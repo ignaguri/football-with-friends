@@ -3,12 +3,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import UserCard from "@/components/user-card";
 import { useSession, signOut } from "@/lib/auth-client";
 
 export function Wrapper(props: { children: React.ReactNode }) {
@@ -16,6 +18,24 @@ export function Wrapper(props: { children: React.ReactNode }) {
   const user = session?.user;
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const avatarBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        avatarBtnRef.current &&
+        !avatarBtnRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   return (
     <div className="relative flex min-h-screen w-full justify-center bg-white bg-grid-small-black/[0.2] dark:bg-black dark:bg-grid-small-white/[0.2]">
@@ -34,6 +54,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
           {isPending ? null : user ? (
             <div className="relative">
               <button
+                ref={avatarBtnRef}
                 className="focus:outline-none"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="User menu"
@@ -45,29 +66,45 @@ export function Wrapper(props: { children: React.ReactNode }) {
                   </AvatarFallback>
                 </Avatar>
               </button>
-              {menuOpen && (
-                <div className="absolute right-0 mt-2 w-40 rounded-md border bg-white shadow-lg dark:bg-black">
-                  <div className="flex flex-col p-2">
-                    <span className="truncate px-2 py-1 text-xs text-muted-foreground">
-                      {user.name || user.email}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      className="justify-start px-2 py-1 text-left text-sm"
-                      onClick={async () => {
-                        setMenuOpen(false);
-                        await signOut({
-                          fetchOptions: {
-                            onSuccess: () => router.push("/"),
-                          },
-                        });
-                      }}
-                    >
-                      Log out
-                    </Button>
+              <Dialog>
+                {menuOpen && (
+                  <div
+                    ref={dropdownRef}
+                    className="absolute right-0 mt-2 w-40 rounded-md border bg-white shadow-lg dark:bg-black"
+                  >
+                    <div className="flex flex-col p-2">
+                      <DialogTrigger asChild>
+                        <span
+                          className="cursor-pointer truncate px-2 py-1 text-xs text-muted-foreground hover:underline"
+                          tabIndex={0}
+                        >
+                          {user.name || user.email}
+                        </span>
+                      </DialogTrigger>
+                      <Button
+                        variant="ghost"
+                        className="justify-start px-2 py-1 text-left text-sm"
+                        onClick={async () => {
+                          setMenuOpen(false);
+                          await signOut({
+                            fetchOptions: {
+                              onSuccess: () => router.push("/"),
+                            },
+                          });
+                        }}
+                      >
+                        Log out
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                <DialogContent
+                  className="max-w-xs border-none bg-transparent p-0 shadow-none"
+                  aria-describedby="user-card"
+                >
+                  <UserCard session={session} activeSessions={[]} />
+                </DialogContent>
+              </Dialog>
             </div>
           ) : (
             <Button

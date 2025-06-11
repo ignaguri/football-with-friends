@@ -5,7 +5,7 @@ import { addOrUpdatePlayerRow } from "@/lib/google-sheets";
 
 export async function POST(
   req: Request,
-  context: { params: { matchId: string } },
+  context: { params: Promise<{ matchId: string }> },
 ) {
   const session = await auth.api.getSession({ headers: await headers() });
   const user = session?.user;

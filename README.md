@@ -1,83 +1,62 @@
-# Better Auth Demo App
+# Football with Friends
 
-Welcome to the Better Auth demo app! This project is built with [Next.js](https://nextjs.org) using [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+> _This project was originally initiated from the BetterAuth demo app._
 
-## Getting Started
+## Overview
 
-Here’s how you can get the app running locally:
-
-### Prerequisites
-
-1. **Clone the repo**:
-
-   ```bash
-   git clone https://github.com/better-auth/better-auth
-   cd better-auth/demo/nextjs
-   ```
-
-2. **Install the dependencies**:
-
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
-
-3. **Set up your environment variables**:
-
-   - Rename the `.env.example` file to `.env`:
-
-     ```bash
-     mv .env.example .env
-     ```
-
-   - Open `.env` and fill in the required details. These will include things like API URLs, client IDs, and secrets needed to connect to the Better Auth service.
-
-### Start the Development Server
-
-Once everything is set up, start the development server with:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-The app will be live at [http://localhost:3000](http://localhost:3000). Open it in your browser, and you’re good to go!
-
-Feel free to jump in and edit the app by modifying `app/page.tsx`. Any changes you make will update automatically in the browser.
+**Football with Friends** is a web application for organizing, joining, and managing casual football (soccer) matches with your friends and local community. Built with Next.js, TypeScript, and Tailwind CSS, it provides a seamless experience for both match organizers and players.
 
 ## Features
 
-Here’s what this app supports out of the box:
+- **Create Matches:** Organize new football matches, set date, time, location, and player limits.
+- **Join Matches:** Browse upcoming matches and sign up to play.
+- **Player Signups:** See who's in, manage signups, and handle waitlists automatically.
+- **Match Management:** Edit match details, manage participants, and cancel matches if needed.
+- **Authentication:** Secure sign-in and sign-up (powered by BetterAuth).
+- **Mobile-First Design:** Responsive UI for easy use on any device.
 
-- **[Email & Password](https://www.better-auth.com/docs/basic-usage#email-password)**: Simple and secure authentication.
-- **[Organization / Teams](https://www.better-auth.com/docs/plugins/organization)**: Manage users within organizations or teams.
-- **[Passkeys](https://www.better-auth.com/docs/plugins/passkey)**: Passwordless login using modern authentication standards.
-- **[Multi-Factor Authentication (MFA)](https://www.better-auth.com/docs/plugins/2fa)**: Add an extra layer of security.
-- **[Password Reset](https://www.better-auth.com/docs/concepts/email#password-reset-email)**: Let users reset their passwords if they forget them.
-- **[Email Verification](https://www.better-auth.com/docs/concepts/email#email-verification)**: Ensure users verify their email addresses.
-- **[Roles & Permissions](https://www.better-auth.com/docs/plugins/admin#role)**: Define and manage who can do what.
-- **[Rate Limiting](https://www.better-auth.com/docs/concepts/rate-limit)**: Protect your app from abuse with smart limits.
-- **[Session Management](https://www.better-auth.com/docs/concepts/session-management)**: Handle user sessions seamlessly.
-- **[Stripe Plugin](https://www.better-auth.com/docs/plugins/stripe)**: Integrate Stripe for customer management, subscriptions, and webhooks.
+## Getting Started
 
-## Learn More
+### Prerequisites
 
-Here are some helpful links if you want to dive deeper:
+- Node.js (v18 or later recommended)
+- pnpm, npm, or yarn
 
-- [Better Auth Documentation](https://better-auth.com/docs) - Everything you need to know to integrate Better Auth.
-- [Next.js Documentation](https://nextjs.org/docs) - Learn about the framework we used to build this app.
-- [Learn Next.js](https://nextjs.org/learn) - A hands-on tutorial for Next.js.
+### Installation
 
----
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd football-with-friends
+   ```
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   # or
+   npm install
+   # or
+   yarn install
+   ```
+3. **Set up environment variables:**
+   - Copy `.env.example` to `.env` and fill in the required values.
 
-If you run into issues or have suggestions, feel free to open an issue or submit a pull request on the [GitHub repo](https://github.com/better-auth/better-auth).
+### Running the App
 
-Happy coding!
+Start the development server:
+```bash
+pnpm dev
+# or
+npm run dev
+# or
+yarn dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) to use the app.
+
+## Contributing
+
+Contributions are welcome! Please open issues or submit pull requests for new features, bug fixes, or suggestions.
+
+## License
+
+MIT

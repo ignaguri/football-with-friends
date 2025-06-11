@@ -1,11 +1,3 @@
-// Google Sheets structure sample (from RESERVA 2024 25.html):
-// Row 1: Title
-// Row 2: Empty/headers
-// Row 3: Match dates and status (columns C+)
-// Row 4+: Player rows: [number, name, payment per match...]
-// ...
-// There are also summary rows at the bottom (cost, recaudado, etc.)
-
 import { google } from "googleapis";
 
 import type { sheets_v4 } from "googleapis";

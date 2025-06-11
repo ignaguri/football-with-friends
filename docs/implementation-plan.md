@@ -98,21 +98,21 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 
 - [x] Write backend API routes for:
   - Fetching match list and details (from master sheet or sheet list).
-  - [ ] Adding/updating player signups (add/update row in the match's sheet).
-  - [ ] Adding new matches (create a new sheet for each match).
+  - [x] Adding/updating player signups (add/update row in the match's sheet).
+  - [x] Adding new matches (create a new sheet for each match).
   - [ ] Fetching/writing costs, rules, and summary data (per match sheet).
 
 ### 5.4. UI Components
 
 - [x] Match List Page
-- [ ] Match Details Page (with player list, sign-up/payment button)
+- [x] Match Details Page (with player list, sign-up/payment button)
 - [ ] Player Signup/Payment Flow (PayPal integration)
 - [ ] Organizer Dashboard (add/edit matches, see financials)
 - [ ] Rules/Info Page
 
 ### 5.5. Polish & Deploy
 
-- [ ] Responsive/mobile-first design
+- [x] Responsive/mobile-first design
 - [ ] Web Vitals optimization
 - [ ] Image optimization (if needed)
 - [ ] Deploy to Vercel

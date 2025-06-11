@@ -12,5 +12,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/matches/:path*"],
+  matcher: ["/add-match", "/matches/:path*", "/matches/:path*/:path*"],
 };

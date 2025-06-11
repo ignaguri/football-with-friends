@@ -1,11 +1,17 @@
 import "./globals.css";
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
+import { Montserrat, Fira_Mono } from "next/font/google";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Wrapper, WrapperWithQuery } from "@/components/wrapper";
 import { createMetadata } from "@/lib/metadata";
+
+const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-sans" });
+const firaMono = Fira_Mono({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const metadata = createMetadata({
   title: {
@@ -27,7 +33,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon/favicon.ico" sizes="any" />
       </head>
-      <body className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}>
+      <body className={`${montserrat.variable} ${firaMono.variable} font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
           <Wrapper>
             <WrapperWithQuery>{children}</WrapperWithQuery>

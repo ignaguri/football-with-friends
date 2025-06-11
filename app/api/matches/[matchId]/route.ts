@@ -2,7 +2,7 @@ import { getMatchSheetData } from "@/lib/google-sheets";
 
 export async function GET(
   request: Request,
-  context: { params: { matchId: string } },
+  context: { params: Promise<{ matchId: string }> },
 ) {
   const { matchId } = await context.params;
   const sheetName = decodeURIComponent(matchId);
