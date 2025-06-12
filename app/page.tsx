@@ -43,6 +43,13 @@ export default function Home() {
               <Button className="w-48" onClick={() => router.push("/matches")}>
                 See Matches
               </Button>
+              <Button
+                className="w-48"
+                variant="secondary"
+                onClick={() => router.push("/rules")}
+              >
+                Rules & Info
+              </Button>
             </div>
           ) : (
             <Suspense fallback={<SignInFallback />}>

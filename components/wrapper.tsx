@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -10,6 +11,14 @@ import { ThemeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import UserCard from "@/components/user-card";
 import { useSession, signOut } from "@/lib/auth-client";
 
@@ -41,94 +50,186 @@ export function Wrapper(props: { children: React.ReactNode }) {
     <div className="relative flex min-h-screen w-full justify-center bg-white bg-grid-small-black/[0.2] dark:bg-black dark:bg-grid-small-white/[0.2]">
       <div className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] dark:bg-black md:flex"></div>
       <div className="absolute z-50 flex w-full items-center justify-between border-b border-border bg-white px-4 py-2 dark:bg-black md:px-1 lg:w-8/12">
-        <Link href="/">
-          <div className="flex cursor-pointer items-center gap-2">
+        {/* Header: Logo+Name, NavMenu/Burger, Theme+Account */}
+        <div className="flex w-full items-center justify-between gap-2">
+          {/* Logo + Name */}
+          <Link href="/" className="flex items-center gap-2">
             <Logo />
             <p className="text-lg font-bold tracking-tight text-black dark:text-white">
               Football With Friends
             </p>
-          </div>
-        </Link>
-        <div className="z-50 flex items-center gap-2">
-          <ThemeToggle />
-          {isPending ? null : user ? (
-            <div className="relative">
-              <button
-                ref={avatarBtnRef}
-                className="focus:outline-none"
-                onClick={() => setMenuOpen((v) => !v)}
-                aria-label="User menu"
-              >
-                <div className="relative h-8 w-8">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={user.image || undefined}
-                      alt={user.name}
-                    />
-                    <AvatarFallback>
-                      {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  {user.role === "admin" && (
-                    <span
-                      className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-50 text-[8px] font-bold text-white shadow-md ring-2 ring-white dark:ring-black"
-                      title="Admin"
-                      aria-label="Admin badge"
+          </Link>
+
+          {/* Navigation: Desktop or Mobile */}
+          <div className="flex flex-1 justify-center">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex">
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
                     >
-                      🛡️
-                    </span>
-                  )}
-                </div>
-              </button>
-              <Dialog>
-                {menuOpen && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute right-0 mt-2 w-40 rounded-md border bg-white shadow-lg dark:bg-black"
-                  >
-                    <div className="flex flex-col p-2">
-                      <DialogTrigger asChild>
-                        <span
-                          className="cursor-pointer truncate px-2 py-1 text-xs text-muted-foreground hover:underline"
-                          tabIndex={0}
-                        >
-                          {user.name || user.email}
-                        </span>
-                      </DialogTrigger>
-                      <Button
-                        variant="ghost"
-                        className="justify-start px-2 py-1 text-left text-sm"
-                        onClick={async () => {
-                          setMenuOpen(false);
-                          await signOut({
-                            fetchOptions: {
-                              onSuccess: () => router.push("/"),
-                            },
-                          });
-                        }}
+                      <Link href="/">Home</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      <Link href="/matches">Matches</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  {user?.role === "admin" && (
+                    <NavigationMenuItem>
+                      <NavigationMenuLink
+                        asChild
+                        className={navigationMenuTriggerStyle()}
                       >
-                        Log out
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                <DialogContent
-                  className="max-w-xs border-none bg-transparent p-0 shadow-none"
-                  aria-describedby="user-card"
-                >
-                  <UserCard session={session} activeSessions={[]} />
-                </DialogContent>
-              </Dialog>
+                        <Link href="/add-match">Add Match</Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  )}
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      asChild
+                      className={navigationMenuTriggerStyle()}
+                    >
+                      <Link href="/rules">Rules & Info</Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
             </div>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={() => router.push("/sign-in")}
-              className="ml-2"
-            >
-              Log in
-            </Button>
-          )}
+            {/* Mobile Burger Menu */}
+            <div className="md:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button
+                    aria-label="Open menu"
+                    className="rounded p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-64 p-0">
+                  <nav className="flex flex-col gap-2 p-6">
+                    <Link href="/" className="text-lg font-medium" tabIndex={0}>
+                      Home
+                    </Link>
+                    <Link
+                      href="/matches"
+                      className="text-lg font-medium"
+                      tabIndex={0}
+                    >
+                      Matches
+                    </Link>
+                    {user?.role === "admin" && (
+                      <Link
+                        href="/add-match"
+                        className="text-lg font-medium"
+                        tabIndex={0}
+                      >
+                        Add Match
+                      </Link>
+                    )}
+                    <Link
+                      href="/rules"
+                      className="text-lg font-medium"
+                      tabIndex={0}
+                    >
+                      Rules & Info
+                    </Link>
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+
+          {/* Theme Toggle + Account */}
+          <div className="z-50 flex items-center gap-2">
+            <ThemeToggle />
+            {isPending ? null : user ? (
+              <div className="relative">
+                <button
+                  ref={avatarBtnRef}
+                  className="focus:outline-none"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-label="User menu"
+                >
+                  <div className="relative h-8 w-8">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={user.image || undefined}
+                        alt={user.name}
+                      />
+                      <AvatarFallback>
+                        {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    {user.role === "admin" && (
+                      <span
+                        className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-50 text-[8px] font-bold text-white shadow-md ring-2 ring-white dark:ring-black"
+                        title="Admin"
+                        aria-label="Admin badge"
+                      >
+                        🛡️
+                      </span>
+                    )}
+                  </div>
+                </button>
+                <Dialog>
+                  {menuOpen && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-40 rounded-md border bg-white shadow-lg dark:bg-black"
+                    >
+                      <div className="flex flex-col p-2">
+                        <DialogTrigger asChild>
+                          <span
+                            className="cursor-pointer truncate px-2 py-1 text-xs text-muted-foreground hover:underline"
+                            tabIndex={0}
+                          >
+                            {user.name || user.email}
+                          </span>
+                        </DialogTrigger>
+                        <Button
+                          variant="ghost"
+                          className="justify-start px-2 py-1 text-left text-sm"
+                          onClick={async () => {
+                            setMenuOpen(false);
+                            await signOut({
+                              fetchOptions: {
+                                onSuccess: () => router.push("/"),
+                              },
+                            });
+                          }}
+                        >
+                          Log out
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <DialogContent
+                    className="max-w-xs border-none bg-transparent p-0 shadow-none"
+                    aria-describedby="user-card"
+                  >
+                    <UserCard session={session} activeSessions={[]} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => router.push("/sign-in")}
+                className="ml-2"
+              >
+                Log in
+              </Button>
+            )}
+          </div>
         </div>
       </div>
       <div className="mt-20 w-full lg:w-7/12">{props.children}</div>
