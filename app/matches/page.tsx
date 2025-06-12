@@ -9,11 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 async function getMatches() {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  if (!baseUrl)
-    throw new Error("NEXT_PUBLIC_BASE_URL is not set in the environment");
+  const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/api/matches`, {
     cache: "no-store",
   });
