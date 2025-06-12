@@ -248,3 +248,150 @@ export async function addOrUpdatePlayerRow(
     });
   }
 }
+
+// --- MASTER SHEET (METADATA) UTILS ---
+
+export const MASTER_SHEET_NAME = "Master";
+
+export interface MatchMetadata {
+  matchId: string; // unique, e.g., UUID or timestamp
+  sheetName: string; // tab name for the match (displayed as a hyperlink)
+  sheetGid: string; // Google Sheets tab ID (gid)
+  date: string; // ISO or DD-MM-YYYY
+  time: string;
+  courtNumber: string;
+  status: string; // e.g., upcoming, cancelled, completed
+  costCourt: string;
+  costShirts: string;
+}
+
+const MASTER_HEADERS: (keyof MatchMetadata)[] = [
+  "matchId",
+  "sheetName",
+  "sheetGid",
+  "date",
+  "time",
+  "courtNumber",
+  "status",
+  "costCourt",
+  "costShirts",
+];
+
+/**
+ * Ensure the master sheet exists. If not, create it with correct headers.
+ * Returns the sheet properties.
+ */
+export async function ensureMasterSheetExists(): Promise<sheets_v4.Schema$SheetProperties> {
+  const sheets = getSheetsWriteClient();
+  const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+  const found = (meta.data.sheets || []).find(
+    (s) => s.properties?.title === MASTER_SHEET_NAME,
+  );
+  if (found) return found.properties!;
+  // Create the master sheet
+  const resp = await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: {
+      requests: [{ addSheet: { properties: { title: MASTER_SHEET_NAME } } }],
+    },
+  });
+  // Write header row
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${MASTER_SHEET_NAME}!A1:K1`,
+    valueInputOption: "RAW",
+    requestBody: { values: [MASTER_HEADERS] },
+  });
+  return resp.data.replies?.[0]?.addSheet?.properties!;
+}
+
+/**
+ * Get all match metadata rows from the master sheet.
+ */
+export async function getAllMatchesMetadata(): Promise<MatchMetadata[]> {
+  await ensureMasterSheetExists();
+  const sheets = getSheetsClient();
+  const range = `${MASTER_SHEET_NAME}`;
+  const resp = await sheets.spreadsheets.values.get({
+    spreadsheetId: SPREADSHEET_ID,
+    range,
+  });
+  const rows = resp.data.values || [];
+  if (rows.length < 2) return [];
+  const headers = rows[0];
+  return rows.slice(1).map((row) => {
+    const obj: any = {};
+    headers.forEach((h, i) => (obj[h] = row[i] ?? ""));
+    return obj as MatchMetadata;
+  });
+}
+
+/**
+ * Add a new match metadata row to the master sheet, with sheetName as a clickable hyperlink to the tab.
+ */
+export async function addMatchMetadata(meta: MatchMetadata) {
+  const sheets = getSheetsWriteClient();
+  await ensureMasterSheetExists();
+  // Write the sheetName as a HYPERLINK formula referencing the tab's gid
+  const sheetNameFormula = `=HYPERLINK("#gid=${meta.sheetGid}", "${meta.sheetName}")`;
+  const row = MASTER_HEADERS.map((h) =>
+    h === "sheetName" ? sheetNameFormula : (meta[h] ?? ""),
+  );
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: SPREADSHEET_ID,
+    range: `${MASTER_SHEET_NAME}!A1:K1`,
+    valueInputOption: "USER_ENTERED",
+    insertDataOption: "INSERT_ROWS",
+    requestBody: { values: [row] },
+  });
+}
+
+/**
+ * Update a match metadata row by matchId.
+ */
+export async function updateMatchMetadata(
+  matchId: string,
+  updates: Partial<MatchMetadata>,
+) {
+  const sheets = getSheetsWriteClient();
+  const all = await getAllMatchesMetadata();
+  const idx = all.findIndex((m) => m.matchId === matchId);
+  if (idx === -1) throw new Error("Match not found");
+  const updated = { ...all[idx], ...updates };
+  const row = MASTER_HEADERS.map((h) => updated[h] ?? "");
+  const range = `${MASTER_SHEET_NAME}!A${idx + 2}:K${idx + 2}`;
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SPREADSHEET_ID,
+    range,
+    valueInputOption: "RAW",
+    requestBody: { values: [row] },
+  });
+}
+
+/**
+ * Delete a match metadata row by matchId.
+ */
+export async function deleteMatchMetadata(matchId: string) {
+  const sheets = getSheetsWriteClient();
+  const all = await getAllMatchesMetadata();
+  const idx = all.findIndex((m) => m.matchId === matchId);
+  if (idx === -1) throw new Error("Match not found");
+  // Delete the row (Google Sheets API: deleteDimension)
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId: SPREADSHEET_ID,
+    requestBody: {
+      requests: [
+        {
+          deleteDimension: {
+            range: {
+              sheetId: (await ensureMasterSheetExists()).sheetId,
+              dimension: "ROWS",
+              startIndex: idx + 1, // skip header
+              endIndex: idx + 2,
+            },
+          },
+        },
+      ],
+    },
+  });
+}

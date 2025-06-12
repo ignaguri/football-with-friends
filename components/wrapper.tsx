@@ -1,30 +1,24 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Menu } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
+import type { UserWithRole } from "@/lib/auth-types";
+
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
+import { MainNavigation } from "@/components/main-navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import UserCard from "@/components/user-card";
 import { useSession, signOut } from "@/lib/auth-client";
 
 export function Wrapper(props: { children: React.ReactNode }) {
   const { data: session, isPending } = useSession();
-  const user = session?.user;
+  const user = session?.user as UserWithRole;
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -62,90 +56,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
 
           {/* Navigation: Desktop or Mobile */}
           <div className="flex flex-1 justify-center">
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex">
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      asChild
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      <Link href="/">Home</Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      asChild
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      <Link href="/matches">Matches</Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                  {user?.role === "admin" && (
-                    <NavigationMenuItem>
-                      <NavigationMenuLink
-                        asChild
-                        className={navigationMenuTriggerStyle()}
-                      >
-                        <Link href="/add-match">Add Match</Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  )}
-                  <NavigationMenuItem>
-                    <NavigationMenuLink
-                      asChild
-                      className={navigationMenuTriggerStyle()}
-                    >
-                      <Link href="/rules">Rules & Info</Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
-            </div>
-            {/* Mobile Burger Menu */}
-            <div className="md:hidden">
-              <Sheet>
-                <SheetTrigger asChild>
-                  <button
-                    aria-label="Open menu"
-                    className="rounded p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <Menu className="h-6 w-6" />
-                  </button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-64 p-0">
-                  <nav className="flex flex-col gap-2 p-6">
-                    <Link href="/" className="text-lg font-medium" tabIndex={0}>
-                      Home
-                    </Link>
-                    <Link
-                      href="/matches"
-                      className="text-lg font-medium"
-                      tabIndex={0}
-                    >
-                      Matches
-                    </Link>
-                    {user?.role === "admin" && (
-                      <Link
-                        href="/add-match"
-                        className="text-lg font-medium"
-                        tabIndex={0}
-                      >
-                        Add Match
-                      </Link>
-                    )}
-                    <Link
-                      href="/rules"
-                      className="text-lg font-medium"
-                      tabIndex={0}
-                    >
-                      Rules & Info
-                    </Link>
-                  </nav>
-                </SheetContent>
-              </Sheet>
-            </div>
+            <MainNavigation user={user} />
           </div>
 
           {/* Theme Toggle + Account */}

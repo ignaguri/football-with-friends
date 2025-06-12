@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Rules & Info",
-  description: "Football With Friends – Rules, pot, and summary stats.",
+  description: "Football With Friends – Rules, and summary stats.",
 };
 
 export default function RulesPage() {
@@ -21,13 +21,6 @@ export default function RulesPage() {
           <li>Guest players allowed if spots are open.</li>
         </ul>
       </div>
-      {/* <div className="mb-8 rounded-lg bg-gray-50 p-4 shadow dark:bg-gray-900">
-        <h2 className="mb-2 text-xl font-semibold">Pot (Pozo)</h2>
-        <p className="text-base text-gray-700 dark:text-gray-200">
-          The current pot is <span className="font-bold">$0</span>{" "}
-          (placeholder).
-        </p>
-      </div> */}
       <div className="rounded-lg bg-gray-50 p-4 shadow dark:bg-gray-900">
         <h2 className="mb-2 text-xl font-semibold">Summary Stats</h2>
         <ul className="list-disc pl-5 text-base text-gray-700 dark:text-gray-200">

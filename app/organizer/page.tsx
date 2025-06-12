@@ -1,0 +1,300 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { EditMatchForm } from "./edit-match-form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useSession } from "@/lib/auth-client";
+
+type Match = {
+  matchId: string;
+  date: string;
+  time: string;
+  courtNumber: string;
+  status: string;
+  costCourt: string;
+  costShirts: string;
+};
+
+async function fetchMatches(): Promise<Match[]> {
+  const res = await fetch("/api/matches", { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch matches");
+  const data = await res.json();
+  return data.matches || [];
+}
+
+export default function OrganizerDashboard() {
+  const { data: session, isPending } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [editForm, setEditForm] = useState<Match | null>(null);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    setLoading(true);
+    fetchMatches()
+      .then(setMatches)
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false));
+  }, [isAdmin]);
+
+  const handleDelete = async (matchId: string) => {
+    setDeletingId(matchId);
+    try {
+      const res = await fetch(`/api/matches/${matchId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete match");
+      setMatches((prev) => prev.filter((m) => m.matchId !== matchId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  function handleEditClick(match: Match) {
+    setEditingMatch(match);
+    setEditForm({ ...match });
+  }
+
+  function handleEditCancel() {
+    setEditingMatch(null);
+    setEditForm(null);
+  }
+
+  if (isPending) {
+    return (
+      <main className="container mx-auto p-4">
+        <Skeleton className="mb-4 h-10 w-1/2" />
+        <Skeleton className="mb-2 h-6 w-1/3" />
+        <div className="overflow-x-auto rounded-lg border bg-white shadow">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {[...Array(8)].map((_, i) => (
+                  <TableHead key={i}>
+                    <Skeleton className="h-6 w-20" />
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(4)].map((_, i) => (
+                <TableRow key={i}>
+                  {[...Array(8)].map((_, j) => (
+                    <TableCell key={j}>
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <main className="container mx-auto p-8 text-center">
+        <h1 className="mb-4 text-2xl font-bold">Organizer Dashboard</h1>
+        <p className="text-red-600">
+          You are not authorized to view this page.
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="container mx-auto p-4">
+      <h1 className="mb-6 text-3xl font-bold">Organizer Dashboard</h1>
+      <p className="mb-8 text-gray-600">
+        Manage all matches, edit details, or remove matches.
+      </p>
+      {error && (
+        <div className="mb-4 rounded bg-red-100 p-4 text-red-700">{error}</div>
+      )}
+      <div className="overflow-x-auto rounded-lg border bg-white shadow dark:bg-gray-900">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Date
+              </TableHead>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Time
+              </TableHead>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Court
+              </TableHead>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Status
+              </TableHead>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Cost (Court)
+              </TableHead>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Cost (Shirts)
+              </TableHead>
+              <TableHead className="text-gray-900 dark:text-gray-100">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              [...Array(4)].map((_, i) => (
+                <TableRow key={i}>
+                  {[...Array(8)].map((_, j) => (
+                    <TableCell
+                      key={j}
+                      className="text-gray-900 dark:text-gray-100"
+                    >
+                      <Skeleton className="h-5 w-16" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : matches.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="text-center text-gray-400 dark:text-gray-500"
+                >
+                  No matches found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              matches.map((m) => (
+                <TableRow key={m.matchId}>
+                  <TableCell className="text-gray-900 dark:text-gray-100">
+                    {m.date}
+                  </TableCell>
+                  <TableCell className="text-gray-900 dark:text-gray-100">
+                    {m.time}
+                  </TableCell>
+                  <TableCell className="text-gray-900 dark:text-gray-100">
+                    {m.courtNumber}
+                  </TableCell>
+                  <TableCell className="text-gray-900 dark:text-gray-100">
+                    {m.status}
+                  </TableCell>
+                  <TableCell className="text-gray-900 dark:text-gray-100">
+                    {m.costCourt}
+                  </TableCell>
+                  <TableCell className="text-gray-900 dark:text-gray-100">
+                    {m.costShirts}
+                  </TableCell>
+                  <TableCell className="flex gap-2 text-gray-900 dark:text-gray-100">
+                    <Drawer
+                      open={editingMatch?.matchId === m.matchId}
+                      onOpenChange={(open) => {
+                        if (!open) handleEditCancel();
+                      }}
+                    >
+                      <DrawerTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleEditClick(m)}
+                          disabled={deletingId === m.matchId}
+                        >
+                          Edit
+                        </Button>
+                      </DrawerTrigger>
+                      <DrawerContent>
+                        <DrawerHeader>
+                          <DrawerTitle>Edit Match</DrawerTitle>
+                          <DrawerDescription>
+                            Update the match details below and save your
+                            changes.
+                          </DrawerDescription>
+                        </DrawerHeader>
+                        {editForm && (
+                          <EditMatchForm
+                            match={editForm}
+                            onSave={(updated) => {
+                              setMatches((prev) =>
+                                prev.map((m) =>
+                                  m.matchId === updated.matchId ? updated : m,
+                                ),
+                              );
+                              setEditingMatch(null);
+                              setEditForm(null);
+                            }}
+                            onCancel={handleEditCancel}
+                          />
+                        )}
+                      </DrawerContent>
+                    </Drawer>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={deletingId === m.matchId}
+                        >
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Match</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this match? This
+                            action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(m.matchId)}
+                            disabled={deletingId === m.matchId}
+                          >
+                            Confirm
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </main>
+  );
+}
