@@ -13,15 +13,29 @@ import { getBaseUrl } from "@/lib/getBaseUrl";
 
 async function getMatches() {
   const baseUrl = getBaseUrl();
+  console.log("[getMatches] baseUrl:", baseUrl);
   const res = await fetch(`${baseUrl}/api/matches`, {
     cache: "no-store",
   });
-  if (!res.ok) return { matches: [] };
-  return res.json();
+  console.log("[getMatches] response status:", res.status);
+  if (!res.ok) {
+    let errorBody;
+    try {
+      errorBody = await res.text();
+    } catch (e) {
+      errorBody = "[unreadable body]";
+    }
+    console.error("[getMatches] Fetch failed:", res.status, errorBody);
+    return { matches: [] };
+  }
+  const data = await res.json();
+  console.log("[getMatches] matches:", data.matches);
+  return data;
 }
 
 export default async function MatchListPage() {
   const { matches } = await getMatches();
+  console.log("[MatchListPage] matches count:", matches.length);
 
   return (
     <div className="w-full p-4">
