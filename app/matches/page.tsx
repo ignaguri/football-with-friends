@@ -9,25 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getMatchesFromSheets } from "@/lib/matches";
 
 async function getMatches() {
-  const res = await fetch("/api/matches", {
-    cache: "no-store",
-  });
-  console.log("[getMatches] response status:", res.status);
-  if (!res.ok) {
-    let errorBody;
-    try {
-      errorBody = await res.text();
-    } catch (e) {
-      errorBody = "[unreadable body]";
-    }
-    console.error("[getMatches] Fetch failed:", res.status, errorBody);
-    return { matches: [] };
-  }
-  const data = await res.json();
-  console.log("[getMatches] matches:", data.matches);
-  return data;
+  return getMatchesFromSheets();
 }
 
 export default async function MatchListPage() {
