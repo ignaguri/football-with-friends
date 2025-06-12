@@ -9,12 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getBaseUrl } from "@/lib/getBaseUrl";
 
 async function getMatches() {
-  const baseUrl = getBaseUrl();
-  console.log("[getMatches] baseUrl:", baseUrl);
-  const res = await fetch(`${baseUrl}/api/matches`, {
+  const res = await fetch("/api/matches", {
     cache: "no-store",
   });
   console.log("[getMatches] response status:", res.status);
