@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { EditMatchForm } from "./edit-match-form";
 import {
@@ -60,6 +61,7 @@ export default function OrganizerDashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [editForm, setEditForm] = useState<Match | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -91,6 +93,31 @@ export default function OrganizerDashboard() {
   function handleEditCancel() {
     setEditingMatch(null);
     setEditForm(null);
+  }
+
+  async function handleEditSave(updated: Match) {
+    setEditLoading(true);
+    setError(null);
+    try {
+      const { matchId, ...updates } = updated;
+      const res = await fetch(`/api/matches/${matchId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error("Failed to update match");
+      setMatches((prev) =>
+        prev.map((m) => (m.matchId === matchId ? { ...m, ...updates } : m)),
+      );
+      setEditingMatch(null);
+      setEditForm(null);
+      toast.success("Match updated successfully");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      toast.error(e instanceof Error ? e.message : String(e));
+    } finally {
+      setEditLoading(false);
+    }
   }
 
   if (isPending) {
@@ -245,15 +272,7 @@ export default function OrganizerDashboard() {
                         {editForm && (
                           <EditMatchForm
                             match={editForm}
-                            onSave={(updated) => {
-                              setMatches((prev) =>
-                                prev.map((m) =>
-                                  m.matchId === updated.matchId ? updated : m,
-                                ),
-                              );
-                              setEditingMatch(null);
-                              setEditForm(null);
-                            }}
+                            onSave={handleEditSave}
                             onCancel={handleEditCancel}
                           />
                         )}
