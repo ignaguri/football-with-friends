@@ -17,7 +17,6 @@ async function getMatches() {
 
 export default async function MatchListPage() {
   const { matches } = await getMatches();
-  console.log("[MatchListPage] matches count:", matches.length);
 
   return (
     <div className="w-full p-4">

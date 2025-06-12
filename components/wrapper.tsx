@@ -59,12 +59,26 @@ export function Wrapper(props: { children: React.ReactNode }) {
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="User menu"
               >
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user.image || undefined} alt={user.name} />
-                  <AvatarFallback>
-                    {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative h-8 w-8">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={user.image || undefined}
+                      alt={user.name}
+                    />
+                    <AvatarFallback>
+                      {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  {user.role === "admin" && (
+                    <span
+                      className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-50 text-[8px] font-bold text-white shadow-md ring-2 ring-white dark:ring-black"
+                      title="Admin"
+                      aria-label="Admin badge"
+                    >
+                      🛡️
+                    </span>
+                  )}
+                </div>
               </button>
               <Dialog>
                 {menuOpen && (
