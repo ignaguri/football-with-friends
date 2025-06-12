@@ -70,10 +70,10 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 
 ## 4. Authentication & Authorization
 
-- **Authentication:**  
+- **Authentication:**
   - All users sign in with Google (OAuth).
   - No separate registration—anyone with a Google account can log in.
-- **Authorization:**  
+- **Authorization:**
   - Organizer actions (add/edit matches) can be restricted to specific Google accounts (by email).
   - All other users can sign up and pay for matches.
 
@@ -85,7 +85,7 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 
 - [x] Initialize Bun + React + TypeScript project.
 - [x] Set up Tailwind CSS.
-- [ ] Prepare Vercel deployment config.
+- [x] Prepare Vercel deployment config.
 - [x] Set up Google Sheets API access (service account, credentials).
 
 ### 5.2. Authentication
@@ -108,7 +108,7 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 - [x] Match Details Page (with player list, sign-up/payment button)
 - [ ] Player Signup/Payment Flow (PayPal integration)
 - [ ] Organizer Dashboard (add/edit matches, see financials)
-- [ ] Rules/Info Page
+- [ ] Rules/Info Page (static, no API needed)
 
 ### 5.5. Polish & Deploy
 
@@ -117,6 +117,28 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 - [ ] Image optimization (if needed)
 - [ ] Deploy to Vercel
 
+### 5.6. Remaining MVP Steps (Detailed)
+
+#### Player Signup/Payment Flow (PayPal Integration)
+- Backend: API endpoint to initiate PayPal payment and handle confirmation (update player status in match sheet).
+- Frontend: "Sign Up & Pay" button, PayPal checkout integration, update UI after payment, show payment status/history.
+
+#### Rules/Info Page (Static)
+- No backend API needed; rules, pozo, and summary stats are stored as static content in the codebase.
+- Frontend: `/rules` or `/info` page, mobile-friendly, accessible from main navigation.
+
+#### Organizer Dashboard
+- Backend: API endpoints for adding/editing matches, updating costs, canceling matches, and fetching financial summaries.
+- Frontend: Dashboard page (organizer-only), forms for match management, financial summary table.
+
+#### API for Costs & Summary Data
+- Extend backend to read/write costs and summary data per match sheet (if needed for dashboard/financials).
+
+#### Polish & Deploy
+- Audit and optimize Web Vitals (LCP, CLS, FID).
+- Optimize images (WebP, lazy loading, size data).
+- Final deploy to Vercel.
+
 ---
 
 ## 6. Stretch Goals
@@ -124,13 +146,11 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 - Notifications (email/WhatsApp) for match reminders or payment confirmations.
 - Player stats/history.
 - Export to PDF/CSV.
-- Support for multiple organizers/groups.
 
 ---
 
 ## 7. Open Questions
 
-- Should the app support multiple organizers/groups in the future? (Planned for future)
 - Any additional payment methods needed beyond PayPal?
-- Should we allow anonymous viewing of matches, or require login for all access?
+- Should we allow anonymous viewing of matches, or require login for all access? -> Login required
 - **[NEW] Should the master sheet include all match metadata, or just rely on the sheet list?**
