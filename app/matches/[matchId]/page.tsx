@@ -217,8 +217,16 @@ export default function MatchPage() {
 
   // Define columns for TanStack Table
   const columns = useMemo<ColumnDef<Player, unknown>[]>(
-    () =>
-      header
+    () => [
+      // Add index column as the first column
+      {
+        id: "number",
+        header: "#",
+        cell: (info: { row: { index: number } }) => info.row.index + 1,
+        size: 32,
+      },
+      // Then the rest of the columns (except Email)
+      ...header
         .filter((col) => col !== "Email")
         .map((col) => ({
           accessorKey: col,
@@ -271,6 +279,7 @@ export default function MatchPage() {
             return player[col];
           },
         })),
+    ],
     [header, user, isLoading, displayDate],
   );
 
@@ -297,6 +306,23 @@ export default function MatchPage() {
       <h2 className="mb-4 break-words text-2xl font-bold">
         {capitalize(displayMatch)}
       </h2>
+      {/* Counters for sign-ups and paid players */}
+      <div className="mb-4 flex flex-row gap-2">
+        <div className="flex-1 rounded bg-blue-100 px-2 py-1 text-center text-blue-800">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-blue-600">
+            Signed Up
+          </span>
+          <span className="text-lg font-bold">{players.length}</span>
+        </div>
+        <div className="flex-1 rounded bg-green-100 px-2 py-1 text-center text-green-800">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-green-600">
+            Paid
+          </span>
+          <span className="text-lg font-bold">
+            {players.filter((p) => p.Paid === "PAID").length}
+          </span>
+        </div>
+      </div>
       <Table>
         <TableHeader>
           {table
