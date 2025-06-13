@@ -448,3 +448,29 @@ export async function deleteMatchMetadata(matchId: string) {
     },
   });
 }
+
+/**
+ * Get match metadata by matchId.
+ */
+export async function getMatchMetadataById(
+  matchId: string,
+): Promise<MatchMetadata | null> {
+  const all = await getAllMatchesMetadata();
+  return all.find((m) => m.matchId === matchId) || null;
+}
+
+/**
+ * Get the sheet/tab name by sheetId (sheetGid).
+ */
+export async function getSheetNameById(
+  sheetId: string,
+): Promise<string | null> {
+  const sheets = getSheetsClient();
+  const response = await sheets.spreadsheets.get({
+    spreadsheetId: SPREADSHEET_ID,
+  });
+  const sheet = (response.data.sheets || []).find(
+    (s) => s.properties?.sheetId?.toString() === sheetId,
+  );
+  return sheet?.properties?.title || null;
+}

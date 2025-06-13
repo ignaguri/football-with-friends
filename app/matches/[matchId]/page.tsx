@@ -7,6 +7,7 @@ import {
   flexRender,
   getSortedRowModel,
 } from "@tanstack/react-table";
+import { parse } from "date-fns";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
@@ -113,44 +114,13 @@ export default function MatchPage() {
   const [cancelled, setCancelled] = useState(false);
   const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
   const [isAddingGuest, setIsAddingGuest] = useState(false);
+  const [matchMeta, setMatchMeta] = useState<{
+    date?: string;
+    time?: string;
+  } | null>(null);
 
   // Decode matchId for display and WhatsApp
   const matchId = decodeURIComponent(rawMatchId || "");
-
-  // Try to parse and format the matchId as 'dd-MM-yyyy HH:mm' using Intl
-  let displayMatch = matchId;
-  let displayDate = matchId;
-  try {
-    // Match format: 'DD-MM-YYYY HH:mm'
-    const match = matchId.match(/^(\d{2})-(\d{2})-(\d{4}) (\d{2}):(\d{2})/);
-    if (match) {
-      const [_, day, month, year, hour, minute] = match;
-      const dateObj = new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        Number(hour),
-        Number(minute),
-      );
-      // Use user's locale if available, fallback to 'en'
-      const locale =
-        typeof navigator !== "undefined" && navigator.language
-          ? navigator.language
-          : "en";
-      displayMatch = new Intl.DateTimeFormat(locale, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(dateObj);
-      // WhatsApp message: dd-MM-yyyy HH:mm
-      const pad = (n: number) => n.toString().padStart(2, "0");
-      displayDate = `${pad(dateObj.getDate())}-${pad(dateObj.getMonth() + 1)}-${dateObj.getFullYear()} ${pad(dateObj.getHours())}:${pad(dateObj.getMinutes())}`;
-    }
-  } catch {}
 
   useEffect(() => {
     async function fetchMatch() {
@@ -162,6 +132,10 @@ export default function MatchPage() {
         const data = await res.json();
         setHeader(data.header);
         setPlayers(data.players);
+        // Try to get date and time from API response if available
+        if (data.meta && (data.meta.date || data.meta.time)) {
+          setMatchMeta({ date: data.meta.date, time: data.meta.time });
+        }
         if (user) {
           setJoined(data.players.some((p: Player) => p.Email === user.email));
         }
@@ -381,7 +355,7 @@ export default function MatchPage() {
                       </a>
                       {user && (
                         <NotifyOrganizerDialog
-                          displayDate={displayDate}
+                          displayDate={matchId}
                           userName={user.name}
                         />
                       )}
@@ -400,7 +374,7 @@ export default function MatchPage() {
           },
         })),
     ],
-    [header, user, isLoading, displayDate],
+    [header, user, isLoading, matchId],
   );
 
   const table = useReactTable({
@@ -411,6 +385,24 @@ export default function MatchPage() {
     state: { sorting },
     onSortingChange: setSorting,
   });
+
+  // Format match title (date + time)
+  let matchTitle = matchId;
+  if (matchMeta?.date && matchMeta?.time) {
+    try {
+      const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
+      const dateObj = parse(dateTimeString, "yyyy-MM-dd HH:mm", new Date());
+      matchTitle = new Intl.DateTimeFormat(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(dateObj);
+    } catch {}
+  }
 
   if (isLoading || isSessionPending) {
     return (
@@ -424,7 +416,7 @@ export default function MatchPage() {
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
       <h2 className="mb-4 break-words text-2xl font-bold">
-        {capitalize(displayMatch)}
+        {capitalize(matchTitle)}
       </h2>
       <div className="mb-4 flex justify-center">
         <div className="rounded bg-green-100 px-4 py-2 text-center text-green-800">

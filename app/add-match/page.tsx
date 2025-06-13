@@ -87,13 +87,13 @@ function AddMatchForm() {
         throw new Error(text || "Failed to create match");
       }
       const data = await res.json();
-      const sheetName = data.match?.sheetName;
-      if (!sheetName) throw new Error("No match sheetName returned");
+      const matchId = data.match?.matchId;
+      if (!matchId) throw new Error("No matchId returned");
       toast.success("Match created! Redirecting you to the match page...");
       setRedirecting(true);
       // Wait a moment for the toast to show
       setTimeout(() => {
-        router.push(`/matches/${encodeURIComponent(sheetName)}`);
+        router.push(`/matches/${encodeURIComponent(matchId)}`);
       }, 800);
     } catch (err: any) {
       setError(err.message || "Unknown error");

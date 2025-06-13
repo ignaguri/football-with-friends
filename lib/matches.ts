@@ -1,31 +1,38 @@
 import { parse, isAfter, isEqual } from "date-fns";
 
-import { listMatchSheets } from "@/lib/google-sheets";
+import { getAllMatchesMetadata } from "@/lib/google-sheets";
 
-function parseMatchDate(name: string): Date | null {
-  // Expecting 'DD-MM-YYYY' or 'DD-MM-YYYY ...'
-  const match = name.match(/\b(\d{2})-(\d{2})-(\d{4})\b/);
-  if (!match) return null;
-  const date = parse(match[0], "dd-MM-yyyy", new Date());
-  return isNaN(date.getTime()) ? null : date;
+export interface Match {
+  matchId: string;
+  name: string;
+  date: string;
+  time: string;
+  status?: string;
+  courtNumber?: string;
+  costCourt?: string;
+  costShirts?: string;
 }
 
-export async function getMatchesFromSheets() {
-  const sheets = await listMatchSheets();
+export async function getMatchesFromSheets(): Promise<{ matches: Match[] }> {
+  const all = await getAllMatchesMetadata();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const matches = sheets
-    .map((sheet) => {
-      const name = sheet.properties?.title || "";
-      const date = parseMatchDate(name);
-      return {
-        id: sheet.properties?.sheetId,
-        name,
-        index: sheet.properties?.index,
-        date,
-      };
-    })
-    .filter((m) => m.date && (isAfter(m.date, today) || isEqual(m.date, today)))
-    .sort((a, b) => a.date!.getTime() - b.date!.getTime());
+  const matches = all
+    .map((meta) => ({
+      matchId: meta.matchId,
+      name: meta.sheetName,
+      date: meta.date,
+      time: meta.time,
+      status: meta.status,
+      courtNumber: meta.courtNumber,
+      costCourt: meta.costCourt,
+      costShirts: meta.costShirts,
+    }))
+    .filter((m) => {
+      if (!m.date) return false;
+      const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
+      return isAfter(matchDate, today) || isEqual(matchDate, today);
+    });
+
   return { matches };
 }

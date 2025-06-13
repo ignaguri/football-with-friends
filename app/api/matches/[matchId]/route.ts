@@ -3,7 +3,11 @@ import { headers } from "next/headers";
 import type { MatchMetadata } from "@/lib/google-sheets";
 
 import { auth } from "@/lib/auth";
-import { getMatchSheetData } from "@/lib/google-sheets";
+import {
+  getMatchSheetData,
+  getMatchMetadataById,
+  getSheetNameById,
+} from "@/lib/google-sheets";
 import { updateMatchMetadata, deleteMatchMetadata } from "@/lib/google-sheets";
 
 export async function GET(
@@ -11,10 +15,22 @@ export async function GET(
   context: { params: Promise<{ matchId: string }> },
 ) {
   const { matchId } = await context.params;
-  const sheetName = decodeURIComponent(matchId);
+  // Use matchId as the sheetGid (sheetId)
+  const meta = await getMatchMetadataById(matchId);
+  if (!meta) {
+    console.error("Match metadata not found for matchId:", matchId);
+    return new Response("Not found", { status: 404 });
+  }
+  // Get the actual tab name by sheetId
+  const sheetName = await getSheetNameById(matchId);
+  if (!sheetName) {
+    console.error("Sheet/tab not found for sheetId:", matchId);
+    return new Response("Not found", { status: 404 });
+  }
   try {
     const data = await getMatchSheetData(sheetName);
     if (!data || data.length === 0) {
+      console.error("Match sheet data not found for matchId:", matchId);
       return new Response("Not found", { status: 404 });
     }
     // Assume first row is header
@@ -26,7 +42,11 @@ export async function GET(
       });
       return player;
     });
-    return Response.json({ header, players });
+    return Response.json({
+      header,
+      players,
+      meta: { date: meta.date, time: meta.time },
+    });
   } catch (e) {
     console.error("Error fetching match data:", e);
     return new Response("Not found", { status: 404 });

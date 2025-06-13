@@ -1,5 +1,6 @@
 import { parse, isSameDay } from "date-fns";
 import { headers } from "next/headers";
+import { z } from "zod";
 
 import type { MatchMetadata } from "@/lib/google-sheets";
 
@@ -16,6 +17,15 @@ export async function GET() {
   return Response.json({ matches });
 }
 
+const matchSchema = z.object({
+  date: z.string().regex(/^\d{2}-\d{2}-\d{4}$/), // DD-MM-YYYY
+  time: z.string().regex(/^\d{2}:\d{2}$/), // HH:mm
+  courtNumber: z.string().optional(),
+  costCourt: z.string().optional(),
+  costShirts: z.string().optional(),
+  status: z.string().optional(),
+});
+
 // POST /api/matches: Add a new match (sheet + metadata, organizer only)
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -24,7 +34,15 @@ export async function POST(req: Request) {
     return new Response("Unauthorized", { status: 401 });
   }
   const body = await req.json();
-  const { date, time, courtNumber, costCourt, costShirts, status } = body;
+  const parsed = matchSchema.safeParse(body);
+  if (!parsed.success) {
+    return new Response(
+      "Invalid input: " + JSON.stringify(parsed.error.format()),
+      { status: 400 },
+    );
+  }
+  const { date, time, courtNumber, costCourt, costShirts, status } =
+    parsed.data;
   if (!date || !time) {
     return new Response("Missing required fields", { status: 400 });
   }
@@ -41,24 +59,25 @@ export async function POST(req: Request) {
       status: 409,
     });
   }
-  // Generate a unique matchId and sheetName
-  const matchId = Date.now().toString();
+  // Generate a sheet name and create the match sheet/tab
   const sheetName = `${date} ${time}`;
-  // 1. Create the match sheet/tab and get its sheetId (gid)
   const sheetProps = await createMatchSheet(sheetName);
   const sheetGid = sheetProps.sheetId?.toString() || "";
-  // 2. Add metadata row
+  // Use sheetGid as matchId
+  const matchId = sheetGid;
+
   const meta: MatchMetadata = {
     matchId,
     sheetName,
     sheetGid,
-    date,
-    time,
-    courtNumber,
+    date: String(date),
+    time: String(time),
+    courtNumber: courtNumber || "",
     status: status || "upcoming",
     costCourt: costCourt || "",
     costShirts: costShirts || "",
   };
+
   await addMatchMetadata(meta);
   return Response.json({ match: meta });
 }

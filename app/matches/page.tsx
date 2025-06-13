@@ -1,5 +1,7 @@
-import { format } from "date-fns";
+import { parse, isValid, format } from "date-fns";
 import Link from "next/link";
+
+import type { Match } from "@/lib/matches";
 
 import {
   Table,
@@ -11,12 +13,12 @@ import {
 } from "@/components/ui/table";
 import { getMatchesFromSheets } from "@/lib/matches";
 
-async function getMatches() {
+async function getMatches(): Promise<{ matches: Match[] }> {
   return getMatchesFromSheets();
 }
 
 export default async function MatchListPage() {
-  const { matches } = await getMatches();
+  const { matches }: { matches: Match[] } = await getMatches();
 
   return (
     <div className="w-full p-4">
@@ -25,27 +27,32 @@ export default async function MatchListPage() {
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
-            <TableHead>Match Name</TableHead>
+            <TableHead>Time</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {matches.map((match: any) => (
-            <TableRow key={match.id}>
-              <TableCell>
-                {match.date ? format(new Date(match.date), "dd MMM yyyy") : "-"}
-              </TableCell>
-              <TableCell>{match.name}</TableCell>
-              <TableCell>
-                <Link
-                  href={`/matches/${encodeURIComponent(match.name)}`}
-                  className="text-blue-600 underline hover:text-blue-800"
-                >
-                  View
-                </Link>
-              </TableCell>
-            </TableRow>
-          ))}
+          {matches.map((match: Match, idx: number) => {
+            const parsedDate = parse(match.date, "yyyy-MM-dd", new Date());
+            return (
+              <TableRow key={match.matchId || match.name || idx}>
+                <TableCell>
+                  {parsedDate && isValid(parsedDate)
+                    ? format(parsedDate, "dd MMM yyyy")
+                    : "-"}
+                </TableCell>
+                <TableCell>{match.time || "-"}</TableCell>
+                <TableCell>
+                  <Link
+                    href={`/matches/${encodeURIComponent(match.matchId)}`}
+                    className="text-blue-600 underline hover:text-blue-800"
+                  >
+                    View
+                  </Link>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

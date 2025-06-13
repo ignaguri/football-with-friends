@@ -1,16 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { client } from "@/lib/auth-client";
+import { client, useSession } from "@/lib/auth-client";
 
 export default function Page() {
   const router = useRouter();
-  //   useEffect(() => {
-  //     // Optionally, you can auto-trigger Google sign-in here if desired
-  //   }, []);
+  const { data: session, isPending } = useSession();
 
   async function handleGoogleSignIn() {
     try {
@@ -31,6 +30,12 @@ export default function Page() {
       toast.error(error instanceof Error ? error.message : "An error occurred");
     }
   }
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      handleGoogleSignIn();
+    }
+  }, [isPending, session]);
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center">

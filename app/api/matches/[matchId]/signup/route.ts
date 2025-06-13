@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
-import { addOrUpdatePlayerRow } from "@/lib/google-sheets";
+import { addOrUpdatePlayerRow, getSheetNameById } from "@/lib/google-sheets";
 
 export async function POST(
   req: Request,
@@ -13,7 +13,10 @@ export async function POST(
     return new Response("Unauthorized", { status: 401 });
   }
   const { matchId } = await context.params;
-  const sheetName = decodeURIComponent(matchId);
+  const sheetName = await getSheetNameById(matchId);
+  if (!sheetName) {
+    return new Response("Sheet not found", { status: 404 });
+  }
   const body = await req.json();
   if (body.isGuest) {
     const { ownerName, ownerEmail, guestName, status } = body;
