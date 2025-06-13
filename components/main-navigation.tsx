@@ -40,14 +40,24 @@ export function MainNavigation({ user }: MainNavigationProps) {
               </NavigationMenuLink>
             </NavigationMenuItem>
             {user?.role === "admin" && (
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  asChild
-                  className={navigationMenuTriggerStyle()}
-                >
-                  <Link href="/add-match">Add Match</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+              <>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <Link href="/add-match">Add Match</Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    asChild
+                    className={navigationMenuTriggerStyle()}
+                  >
+                    <Link href="/organizer">Organizer</Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              </>
             )}
             <NavigationMenuItem>
               <NavigationMenuLink
@@ -55,14 +65,6 @@ export function MainNavigation({ user }: MainNavigationProps) {
                 className={navigationMenuTriggerStyle()}
               >
                 <Link href="/rules">Rules & Info</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/organizer">Organizer</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -92,21 +94,23 @@ export function MainNavigation({ user }: MainNavigationProps) {
                 Matches
               </Link>
               {user?.role === "admin" && (
-                <Link
-                  href="/add-match"
-                  className="text-lg font-medium"
-                  tabIndex={0}
-                >
-                  Add Match
-                </Link>
+                <>
+                  <Link
+                    href="/add-match"
+                    className="text-lg font-medium"
+                    tabIndex={0}
+                  >
+                    Add Match
+                  </Link>
+                  <Link
+                    href="/organizer"
+                    className="text-lg font-medium"
+                    tabIndex={0}
+                  >
+                    Organizer
+                  </Link>
+                </>
               )}
-              <Link
-                href="/organizer"
-                className="text-lg font-medium"
-                tabIndex={0}
-              >
-                Organizer
-              </Link>
               <Link href="/rules" className="text-lg font-medium" tabIndex={0}>
                 Rules & Info
               </Link>
