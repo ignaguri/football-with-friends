@@ -11,18 +11,19 @@ A concise checklist of remaining MVP tasks. Check off each item as you complete 
 
 ## Organizer Dashboard
 
-- [ ] Backend: API endpoints for adding/editing matches, updating costs, canceling matches, and fetching financial summaries
-- [ ] Frontend: Dashboard page (organizer-only), forms for match management, financial summary table
-- [ ] Add court number field to match creation/edit forms and data model
-- [ ] Allow admin to manually mark a user as 'cancelled' and free up their spot
-- [ ] Add 'cancelled' state for users in a match
-- [ ] Implement a metadata (master) sheet to store and manage all match-level information, and integrate it with admin actions and match listing
+- [x] Backend: API endpoints for adding/editing matches, updating costs, canceling matches, and fetching financial summaries
+- [x] Frontend: Dashboard page (organizer-only), forms for match management, financial summary table
+- [x] Add court number field to match creation/edit forms and data model
+- [x] Allow admin to manually mark a user as 'cancelled' and free up their spot
+- [x] Add 'cancelled' state for users in a match
+- [x] Implement a metadata (master) sheet to store and manage all match-level information, and integrate it with admin actions and match listing
 
 ## Invite a Friend / Guest Management
 
-- [ ] Allow a user to pay for themselves + a friend (guest)
-- [ ] Add guest to participant list as 'guest' (no registration required)
-- [ ] Adjust available spots accordingly
+- [x] Allow a user to add one or more guests (with optional name) after signing up
+- [x] Add guest to participant list as 'Guest of [User Name]' or '[Guest Name] (Guest of [User Name])' (no registration required)
+- [x] Adjust available spots accordingly
+- [x] Toast notifications for all actions (signup, cancel, add guest, mark as paid, errors)
 
 ## Player Signup/Payment Flow (PayPal Integration)
 

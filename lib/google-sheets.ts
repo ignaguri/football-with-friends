@@ -180,12 +180,12 @@ export async function createMatchSheet(
   });
   const sheetProps = response.data.replies?.[0]?.addSheet?.properties!;
 
-  // Write header row: Name, Email, Paid
+  // Write header row: Name, Email, Status
   await sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
     range: `${matchName}!A1:C1`,
     valueInputOption: "RAW",
-    requestBody: { values: [["Name", "Email", "Paid"]] },
+    requestBody: { values: [["Name", "Email", "Status"]] },
   });
 
   return sheetProps;
@@ -212,33 +212,59 @@ export async function getMatchSheetData(
  */
 export async function addOrUpdatePlayerRow(
   sheetName: string,
-  player: { name: string; email: string; paid: boolean },
+  player: {
+    name: string;
+    email: string;
+    status: string;
+    isGuest?: boolean;
+    ownerEmail?: string;
+    guestName?: string;
+    ownerName?: string;
+  },
 ) {
   const sheets = getSheetsWriteClient();
   const data = await getMatchSheetData(sheetName);
-  // Assume header row: [Name, Email, Paid]
-  const header = data[0] || [];
-  const emailIdx = header.indexOf("Email");
-  let found = false;
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][emailIdx] === player.email) {
-      // Update row
-      const range = `${sheetName}!A${i + 1}:C${i + 1}`;
-      const row = [player.name, player.email, player.paid ? "PAID" : "PENDING"];
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: SPREADSHEET_ID,
-        range,
-        valueInputOption: "RAW",
-        requestBody: { values: [row] },
-      });
-      found = true;
-      break;
-    }
+  // Ensure header has new columns
+  let header = data[0] || [];
+  let needsUpdate = false;
+  if (!header.includes("IsGuest")) {
+    header.push("IsGuest");
+    needsUpdate = true;
   }
-  if (!found) {
-    // Append new row
-    const range = `${sheetName}!A1:C1`;
-    const row = [player.name, player.email, player.paid ? "PAID" : "PENDING"];
+  if (!header.includes("OwnerEmail")) {
+    header.push("OwnerEmail");
+    needsUpdate = true;
+  }
+  if (!header.includes("GuestName")) {
+    header.push("GuestName");
+    needsUpdate = true;
+  }
+  if (needsUpdate) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SPREADSHEET_ID,
+      range: `${sheetName}!A1`,
+      valueInputOption: "RAW",
+      requestBody: { values: [header] },
+    });
+  }
+  // Map header indices
+  const nameIdx = header.indexOf("Name");
+  const emailIdx = header.indexOf("Email");
+  const statusIdx = header.indexOf("Status");
+  const isGuestIdx = header.indexOf("IsGuest");
+  const ownerEmailIdx = header.indexOf("OwnerEmail");
+  const guestNameIdx = header.indexOf("GuestName");
+  // Compose row
+  let row: string[] = Array(header.length).fill("");
+  row[nameIdx] = player.name;
+  row[emailIdx] = player.email;
+  row[statusIdx] = player.status;
+  row[isGuestIdx] = player.isGuest ? "1" : "0";
+  row[ownerEmailIdx] = player.ownerEmail || "";
+  row[guestNameIdx] = player.guestName || "";
+  // For guests, always append; for users, update or append
+  if (player.isGuest) {
+    const range = `${sheetName}!A1`;
     await sheets.spreadsheets.values.append({
       spreadsheetId: SPREADSHEET_ID,
       range,
@@ -246,6 +272,33 @@ export async function addOrUpdatePlayerRow(
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: [row] },
     });
+  } else {
+    let found = false;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][emailIdx] === player.email) {
+        // Update row
+        const lastColLetter = columnToLetter(header.length);
+        const range = `${sheetName}!A${i + 1}:${lastColLetter}${i + 1}`;
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range,
+          valueInputOption: "RAW",
+          requestBody: { values: [row] },
+        });
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      const range = `${sheetName}!A1`;
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range,
+        valueInputOption: "RAW",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: [row] },
+      });
+    }
   }
 }
 

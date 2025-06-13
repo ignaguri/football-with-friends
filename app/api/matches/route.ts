@@ -1,3 +1,4 @@
+import { parse, isSameDay } from "date-fns";
 import { headers } from "next/headers";
 
 import type { MatchMetadata } from "@/lib/google-sheets";
@@ -26,6 +27,19 @@ export async function POST(req: Request) {
   const { date, time, courtNumber, costCourt, costShirts, status } = body;
   if (!date || !time) {
     return new Response("Missing required fields", { status: 400 });
+  }
+  // Prevent duplicate matches on the same day
+  const allMatches = await getAllMatchesMetadata();
+  const newDate = parse(date, "dd-MM-yyyy", new Date());
+  const hasSameDay = allMatches.some((m) => {
+    if (!m.date) return false;
+    const matchDate = parse(m.date, "dd-MM-yyyy", new Date());
+    return isSameDay(newDate, matchDate);
+  });
+  if (hasSameDay) {
+    return new Response("A match already exists for this date.", {
+      status: 409,
+    });
   }
   // Generate a unique matchId and sheetName
   const matchId = Date.now().toString();

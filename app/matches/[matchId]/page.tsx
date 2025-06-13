@@ -1,5 +1,6 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,6 +9,9 @@ import {
 } from "@tanstack/react-table";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 
@@ -22,6 +26,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -31,6 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
+import { PLAYER_STATUSES } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 
 interface Player {
@@ -86,6 +92,12 @@ function NotifyOrganizerDialog({
   );
 }
 
+// Zod schema for guest form (move outside component)
+const guestSchema = z.object({
+  guestName: z.string().max(50, "Name too long").optional(),
+});
+type GuestFormValues = z.infer<typeof guestSchema>;
+
 export default function MatchPage() {
   const { matchId: rawMatchId } = useParams<{ matchId: string }>();
   const { data: session, isPending: isSessionPending } = useSession();
@@ -97,6 +109,10 @@ export default function MatchPage() {
   const [isJoining, setIsJoining] = useState(false);
   const [joined, setJoined] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
+  const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
+  const [isAddingGuest, setIsAddingGuest] = useState(false);
 
   // Decode matchId for display and WhatsApp
   const matchId = decodeURIComponent(rawMatchId || "");
@@ -169,11 +185,12 @@ export default function MatchPage() {
         body: JSON.stringify({
           playerName: user.name,
           playerEmail: user.email,
-          paid: false,
+          status: PLAYER_STATUSES[1],
         }),
       });
       if (!res.ok) throw new Error(await res.text());
       setJoined(true);
+      toast.success("Signed up for the match!");
       // Refetch players
       const matchRes = await fetch(`/api/matches/${matchId}`);
       if (matchRes.ok) {
@@ -182,6 +199,7 @@ export default function MatchPage() {
       }
     } catch (e: any) {
       setError(e.message || "Could not join match");
+      toast.error(e.message || "Could not join match");
     } finally {
       setIsJoining(false);
     }
@@ -198,10 +216,11 @@ export default function MatchPage() {
         body: JSON.stringify({
           playerName,
           playerEmail,
-          paid: true,
+          status: PLAYER_STATUSES[0],
         }),
       });
       if (!res.ok) throw new Error(await res.text());
+      toast.success("Marked as paid");
       // Refetch players
       const matchRes = await fetch(`/api/matches/${matchId}`);
       if (matchRes.ok) {
@@ -210,8 +229,94 @@ export default function MatchPage() {
       }
     } catch (e: any) {
       setError(e.message || "Could not update payment");
+      toast.error(e.message || "Could not update payment");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  // Find the current user's player row
+  const currentPlayer = players.find((p) => p.Email === user?.email);
+  const isUserCancelled = currentPlayer?.Status === PLAYER_STATUSES[2];
+
+  async function handleCancel() {
+    if (!user) return;
+    setIsCancelling(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/matches/${matchId}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerName: user.name,
+          playerEmail: user.email,
+          status: PLAYER_STATUSES[2],
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      setCancelled(true);
+      toast.success("Cancelled your spot");
+      // Refetch players
+      const matchRes = await fetch(`/api/matches/${matchId}`);
+      if (matchRes.ok) {
+        const data = await matchRes.json();
+        setPlayers(data.players);
+      }
+    } catch (e: any) {
+      setError(e.message || "Could not cancel spot");
+      toast.error(e.message || "Could not cancel spot");
+    } finally {
+      setIsCancelling(false);
+    }
+  }
+
+  // Count available spots (max 10)
+  const paidCount = players.filter(
+    (p) => p.Status === PLAYER_STATUSES[0],
+  ).length;
+  const totalSpots = 10;
+  const spotsLeft = totalSpots - players.length;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<GuestFormValues>({
+    resolver: zodResolver(guestSchema),
+  });
+
+  async function handleAddGuestRHF(data: GuestFormValues) {
+    if (!user) return;
+    setIsAddingGuest(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/matches/${matchId}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isGuest: true,
+          ownerName: user.name,
+          ownerEmail: user.email,
+          guestName: data.guestName?.trim() || undefined,
+          status: PLAYER_STATUSES[1],
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      reset();
+      setIsGuestDialogOpen(false);
+      toast.success("Guest added!");
+      // Refetch players
+      const matchRes = await fetch(`/api/matches/${matchId}`);
+      if (matchRes.ok) {
+        const data = await matchRes.json();
+        setPlayers(data.players);
+      }
+    } catch (e: any) {
+      setError(e.message || "Could not add guest");
+      toast.error(e.message || "Could not add guest");
+    } finally {
+      setIsAddingGuest(false);
     }
   }
 
@@ -225,54 +330,69 @@ export default function MatchPage() {
         cell: (info: { row: { index: number } }) => info.row.index + 1,
         size: 32,
       },
-      // Then the rest of the columns (except Email)
+      // Then the rest of the columns (except Email, IsGuest, OwnerEmail, GuestName)
       ...header
-        .filter((col) => col !== "Email")
+        .filter(
+          (col) =>
+            col !== "Email" &&
+            col !== "IsGuest" &&
+            col !== "OwnerEmail" &&
+            col !== "GuestName",
+        )
         .map((col) => ({
           accessorKey: col,
           header: col,
-          enableSorting: col !== "Paid",
+          enableSorting: col !== "Status",
           cell: (info: { row: { original: Player } }) => {
             const player = info.row.original;
-            if (col === "Paid" && player[col] !== "PAID") {
-              if (user?.role === "admin") {
-                return (
-                  <Button
-                    size="sm"
-                    className="bg-green-700/70 text-white hover:bg-green-700"
-                    onClick={() =>
-                      handleMarkAsPaid(player["Email"], player["Name"])
-                    }
-                    disabled={isLoading}
-                  >
-                    Mark as Paid
-                  </Button>
-                );
-              } else if (player["Email"] === user?.email) {
-                return (
-                  <div className="flex items-center gap-2">
-                    <a
-                      href="http://paypal.me/federicolucero510"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block h-full rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
-                    >
-                      Pay
-                    </a>
-                    {user && (
-                      <NotifyOrganizerDialog
-                        displayDate={displayDate}
-                        userName={user.name}
-                      />
-                    )}
-                  </div>
-                );
+            if (col === "Status") {
+              // Map status to badge variant
+              function getBadgeVariant(status: string) {
+                if (status === PLAYER_STATUSES[0]) return "success";
+                if (status === PLAYER_STATUSES[1]) return "default";
+                if (status === PLAYER_STATUSES[2]) return "destructive";
+                return "secondary";
               }
-            }
-            if (player[col] === "PAID") {
+              // Show action buttons for PENDING if admin or current user
+              if (player[col] === PLAYER_STATUSES[1]) {
+                if (user?.role === "admin") {
+                  return (
+                    <Button
+                      size="sm"
+                      className="bg-green-700/70 text-white hover:bg-green-700"
+                      onClick={() =>
+                        handleMarkAsPaid(player["Email"], player["Name"])
+                      }
+                      disabled={isLoading}
+                    >
+                      Mark as Paid
+                    </Button>
+                  );
+                } else if (player["Email"] === user?.email) {
+                  return (
+                    <div className="flex items-center gap-2">
+                      <a
+                        href="http://paypal.me/federicolucero510"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block h-full rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700"
+                      >
+                        Pay
+                      </a>
+                      {user && (
+                        <NotifyOrganizerDialog
+                          displayDate={displayDate}
+                          userName={user.name}
+                        />
+                      )}
+                    </div>
+                  );
+                }
+              }
+              // Otherwise, show badge for all statuses
               return (
-                <Badge className="rounded-xl" variant="success">
-                  PAID
+                <Badge variant={getBadgeVariant(player[col])}>
+                  {player[col]}
                 </Badge>
               );
             }
@@ -306,20 +426,13 @@ export default function MatchPage() {
       <h2 className="mb-4 break-words text-2xl font-bold">
         {capitalize(displayMatch)}
       </h2>
-      {/* Counters for sign-ups and paid players */}
-      <div className="mb-4 flex flex-row gap-2">
-        <div className="flex-1 rounded bg-blue-100 px-2 py-1 text-center text-blue-800">
-          <span className="block text-[10px] font-medium uppercase tracking-wide text-blue-600">
-            Signed Up
-          </span>
-          <span className="text-lg font-bold">{players.length}</span>
-        </div>
-        <div className="flex-1 rounded bg-green-100 px-2 py-1 text-center text-green-800">
+      <div className="mb-4 flex justify-center">
+        <div className="rounded bg-green-100 px-4 py-2 text-center text-green-800">
           <span className="block text-[10px] font-medium uppercase tracking-wide text-green-600">
             Paid
           </span>
           <span className="text-lg font-bold">
-            {players.filter((p) => p.Paid === "PAID").length}
+            {paidCount}/{totalSpots}
           </span>
         </div>
       </div>
@@ -403,9 +516,78 @@ export default function MatchPage() {
           </Button>
         </div>
       )}
-      {user && joined && (
-        <div className="mt-6 text-center font-medium text-green-600">
-          You have joined this match.
+      {user && joined && !isUserCancelled && !cancelled && (
+        <>
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={handleCancel}
+              disabled={isCancelling}
+              variant="destructive"
+            >
+              {isCancelling ? "Cancelling..." : "Cancel my spot"}
+            </Button>
+          </div>
+          <div className="mt-4 flex justify-center">
+            <Button
+              onClick={() => setIsGuestDialogOpen(true)}
+              disabled={spotsLeft < 1 || isAddingGuest}
+              variant="secondary"
+            >
+              Sign up a guest
+            </Button>
+          </div>
+          <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Sign up a guest</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit(handleAddGuestRHF)}>
+                <div className="mb-2">
+                  <label
+                    htmlFor="guest-name"
+                    className="mb-1 block text-sm font-medium"
+                  >
+                    Guest's name (optional)
+                  </label>
+                  <Input
+                    id="guest-name"
+                    {...register("guestName")}
+                    placeholder="Guest's name (optional)"
+                    disabled={isAddingGuest || isSubmitting}
+                  />
+                  {errors.guestName && (
+                    <p className="text-xs text-red-600">
+                      {errors.guestName.message}
+                    </p>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    disabled={isAddingGuest || isSubmitting || spotsLeft < 1}
+                  >
+                    {isAddingGuest || isSubmitting ? "Adding..." : "Add guest"}
+                  </Button>
+                  <DialogClose asChild>
+                    <Button
+                      variant="outline"
+                      type="button"
+                      onClick={() => {
+                        reset();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+      {user && (isUserCancelled || cancelled) && (
+        <div className="mt-6 text-center font-medium text-red-600">
+          You have cancelled your spot.
         </div>
       )}
     </div>

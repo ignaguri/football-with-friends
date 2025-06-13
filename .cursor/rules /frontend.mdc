@@ -100,9 +100,6 @@ export async function createPost(params: CreatePostParams) {
 ### Response types
 Creating response types when using the rpc client is not required. The hono-rpc we use lets us infer the response types safely.
 
-
-
-
 ### Naming Conventions
 - Use lowercase with dashes for directories (e.g., `components/auth-wizard`).
 - Use kebab-case (`example-card.tsx`) for *all* components.

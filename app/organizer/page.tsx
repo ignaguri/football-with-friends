@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useSession } from "@/lib/auth-client";
+import { PLAYER_STATUSES } from "@/lib/types";
 
 type Match = {
   matchId: string;
@@ -62,6 +63,14 @@ export default function OrganizerDashboard() {
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [editForm, setEditForm] = useState<Match | null>(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [playerDrawerMatchId, setPlayerDrawerMatchId] = useState<string | null>(
+    null,
+  );
+  const [playerDrawerOpen, setPlayerDrawerOpen] = useState(false);
+  const [playerList, setPlayerList] = useState<any[]>([]);
+  const [playerListLoading, setPlayerListLoading] = useState(false);
+  const [playerListError, setPlayerListError] = useState<string | null>(null);
+  const [cancellingPlayer, setCancellingPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -117,6 +126,50 @@ export default function OrganizerDashboard() {
       toast.error(e instanceof Error ? e.message : String(e));
     } finally {
       setEditLoading(false);
+    }
+  }
+
+  async function openPlayerDrawer(matchId: string) {
+    setPlayerDrawerMatchId(matchId);
+    setPlayerDrawerOpen(true);
+    setPlayerListLoading(true);
+    setPlayerListError(null);
+    try {
+      const res = await fetch(`/api/matches/${matchId}`);
+      if (!res.ok) throw new Error("Failed to fetch players");
+      const data = await res.json();
+      setPlayerList(data.players);
+    } catch (e: any) {
+      setPlayerListError(e.message || "Error loading players");
+    } finally {
+      setPlayerListLoading(false);
+    }
+  }
+
+  async function handleCancelPlayer(matchId: string, player: any) {
+    setCancellingPlayer(player.Email);
+    try {
+      const res = await fetch(`/api/matches/${matchId}/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          playerName: player.Name,
+          playerEmail: player.Email,
+          status: PLAYER_STATUSES[2],
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      toast.success(`Cancelled ${player.Name}`);
+      // Refetch player list
+      const refRes = await fetch(`/api/matches/${matchId}`);
+      if (refRes.ok) {
+        const data = await refRes.json();
+        setPlayerList(data.players);
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Could not cancel player");
+    } finally {
+      setCancellingPlayer(null);
     }
   }
 
@@ -307,6 +360,14 @@ export default function OrganizerDashboard() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openPlayerDrawer(m.matchId)}
+                      disabled={deletingId === m.matchId}
+                    >
+                      View Players
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -314,6 +375,64 @@ export default function OrganizerDashboard() {
           </TableBody>
         </Table>
       </div>
+      <Drawer open={playerDrawerOpen} onOpenChange={setPlayerDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Players</DrawerTitle>
+            <DrawerDescription>
+              {playerDrawerMatchId &&
+                `Players for match ${matches.find((m) => m.matchId === playerDrawerMatchId)?.date || ""}`}
+            </DrawerDescription>
+          </DrawerHeader>
+          {playerListLoading ? (
+            <div className="p-4">Loading...</div>
+          ) : playerListError ? (
+            <div className="p-4 text-red-600">{playerListError}</div>
+          ) : playerList.length === 0 ? (
+            <div className="p-4 text-gray-500">No players found.</div>
+          ) : (
+            <div className="p-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {playerList.map((player) => (
+                    <TableRow key={player.Email}>
+                      <TableCell>{player.Name}</TableCell>
+                      <TableCell>{player.Email}</TableCell>
+                      <TableCell>{player.Status}</TableCell>
+                      <TableCell>
+                        {player.Status !== PLAYER_STATUSES[2] ? (
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            disabled={cancellingPlayer === player.Email}
+                            onClick={() =>
+                              handleCancelPlayer(playerDrawerMatchId!, player)
+                            }
+                          >
+                            {cancellingPlayer === player.Email
+                              ? "Cancelling..."
+                              : "Cancel"}
+                          </Button>
+                        ) : (
+                          <span className="text-red-500">Cancelled</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DrawerContent>
+      </Drawer>
     </main>
   );
 }
