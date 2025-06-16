@@ -1,0 +1,12 @@
+---
+description: 
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+## Next.js App Router Data Fetching and Suspense
+
+- In server components, always prefer direct data helpers (e.g., from `lib/`) over fetching from API routes (e.g., `fetch('/api/...')`).
+- Use `Suspense` to load multiple data sources in parallel and provide a fallback skeleton for each section to improve perceived performance and UX.
+- Avoid using `fetch('/api/...')` in server components; this can cause invalid URL errors and is not idiomatic in the App Router.
+- Use server helpers for all data access, and only use API routes for client-side or external access.
+- Structure UI to show loading states for each async section, not just the whole page.

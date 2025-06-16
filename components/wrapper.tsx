@@ -12,7 +12,12 @@ import { ThemeToggle } from "./theme-toggle";
 import { MainNavigation } from "@/components/main-navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import UserCard from "@/components/user-card";
 import { useSession, signOut } from "@/lib/auth-client";
 
@@ -46,22 +51,24 @@ export function Wrapper(props: { children: React.ReactNode }) {
       <div className="absolute z-50 flex w-full items-center justify-between border-b border-border bg-white px-4 py-2 dark:bg-black md:px-1 lg:w-8/12">
         {/* Header: Logo+Name, NavMenu/Burger, Theme+Account */}
         <div className="flex w-full items-center justify-between gap-2">
-          {/* Logo + Name */}
+          {/* Left: Logo */}
           <Link href="/" className="flex items-center gap-2">
             <Logo />
-            <p className="text-lg font-bold tracking-tight text-black dark:text-white">
+            <p className="whitespace-nowrap text-base font-bold tracking-tight text-black dark:text-white sm:text-lg">
               Football With Friends
             </p>
           </Link>
 
-          {/* Navigation: Desktop or Mobile */}
-          <div className="flex flex-1 justify-center">
+          {/* Center: Desktop Nav */}
+          <div className="hidden flex-1 justify-center md:flex">
             <MainNavigation user={user} />
           </div>
 
-          {/* Theme Toggle + Account */}
+          {/* Right: Mobile Burger + Account */}
           <div className="z-50 flex items-center gap-2">
-            <ThemeToggle />
+            <div className="md:hidden">
+              <MainNavigation user={user} />
+            </div>
             {isPending ? null : user ? (
               <div className="relative">
                 <button
@@ -95,9 +102,12 @@ export function Wrapper(props: { children: React.ReactNode }) {
                   {menuOpen && (
                     <div
                       ref={dropdownRef}
-                      className="absolute right-0 mt-2 w-40 rounded-md border bg-white shadow-lg dark:bg-black"
+                      className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-lg dark:bg-black"
                     >
-                      <div className="flex flex-col p-2">
+                      <div className="flex flex-col gap-2 p-2">
+                        <div className="flex w-full justify-center border-b border-border pb-2">
+                          <ThemeToggle />
+                        </div>
                         <DialogTrigger asChild>
                           <span
                             className="cursor-pointer truncate px-2 py-1 text-xs text-muted-foreground hover:underline"
@@ -127,6 +137,12 @@ export function Wrapper(props: { children: React.ReactNode }) {
                     className="max-w-xs border-none bg-transparent p-0 shadow-none"
                     aria-describedby="user-card"
                   >
+                    <DialogTitle>
+                      <span className="sr-only">User Profile</span>
+                    </DialogTitle>
+                    <p id="user-card" className="sr-only">
+                      User account details and session information.
+                    </p>
                     <UserCard session={session} activeSessions={[]} />
                   </DialogContent>
                 </Dialog>

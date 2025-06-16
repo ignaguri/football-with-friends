@@ -294,6 +294,24 @@ export default function MatchPage() {
     }
   }
 
+  // Format match title (date + time) before columns and NotifyOrganizerDialog usage
+  let matchTitle = matchId;
+  if (matchMeta?.date && matchMeta?.time) {
+    try {
+      const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
+      const dateObj = parse(dateTimeString, "yyyy-MM-dd HH:mm", new Date());
+      matchTitle = new Intl.DateTimeFormat(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(dateObj);
+    } catch {}
+  }
+
   // Define columns for TanStack Table
   const columns = useMemo<ColumnDef<Player, unknown>[]>(
     () => [
@@ -355,7 +373,7 @@ export default function MatchPage() {
                       </a>
                       {user && (
                         <NotifyOrganizerDialog
-                          displayDate={matchId}
+                          displayDate={matchTitle}
                           userName={user.name}
                         />
                       )}
@@ -374,7 +392,7 @@ export default function MatchPage() {
           },
         })),
     ],
-    [header, user, isLoading, matchId],
+    [header, user, isLoading, matchId, matchTitle],
   );
 
   const table = useReactTable({
@@ -385,24 +403,6 @@ export default function MatchPage() {
     state: { sorting },
     onSortingChange: setSorting,
   });
-
-  // Format match title (date + time)
-  let matchTitle = matchId;
-  if (matchMeta?.date && matchMeta?.time) {
-    try {
-      const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
-      const dateObj = parse(dateTimeString, "yyyy-MM-dd HH:mm", new Date());
-      matchTitle = new Intl.DateTimeFormat(undefined, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(dateObj);
-    } catch {}
-  }
 
   if (isLoading || isSessionPending) {
     return (

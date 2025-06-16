@@ -10,7 +10,12 @@ import {
   NavigationMenuLink,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 interface MainNavigationProps {
   user?: Pick<UserWithRole, "role">;
@@ -82,6 +87,9 @@ export function MainNavigation({ user }: MainNavigationProps) {
             </button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64 p-0">
+            <SheetTitle>
+              <span className="sr-only">Main Menu</span>
+            </SheetTitle>
             <nav className="flex flex-col gap-2 p-6">
               <Link href="/" className="text-lg font-medium" tabIndex={0}>
                 Home

@@ -44,10 +44,14 @@ type EditMatchFormProps = {
 
 // Helper functions to normalize date and time formats
 function normalizeDate(date: string) {
-  // Handles 'dd-MM-yyyy' or 'yyyy-MM-dd'
-  if (/^\d{2}-\d{2}-\d{4}$/.test(date)) {
-    const [day, month, year] = date.split("-");
-    return `${year}-${month}-${day}`;
+  // Always return YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+  // If not in correct format, try to parse and reformat
+  const d = new Date(date);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().slice(0, 10);
   }
   return date;
 }

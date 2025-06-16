@@ -52,7 +52,7 @@ export default function Home() {
           {session ? (
             <div className="flex flex-col items-center gap-4">
               <Button asChild className="w-48">
-                <Link href="/matches">See Matches</Link>
+                <Link href="/matches">Matches</Link>
               </Button>
               <Button asChild className="w-48" variant="secondary">
                 <Link href="/rules">Rules & Info</Link>
@@ -60,7 +60,7 @@ export default function Home() {
               {isAdmin && (
                 <>
                   <Button asChild className="w-48">
-                    <Link href="/add-match">+ Add Match</Link>
+                    <Link href="/add-match">New Match</Link>
                   </Button>
                   <Button asChild className="w-48" variant="secondary">
                     <Link href="/organizer">Organizer Dashboard</Link>

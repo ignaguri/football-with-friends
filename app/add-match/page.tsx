@@ -67,11 +67,8 @@ function AddMatchForm() {
   async function onSubmit({ date, time, courtNumber }: AddMatchFormValues) {
     setError(null);
     try {
-      // Format date as DD-MM-YYYY
-      const day = date.getDate().toString().padStart(2, "0");
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
-      const year = date.getFullYear();
-      const formattedDate = `${day}-${month}-${year}`;
+      // Format date as YYYY-MM-DD
+      const formattedDate = date.toISOString().slice(0, 10); // YYYY-MM-DD
       const payload: Record<string, string> = {
         date: formattedDate,
         time,

@@ -1,5 +1,6 @@
 "use client";
 
+import { parse, format as formatDate } from "date-fns";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -292,7 +293,12 @@ export default function OrganizerDashboard() {
                 matches.map((m) => (
                   <TableRow key={m.matchId}>
                     <TableCell className="text-gray-900 dark:text-gray-100">
-                      {m.date}
+                      {m.date
+                        ? formatDate(
+                            parse(m.date, "yyyy-MM-dd", new Date()),
+                            "dd MMM yyyy",
+                          )
+                        : "-"}
                     </TableCell>
                     <TableCell className="text-gray-900 dark:text-gray-100">
                       {m.time}

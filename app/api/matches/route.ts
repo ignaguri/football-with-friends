@@ -12,13 +12,30 @@ import {
 } from "@/lib/google-sheets";
 
 // GET /api/matches: Returns all matches from the master sheet
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const type = searchParams.get("type");
   const matches = await getAllMatchesMetadata();
-  return Response.json({ matches });
+  const today = new Date();
+  let filtered = matches;
+  if (type === "past") {
+    filtered = matches.filter((m) => {
+      if (!m.date) return false;
+      const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
+      return matchDate < new Date(today.setHours(0, 0, 0, 0));
+    });
+  } else if (type === "upcoming") {
+    filtered = matches.filter((m) => {
+      if (!m.date) return false;
+      const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
+      return matchDate >= new Date(today.setHours(0, 0, 0, 0));
+    });
+  }
+  return Response.json({ matches: filtered });
 }
 
 const matchSchema = z.object({
-  date: z.string().regex(/^\d{2}-\d{2}-\d{4}$/), // DD-MM-YYYY
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
   time: z.string().regex(/^\d{2}:\d{2}$/), // HH:mm
   courtNumber: z.string().optional(),
   costCourt: z.string().optional(),
@@ -48,10 +65,10 @@ export async function POST(req: Request) {
   }
   // Prevent duplicate matches on the same day
   const allMatches = await getAllMatchesMetadata();
-  const newDate = parse(date, "dd-MM-yyyy", new Date());
+  const newDate = parse(date, "yyyy-MM-dd", new Date());
   const hasSameDay = allMatches.some((m) => {
     if (!m.date) return false;
-    const matchDate = parse(m.date, "dd-MM-yyyy", new Date());
+    const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
     return isSameDay(newDate, matchDate);
   });
   if (hasSameDay) {
@@ -70,7 +87,7 @@ export async function POST(req: Request) {
     matchId,
     sheetName,
     sheetGid,
-    date: String(date),
+    date: String(date), // YYYY-MM-DD
     time: String(time),
     courtNumber: courtNumber || "",
     status: status || "upcoming",
