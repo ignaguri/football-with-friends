@@ -15,6 +15,8 @@ interface Match {
   costShirts?: string;
 }
 
+export const dynamic = "force-dynamic";
+
 function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
   return (
     <div className="w-full p-4">

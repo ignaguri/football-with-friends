@@ -63,7 +63,6 @@ export default function OrganizerDashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
   const [editForm, setEditForm] = useState<Match | null>(null);
-  const [editLoading, setEditLoading] = useState(false);
   const [playerDrawerMatchId, setPlayerDrawerMatchId] = useState<string | null>(
     null,
   );
@@ -113,7 +112,6 @@ export default function OrganizerDashboard() {
   }
 
   async function handleEditSave(updated: Match) {
-    setEditLoading(true);
     setError(null);
     try {
       const { matchId, ...updates } = updated;
@@ -132,8 +130,6 @@ export default function OrganizerDashboard() {
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       toast.error(e instanceof Error ? e.message : String(e));
-    } finally {
-      setEditLoading(false);
     }
   }
 
