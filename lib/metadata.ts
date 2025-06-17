@@ -6,17 +6,17 @@ export function createMetadata(override: Metadata): Metadata {
     openGraph: {
       title: override.title ?? undefined,
       description: override.description ?? undefined,
-      url: "https://demo.better-auth.com",
-      images: "https://demo.better-auth.com/og.png",
-      siteName: "Better Auth",
+      url: "https://football-with-friends.vercel.app",
+      images: "https://football-with-friends.vercel.app/og.png",
+      siteName: "Football With Friends",
       ...override.openGraph,
     },
     twitter: {
       card: "summary_large_image",
-      creator: "@beakcru",
+      creator: "@ignaguri",
       title: override.title ?? undefined,
       description: override.description ?? undefined,
-      images: "https://demo.better-auth.com/og.png",
+      images: "https://football-with-friends.vercel.app/og.png",
       ...override.twitter,
     },
   };

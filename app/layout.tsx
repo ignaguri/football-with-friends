@@ -31,7 +31,19 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon/favicon.ico" sizes="any" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <meta
+          name="apple-mobile-web-app-title"
+          content="Futbol con los pibes"
+        />
+        <link
+          rel="apple-touch-icon"
+          href="/apple-icon.png"
+          sizes="180x180"
+          type="image/png"
+        />
+        <link rel="icon" href="/icon1.png" sizes="96x96" type="image/png" />
+        <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${montserrat.variable} ${firaMono.variable} font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
