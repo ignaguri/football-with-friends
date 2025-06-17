@@ -9,6 +9,10 @@ const libsql = new LibsqlDialect({
 
 export const auth = betterAuth({
   appName: "Fulbo con los pibes",
+  trustedOrigins: [
+    "https://football-with-friends.vercel.app",
+    "https://football-with-friends-*.vercel.app",
+  ],
   database: {
     dialect: libsql,
     type: "sqlite",

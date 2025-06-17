@@ -80,15 +80,15 @@ export function Wrapper(props: { children: React.ReactNode }) {
               />
             </div>
             {isPending ? null : user ? (
-              <div className="relative">
+              <div>
                 <button
                   ref={avatarBtnRef}
                   className="focus:outline-none"
                   onClick={() => setIsUserMenuOpen((v) => !v)}
                   aria-label="User menu"
                 >
-                  <div className="relative h-8 w-8">
-                    <Avatar className="h-8 w-8">
+                  <div className="relative size-8">
+                    <Avatar className="size-8">
                       <AvatarImage
                         src={user.image || undefined}
                         alt={user.name}
@@ -99,7 +99,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
                     </Avatar>
                     {user.role === "admin" && (
                       <span
-                        className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-50 text-[8px] font-bold text-white shadow-md ring-2 ring-white dark:ring-black"
+                        className="absolute -bottom-1 -right-1 flex size-4 items-center justify-center rounded-full bg-amber-50 text-[8px] font-bold text-white shadow-md ring-2 ring-white dark:ring-black"
                         title="Admin"
                         aria-label="Admin badge"
                       >

@@ -91,7 +91,7 @@ export function MainNavigation({
               aria-label="Open menu"
               className="rounded p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <Menu className="h-6 w-6" />
+              <Menu className="size-6" />
             </button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64 p-0">
