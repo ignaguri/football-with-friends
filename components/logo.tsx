@@ -1,16 +1,15 @@
+"use client";
+
+import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
-export const Logo = () => {
+export function Logo() {
+  const { resolvedTheme } = useTheme();
   const [logoSrc, setLogoSrc] = useState("/logo.png");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isLight = window.matchMedia(
-        "(prefers-color-scheme: light)",
-      ).matches;
-      setLogoSrc(isLight ? "/logo_light.png" : "/logo.png");
-    }
-  }, []);
+    setLogoSrc(resolvedTheme === "light" ? "/logo_light.png" : "/logo.png");
+  }, [resolvedTheme]);
 
   return (
     <img
@@ -23,4 +22,4 @@ export const Logo = () => {
       loading="lazy"
     />
   );
-};
+}

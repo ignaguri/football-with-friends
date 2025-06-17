@@ -26,11 +26,12 @@ export function Wrapper(props: { children: React.ReactNode }) {
   const user = session?.user as UserWithRole;
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const avatarBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!isUserMenuOpen) return;
     function handleClick(event: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -38,12 +39,12 @@ export function Wrapper(props: { children: React.ReactNode }) {
         avatarBtnRef.current &&
         !avatarBtnRef.current.contains(event.target as Node)
       ) {
-        setMenuOpen(false);
+        setIsUserMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [menuOpen]);
+  }, [isUserMenuOpen]);
 
   function handleMobileNavigate() {
     setMenuOpen(false);
@@ -83,7 +84,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
                 <button
                   ref={avatarBtnRef}
                   className="focus:outline-none"
-                  onClick={() => setMenuOpen((v) => !v)}
+                  onClick={() => setIsUserMenuOpen((v) => !v)}
                   aria-label="User menu"
                 >
                   <div className="relative h-8 w-8">
@@ -108,7 +109,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
                   </div>
                 </button>
                 <Dialog>
-                  {menuOpen && (
+                  {isUserMenuOpen && (
                     <div
                       ref={dropdownRef}
                       className="absolute right-0 mt-2 w-44 rounded-md border bg-white shadow-lg dark:bg-black"
@@ -129,6 +130,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
                           variant="ghost"
                           className="justify-start px-2 py-1 text-left text-sm"
                           onClick={async () => {
+                            setIsUserMenuOpen(false);
                             setMenuOpen(false);
                             await signOut({
                               fetchOptions: {
