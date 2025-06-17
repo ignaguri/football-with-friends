@@ -19,9 +19,17 @@ import {
 
 interface MainNavigationProps {
   user?: Pick<UserWithRole, "role">;
+  onMobileNavigate?: () => void;
+  isMobileMenuOpen?: boolean;
+  setMobileMenuOpen?: (open: boolean) => void;
 }
 
-export function MainNavigation({ user }: MainNavigationProps) {
+export function MainNavigation({
+  user,
+  onMobileNavigate,
+  isMobileMenuOpen,
+  setMobileMenuOpen,
+}: MainNavigationProps) {
   return (
     <>
       {/* Desktop Navigation */}
@@ -77,7 +85,7 @@ export function MainNavigation({ user }: MainNavigationProps) {
       </div>
       {/* Mobile Burger Menu */}
       <div className="md:hidden">
-        <Sheet>
+        <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
             <button
               aria-label="Open menu"
@@ -91,13 +99,19 @@ export function MainNavigation({ user }: MainNavigationProps) {
               <span className="sr-only">Main Menu</span>
             </SheetTitle>
             <nav className="flex flex-col gap-2 p-6">
-              <Link href="/" className="text-lg font-medium" tabIndex={0}>
+              <Link
+                href="/"
+                className="text-lg font-medium"
+                tabIndex={0}
+                onClick={onMobileNavigate}
+              >
                 Home
               </Link>
               <Link
                 href="/matches"
                 className="text-lg font-medium"
                 tabIndex={0}
+                onClick={onMobileNavigate}
               >
                 Matches
               </Link>
@@ -107,6 +121,7 @@ export function MainNavigation({ user }: MainNavigationProps) {
                     href="/add-match"
                     className="text-lg font-medium"
                     tabIndex={0}
+                    onClick={onMobileNavigate}
                   >
                     Add Match
                   </Link>
@@ -114,12 +129,18 @@ export function MainNavigation({ user }: MainNavigationProps) {
                     href="/organizer"
                     className="text-lg font-medium"
                     tabIndex={0}
+                    onClick={onMobileNavigate}
                   >
                     Organizer
                   </Link>
                 </>
               )}
-              <Link href="/rules" className="text-lg font-medium" tabIndex={0}>
+              <Link
+                href="/rules"
+                className="text-lg font-medium"
+                tabIndex={0}
+                onClick={onMobileNavigate}
+              >
                 Rules & Info
               </Link>
             </nav>

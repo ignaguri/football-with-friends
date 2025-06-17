@@ -45,6 +45,10 @@ export function Wrapper(props: { children: React.ReactNode }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [menuOpen]);
 
+  function handleMobileNavigate() {
+    setMenuOpen(false);
+  }
+
   return (
     <div className="relative flex min-h-screen w-full justify-center bg-white bg-grid-small-black/[0.2] dark:bg-black dark:bg-grid-small-white/[0.2]">
       <div className="pointer-events-none absolute inset-0 hidden items-center justify-center bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)] dark:bg-black md:flex"></div>
@@ -67,7 +71,12 @@ export function Wrapper(props: { children: React.ReactNode }) {
           {/* Right: Mobile Burger + Account */}
           <div className="z-50 flex items-center gap-2">
             <div className="md:hidden">
-              <MainNavigation user={user} />
+              <MainNavigation
+                user={user}
+                onMobileNavigate={handleMobileNavigate}
+                isMobileMenuOpen={menuOpen}
+                setMobileMenuOpen={setMenuOpen}
+              />
             </div>
             {isPending ? null : user ? (
               <div className="relative">

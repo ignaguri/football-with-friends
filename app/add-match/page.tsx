@@ -100,7 +100,7 @@ function AddMatchForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex w-full max-w-sm flex-col gap-6 rounded-lg border bg-background p-6 shadow-md"
+      className="flex max-h-[90dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6"
     >
       <label className="text-sm font-medium">Match Date</label>
       <Controller
@@ -185,7 +185,7 @@ function AddMatchForm() {
 
 export default function AddMatchPage() {
   return (
-    <div className="flex min-h-[80vh] items-center justify-center px-4">
+    <div className="flex min-h-[75dvh] items-center justify-center px-4">
       <AddMatchForm />
     </div>
   );
