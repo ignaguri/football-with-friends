@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Rules & Info",
-  description: "Football With Friends – Rules, and summary stats.",
+  description: "Fútbol con los pibes – Rules, and summary stats.",
 };
 
 export default function RulesPage() {

@@ -1,4 +1,4 @@
-# Football With Friends – Implementation Plan
+# Fútbol con los pibes – Implementation Plan
 
 ## 1. Project Overview
 

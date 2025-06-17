@@ -15,8 +15,8 @@ const firaMono = Fira_Mono({
 
 export const metadata = createMetadata({
   title: {
-    template: "%s | Football With Friends",
-    default: "Football With Friends",
+    template: "%s | Fútbol con los pibes",
+    default: "Fútbol con los pibes",
   },
   description:
     "Organize, join, and manage your football matches with Google Sheets as the backend.",

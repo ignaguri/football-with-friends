@@ -8,7 +8,7 @@ export function createMetadata(override: Metadata): Metadata {
       description: override.description ?? undefined,
       url: "https://football-with-friends.vercel.app",
       images: "https://football-with-friends.vercel.app/og.png",
-      siteName: "Football With Friends",
+      siteName: "Fútbol con los pibes",
       ...override.openGraph,
     },
     twitter: {

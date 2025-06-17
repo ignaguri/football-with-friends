@@ -1,4 +1,4 @@
-# MVP Tasks – Football With Friends
+# MVP Tasks – Fútbol con los pibes
 
 A concise checklist of remaining MVP tasks. Check off each item as you complete it.
 

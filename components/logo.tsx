@@ -1,19 +1,26 @@
+import { useEffect, useState } from "react";
+
 export const Logo = () => {
+  const [logoSrc, setLogoSrc] = useState("/logo.png");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const isLight = window.matchMedia(
+        "(prefers-color-scheme: light)",
+      ).matches;
+      setLogoSrc(isLight ? "/logo_light.png" : "/logo.png");
+    }
+  }, []);
+
   return (
-    <svg
-      width="60"
-      height="45"
-      viewBox="0 0 60 45"
-      fill="none"
-      className="h-5 w-5"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M0 0H15V15H30V30H15V45H0V30V15V0ZM45 30V15H30V0H45H60V15V30V45H45H30V30H45Z"
-        className="fill-black dark:fill-white"
-      />
-    </svg>
+    <img
+      src={logoSrc}
+      alt="Fútbol con los pibes Logo"
+      width={44}
+      height={44}
+      className="size-11"
+      style={{ width: 44, height: 44 }}
+      loading="lazy"
+    />
   );
 };

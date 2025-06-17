@@ -1,10 +1,10 @@
-# Football with Friends
+# Fútbol con los pibes
 
 > _This project was originally initiated from the BetterAuth demo app._
 
 ## Overview
 
-**Football with Friends** is a web application for organizing, joining, and managing casual football (soccer) matches with your friends and local community. Built with Next.js, TypeScript, and Tailwind CSS, it provides a seamless experience for both match organizers and players.
+**Fútbol con los pibes** is a web application for organizing, joining, and managing casual football (soccer) matches with your friends and local community. Built with Next.js, TypeScript, and Tailwind CSS, it provides a seamless experience for both match organizers and players.
 
 ## Features
 

@@ -12,7 +12,7 @@ const StaticContent = () => {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-center text-4xl font-bold text-black dark:text-white">
-        Football With Friends
+        Fútbol con los pibes
       </h3>
       <p className="break-words text-center text-sm md:text-base">
         Organize, join, and manage your football matches same as with Google

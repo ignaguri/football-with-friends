@@ -55,7 +55,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <p className="whitespace-nowrap text-base font-bold tracking-tight text-black dark:text-white sm:text-lg">
-              Football With Friends
+              Fútbol con los pibes
             </p>
           </Link>
 
