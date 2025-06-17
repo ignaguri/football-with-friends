@@ -8,6 +8,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { parse } from "date-fns";
+import { Share2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
@@ -27,6 +28,16 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerTrigger,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -36,6 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth-client";
 import { PLAYER_STATUSES } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
@@ -118,9 +130,42 @@ export default function MatchPage() {
     date?: string;
     time?: string;
   } | null>(null);
+  const [isShareDrawerOpen, setIsShareDrawerOpen] = useState(false);
+  const [copyButtonText, setCopyButtonText] = useState("Copy link");
+  const { toast: showToast } = useToast();
 
   // Decode matchId for display and WhatsApp
   const matchId = decodeURIComponent(rawMatchId || "");
+
+  // Format match title (date + time) before columns and NotifyOrganizerDialog usage
+  let matchTitle = matchId;
+  if (matchMeta?.date && matchMeta?.time) {
+    try {
+      const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
+      const dateObj = parse(dateTimeString, "yyyy-MM-dd HH:mm", new Date());
+      matchTitle = new Intl.DateTimeFormat(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(dateObj);
+    } catch {}
+  }
+
+  // Compute match URL for sharing
+  const matchUrl =
+    typeof window !== "undefined"
+      ? window.location.href
+      : `https://footballwithfriends.vercel.app/matches/${encodeURIComponent(matchId)}`;
+
+  // WhatsApp share text (memoized)
+  const shareText = useMemo(
+    () => `Join the football match - ${matchTitle} -\n${matchUrl}`,
+    [matchTitle, matchUrl],
+  );
 
   useEffect(() => {
     async function fetchMatch() {
@@ -294,24 +339,6 @@ export default function MatchPage() {
     }
   }
 
-  // Format match title (date + time) before columns and NotifyOrganizerDialog usage
-  let matchTitle = matchId;
-  if (matchMeta?.date && matchMeta?.time) {
-    try {
-      const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
-      const dateObj = parse(dateTimeString, "yyyy-MM-dd HH:mm", new Date());
-      matchTitle = new Intl.DateTimeFormat(undefined, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(dateObj);
-    } catch {}
-  }
-
   // Define columns for TanStack Table
   const columns = useMemo<ColumnDef<Player, unknown>[]>(
     () => [
@@ -404,6 +431,34 @@ export default function MatchPage() {
     onSortingChange: setSorting,
   });
 
+  function handleCopyLink() {
+    if (typeof window === "undefined") return;
+    navigator.clipboard
+      .writeText(matchUrl)
+      .then(() => {
+        setCopyButtonText("Copied!");
+        showToast({
+          title: "Link copied!",
+          description: "You can now share it anywhere.",
+        });
+        setTimeout(() => setCopyButtonText("Copy link"), 2000);
+      })
+      .catch(() => {
+        showToast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to copy link to clipboard.",
+        });
+      });
+  }
+
+  function handleShareWhatsApp() {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      "_blank",
+    );
+  }
+
   if (isLoading || isSessionPending) {
     return (
       <div className="py-8 text-center text-muted-foreground">Loading...</div>
@@ -415,9 +470,54 @@ export default function MatchPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
-      <h2 className="mb-4 break-words text-2xl font-bold">
-        {capitalize(matchTitle)}
-      </h2>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h2 className="flex-1 break-words text-2xl font-bold">
+          {capitalize(matchTitle)}
+        </h2>
+        <Drawer open={isShareDrawerOpen} onOpenChange={setIsShareDrawerOpen}>
+          <DrawerTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              aria-label="Share match"
+              className="ml-2"
+            >
+              <Share2 className="size-5" />
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Share this match</DrawerTitle>
+              <DrawerDescription>
+                Choose how you'd like to share:
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex flex-col gap-3 px-4">
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={handleShareWhatsApp}
+              >
+                Share via WhatsApp
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleCopyLink}
+              >
+                {copyButtonText}
+              </Button>
+            </div>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button variant="ghost" className="w-full">
+                  Close
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      </div>
       <div className="mb-4 flex justify-center">
         <div className="rounded bg-green-100 px-4 py-2 text-center text-green-800">
           <span className="block text-[10px] font-medium uppercase tracking-wide text-green-600">
