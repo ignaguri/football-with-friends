@@ -170,7 +170,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
-      <div className="mt-20 w-full lg:w-7/12">{props.children}</div>
+      <div className="mt-12 w-full lg:w-7/12">{props.children}</div>
     </div>
   );
 }

@@ -7,9 +7,9 @@ import {
   flexRender,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import { parse } from "date-fns";
-import { Share2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { parse, addHours } from "date-fns";
+import { Share2, Calendar as CalendarIcon } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -113,6 +113,7 @@ type GuestFormValues = z.infer<typeof guestSchema>;
 
 export default function MatchPage() {
   const { matchId: rawMatchId } = useParams<{ matchId: string }>();
+  const router = useRouter();
   const { data: session, isPending: isSessionPending } = useSession();
   const user = session?.user;
   const [header, setHeader] = useState<string[]>([]);
@@ -129,6 +130,8 @@ export default function MatchPage() {
   const [matchMeta, setMatchMeta] = useState<{
     date?: string;
     time?: string;
+    costCourt?: string;
+    courtNumber?: string;
   } | null>(null);
   const [isShareDrawerOpen, setIsShareDrawerOpen] = useState(false);
   const [copyButtonText, setCopyButtonText] = useState("Copy link");
@@ -178,8 +181,13 @@ export default function MatchPage() {
         setHeader(data.header);
         setPlayers(data.players);
         // Try to get date and time from API response if available
-        if (data.meta && (data.meta.date || data.meta.time)) {
-          setMatchMeta({ date: data.meta.date, time: data.meta.time });
+        if (data.meta) {
+          setMatchMeta({
+            date: data.meta.date,
+            time: data.meta.time,
+            costCourt: data.meta.costCourt,
+            courtNumber: data.meta.courtNumber,
+          });
         }
         if (user) {
           setJoined(data.players.some((p: Player) => p.Email === user.email));
@@ -459,6 +467,44 @@ export default function MatchPage() {
     );
   }
 
+  function handleAddToCalendar() {
+    if (!matchMeta?.date || !matchMeta?.time) return;
+    const startDate = matchMeta.date.replace(/-/g, "");
+    const startTime = matchMeta.time.replace(":", "");
+    // Use date-fns to add 1 hour to the start time
+    const startDateTime = parse(
+      `${matchMeta.date} ${matchMeta.time}`,
+      "yyyy-MM-dd HH:mm",
+      new Date(),
+    );
+    const end = addHours(startDateTime, 1);
+    const endDate = end.toISOString().slice(0, 10).replace(/-/g, "");
+    const endTime = end.toTimeString().slice(0, 5).replace(":", "");
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      `DTSTART:${startDate}T${startTime}00`,
+      `DTEND:${endDate}T${endTime}00`,
+      `SUMMARY:${matchTitle}`,
+      `DESCRIPTION:Football match - ${matchTitle}`,
+      `URL:${matchUrl}`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const blob = new Blob([icsContent], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `football-match-${matchMeta.date}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+  }
+
   if (isLoading || isSessionPending) {
     return (
       <div className="py-8 text-center text-muted-foreground">Loading...</div>
@@ -470,61 +516,88 @@ export default function MatchPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <h2 className="flex-1 break-words text-2xl font-bold">
-          {capitalize(matchTitle)}
-        </h2>
-        <Drawer open={isShareDrawerOpen} onOpenChange={setIsShareDrawerOpen}>
-          <DrawerTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Share match"
-              className="ml-2"
-            >
-              <Share2 className="size-5" />
-            </Button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Share this match</DrawerTitle>
-              <DrawerDescription>
-                Choose how you'd like to share:
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="flex flex-col gap-3 px-4">
-              <Button
-                variant="secondary"
-                className="w-full"
-                onClick={handleShareWhatsApp}
-              >
-                Share via WhatsApp
-              </Button>
+      <div className="mb-4 flex flex-col items-stretch gap-2">
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Add to calendar"
+            className="mr-1"
+            onClick={handleAddToCalendar}
+          >
+            <CalendarIcon className="size-5" />
+          </Button>
+          <Drawer open={isShareDrawerOpen} onOpenChange={setIsShareDrawerOpen}>
+            <DrawerTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full"
-                onClick={handleCopyLink}
+                size="icon"
+                aria-label="Share match"
+                className="ml-2"
               >
-                {copyButtonText}
+                <Share2 className="size-5" />
               </Button>
-            </div>
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button variant="ghost" className="w-full">
-                  Close
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Share this match</DrawerTitle>
+                <DrawerDescription>
+                  Choose how you'd like to share:
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="flex flex-col gap-3 px-4">
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={handleShareWhatsApp}
+                >
+                  Share via WhatsApp
                 </Button>
-              </DrawerClose>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleCopyLink}
+                >
+                  {copyButtonText}
+                </Button>
+              </div>
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <Button variant="ghost" className="w-full">
+                    Close
+                  </Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        </div>
+        <h2 className="mt-2 break-words text-center text-2xl font-bold">
+          {capitalize(matchTitle)}
+        </h2>
       </div>
-      <div className="mb-4 flex justify-center">
-        <div className="rounded bg-green-100 px-4 py-2 text-center text-green-800">
+      <div className="mb-4 flex flex-row items-center justify-center gap-2">
+        <div className="min-w-[90px] rounded bg-green-100 px-4 py-2 text-center text-green-800">
           <span className="block text-[10px] font-medium uppercase tracking-wide text-green-600">
             Paid
           </span>
           <span className="text-lg font-bold">
             {paidCount}/{totalSpots}
+          </span>
+        </div>
+        <div className="min-w-[90px] rounded bg-blue-100 px-4 py-2 text-center text-blue-800">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-blue-600">
+            Cost (p.p.)
+          </span>
+          <span className="text-lg font-bold">
+            {matchMeta?.costCourt ? `€${matchMeta.costCourt}` : "-"}
+          </span>
+        </div>
+        <div className="min-w-[90px] rounded bg-yellow-100 px-4 py-2 text-center text-yellow-800">
+          <span className="block text-[10px] font-medium uppercase tracking-wide text-yellow-600">
+            Court #
+          </span>
+          <span className="text-lg font-bold">
+            {matchMeta?.courtNumber || "-"}
           </span>
         </div>
       </div>
@@ -677,6 +750,11 @@ export default function MatchPage() {
           </Dialog>
         </>
       )}
+      <div className="mt-4 flex justify-center">
+        <Button variant="outline" onClick={() => router.push("/rules")}>
+          View Rules
+        </Button>
+      </div>
       {user && (isUserCancelled || cancelled) && (
         <div className="mt-6 text-center font-medium text-red-600">
           You have cancelled your spot.

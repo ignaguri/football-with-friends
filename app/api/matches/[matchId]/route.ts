@@ -45,7 +45,7 @@ export async function GET(
     return Response.json({
       header,
       players,
-      meta: { date: meta.date, time: meta.time },
+      meta,
     });
   } catch (e) {
     console.error("Error fetching match data:", e);
