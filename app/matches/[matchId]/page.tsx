@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,8 +50,9 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth-client";
+import { createMetadata } from "@/lib/metadata";
 import { PLAYER_STATUSES } from "@/lib/types";
-import { capitalize } from "@/lib/utils";
+import { capitalize, formatMatchTitle } from "@/lib/utils";
 
 interface Player {
   [key: string]: string;
@@ -141,22 +143,8 @@ export default function MatchPage() {
   const matchId = decodeURIComponent(rawMatchId || "");
 
   // Format match title (date + time) before columns and NotifyOrganizerDialog usage
-  let matchTitle = matchId;
-  if (matchMeta?.date && matchMeta?.time) {
-    try {
-      const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
-      const dateObj = parse(dateTimeString, "yyyy-MM-dd HH:mm", new Date());
-      matchTitle = new Intl.DateTimeFormat(undefined, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(dateObj);
-    } catch {}
-  }
+  const matchTitle =
+    formatMatchTitle(matchMeta?.date, matchMeta?.time) || matchId;
 
   // Compute match URL for sharing
   const matchUrl =
@@ -762,4 +750,55 @@ export default function MatchPage() {
       )}
     </div>
   );
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { matchId: string };
+}): Promise<Metadata> {
+  const matchId = decodeURIComponent(params.matchId);
+  const baseUrl =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://footballwithfriends.vercel.app";
+  try {
+    const res = await fetch(
+      `${baseUrl}/api/matches/${encodeURIComponent(matchId)}`,
+      { next: { revalidate: 60 } },
+    );
+    if (!res.ok) throw new Error("Match not found");
+    const data = await res.json();
+    const meta = data.meta || {};
+    // Format date/time for title/description
+    let matchTitle = meta.sheetName || matchId;
+    const formatted = formatMatchTitle(meta.date, meta.time, "en-US");
+    if (formatted) matchTitle = formatted;
+    const description = `Join the football match on ${matchTitle}${meta.courtNumber ? `, Court #${meta.courtNumber}` : ""}${meta.costCourt ? `, €${meta.costCourt} p.p.` : ""}. Organized with Fútbol con los pibes.`;
+    return createMetadata({
+      title: `Football Match – ${matchTitle}`,
+      description,
+      openGraph: {
+        url: `${baseUrl}/matches/${encodeURIComponent(params.matchId)}`,
+        images: [
+          {
+            url: `${baseUrl}/og.png`,
+            width: 1200,
+            height: 630,
+            alt: "Fútbol con los pibes – Football Match",
+          },
+        ],
+      },
+      twitter: {
+        title: `Football Match – ${matchTitle}`,
+        description,
+        images: [`${baseUrl}/og.png`],
+      },
+    });
+  } catch {
+    return createMetadata({
+      title: "Football Match | Fútbol con los pibes",
+      description: "Join a football match organized with Fútbol con los pibes.",
+    });
+  }
 }
