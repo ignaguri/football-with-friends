@@ -44,14 +44,16 @@ export function MainNavigation({
                 <Link href="/">Home</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/matches">Matches</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
+            {user && (
+              <NavigationMenuItem>
+                <NavigationMenuLink
+                  asChild
+                  className={navigationMenuTriggerStyle()}
+                >
+                  <Link href="/matches">Matches</Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            )}
             {user?.role === "admin" && (
               <>
                 <NavigationMenuItem>
@@ -107,14 +109,16 @@ export function MainNavigation({
               >
                 Home
               </Link>
-              <Link
-                href="/matches"
-                className="text-lg font-medium"
-                tabIndex={0}
-                onClick={onMobileNavigate}
-              >
-                Matches
-              </Link>
+              {user && (
+                <Link
+                  href="/matches"
+                  className="text-lg font-medium"
+                  tabIndex={0}
+                  onClick={onMobileNavigate}
+                >
+                  Matches
+                </Link>
+              )}
               {user?.role === "admin" && (
                 <>
                   <Link
