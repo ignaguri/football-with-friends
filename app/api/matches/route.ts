@@ -2,7 +2,7 @@ import { parse, isSameDay } from "date-fns";
 import { headers } from "next/headers";
 import { z } from "zod";
 
-import type { MatchMetadata } from "@/lib/google-sheets";
+import type { MatchMetadata } from "@/lib/types";
 
 import { auth } from "@/lib/auth";
 import {

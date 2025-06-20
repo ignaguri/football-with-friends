@@ -1,17 +1,8 @@
 import { parse, isAfter, isEqual, isBefore } from "date-fns";
 
-import { getAllMatchesMetadata } from "@/lib/google-sheets";
+import type { Match } from "@/lib/types";
 
-export interface Match {
-  matchId: string;
-  name: string;
-  date: string;
-  time: string;
-  status?: string;
-  courtNumber?: string;
-  costCourt?: string;
-  costShirts?: string;
-}
+import { getAllMatchesMetadata } from "@/lib/google-sheets";
 
 export async function getMatchesFromSheets(): Promise<{ matches: Match[] }> {
   const all = await getAllMatchesMetadata();

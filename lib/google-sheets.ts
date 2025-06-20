@@ -1,19 +1,7 @@
 import { google } from "googleapis";
 
+import type { MatchMetadata } from "@/lib/types";
 import type { sheets_v4 } from "googleapis";
-
-// Types for match and player row (to be refined based on actual sheet structure)
-export interface PlayerRow {
-  number: string;
-  name: string;
-  payments: string[]; // One per match column
-}
-
-export interface MatchColumn {
-  date: string;
-  status: string;
-  // Add more fields as needed
-}
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID || "<YOUR_SPREADSHEET_ID>";
 
@@ -229,18 +217,6 @@ export async function addOrUpdatePlayerRow(
 // --- MASTER SHEET (METADATA) UTILS ---
 
 export const MASTER_SHEET_NAME = "Master";
-
-export interface MatchMetadata {
-  matchId: string; // unique, e.g., UUID or timestamp
-  sheetName: string; // tab name for the match (displayed as a hyperlink)
-  sheetGid: string; // Google Sheets tab ID (gid)
-  date: string; // ISO or DD-MM-YYYY
-  time: string;
-  courtNumber: string;
-  status: string; // e.g., upcoming, cancelled, completed
-  costCourt: string;
-  costShirts: string;
-}
 
 const MASTER_HEADERS: (keyof MatchMetadata)[] = [
   "matchId",
