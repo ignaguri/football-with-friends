@@ -137,6 +137,12 @@ export default function MatchClientPage() {
   const [copyButtonText, setCopyButtonText] = useState("Copy link");
   const { toast: showToast } = useToast();
 
+  useEffect(() => {
+    if (user) {
+      setJoined(players.some((p) => p.Email === user.email));
+    }
+  }, [players, user]);
+
   // Decode matchId for display and WhatsApp
   const matchId = decodeURIComponent(rawMatchId || "");
 
@@ -175,9 +181,6 @@ export default function MatchClientPage() {
             courtNumber: data.meta.courtNumber,
           });
         }
-        if (user) {
-          setJoined(data.players.some((p: Player) => p.Email === user.email));
-        }
       } catch (e: any) {
         setError(e.message || "Error loading match");
       } finally {
@@ -185,7 +188,7 @@ export default function MatchClientPage() {
       }
     }
     if (matchId) fetchMatch();
-  }, [matchId, user?.email]);
+  }, [matchId]);
 
   async function handleJoin() {
     if (!user) return;
@@ -202,7 +205,6 @@ export default function MatchClientPage() {
         }),
       });
       if (!res.ok) throw new Error(await res.text());
-      setJoined(true);
       toast.success("Signed up for the match!");
       // Refetch players
       const matchRes = await fetch(`/api/matches/${matchId}`);

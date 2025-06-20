@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import MatchClientPage from "./MatchClientPage";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 import { createMetadata } from "@/lib/metadata";
 import { formatMatchTitle } from "@/lib/utils";
 
@@ -11,16 +12,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { matchId } = await params;
   const decodedMatchId = decodeURIComponent(matchId);
-  const baseUrl =
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "https://footballwithfriends.vercel.app";
+  const baseUrl = getBaseUrl();
   try {
     const res = await fetch(
       `${baseUrl}/api/matches/${encodeURIComponent(decodedMatchId)}`,
       { next: { revalidate: 60 } },
     );
-    if (!res.ok) throw new Error("Match not found");
+    if (!res.ok) {
+      throw new Error("Match not found");
+    }
     const data = await res.json();
     const meta = data.meta || {};
     // Format date/time for title/description
