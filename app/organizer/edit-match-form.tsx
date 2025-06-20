@@ -4,6 +4,8 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import type { MatchMetadata } from "@/lib/types";
+
 import { Button } from "@/components/ui/button";
 import { DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import {
@@ -16,17 +18,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-// Define Match type locally
-interface Match {
-  matchId: string;
-  date: string;
-  time: string;
-  courtNumber: string;
-  status: string;
-  costCourt: string;
-  costShirts: string;
-}
-
 const matchSchema = z.object({
   matchId: z.string(),
   date: z.string().min(1, "Date is required"),
@@ -35,12 +26,16 @@ const matchSchema = z.object({
   status: z.string(),
   costCourt: z.string(),
   costShirts: z.string(),
+  // Add other fields from MatchMetadata that are not in the form but need to be passed through
+  sheetName: z.string(),
+  sheetGid: z.string(),
 });
 
 type EditMatchFormProps = {
-  match: Match;
-  onSave: (match: Match) => void;
+  match: MatchMetadata;
+  onSave: (match: MatchMetadata) => void;
   onCancel: () => void;
+  isSaving?: boolean;
 };
 
 // Helper functions to normalize date and time formats
@@ -77,7 +72,12 @@ function normalizeTime(time: string) {
   return time;
 }
 
-export function EditMatchForm({ match, onSave, onCancel }: EditMatchFormProps) {
+export function EditMatchForm({
+  match,
+  onSave,
+  onCancel,
+  isSaving,
+}: EditMatchFormProps) {
   const form = useForm<z.infer<typeof matchSchema>>({
     resolver: zodResolver(matchSchema),
     defaultValues: {
@@ -180,12 +180,17 @@ export function EditMatchForm({ match, onSave, onCancel }: EditMatchFormProps) {
           <Button
             type="submit"
             variant="default"
-            disabled={!form.formState.isValid}
+            disabled={!form.formState.isValid || isSaving}
           >
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </Button>
           <DrawerClose asChild>
-            <Button type="button" variant="secondary" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onCancel}
+              disabled={isSaving}
+            >
               Cancel
             </Button>
           </DrawerClose>

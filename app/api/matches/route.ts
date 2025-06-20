@@ -16,6 +16,11 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type");
   const matches = await getAllMatchesMetadata();
+
+  if (!type) {
+    return Response.json({ matches });
+  }
+
   const today = new Date();
   let filtered = matches;
   if (type === "past") {
