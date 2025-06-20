@@ -25,6 +25,7 @@ const addMatchSchema = z.object({
       { message: "Time must be in 30-minute increments (e.g. 18:00, 18:30)" },
     ),
   courtNumber: z.string().optional(),
+  costCourt: z.string().optional(),
 });
 type AddMatchFormValues = z.infer<typeof addMatchSchema>;
 
@@ -40,7 +41,7 @@ function AddMatchForm() {
     formState: { isSubmitting, errors },
   } = useForm<AddMatchFormValues>({
     resolver: zodResolver(addMatchSchema),
-    defaultValues: { date: undefined, time: "" },
+    defaultValues: { date: undefined, time: "", courtNumber: "", costCourt: "" },
   });
   const [redirecting, setRedirecting] = useState(false);
 
@@ -64,7 +65,12 @@ function AddMatchForm() {
     );
   }
 
-  async function onSubmit({ date, time, courtNumber }: AddMatchFormValues) {
+  async function onSubmit({
+    date,
+    time,
+    courtNumber,
+    costCourt,
+  }: AddMatchFormValues) {
     setError(null);
     try {
       // Format date as YYYY-MM-DD
@@ -74,6 +80,7 @@ function AddMatchForm() {
         time,
       };
       if (courtNumber) payload.courtNumber = courtNumber;
+      if (costCourt) payload.costCourt = costCourt;
       const res = await fetch("/api/matches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,70 +107,94 @@ function AddMatchForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex max-h-[90dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6"
+      className="mt-4 flex min-h-[80dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6"
     >
-      <label className="text-sm font-medium">Match Date</label>
-      <Controller
-        name="date"
-        control={control}
-        render={({ field }) => (
-          <>
-            <Calendar
-              mode="single"
-              selected={field.value}
-              onSelect={field.onChange}
-              hidden={{ before: new Date() }}
-              className="w-full"
-            />
-            {errors.date && (
-              <div className="mt-1 text-sm text-destructive">
-                {errors.date.message as string}
-              </div>
-            )}
-          </>
-        )}
-      />
-      <label className="text-sm font-medium" htmlFor="match-time">
-        Match Time
-      </label>
-      <Controller
-        name="time"
-        control={control}
-        render={({ field }) => (
-          <>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium">Match Date</label>
+        <Controller
+          name="date"
+          control={control}
+          render={({ field }) => (
+            <>
+              <Calendar
+                mode="single"
+                selected={field.value}
+                onSelect={field.onChange}
+                hidden={{ before: new Date() }}
+                className="w-full"
+              />
+              {errors.date && (
+                <div className="mt-1 text-sm text-destructive">
+                  {errors.date.message as string}
+                </div>
+              )}
+            </>
+          )}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium" htmlFor="match-time">
+          Match Time
+        </label>
+        <Controller
+          name="time"
+          control={control}
+          render={({ field }) => (
+            <>
+              <Input
+                {...field}
+                id="match-time"
+                type="time"
+                step="1800"
+                placeholder="HH:mm"
+                required
+                disabled={isSubmitting}
+              />
+              {errors.time && (
+                <div className="mt-1 text-sm text-destructive">
+                  {errors.time.message as string}
+                </div>
+              )}
+            </>
+          )}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium" htmlFor="court-number">
+          Court Number (optional)
+        </label>
+        <Controller
+          name="courtNumber"
+          control={control}
+          render={({ field }) => (
             <Input
               {...field}
-              id="match-time"
-              type="time"
-              step="1800"
-              placeholder="HH:mm"
-              required
+              id="court-number"
+              type="text"
+              placeholder="Court #"
               disabled={isSubmitting}
             />
-            {errors.time && (
-              <div className="mt-1 text-sm text-destructive">
-                {errors.time.message as string}
-              </div>
-            )}
-          </>
-        )}
-      />
-      <label className="text-sm font-medium" htmlFor="court-number">
-        Court Number (optional)
-      </label>
-      <Controller
-        name="courtNumber"
-        control={control}
-        render={({ field }) => (
-          <Input
-            {...field}
-            id="court-number"
-            type="text"
-            placeholder="Court #"
-            disabled={isSubmitting}
-          />
-        )}
-      />
+          )}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-sm font-medium" htmlFor="cost-court">
+          Cost per person (optional)
+        </label>
+        <Controller
+          name="costCourt"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              id="cost-court"
+              type="number"
+              placeholder="Cost per person"
+              disabled={isSubmitting}
+            />
+          )}
+        />
+      </div>
       <Button
         type="submit"
         className="w-full"
