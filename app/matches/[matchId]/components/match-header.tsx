@@ -1,14 +1,12 @@
 "use client";
 
-import { Calendar as CalendarIcon } from "lucide-react";
-
 import { ShareDrawer } from "./share-drawer";
-import { Button } from "@/components/ui/button";
-import { capitalize } from "@/lib/utils";
+import { CalendarDownload } from "@/components/calendar-download";
 
 interface MatchHeaderProps {
   matchTitle: string;
-  onAddToCalendar: () => void;
+  matchMeta: { date: string; time: string };
+  matchUrl: string;
   isShareDrawerOpen: boolean;
   onShareDrawerOpenChange: (open: boolean) => void;
   onShareWhatsApp: () => void;
@@ -18,7 +16,8 @@ interface MatchHeaderProps {
 
 export function MatchHeader({
   matchTitle,
-  onAddToCalendar,
+  matchMeta,
+  matchUrl,
   isShareDrawerOpen,
   onShareDrawerOpenChange,
   onShareWhatsApp,
@@ -28,15 +27,11 @@ export function MatchHeader({
   return (
     <div className="mb-4 flex flex-col items-stretch gap-2">
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Add to calendar"
-          className="mr-1"
-          onClick={onAddToCalendar}
-        >
-          <CalendarIcon className="size-5" />
-        </Button>
+        <CalendarDownload
+          matchMeta={matchMeta}
+          matchTitle={matchTitle}
+          matchUrl={matchUrl}
+        />
         <ShareDrawer
           open={isShareDrawerOpen}
           onOpenChange={onShareDrawerOpenChange}
@@ -46,7 +41,7 @@ export function MatchHeader({
         />
       </div>
       <h2 className="mt-2 break-words text-center text-2xl font-bold">
-        {capitalize(matchTitle)}
+        {matchTitle}
       </h2>
     </div>
   );

@@ -5,7 +5,6 @@ import {
   getCoreRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import { parse, addHours } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -264,44 +263,6 @@ export default function MatchClientPage() {
     );
   }
 
-  function handleAddToCalendar() {
-    if (!matchMeta?.date || !matchMeta?.time) return;
-    const startDate = matchMeta.date.replace(/-/g, "");
-    const startTime = matchMeta.time.replace(":", "");
-    // Use date-fns to add 1 hour to the start time
-    const startDateTime = parse(
-      `${matchMeta.date} ${matchMeta.time}`,
-      "yyyy-MM-dd HH:mm",
-      new Date(),
-    );
-    const end = addHours(startDateTime, 1);
-    const endDate = end.toISOString().slice(0, 10).replace(/-/g, "");
-    const endTime = end.toTimeString().slice(0, 5).replace(":", "");
-    const icsContent = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "BEGIN:VEVENT",
-      `DTSTART:${startDate}T${startTime}00`,
-      `DTEND:${endDate}T${endTime}00`,
-      `SUMMARY:${matchTitle}`,
-      `DESCRIPTION:Football match - ${matchTitle}`,
-      `URL:${matchUrl}`,
-      "END:VEVENT",
-      "END:VCALENDAR",
-    ].join("\r\n");
-    const blob = new Blob([icsContent], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `football-match-${matchMeta.date}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 0);
-  }
-
   const totalSpots = 10;
   const paidPlayersCount = players.filter(
     (p) => p.Status === PLAYER_STATUSES[0],
@@ -325,7 +286,11 @@ export default function MatchClientPage() {
     <div className="mx-auto w-full max-w-2xl p-4">
       <MatchHeader
         matchTitle={matchTitle}
-        onAddToCalendar={handleAddToCalendar}
+        matchMeta={{
+          date: matchMeta?.date || "",
+          time: matchMeta?.time || "",
+        }}
+        matchUrl={matchUrl}
         isShareDrawerOpen={isShareDrawerOpen}
         onShareDrawerOpenChange={setIsShareDrawerOpen}
         onShareWhatsApp={handleShareWhatsApp}
