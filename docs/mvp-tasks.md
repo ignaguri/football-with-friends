@@ -27,11 +27,12 @@ A concise checklist of remaining MVP tasks. Check off each item as you complete 
 
 ## Player Signup/Payment Flow (PayPal Integration)
 
-- [ ] Backend: API endpoint to initiate PayPal payment and handle confirmation (update player status in match sheet)
-- [ ] Frontend: "Sign Up & Pay" button, PayPal checkout integration, update UI after payment, show payment status/history
-- [ ] Automate WhatsApp notification to admin after user pays (if possible with PayPal IPN/webhook)
-- [ ] Ensure user's spot is only confirmed (vacancy reduced) after admin marks as paid
-- [ ] Show cancellation and punctuality warning before payment
+- [ ] ~~Backend: API endpoint to initiate PayPal payment and handle confirmation (update player status in match sheet)~~
+- [ ] ~~Frontend: "Sign Up & Pay" button, PayPal checkout integration, update UI after payment, show payment status/history~~
+- [ ] ~~Automate WhatsApp notification to admin after user pays (if possible with PayPal IPN/webhook)~~
+- [ ] ~~Ensure user's spot is only confirmed (vacancy reduced) after admin marks as paid~~
+- [ ] ~~Show cancellation and punctuality warning before payment~~
+- **Note:** PayPal integration was abandoned due to the requirement for a business account and transaction fees, which are not acceptable for this project. Payment will be handled outside the app.
 
 ## API for Costs & Summary Data
 

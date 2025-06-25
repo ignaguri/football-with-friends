@@ -28,9 +28,10 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 ### 2.2. Player Signup & Payment
 
 - Allow a user to sign up for a match.
-- Integrate PayPal payment (redirect or embedded).
-- After payment, mark the player as "secured" for that match.
+- ~~Integrate PayPal payment (redirect or embedded).~~
+- ~~After payment, mark the player as "secured" for that match.~~
 - Optionally, allow users to see their own payment/sign-up history.
+- **Note:** PayPal integration was abandoned due to the requirement for a business account and transaction fees, which are not acceptable for this project. Payment will be handled outside the app.
 
 ### 2.3. Organizer Tools
 
@@ -106,22 +107,23 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 
 - [x] Match List Page
 - [x] Match Details Page (with player list, sign-up/payment button)
-- [ ] Player Signup/Payment Flow (PayPal integration)
+- ~~Player Signup/Payment Flow (PayPal integration)~~
 - [ ] Organizer Dashboard (add/edit matches, see financials)
-- [ ] Rules/Info Page (static, no API needed)
+- [x] Rules/Info Page (static, no API needed)
 
 ### 5.5. Polish & Deploy
 
 - [x] Responsive/mobile-first design
 - [ ] Web Vitals optimization
 - [ ] Image optimization (if needed)
-- [ ] Deploy to Vercel
+- [x] Deploy to Vercel
 
 ### 5.6. Remaining MVP Steps (Detailed)
 
 #### Player Signup/Payment Flow (PayPal Integration)
-- Backend: API endpoint to initiate PayPal payment and handle confirmation (update player status in match sheet).
-- Frontend: "Sign Up & Pay" button, PayPal checkout integration, update UI after payment, show payment status/history.
+- ~~Backend: API endpoint to initiate PayPal payment and handle confirmation (update player status in match sheet).~~
+- ~~Frontend: "Sign Up & Pay" button, PayPal checkout integration, update UI after payment, show payment status/history.~~
+- **Note:** PayPal integration was abandoned due to the requirement for a business account and transaction fees, which are not acceptable for this project. Payment will be handled outside the app.
 
 #### Rules/Info Page (Static)
 - No backend API needed; rules, pozo, and summary stats are stored as static content in the codebase.
