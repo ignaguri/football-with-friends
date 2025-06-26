@@ -22,7 +22,6 @@ import { PlayersTable } from "./components/players-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useGetMatch, useSignupPlayer } from "@/hooks/use-matches";
-import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth-client";
 import { PLAYER_STATUSES } from "@/lib/types";
 import { formatMatchTitle } from "@/lib/utils";
@@ -55,8 +54,6 @@ export default function MatchClientPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
   const [isShareDrawerOpen, setIsShareDrawerOpen] = useState(false);
-  const [copyButtonText, setCopyButtonText] = useState("Copy link");
-  const { toast: showToast } = useToast();
 
   const isPlayerInMatch = useMemo(() => {
     if (!user) return false;
@@ -244,34 +241,6 @@ export default function MatchClientPage() {
     onSortingChange: setSorting,
   });
 
-  function handleCopyLink() {
-    if (typeof window === "undefined") return;
-    navigator.clipboard
-      .writeText(matchUrl)
-      .then(() => {
-        setCopyButtonText(t("matchDetail.copied"));
-        showToast({
-          title: t("matchDetail.linkCopied"),
-          description: t("matchDetail.shareAnywhere"),
-        });
-        setTimeout(() => setCopyButtonText(t("matchDetail.pay")), 2000);
-      })
-      .catch(() => {
-        showToast({
-          variant: "destructive",
-          title: t("matchDetail.error"),
-          description: t("matchDetail.copyFailed"),
-        });
-      });
-  }
-
-  function handleShareWhatsApp() {
-    window.open(
-      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
-      "_blank",
-    );
-  }
-
   const totalSpots = 10;
   const paidPlayersCount = players.filter(
     (p) => p.Status === PLAYER_STATUSES[0],
@@ -304,9 +273,7 @@ export default function MatchClientPage() {
         matchUrl={matchUrl}
         isShareDrawerOpen={isShareDrawerOpen}
         onShareDrawerOpenChange={setIsShareDrawerOpen}
-        onShareWhatsApp={handleShareWhatsApp}
-        onCopyLink={handleCopyLink}
-        copyButtonText={copyButtonText}
+        shareText={shareText}
       />
       <MatchStats
         paidPlayersCount={paidPlayersCount}

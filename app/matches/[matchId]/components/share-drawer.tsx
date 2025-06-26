@@ -2,6 +2,7 @@
 
 import { Share2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,23 +15,53 @@ import {
   DrawerFooter,
   DrawerClose,
 } from "@/components/ui/drawer";
+import { useToast } from "@/hooks/use-toast";
 
 interface ShareDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onShareWhatsApp: () => void;
-  onCopyLink: () => void;
-  copyButtonText: string;
+  matchUrl: string;
+  shareText: string;
 }
 
 export function ShareDrawer({
   open,
   onOpenChange,
-  onShareWhatsApp,
-  onCopyLink,
-  copyButtonText,
+  matchUrl,
+  shareText,
 }: ShareDrawerProps) {
   const t = useTranslations();
+  const { toast: showToast } = useToast();
+  const [copyButtonText, setCopyButtonText] = useState(t("share.copyLink"));
+
+  function handleShareWhatsApp() {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(shareText)}`,
+      "_blank",
+    );
+  }
+
+  function handleCopyLink() {
+    if (typeof window === "undefined") return;
+    navigator.clipboard
+      .writeText(matchUrl)
+      .then(() => {
+        setCopyButtonText(t("share.copied"));
+        showToast({
+          title: t("share.linkCopied"),
+          description: t("matchDetail.shareAnywhere"),
+        });
+        setTimeout(() => setCopyButtonText(t("share.copyLink")), 2000);
+      })
+      .catch(() => {
+        showToast({
+          variant: "destructive",
+          title: t("matchDetail.error"),
+          description: t("matchDetail.copyFailed"),
+        });
+      });
+  }
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
@@ -52,11 +83,11 @@ export function ShareDrawer({
           <Button
             variant="secondary"
             className="w-full"
-            onClick={onShareWhatsApp}
+            onClick={handleShareWhatsApp}
           >
             {t("share.whatsapp")}
           </Button>
-          <Button variant="outline" className="w-full" onClick={onCopyLink}>
+          <Button variant="outline" className="w-full" onClick={handleCopyLink}>
             {copyButtonText}
           </Button>
         </div>

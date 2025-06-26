@@ -2,6 +2,7 @@
 
 import { ShareDrawer } from "./share-drawer";
 import { CalendarDownload } from "@/components/calendar-download";
+import { capitalize } from "@/lib/utils";
 
 interface MatchHeaderProps {
   matchTitle: string;
@@ -9,9 +10,7 @@ interface MatchHeaderProps {
   matchUrl: string;
   isShareDrawerOpen: boolean;
   onShareDrawerOpenChange: (open: boolean) => void;
-  onShareWhatsApp: () => void;
-  onCopyLink: () => void;
-  copyButtonText: string;
+  shareText: string;
 }
 
 export function MatchHeader({
@@ -20,9 +19,7 @@ export function MatchHeader({
   matchUrl,
   isShareDrawerOpen,
   onShareDrawerOpenChange,
-  onShareWhatsApp,
-  onCopyLink,
-  copyButtonText,
+  shareText,
 }: MatchHeaderProps) {
   return (
     <div className="mb-4 flex flex-col items-stretch gap-2">
@@ -35,13 +32,12 @@ export function MatchHeader({
         <ShareDrawer
           open={isShareDrawerOpen}
           onOpenChange={onShareDrawerOpenChange}
-          onShareWhatsApp={onShareWhatsApp}
-          onCopyLink={onCopyLink}
-          copyButtonText={copyButtonText}
+          matchUrl={matchUrl}
+          shareText={shareText}
         />
       </div>
       <h2 className="mt-2 break-words text-center text-2xl font-bold">
-        {matchTitle}
+        {capitalize(matchTitle)}
       </h2>
     </div>
   );
