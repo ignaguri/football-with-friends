@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
 
 export function SignInButton() {
+  const t = useTranslations();
   const { data: session, isPending } = useSession();
   const isSignedIn = !!session?.session;
 
@@ -41,7 +43,11 @@ export function SignInButton() {
           </svg>
         )}
         <span>
-          {isPending ? "Loading..." : isSignedIn ? "Home" : "Sign In"}
+          {isPending
+            ? t("shared.loading")
+            : isSignedIn
+              ? t("shared.home")
+              : t("shared.signIn")}
         </span>
       </Button>
     </Link>
@@ -49,12 +55,13 @@ export function SignInButton() {
 }
 
 export function SignInFallback() {
+  const t = useTranslations();
   // Simple client fallback for suspense/loading
   return (
     <div className="flex justify-center">
       <Button className="justify-between gap-2" variant="default" disabled>
         <span className="animate-pulse">...</span>
-        <span>Loading...</span>
+        <span>{t("shared.loading")}</span>
       </Button>
     </div>
   );

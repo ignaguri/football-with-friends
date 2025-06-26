@@ -43,3 +43,11 @@ A concise checklist of remaining MVP tasks. Check off each item as you complete 
 - [ ] Audit and optimize Web Vitals (LCP, CLS, FID)
 - [ ] Optimize images (WebP, lazy loading, size data)
 - [ ] Final deploy to Vercel
+
+## Internationalization (i18n)
+
+- [ ] Backend: Set up i18n support for API responses (if needed)
+- [ ] Frontend: Integrate i18n library (e.g., next-intl or next-i18next)
+- [ ] Add language switcher to main navigation
+- [ ] Translate all static content (rules, buttons, forms, etc.)
+- [ ] Ensure locale is preserved in navigation and URLs

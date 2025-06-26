@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -35,6 +36,7 @@ export function GuestSignupDialog({
   isSubmitting,
   playerCount,
 }: GuestSignupDialogProps) {
+  const t = useTranslations();
   const guestForm = useForm<GuestFormValues>({
     resolver: zodResolver(guestSchema),
     defaultValues: { guestName: "" },
@@ -57,7 +59,7 @@ export function GuestSignupDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Sign up a guest</DialogTitle>
+          <DialogTitle>{t("guest.title")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={guestForm.handleSubmit(handleSubmit)}>
           <div className="mb-2">
@@ -65,23 +67,21 @@ export function GuestSignupDialog({
               htmlFor="guest-name"
               className="mb-1 block text-sm font-medium"
             >
-              Guest's name (optional)
+              {t("guest.label")}
             </label>
             <Input
               id="guest-name"
               {...guestForm.register("guestName")}
-              placeholder="Guest's name (optional)"
+              placeholder={t("guest.placeholder")}
               disabled={isSubmitting}
             />
             {guestForm.formState.errors.guestName && (
-              <p className="text-xs text-red-600">
-                {guestForm.formState.errors.guestName.message}
-              </p>
+              <p className="text-xs text-red-600">{t("guest.nameTooLong")}</p>
             )}
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting || playerCount >= 10}>
-              {isSubmitting ? "Adding..." : "Add guest"}
+              {isSubmitting ? t("guest.adding") : t("guest.add")}
             </Button>
             <DialogClose asChild>
               <Button
@@ -92,7 +92,7 @@ export function GuestSignupDialog({
                   onOpenChange(false);
                 }}
               >
-                Cancel
+                {t("shared.cancel")}
               </Button>
             </DialogClose>
           </DialogFooter>

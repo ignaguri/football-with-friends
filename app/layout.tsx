@@ -1,5 +1,7 @@
 import "./globals.css";
 import { Montserrat, Fira_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,13 +25,14 @@ export const metadata = createMetadata({
   metadataBase: new URL("https://football-with-friends.vercel.app"),
 });
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+interface RootLayoutProps {
   children: React.ReactNode;
-}>) {
+}
+
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const locale = await getLocale();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta
@@ -47,9 +50,11 @@ export default function RootLayout({
       </head>
       <body className={`${montserrat.variable} ${firaMono.variable} font-sans`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
-          <Wrapper>
-            <WrapperWithQuery>{children}</WrapperWithQuery>
-          </Wrapper>
+          <NextIntlClientProvider>
+            <Wrapper>
+              <WrapperWithQuery>{children}</WrapperWithQuery>
+            </Wrapper>
+          </NextIntlClientProvider>
           <Toaster richColors closeButton />
         </ThemeProvider>
       </body>

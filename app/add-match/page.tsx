@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,55 +13,62 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/lib/auth-client";
 
-const addMatchSchema = z.object({
-  date: z.date({ required_error: "Please select a date." }),
-  time: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/, "Time must be in HH:mm format.")
-    .refine(
-      (val) => {
-        const [, minutes] = val.split(":");
-        return minutes === "00" || minutes === "30";
-      },
-      { message: "Time must be in 30-minute increments (e.g. 18:00, 18:30)" },
-    ),
-  courtNumber: z.string().optional(),
-  costCourt: z.string().optional(),
-});
-type AddMatchFormValues = z.infer<typeof addMatchSchema>;
-
 function AddMatchForm() {
+  const t = useTranslations();
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const user = session?.user;
   const isAdmin = user?.role === "admin";
   const [error, setError] = useState<string | null>(null);
+  const addMatchSchema = z.object({
+    date: z.date({ required_error: t("addMatch.dateRequired") }),
+    time: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/, t("addMatch.timeFormat"))
+      .refine(
+        (val) => {
+          const [, minutes] = val.split(":");
+          return minutes === "00" || minutes === "30";
+        },
+        { message: t("addMatch.timeIncrement") },
+      ),
+    courtNumber: z.string().optional(),
+    costCourt: z.string().optional(),
+  });
+  type AddMatchFormValues = z.infer<typeof addMatchSchema>;
   const {
     handleSubmit,
     control,
     formState: { isSubmitting, errors },
   } = useForm<AddMatchFormValues>({
     resolver: zodResolver(addMatchSchema),
-    defaultValues: { date: undefined, time: "", courtNumber: "", costCourt: "" },
+    defaultValues: {
+      date: undefined,
+      time: "",
+      courtNumber: "",
+      costCourt: "",
+    },
   });
   const [redirecting, setRedirecting] = useState(false);
 
   if (isPending) {
     return (
-      <div className="py-8 text-center text-muted-foreground">Loading...</div>
+      <div className="py-8 text-center text-muted-foreground">
+        {t("shared.loading")}
+      </div>
     );
   }
   if (!user) {
     return (
       <div className="py-8 text-center text-muted-foreground">
-        You must be signed in.
+        {t("addMatch.mustSignIn")}
       </div>
     );
   }
   if (!isAdmin) {
     return (
       <div className="py-8 text-center text-muted-foreground">
-        You are not authorized to add matches.
+        {t("addMatch.unauthorized")}
       </div>
     );
   }
@@ -87,20 +95,34 @@ function AddMatchForm() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to create match");
+        let errorMsg = t("addMatch.error");
+        try {
+          const data = await res.json();
+          if (data?.error && typeof data.error === "string") {
+            errorMsg = t(data.error as any, {
+              defaultValue: t("addMatch.error"),
+            });
+          }
+        } catch {
+          // fallback to text
+          const text = await res.text();
+          if (text) errorMsg = text;
+        }
+        throw new Error(errorMsg);
       }
       const data = await res.json();
       const matchId = data.match?.matchId;
-      if (!matchId) throw new Error("No matchId returned");
-      toast.success("Match created! Redirecting you to the match page...");
+      if (!matchId) {
+        throw new Error(t("errors.noMatchId"));
+      }
+      toast.success(t("addMatch.created"));
       setRedirecting(true);
       // Wait a moment for the toast to show
       setTimeout(() => {
         router.push(`/matches/${encodeURIComponent(matchId)}`);
       }, 800);
     } catch (err: any) {
-      setError(err.message || "Unknown error");
+      setError(err.message || t("errors.unknownError"));
     }
   }
 
@@ -110,7 +132,7 @@ function AddMatchForm() {
       className="mt-4 flex min-h-[80dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6"
     >
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">Match Date</label>
+        <label className="text-sm font-medium">{t("shared.date")}</label>
         <Controller
           name="date"
           control={control}
@@ -125,7 +147,7 @@ function AddMatchForm() {
               />
               {errors.date && (
                 <div className="mt-1 text-sm text-destructive">
-                  {errors.date.message as string}
+                  {t("addMatch.dateRequired")}
                 </div>
               )}
             </>
@@ -134,7 +156,7 @@ function AddMatchForm() {
       </div>
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium" htmlFor="match-time">
-          Match Time
+          {t("shared.time")}
         </label>
         <Controller
           name="time"
@@ -152,7 +174,9 @@ function AddMatchForm() {
               />
               {errors.time && (
                 <div className="mt-1 text-sm text-destructive">
-                  {errors.time.message as string}
+                  {errors.time.message === "Time must be in HH:mm format."
+                    ? t("addMatch.timeFormat")
+                    : t("addMatch.timeIncrement")}
                 </div>
               )}
             </>
@@ -161,7 +185,7 @@ function AddMatchForm() {
       </div>
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium" htmlFor="court-number">
-          Court Number (optional)
+          {t("addMatch.courtNumber")}
         </label>
         <Controller
           name="courtNumber"
@@ -171,7 +195,7 @@ function AddMatchForm() {
               {...field}
               id="court-number"
               type="text"
-              placeholder="Court #"
+              placeholder={t("addMatch.courtPlaceholder")}
               disabled={isSubmitting}
             />
           )}
@@ -179,7 +203,7 @@ function AddMatchForm() {
       </div>
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium" htmlFor="cost-court">
-          Cost per person (optional)
+          {t("addMatch.costCourt")}
         </label>
         <Controller
           name="costCourt"
@@ -189,7 +213,7 @@ function AddMatchForm() {
               {...field}
               id="cost-court"
               type="number"
-              placeholder="Cost per person"
+              placeholder={t("addMatch.costPlaceholder")}
               disabled={isSubmitting}
             />
           )}
@@ -200,11 +224,11 @@ function AddMatchForm() {
         className="w-full"
         disabled={isSubmitting || redirecting}
       >
-        {isSubmitting || redirecting ? "Adding..." : "+ Add Match"}
+        {isSubmitting || redirecting ? t("addMatch.adding") : t("addMatch.add")}
       </Button>
       {redirecting && (
         <div className="mt-2 text-center text-sm text-muted-foreground">
-          Match created! Redirecting...
+          {t("addMatch.redirecting")}
         </div>
       )}
       {error && (

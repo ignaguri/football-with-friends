@@ -3,10 +3,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 
 import type { UserWithRole } from "@/lib/auth-types";
 
+import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 import { MainNavigation } from "@/components/main-navigation";
@@ -22,9 +24,11 @@ import UserCard from "@/components/user-card";
 import { useSession, signOut } from "@/lib/auth-client";
 
 export function Wrapper(props: { children: React.ReactNode }) {
+  const t = useTranslations();
   const { data: session, isPending } = useSession();
   const user = session?.user as UserWithRole;
   const router = useRouter();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -50,6 +54,14 @@ export function Wrapper(props: { children: React.ReactNode }) {
     setMenuOpen(false);
   }
 
+  function getCurrentLocale() {
+    if (typeof document !== "undefined") {
+      const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/);
+      return match ? match[1] : "es";
+    }
+    return "es";
+  }
+
   return (
     <div className="relative flex min-h-screen w-full justify-center bg-white bg-grid-small-black/[0.2] dark:bg-black dark:bg-grid-small-white/[0.2]">
       <div className="absolute z-50 flex w-full items-center justify-between border-b border-border bg-white px-4 py-2 dark:bg-black md:px-1 lg:w-8/12">
@@ -59,7 +71,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
           <Link href="/" className="flex items-center gap-2">
             <Logo />
             <p className="whitespace-nowrap text-base font-bold tracking-tight text-black dark:text-white sm:text-lg">
-              Fútbol con los pibes
+              {t("appTitle")}
             </p>
           </Link>
 
@@ -115,7 +127,12 @@ export function Wrapper(props: { children: React.ReactNode }) {
                     >
                       <div className="flex flex-col gap-2 p-2">
                         <div className="flex w-full justify-center border-b border-border pb-2">
-                          <ThemeToggle />
+                          <div className="flex flex-col items-center gap-1">
+                            <ThemeToggle />
+                            <LanguageSwitcher
+                              currentLocale={getCurrentLocale()}
+                            />
+                          </div>
                         </div>
                         <DialogTrigger asChild>
                           <span
@@ -138,7 +155,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
                             });
                           }}
                         >
-                          Log out
+                          {t("shared.logOut")}
                         </Button>
                       </div>
                     </div>
@@ -148,10 +165,10 @@ export function Wrapper(props: { children: React.ReactNode }) {
                     aria-describedby="user-card"
                   >
                     <DialogTitle>
-                      <span className="sr-only">User Profile</span>
+                      <span className="sr-only">{t("shared.userProfile")}</span>
                     </DialogTitle>
                     <p id="user-card" className="sr-only">
-                      User account details and session information.
+                      {t("shared.userDetails")}
                     </p>
                     <UserCard session={session} activeSessions={[]} />
                   </DialogContent>
@@ -163,7 +180,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
                 onClick={() => router.push("/sign-in")}
                 className="ml-2"
               >
-                Log in
+                {t("shared.logIn")}
               </Button>
             )}
           </div>

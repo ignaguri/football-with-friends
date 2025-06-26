@@ -1,6 +1,7 @@
 "use client";
 
 import { parse, format as formatDate } from "date-fns";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -44,6 +45,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 
 export default function OrganizerDashboard() {
+  const t = useTranslations();
   const { data: session, isPending } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
@@ -65,10 +67,10 @@ export default function OrganizerDashboard() {
   const handleDelete = (matchId: string) => {
     deleteMatch(matchId, {
       onSuccess: () => {
-        toast.success("Match deleted successfully");
+        toast.success(t("organizer.deleteSuccess"));
       },
       onError: (e: any) => {
-        toast.error(e.message || "Failed to delete match");
+        toast.error(e.message || t("organizer.deleteError"));
       },
     });
   };
@@ -86,11 +88,11 @@ export default function OrganizerDashboard() {
       { matchId: updated.matchId, updates: updated },
       {
         onSuccess: () => {
-          toast.success("Match updated successfully");
+          toast.success(t("organizer.updateSuccess"));
           setEditingMatch(null);
         },
         onError: (e: any) => {
-          toast.error(e.message || "Failed to update match");
+          toast.error(e.message || t("organizer.updateError"));
         },
       },
     );
@@ -99,10 +101,8 @@ export default function OrganizerDashboard() {
   return (
     <main className="container mx-auto p-4">
       <div className="flex flex-col gap-4">
-        <h1 className="text-3xl font-bold">Organizer Dashboard</h1>
-        <p className="text-gray-600">
-          Manage all matches, edit details, or remove matches.
-        </p>
+        <h1 className="text-3xl font-bold">{t("organizer.title")}</h1>
+        <p className="text-gray-600">{t("organizer.description")}</p>
         {isPending || isLoadingMatches ? (
           <div className="mt-4 overflow-x-auto rounded-lg border bg-white shadow dark:bg-gray-900">
             <Table>
@@ -130,14 +130,12 @@ export default function OrganizerDashboard() {
           </div>
         ) : !isAdmin ? (
           <div className="p-8 text-center">
-            <p className="text-red-600">
-              You are not authorized to view this page.
-            </p>
+            <p className="text-red-600">{t("organizer.unauthorized")}</p>
           </div>
         ) : matchesError ? (
           <div className="p-8 text-center">
             <p className="text-red-600">
-              Failed to load matches: {matchesError.message}
+              {t("organizer.error", { message: matchesError.message })}
             </p>
           </div>
         ) : (
@@ -145,13 +143,13 @@ export default function OrganizerDashboard() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Court</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Cost Court</TableHead>
-                  <TableHead>Cost Shirts</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("shared.date")}</TableHead>
+                  <TableHead>{t("shared.time")}</TableHead>
+                  <TableHead>{t("organizer.table.court")}</TableHead>
+                  <TableHead>{t("shared.status")}</TableHead>
+                  <TableHead>{t("organizer.table.costCourt")}</TableHead>
+                  <TableHead>{t("organizer.table.costShirts")}</TableHead>
+                  <TableHead>{t("shared.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -177,7 +175,7 @@ export default function OrganizerDashboard() {
                         onClick={() => handleEditClick(m)}
                         disabled={isDeleting || isUpdating}
                       >
-                        Edit
+                        {t("organizer.edit")}
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -186,24 +184,24 @@ export default function OrganizerDashboard() {
                             size="sm"
                             disabled={isDeleting || isUpdating}
                           >
-                            Delete
+                            {t("organizer.delete")}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Match</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {t("organizer.deleteTitle")}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete this match? This
-                              action cannot be undone.
+                              {t("organizer.deleteDesc")}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(m.matchId)}
-                              disabled={isDeleting}
-                            >
-                              Confirm
+                            <AlertDialogCancel>
+                              {t("shared.cancel")}
+                            </AlertDialogCancel>
+                            <AlertDialogAction>
+                              {t("organizer.deleteConfirm")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

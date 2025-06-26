@@ -1,10 +1,12 @@
 "use client";
 import { Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
+  const t = useTranslations();
   const { setTheme, theme } = useTheme();
 
   return (
@@ -15,8 +17,8 @@ export function ThemeToggle() {
     >
       <Sun className="h-[1.5rem] w-[1.3rem] dark:hidden" color="#000" />
       <Moon className="hidden h-5 w-5 dark:block" />
-      <span className="sr-only">Toggle theme</span>
-      <span className="text-xs font-medium">Toggle theme</span>
+      <span className="sr-only">{t("shared.toggleTheme")}</span>
+      <span className="text-xs font-medium">{t("shared.toggleTheme")}</span>
     </Button>
   );
 }

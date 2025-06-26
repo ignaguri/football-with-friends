@@ -1,4 +1,5 @@
 import { parse, addHours } from "date-fns";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 
@@ -51,6 +52,8 @@ export function CalendarDownload({
   matchUrl,
   buttonClassName,
 }: CalendarDownloadProps) {
+  const t = useTranslations();
+
   function handleAddToCalendar() {
     if (!matchMeta?.date || !matchMeta?.time) return;
     const startDate = matchMeta.date.replace(/-/g, "");
@@ -78,11 +81,7 @@ export function CalendarDownload({
     ].join("\r\n");
 
     if (isIOS() && !isSafari()) {
-      if (
-        window.confirm(
-          "To add this event to your calendar, please open this page in Safari and tap 'Add to Calendar.' Or use Google Calendar instead.",
-        )
-      ) {
+      if (window.confirm(t("shared.iosSafari"))) {
         window.open(
           getGoogleCalendarUrl({
             startDate,
@@ -131,7 +130,7 @@ export function CalendarDownload({
     <Button
       variant="outline"
       size="icon"
-      aria-label="Add to calendar"
+      aria-label={t("shared.addToCalendar")}
       className={buttonClassName}
       onClick={handleAddToCalendar}
     >

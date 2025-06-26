@@ -2,12 +2,14 @@
 
 import { format, isValid, parse } from "date-fns";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import type { Match, MatchMetadata } from "@/lib/types";
 
 import { useGetMatches } from "@/hooks/use-matches";
 
 function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
+  const t = useTranslations();
   return (
     <div className="w-full p-4">
       <h2 className="mb-4 text-2xl font-bold">{title}</h2>
@@ -16,10 +18,10 @@ function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
           <thead>
             <tr>
               <th className="px-4 py-2 text-left text-sm font-semibold">
-                Date
+                {t("shared.date")}
               </th>
               <th className="px-4 py-2 text-left text-sm font-semibold">
-                Time
+                {t("shared.time")}
               </th>
               <th className="px-4 py-2"></th>
             </tr>
@@ -31,7 +33,7 @@ function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
                   colSpan={3}
                   className="px-4 py-4 text-center text-gray-400 dark:text-gray-500"
                 >
-                  No matches found.
+                  {t("matches.none")}
                 </td>
               </tr>
             ) : (
@@ -54,7 +56,7 @@ function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
                         href={`/matches/${encodeURIComponent(match.matchId)}`}
                         className="text-blue-600 underline hover:text-blue-800"
                       >
-                        View
+                        {t("matches.view")}
                       </Link>
                     </td>
                   </tr>
@@ -91,6 +93,7 @@ function MatchesList({
   type: "upcoming" | "past";
   title: string;
 }) {
+  const t = useTranslations();
   const { data, isLoading, isError } = useGetMatches(type);
 
   if (isLoading) {
@@ -101,7 +104,7 @@ function MatchesList({
     return (
       <div className="w-full p-4">
         <h2 className="mb-4 text-2xl font-bold">{title}</h2>
-        <p className="text-red-500">Failed to load matches.</p>
+        <p className="text-red-500">{t("matches.error")}</p>
       </div>
     );
   }
@@ -122,10 +125,11 @@ function MatchesList({
 }
 
 export function MatchesClientPage() {
+  const t = useTranslations("matches");
   return (
     <div className="flex w-full flex-col gap-8 p-4">
-      <MatchesList type="upcoming" title="Upcoming Matches" />
-      <MatchesList type="past" title="Past Matches" />
+      <MatchesList type="upcoming" title={t("upcoming")} />
+      <MatchesList type="past" title={t("past")} />
     </div>
   );
 }

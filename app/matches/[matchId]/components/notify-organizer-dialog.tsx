@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +20,7 @@ export function NotifyOrganizerDialog({
   displayDate,
   userName,
 }: NotifyOrganizerDialogProps) {
+  const t = useTranslations();
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -25,14 +28,12 @@ export function NotifyOrganizerDialog({
           variant="secondary"
           className="bg-green-600 px-3 py-1 text-white hover:bg-green-700"
         >
-          I paid
+          {t("notify.trigger")}
         </Button>
       </DialogTrigger>
       <DialogContent aria-describedby="notify-organizer">
         <DialogHeader>
-          <DialogTitle>
-            If you already paid, you can notify the organizer via WhatsApp
-          </DialogTitle>
+          <DialogTitle>{t("notify.title")}</DialogTitle>
         </DialogHeader>
         <DialogFooter className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
           <a
@@ -44,12 +45,12 @@ export function NotifyOrganizerDialog({
             className="w-full"
           >
             <Button variant="default" className="w-full">
-              Send WhatsApp message
+              {t("notify.send")}
             </Button>
           </a>
           <DialogClose asChild>
             <Button variant="outline" className="w-full">
-              I already sent the message
+              {t("notify.sent")}
             </Button>
           </DialogClose>
         </DialogFooter>

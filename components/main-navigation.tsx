@@ -1,5 +1,6 @@
 import { Menu } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import type { UserWithRole } from "@/lib/auth-types";
 
@@ -30,6 +31,7 @@ export function MainNavigation({
   isMobileMenuOpen,
   setMobileMenuOpen,
 }: MainNavigationProps) {
+  const t = useTranslations();
   return (
     <>
       {/* Desktop Navigation */}
@@ -41,7 +43,7 @@ export function MainNavigation({
                 asChild
                 className={navigationMenuTriggerStyle()}
               >
-                <Link href="/">Home</Link>
+                <Link href="/">{t("shared.home")}</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
             {user && (
@@ -50,7 +52,7 @@ export function MainNavigation({
                   asChild
                   className={navigationMenuTriggerStyle()}
                 >
-                  <Link href="/matches">Matches</Link>
+                  <Link href="/matches">{t("nav.matches")}</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
             )}
@@ -61,7 +63,7 @@ export function MainNavigation({
                     asChild
                     className={navigationMenuTriggerStyle()}
                   >
-                    <Link href="/add-match">Add Match</Link>
+                    <Link href="/add-match">{t("nav.addMatch")}</Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
@@ -69,7 +71,7 @@ export function MainNavigation({
                     asChild
                     className={navigationMenuTriggerStyle()}
                   >
-                    <Link href="/organizer">Organizer</Link>
+                    <Link href="/organizer">{t("nav.organizer")}</Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               </>
@@ -79,7 +81,7 @@ export function MainNavigation({
                 asChild
                 className={navigationMenuTriggerStyle()}
               >
-                <Link href="/rules">Rules & Info</Link>
+                <Link href="/rules">{t("nav.rules")}</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -107,7 +109,7 @@ export function MainNavigation({
                 tabIndex={0}
                 onClick={onMobileNavigate}
               >
-                Home
+                {t("shared.home")}
               </Link>
               {user && (
                 <Link
@@ -116,7 +118,7 @@ export function MainNavigation({
                   tabIndex={0}
                   onClick={onMobileNavigate}
                 >
-                  Matches
+                  {t("nav.matches")}
                 </Link>
               )}
               {user?.role === "admin" && (
@@ -127,7 +129,7 @@ export function MainNavigation({
                     tabIndex={0}
                     onClick={onMobileNavigate}
                   >
-                    Add Match
+                    {t("nav.addMatch")}
                   </Link>
                   <Link
                     href="/organizer"
@@ -135,7 +137,7 @@ export function MainNavigation({
                     tabIndex={0}
                     onClick={onMobileNavigate}
                   >
-                    Organizer
+                    {t("nav.organizer")}
                   </Link>
                 </>
               )}
@@ -145,7 +147,7 @@ export function MainNavigation({
                 tabIndex={0}
                 onClick={onMobileNavigate}
               >
-                Rules & Info
+                {t("nav.rules")}
               </Link>
             </nav>
           </SheetContent>

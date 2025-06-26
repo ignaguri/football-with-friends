@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ export function PlayerDrawer({
   isOpen,
   onOpenChange,
 }: PlayerDrawerProps) {
+  const t = useTranslations();
   const { data: matchData, isLoading, isError, error } = useGetMatch(matchId!);
 
   const { mutate: cancelPlayer, isPending: isCancelling } = useSignupPlayer();
@@ -64,10 +66,10 @@ export function PlayerDrawer({
       },
       {
         onSuccess: () => {
-          toast.success(`Cancelled ${player.Name}'s spot.`);
+          toast.success(t("playerDrawer.cancelSuccess", { name: player.Name }));
         },
         onError: (e: any) => {
-          toast.error(e.message || "Could not cancel player's spot.");
+          toast.error(e.message || t("playerDrawer.cancelError"));
         },
       },
     );
@@ -77,28 +79,30 @@ export function PlayerDrawer({
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Players for {capitalize(matchTitle)}</DrawerTitle>
-          <DrawerDescription>
-            View and manage players signed up for this match.
-          </DrawerDescription>
+          <DrawerTitle>
+            {t("playerDrawer.title", { title: capitalize(matchTitle) })}
+          </DrawerTitle>
+          <DrawerDescription>{t("playerDrawer.description")}</DrawerDescription>
         </DrawerHeader>
         <div className="p-4">
           {isLoading ? (
             <Skeleton className="h-40 w-full" />
           ) : isError ? (
             <div className="text-destructive">
-              Error loading players: {error?.message}
+              {t("playerDrawer.error", { message: error?.message })}
             </div>
           ) : players.length === 0 ? (
-            <div className="text-muted-foreground">No players found.</div>
+            <div className="text-muted-foreground">
+              {t("playerDrawer.noPlayers")}
+            </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t("shared.name")}</TableHead>
+                  <TableHead>{t("playerDrawer.email")}</TableHead>
+                  <TableHead>{t("shared.status")}</TableHead>
+                  <TableHead>{t("shared.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -119,7 +123,9 @@ export function PlayerDrawer({
                           disabled={isCancelling}
                           onClick={() => handleCancelPlayer(player)}
                         >
-                          {isCancelling ? "Cancelling..." : "Cancel Spot"}
+                          {isCancelling
+                            ? t("playerDrawer.cancelling")
+                            : t("playerDrawer.cancelSpot")}
                         </Button>
                       ) : null}
                     </TableCell>

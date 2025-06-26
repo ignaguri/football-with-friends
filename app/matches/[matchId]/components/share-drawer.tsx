@@ -1,6 +1,7 @@
 "use client";
 
 import { Share2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,13 +30,14 @@ export function ShareDrawer({
   onCopyLink,
   copyButtonText,
 }: ShareDrawerProps) {
+  const t = useTranslations();
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
         <Button
           variant="outline"
           size="icon"
-          aria-label="Share match"
+          aria-label={t("share.title")}
           className="ml-2"
         >
           <Share2 className="size-5" />
@@ -43,8 +45,8 @@ export function ShareDrawer({
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>
-          <DrawerTitle>Share this match</DrawerTitle>
-          <DrawerDescription>Choose how you'd like to share:</DrawerDescription>
+          <DrawerTitle>{t("share.title")}</DrawerTitle>
+          <DrawerDescription>{t("share.description")}</DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-3 px-4">
           <Button
@@ -52,7 +54,7 @@ export function ShareDrawer({
             className="w-full"
             onClick={onShareWhatsApp}
           >
-            Share via WhatsApp
+            {t("share.whatsapp")}
           </Button>
           <Button variant="outline" className="w-full" onClick={onCopyLink}>
             {copyButtonText}
@@ -61,7 +63,7 @@ export function ShareDrawer({
         <DrawerFooter>
           <DrawerClose asChild>
             <Button variant="ghost" className="w-full">
-              Close
+              {t("share.close")}
             </Button>
           </DrawerClose>
         </DrawerFooter>

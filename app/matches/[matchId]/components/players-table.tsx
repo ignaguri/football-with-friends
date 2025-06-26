@@ -1,6 +1,7 @@
 "use client";
 
 import { flexRender, type Table as TableType } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 import {
   Table,
@@ -22,6 +23,7 @@ export function PlayersTable<TData>({
   columnsCount,
   isPending,
 }: PlayersTableProps<TData>) {
+  const t = useTranslations();
   return (
     <Table>
       <TableHeader>
@@ -65,7 +67,7 @@ export function PlayersTable<TData>({
         {isPending ? (
           <TableRow>
             <TableCell colSpan={columnsCount} className="h-24 text-center">
-              Updating players...
+              {t("players.updating")}
             </TableCell>
           </TableRow>
         ) : (

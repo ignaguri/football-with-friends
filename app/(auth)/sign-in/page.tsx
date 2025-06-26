@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { client, useSession } from "@/lib/auth-client";
 
 export default function Page() {
+  const tSignin = useTranslations("signin");
+  const tShared = useTranslations("shared");
   const router = useRouter();
   const { data: session, isPending } = useSession();
 
@@ -18,16 +21,18 @@ export default function Page() {
         callbackURL: "/",
         fetchOptions: {
           onError: ({ error }) => {
-            toast.error(error.message || "An error occurred");
+            toast.error(error.message || tShared("errorOccurred"));
           },
           onSuccess: () => {
-            toast.success("Successfully signed in");
+            toast.success(tSignin("signInSuccess"));
             router.push("/");
           },
         },
       });
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "An error occurred");
+      toast.error(
+        error instanceof Error ? error.message : tShared("errorOccurred"),
+      );
     }
   }
 
@@ -67,7 +72,7 @@ export default function Page() {
             d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
           ></path>
         </svg>
-        Sign in with Google
+        {tSignin("signInWithGoogle")}
       </Button>
     </div>
   );

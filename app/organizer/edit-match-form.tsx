@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { parse, format } from "date-fns";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -78,6 +79,7 @@ export function EditMatchForm({
   onCancel,
   isSaving,
 }: EditMatchFormProps) {
+  const t = useTranslations();
   const form = useForm<z.infer<typeof matchSchema>>({
     resolver: zodResolver(matchSchema),
     defaultValues: {
@@ -103,7 +105,7 @@ export function EditMatchForm({
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date</FormLabel>
+              <FormLabel>{t("shared.date")}</FormLabel>
               <FormControl>
                 <Input type="date" {...field} />
               </FormControl>
@@ -116,7 +118,7 @@ export function EditMatchForm({
           name="time"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Time</FormLabel>
+              <FormLabel>{t("shared.time")}</FormLabel>
               <FormControl>
                 <Input type="time" {...field} />
               </FormControl>
@@ -129,7 +131,7 @@ export function EditMatchForm({
           name="courtNumber"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Court Number</FormLabel>
+              <FormLabel>{t("editMatch.courtNumber")}</FormLabel>
               <FormControl>
                 <Input type="text" {...field} />
               </FormControl>
@@ -142,7 +144,7 @@ export function EditMatchForm({
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status</FormLabel>
+              <FormLabel>{t("shared.status")}</FormLabel>
               <FormControl>
                 <Input type="text" {...field} />
               </FormControl>
@@ -155,7 +157,7 @@ export function EditMatchForm({
           name="costCourt"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cost (Court)</FormLabel>
+              <FormLabel>{t("editMatch.costCourt")}</FormLabel>
               <FormControl>
                 <Input type="text" {...field} />
               </FormControl>
@@ -168,7 +170,7 @@ export function EditMatchForm({
           name="costShirts"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cost (Shirts)</FormLabel>
+              <FormLabel>{t("editMatch.costShirts")}</FormLabel>
               <FormControl>
                 <Input type="text" {...field} />
               </FormControl>
@@ -182,7 +184,7 @@ export function EditMatchForm({
             variant="default"
             disabled={!form.formState.isValid || isSaving}
           >
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? t("editMatch.saving") : t("editMatch.save")}
           </Button>
           <DrawerClose asChild>
             <Button
@@ -191,7 +193,7 @@ export function EditMatchForm({
               onClick={onCancel}
               disabled={isSaving}
             >
-              Cancel
+              {t("shared.cancel")}
             </Button>
           </DrawerClose>
         </DrawerFooter>

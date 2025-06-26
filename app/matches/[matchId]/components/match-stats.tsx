@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils";
 
 interface MatchStatsProps {
@@ -55,19 +57,24 @@ export function MatchStats({
   cost,
   courtNumber,
 }: MatchStatsProps) {
+  const t = useTranslations();
   return (
     <div className="mb-4 flex flex-row items-center justify-center gap-2">
       <StatCard
-        label="Paid"
+        label={t("stats.paid")}
         value={`${paidPlayersCount}/${totalPlayersCount}`}
         color="green"
       />
       <StatCard
-        label="Cost (p.p.)"
+        label={t("stats.cost")}
         value={cost ? `€${cost}` : "-"}
         color="blue"
       />
-      <StatCard label="Court #" value={courtNumber || "-"} color="yellow" />
+      <StatCard
+        label={t("stats.court")}
+        value={courtNumber || "-"}
+        color="yellow"
+      />
     </div>
   );
 }

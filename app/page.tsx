@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 
 import { SignInButton, SignInFallback } from "@/components/sign-in-btn";
@@ -9,14 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth-client";
 
 const StaticContent = () => {
+  const t = useTranslations("home");
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-center text-4xl font-bold text-black dark:text-white">
-        Fútbol con los pibes
+        {t("title")}
       </h3>
       <p className="break-words text-center text-sm md:text-base">
-        Organize, join, and manage your football matches same as with Google
-        Sheets.
+        {t("description")}
       </p>
     </div>
   );
@@ -26,6 +27,7 @@ export default function Home() {
   const { data: session, isPending } = useSession();
   const user = session?.user;
   const isAdmin = user?.role === "admin";
+  const t = useTranslations("home");
 
   if (isPending) {
     return (
@@ -52,18 +54,18 @@ export default function Home() {
           {session ? (
             <div className="flex flex-col items-center gap-4">
               <Button asChild className="w-48">
-                <Link href="/matches">Matches</Link>
+                <Link href="/matches">{t("matches")}</Link>
               </Button>
               <Button asChild className="w-48" variant="secondary">
-                <Link href="/rules">Rules & Info</Link>
+                <Link href="/rules">{t("rules")}</Link>
               </Button>
               {isAdmin && (
                 <>
                   <Button asChild className="w-48">
-                    <Link href="/add-match">New Match</Link>
+                    <Link href="/add-match">{t("newMatch")}</Link>
                   </Button>
                   <Button asChild className="w-48" variant="secondary">
-                    <Link href="/organizer">Organizer Dashboard</Link>
+                    <Link href="/organizer">{t("organizerDashboard")}</Link>
                   </Button>
                 </>
               )}

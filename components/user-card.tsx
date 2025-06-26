@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import type { Session } from "@/lib/auth-types";
@@ -20,6 +21,7 @@ export default function UserCard(props: {
   session: Session | null;
   activeSessions: Session["session"][];
 }) {
+  const t = useTranslations();
   const router = useRouter();
   const { data } = useSession();
   const session = data || props.session;
@@ -28,7 +30,7 @@ export default function UserCard(props: {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User</CardTitle>
+        <CardTitle>{t("shared.user")}</CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-8">
         <div className="flex flex-col gap-2">
@@ -96,7 +98,7 @@ export default function UserCard(props: {
                     d="M16 13v-2H7V8l-5 4l5 4v-3zM20 3h-8a2 2 0 0 0-2 2v4h2V5h8v14h-8v-4h-2v4a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"
                   />
                 </svg>
-                Sign Out
+                {t("shared.signOut")}
               </div>
             )}
           </span>

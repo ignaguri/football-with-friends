@@ -53,20 +53,20 @@ export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: await headers() });
   const user = session?.user;
   if (!user || user.role !== "admin") {
-    return new Response("Unauthorized", { status: 401 });
+    return Response.json({ error: "errors.unauthorizedApi" }, { status: 401 });
   }
   const body = await req.json();
   const parsed = matchSchema.safeParse(body);
   if (!parsed.success) {
-    return new Response(
-      "Invalid input: " + JSON.stringify(parsed.error.format()),
+    return Response.json(
+      { error: "errors.invalidInput", details: parsed.error.format() },
       { status: 400 },
     );
   }
   const { date, time, courtNumber, costCourt, costShirts, status } =
     parsed.data;
   if (!date || !time) {
-    return new Response("Missing required fields", { status: 400 });
+    return Response.json({ error: "errors.missingFields" }, { status: 400 });
   }
   // Prevent duplicate matches on the same day
   const allMatches = await getAllMatchesMetadata();
@@ -77,9 +77,12 @@ export async function POST(req: Request) {
     return isSameDay(newDate, matchDate);
   });
   if (hasSameDay) {
-    return new Response("A match already exists for this date.", {
-      status: 409,
-    });
+    return Response.json(
+      { error: "errors.duplicateDate" },
+      {
+        status: 409,
+      },
+    );
   }
   // Generate a sheet name and create the match sheet/tab
   const sheetName = `${date} ${time}`;

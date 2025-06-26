@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
+
+# next-intl
+locales/**/*.d.json.ts

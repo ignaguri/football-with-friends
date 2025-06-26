@@ -1,0 +1,196 @@
+{
+  "appTitle": "Fútbol con los pibes",
+  "subtitle": "Organizá, sumate y gestioná tus partidos de fútbol igual que con Google Sheets.",
+  "nav": {
+    "home": "Inicio",
+    "matches": "Partidos",
+    "organizer": "Organizador",
+    "rules": "Reglas",
+    "addMatch": "Agregar Partido"
+  },
+  "home": {
+    "title": "Fútbol con los pibes",
+    "description": "Organizá, unite y gestioná tus partidos de fútbol como en Google Sheets.",
+    "matches": "Partidos",
+    "rules": "Reglas e Información",
+    "newMatch": "Nuevo Partido",
+    "organizerDashboard": "Panel del Organizador"
+  },
+  "matches": {
+    "upcoming": "Próximos partidos",
+    "past": "Partidos anteriores",
+    "view": "Ver",
+    "none": "No se encontraron partidos.",
+    "error": "No se pudieron cargar los partidos."
+  },
+  "matchDetail": {
+    "pay": "Pagar",
+    "markPaid": "Marcar como pagado",
+    "viewRules": "Ver reglas",
+    "shareAnywhere": "Ahora podés compartirlo donde quieras.",
+    "error": "Error",
+    "copyFailed": "No se pudo copiar el enlace al portapapeles.",
+    "signupSuccess": "¡Te anotaste al partido!",
+    "markPaidSuccess": "Marcado como pagado",
+    "cancelSuccess": "Cancelaste tu lugar.",
+    "guestAddSuccess": "¡Invitado agregado con éxito!"
+  },
+  "share": {
+    "title": "Compartir este partido",
+    "description": "Elegí cómo querés compartir:",
+    "whatsapp": "Compartir por WhatsApp",
+    "close": "Cerrar",
+    "copyLink": "Copiar enlace",
+    "copied": "¡Copiado!",
+    "linkCopied": "¡Enlace copiado!"
+  },
+  "stats": {
+    "paid": "Pagados",
+    "cost": "Costo (p.p.)",
+    "court": "Cancha #"
+  },
+  "actions": {
+    "in": "¡Estás adentro!",
+    "wantToPlay": "¿Querés jugar?",
+    "cancelOrGuest": "Podés cancelar tu lugar o anotar un invitado abajo.",
+    "spotsLeft": "{count, plural, one {¡Queda # lugar!} other {¡Quedan # lugares!}}",
+    "matchFull": "¡Partido completo!",
+    "joining": "Anotando...",
+    "join": "Anotarme",
+    "cancelling": "Cancelando...",
+    "cancel": "Cancelar mi lugar",
+    "signUpGuest": "Anotar invitado",
+    "cancelled": "Cancelaste tu lugar."
+  },
+  "players": {
+    "updating": "Actualizando jugadores..."
+  },
+  "guest": {
+    "title": "Anotar invitado",
+    "label": "Nombre del invitado (opcional)",
+    "placeholder": "Nombre del invitado (opcional)",
+    "add": "Agregar invitado",
+    "adding": "Agregando...",
+    "nameTooLong": "Nombre demasiado largo"
+  },
+  "notify": {
+    "trigger": "Ya pagué",
+    "title": "Si ya pagaste, podés avisarle al organizador por WhatsApp",
+    "send": "Mandar mensaje por WhatsApp",
+    "sent": "Ya mandé el mensaje"
+  },
+  "rules": {
+    "title": "Reglas e Información",
+    "description": "Fútbol con los pibes – Reglas y estadísticas.",
+    "generalTitle": "Reglas generales",
+    "general": [
+      "No llegar tarde. Llegar 10 minutos antes del inicio.",
+      "Pagar antes de jugar. Sin pago, no se juega.",
+      "Respetar a todos los jugadores y árbitros.",
+      "Regla 2x1: Si cancelás tarde, pagás doble la próxima vez.",
+      "Se permiten invitados si hay lugares disponibles."
+    ],
+    "matchTitle": "Reglas del partido",
+    "match": [
+      "Si toca la red, es fuera.",
+      "El arquero no la puede agarrar si es pase de compañero.",
+      "Goles solo desde la mitad de la cancha rival.",
+      "El arquero cuando saca con la mano, solo puede pasar la mitad de cancha si la pelota pica antes."
+    ]
+  },
+  "organizer": {
+    "title": "Panel del organizador",
+    "description": "Gestioná todos los partidos, editá detalles o eliminá partidos.",
+    "unauthorized": "No estás autorizado para ver esta página.",
+    "error": "No se pudieron cargar los partidos: {message}",
+    "table": {
+      "court": "Cancha",
+      "costCourt": "Costo cancha",
+      "costShirts": "Costo pecheras"
+    },
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleteTitle": "Eliminar partido",
+    "deleteDesc": "¿Estás seguro de que querés eliminar este partido? Esta acción no se puede deshacer.",
+    "deleteConfirm": "Eliminar",
+    "updateSuccess": "Partido actualizado con éxito",
+    "updateError": "No se pudo actualizar el partido",
+    "deleteSuccess": "Partido eliminado con éxito",
+    "deleteError": "No se pudo eliminar el partido"
+  },
+  "signin": {
+    "signInWithGoogle": "Iniciar sesión con Google",
+    "signInSuccess": "Inicio de sesión exitoso"
+  },
+  "addMatch": {
+    "title": "Agregar partido",
+    "mustSignIn": "Debés iniciar sesión.",
+    "unauthorized": "No estás autorizado para agregar partidos.",
+    "courtNumber": "Número de cancha (opcional)",
+    "costCourt": "Costo por persona (opcional)",
+    "add": "+ Agregar partido",
+    "adding": "Agregando...",
+    "created": "¡Partido creado! Redirigiendo a la página del partido...",
+    "redirecting": "¡Partido creado! Redirigiendo...",
+    "error": "No se pudo crear el partido",
+    "dateRequired": "Por favor seleccioná una fecha.",
+    "timeFormat": "La hora debe estar en formato HH:mm.",
+    "timeIncrement": "La hora debe estar en incrementos de 30 minutos (ej. 18:00, 18:30)",
+    "courtPlaceholder": "Cancha #",
+    "costPlaceholder": "Costo por persona"
+  },
+  "errors": {
+    "duplicateDate": "Ya existe un partido para esta fecha.",
+    "missingFields": "Faltan campos obligatorios.",
+    "invalidInput": "Entrada inválida.",
+    "unauthorizedApi": "No tienes autorización para realizar esta acción.",
+    "noMatchId": "No se devolvió el matchId.",
+    "unknownError": "Error desconocido."
+  },
+  "editMatch": {
+    "courtNumber": "Número de cancha",
+    "costCourt": "Costo (cancha)",
+    "costShirts": "Costo (pecheras)",
+    "save": "Guardar",
+    "saving": "Guardando..."
+  },
+  "playerDrawer": {
+    "title": "Jugadores para {title}",
+    "description": "Ver y gestionar los jugadores anotados para este partido.",
+    "error": "Error al cargar jugadores: {message}",
+    "noPlayers": "No se encontraron jugadores.",
+    "email": "Email",
+    "status": "Estado",
+    "actions": "Acciones",
+    "cancelling": "Cancelando...",
+    "cancelSpot": "Cancelar lugar",
+    "cancelSuccess": "Lugar de {name} cancelado.",
+    "cancelError": "No se pudo cancelar el lugar del jugador."
+  },
+  "shared": {
+    "loading": "Cargando...",
+    "home": "Inicio",
+    "signIn": "Iniciar sesión",
+    "addToCalendar": "Agregar al calendario",
+    "iosSafari": "Para agregar este evento a tu calendario, abrí esta página en Safari y tocá 'Agregar al calendario'. O usá Google Calendar en su lugar.",
+    "logOut": "Cerrar sesión",
+    "logIn": "Iniciar sesión",
+    "userProfile": "Perfil de usuario",
+    "userDetails": "Detalles de la cuenta y sesión de usuario.",
+    "user": "Usuario",
+    "signOut": "Cerrar sesión",
+    "toggleTheme": "Cambiar tema",
+    "errorOccurred": "Ocurrió un error",
+    "cancel": "Cancelar",
+    "name": "Nombre",
+    "status": "Estado",
+    "actions": "Acciones",
+    "date": "Fecha",
+    "time": "Hora"
+  },
+  "status": {
+    "paid": "Pagado",
+    "pending": "Pendiente",
+    "cancelled": "Cancelado"
+  }
+}

@@ -6,6 +6,7 @@ import {
   getSortedRowModel,
 } from "@tanstack/react-table";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -35,6 +36,8 @@ export default function MatchClientPage() {
   const router = useRouter();
   const { data: session, isPending: isSessionPending } = useSession();
   const user = session?.user;
+  const t = useTranslations();
+  const locale = useLocale();
 
   const matchId = decodeURIComponent(rawMatchId || "");
 
@@ -68,7 +71,7 @@ export default function MatchClientPage() {
   }, [players, user]);
 
   const matchTitle =
-    formatMatchTitle(matchMeta?.date, matchMeta?.time) || matchId;
+    formatMatchTitle(matchMeta?.date, matchMeta?.time, locale) || matchId;
   const matchUrl =
     typeof window !== "undefined"
       ? window.location.href
@@ -80,6 +83,12 @@ export default function MatchClientPage() {
     [matchTitle, matchUrl],
   );
 
+  const statusLabelMap = {
+    PAID: t("status.paid"),
+    PENDING: t("status.pending"),
+    CANCELLED: t("status.cancelled"),
+  };
+
   const handleSignup = (payload: any, successMessage: string) => {
     signupMutation.mutate(
       { matchId, payload },
@@ -88,7 +97,7 @@ export default function MatchClientPage() {
           toast.success(successMessage);
         },
         onError: (error) => {
-          toast.error(error.message || "An error occurred");
+          toast.error(error.message || t("shared.errorOccurred"));
         },
       },
     );
@@ -102,7 +111,7 @@ export default function MatchClientPage() {
         playerEmail: user.email,
         status: PLAYER_STATUSES[1], // PENDING
       },
-      "Signed up for the match!",
+      t("matchDetail.signupSuccess"),
     );
   }
 
@@ -113,7 +122,7 @@ export default function MatchClientPage() {
         playerEmail,
         status: PLAYER_STATUSES[0], // PAID
       },
-      "Marked as paid",
+      t("matchDetail.markPaidSuccess"),
     );
   }
 
@@ -125,7 +134,7 @@ export default function MatchClientPage() {
         playerEmail: user.email,
         status: "CANCELLED",
       },
-      "You have cancelled your spot.",
+      t("matchDetail.cancelSuccess"),
     );
   }
 
@@ -139,7 +148,7 @@ export default function MatchClientPage() {
         guestName,
         status: PLAYER_STATUSES[1], // PENDING
       },
-      "Guest added successfully!",
+      t("matchDetail.guestAddSuccess"),
     );
     setIsGuestDialogOpen(false);
   }
@@ -155,24 +164,24 @@ export default function MatchClientPage() {
     () => [
       {
         accessorKey: "Name",
-        header: "Name",
+        header: t("shared.name"),
       },
       {
         accessorKey: "Status",
-        header: "Status",
+        header: t("shared.status"),
         cell: ({ row }) => {
           const player = row.original;
           const status = player.Status?.toUpperCase();
           return (
             <Badge variant={getBadgeVariant(status as PlayerStatus)}>
-              {status}
+              {statusLabelMap[status as PlayerStatus] || status}
             </Badge>
           );
         },
       },
       {
         id: "actions",
-        header: "Actions",
+        header: t("shared.actions"),
         cell: ({ row }) => {
           const player = row.original;
           const status = (player.Status as PlayerStatus)?.toUpperCase();
@@ -199,7 +208,7 @@ export default function MatchClientPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Pay
+                      {t("matchDetail.pay")}
                     </a>
                   </Button>
                   <NotifyOrganizerDialog
@@ -215,7 +224,7 @@ export default function MatchClientPage() {
                   onClick={() => handleMarkAsPaid(player.Email, player.Name)}
                   disabled={signupMutation.isPending}
                 >
-                  Mark as Paid
+                  {t("matchDetail.markPaid")}
                 </Button>
               )}
             </div>
@@ -223,7 +232,7 @@ export default function MatchClientPage() {
         },
       },
     ],
-    [user, signupMutation.isPending, matchTitle],
+    [user, signupMutation.isPending, matchTitle, t, statusLabelMap],
   );
 
   const table = useReactTable({
@@ -240,18 +249,18 @@ export default function MatchClientPage() {
     navigator.clipboard
       .writeText(matchUrl)
       .then(() => {
-        setCopyButtonText("Copied!");
+        setCopyButtonText(t("matchDetail.copied"));
         showToast({
-          title: "Link copied!",
-          description: "You can now share it anywhere.",
+          title: t("matchDetail.linkCopied"),
+          description: t("matchDetail.shareAnywhere"),
         });
-        setTimeout(() => setCopyButtonText("Copy link"), 2000);
+        setTimeout(() => setCopyButtonText(t("matchDetail.pay")), 2000);
       })
       .catch(() => {
         showToast({
           variant: "destructive",
-          title: "Error",
-          description: "Failed to copy link to clipboard.",
+          title: t("matchDetail.error"),
+          description: t("matchDetail.copyFailed"),
         });
       });
   }
@@ -271,7 +280,9 @@ export default function MatchClientPage() {
 
   if (isMatchLoading || isSessionPending) {
     return (
-      <div className="py-8 text-center text-muted-foreground">Loading...</div>
+      <div className="py-8 text-center text-muted-foreground">
+        {t("shared.loading")}
+      </div>
     );
   }
   if (matchError) {
@@ -320,7 +331,7 @@ export default function MatchClientPage() {
       />
       <div className="mt-4 flex justify-center">
         <Button variant="outline" onClick={() => router.push("/rules")}>
-          View Rules
+          {t("matchDetail.viewRules")}
         </Button>
       </div>
       <GuestSignupDialog

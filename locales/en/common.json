@@ -1,0 +1,193 @@
+{
+  "appTitle": "Football with Friends",
+  "subtitle": "Organize, join, and manage your football matches same as with Google Sheets.",
+  "nav": {
+    "matches": "Matches",
+    "organizer": "Organizer",
+    "rules": "Rules",
+    "addMatch": "Add Match"
+  },
+  "home": {
+    "title": "Football with Friends",
+    "description": "Organize, join, and manage your football matches just like with Google Sheets.",
+    "matches": "Matches",
+    "rules": "Rules & Info",
+    "newMatch": "New Match",
+    "organizerDashboard": "Organizer Dashboard"
+  },
+  "matches": {
+    "upcoming": "Upcoming Matches",
+    "past": "Past Matches",
+    "view": "View",
+    "none": "No matches found.",
+    "error": "Failed to load matches."
+  },
+  "matchDetail": {
+    "pay": "Pay",
+    "markPaid": "Mark as Paid",
+    "viewRules": "View Rules",
+    "shareAnywhere": "You can now share it anywhere.",
+    "error": "Error",
+    "copyFailed": "Failed to copy link to clipboard.",
+    "signupSuccess": "Signed up for the match!",
+    "markPaidSuccess": "Marked as paid",
+    "cancelSuccess": "You have cancelled your spot.",
+    "guestAddSuccess": "Guest added successfully!"
+  },
+  "share": {
+    "title": "Share this match",
+    "description": "Choose how you'd like to share:",
+    "whatsapp": "Share via WhatsApp",
+    "close": "Close",
+    "copyLink": "Copy link",
+    "copied": "Copied!",
+    "linkCopied": "Link copied!"
+  },
+  "stats": {
+    "paid": "Paid",
+    "cost": "Cost (p.p.)",
+    "court": "Court #"
+  },
+  "actions": {
+    "in": "You're in!",
+    "wantToPlay": "Want to play?",
+    "cancelOrGuest": "You can cancel your spot or sign up a guest below.",
+    "spotsLeft": "{count, plural, one {# spot left!} other {# spots left!}}",
+    "matchFull": "Match is full!",
+    "joining": "Joining...",
+    "join": "Join Match",
+    "cancelling": "Cancelling...",
+    "cancel": "Cancel my spot",
+    "signUpGuest": "Sign up a guest",
+    "cancelled": "You have cancelled your spot."
+  },
+  "players": {
+    "updating": "Updating players..."
+  },
+  "guest": {
+    "title": "Sign up a guest",
+    "label": "Guest's name (optional)",
+    "placeholder": "Guest's name (optional)",
+    "add": "Add guest",
+    "adding": "Adding...",
+    "nameTooLong": "Name too long"
+  },
+  "notify": {
+    "trigger": "I paid",
+    "title": "If you already paid, you can notify the organizer via WhatsApp",
+    "send": "Send WhatsApp message",
+    "sent": "I already sent the message"
+  },
+  "rules": {
+    "title": "Rules & Info",
+    "description": "Fútbol con los pibes – Rules, and summary stats.",
+    "generalTitle": "General Rules",
+    "general": [
+      "No late arrivals. Arrive 10 minutes before kickoff.",
+      "Pay before playing. No pay, no play.",
+      "Respect all players and referees.",
+      "2x1 rule: If you cancel late, you pay double next time.",
+      "Guest players allowed if spots are open."
+    ],
+    "matchTitle": "Match Rules",
+    "match": [
+      "If the ball touches the net, it's out.",
+      "The goalkeeper cannot grab the ball if it comes from a teammate's pass.",
+      "Goals can only be scored from the opponent's half.",
+      "When the goalkeeper throws the ball, it can only cross midfield if it bounces before crossing."
+    ]
+  },
+  "organizer": {
+    "title": "Organizer Dashboard",
+    "description": "Manage all matches, edit details, or remove matches.",
+    "unauthorized": "You are not authorized to view this page.",
+    "error": "Failed to load matches: {message}",
+    "table": {
+      "court": "Court",
+      "costCourt": "Cost Court",
+      "costShirts": "Cost Shirts"
+    },
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteTitle": "Delete Match",
+    "deleteDesc": "Are you sure you want to delete this match? This action cannot be undone.",
+    "deleteConfirm": "Delete",
+    "updateSuccess": "Match updated successfully",
+    "updateError": "Failed to update match",
+    "deleteSuccess": "Match deleted successfully",
+    "deleteError": "Failed to delete match"
+  },
+  "signin": {
+    "signInWithGoogle": "Sign in with Google",
+    "signInSuccess": "Successfully signed in"
+  },
+  "addMatch": {
+    "title": "Add Match",
+    "mustSignIn": "You must be signed in.",
+    "unauthorized": "You are not authorized to add matches.",
+    "courtNumber": "Court Number (optional)",
+    "costCourt": "Cost per person (optional)",
+    "add": "+ Add Match",
+    "adding": "Adding...",
+    "created": "Match created! Redirecting you to the match page...",
+    "redirecting": "Match created! Redirecting...",
+    "error": "Failed to create match",
+    "dateRequired": "Please select a date.",
+    "timeFormat": "Time must be in HH:mm format.",
+    "timeIncrement": "Time must be in 30-minute increments (e.g. 18:00, 18:30)",
+    "courtPlaceholder": "Court #",
+    "costPlaceholder": "Cost per person"
+  },
+  "errors": {
+    "duplicateDate": "A match already exists for this date.",
+    "missingFields": "Missing required fields.",
+    "invalidInput": "Invalid input.",
+    "unauthorizedApi": "You are not authorized to perform this action.",
+    "noMatchId": "No matchId returned.",
+    "unknownError": "Unknown error."
+  },
+  "editMatch": {
+    "courtNumber": "Court Number",
+    "costCourt": "Cost (Court)",
+    "costShirts": "Cost (Shirts)",
+    "save": "Save",
+    "saving": "Saving..."
+  },
+  "playerDrawer": {
+    "title": "Players for {title}",
+    "description": "View and manage players signed up for this match.",
+    "error": "Error loading players: {message}",
+    "noPlayers": "No players found.",
+    "email": "Email",
+    "cancelling": "Cancelling...",
+    "cancelSpot": "Cancel Spot",
+    "cancelSuccess": "Cancelled {name}'s spot.",
+    "cancelError": "Could not cancel player's spot."
+  },
+  "shared": {
+    "loading": "Loading...",
+    "home": "Home",
+    "signIn": "Sign In",
+    "addToCalendar": "Add to calendar",
+    "iosSafari": "To add this event to your calendar, please open this page in Safari and tap 'Add to Calendar.' Or use Google Calendar instead.",
+    "logOut": "Log out",
+    "logIn": "Log in",
+    "userProfile": "User Profile",
+    "userDetails": "User account details and session information.",
+    "user": "User",
+    "signOut": "Sign Out",
+    "toggleTheme": "Toggle theme",
+    "errorOccurred": "An error occurred",
+    "cancel": "Cancel",
+    "name": "Name",
+    "status": "Status",
+    "actions": "Actions",
+    "date": "Date",
+    "time": "Time"
+  },
+  "status": {
+    "paid": "Paid",
+    "pending": "Pending",
+    "cancelled": "Cancelled"
+  }
+}
