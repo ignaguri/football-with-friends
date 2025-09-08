@@ -1,8 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { toast } from "sonner";
-
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +20,8 @@ import {
 } from "@/components/ui/table";
 import { useGetMatch, useSignupPlayer } from "@/hooks/use-matches";
 import { capitalize, formatMatchTitle } from "@/lib/utils";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 interface PlayerDrawerProps {
   matchId: string | null;
@@ -68,8 +67,10 @@ export function PlayerDrawer({
         onSuccess: () => {
           toast.success(t("playerDrawer.cancelSuccess", { name: player.Name }));
         },
-        onError: (e: any) => {
-          toast.error(e.message || t("playerDrawer.cancelError"));
+        onError: (e: unknown) => {
+          toast.error(
+            e instanceof Error ? e.message : t("playerDrawer.cancelError"),
+          );
         },
       },
     );

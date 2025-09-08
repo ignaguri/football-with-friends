@@ -1,12 +1,11 @@
 "use client";
 
+import { useGetMatches } from "@/hooks/use-matches";
 import { format, isValid, parse } from "date-fns";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import type { Match, MatchMetadata } from "@/lib/types";
-
-import { useGetMatches } from "@/hooks/use-matches";
 
 function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
   const t = useTranslations();

@@ -1,14 +1,5 @@
 "use client";
 
-import { parse, format as formatDate } from "date-fns";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { toast } from "sonner";
-
-import type { MatchMetadata } from "@/lib/types";
-
-import { EditMatchForm } from "./edit-match-form";
-import { PlayerDrawer } from "./player-drawer";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +34,15 @@ import {
   useUpdateMatch,
 } from "@/hooks/use-matches";
 import { useSession } from "@/lib/auth-client";
+import { parse, format as formatDate } from "date-fns";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import type { MatchMetadata } from "@/lib/types";
+
+import { EditMatchForm } from "./edit-match-form";
+import { PlayerDrawer } from "./player-drawer";
 
 export default function OrganizerDashboard() {
   const t = useTranslations();
@@ -64,13 +64,15 @@ export default function OrganizerDashboard() {
     null,
   );
 
-  const handleDelete = (matchId: string) => {
+  const _handleDelete = (matchId: string) => {
     deleteMatch(matchId, {
       onSuccess: () => {
         toast.success(t("organizer.deleteSuccess"));
       },
-      onError: (e: any) => {
-        toast.error(e.message || t("organizer.deleteError"));
+      onError: (e: unknown) => {
+        toast.error(
+          e instanceof Error ? e.message : t("organizer.deleteError"),
+        );
       },
     });
   };
@@ -91,8 +93,10 @@ export default function OrganizerDashboard() {
           toast.success(t("organizer.updateSuccess"));
           setEditingMatch(null);
         },
-        onError: (e: any) => {
-          toast.error(e.message || t("organizer.updateError"));
+        onError: (e: unknown) => {
+          toast.error(
+            e instanceof Error ? e.message : t("organizer.updateError"),
+          );
         },
       },
     );

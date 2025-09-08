@@ -90,7 +90,10 @@ export async function createMatchSheet(
       ],
     },
   });
-  const sheetProps = response.data.replies?.[0]?.addSheet?.properties!;
+  const sheetProps = response.data.replies?.[0]?.addSheet?.properties;
+  if (!sheetProps) {
+    throw new Error("Failed to create sheet - no properties returned");
+  }
 
   // Write header row: Name, Email, Status
   await sheets.spreadsheets.values.update({
@@ -137,7 +140,7 @@ export async function addOrUpdatePlayerRow(
   const sheets = getSheetsWriteClient();
   const data = await getMatchSheetData(sheetName);
   // Ensure header has new columns
-  let header = data[0] || [];
+  const header = data[0] || [];
   let needsUpdate = false;
   if (!header.includes("IsGuest")) {
     header.push("IsGuest");
@@ -167,7 +170,7 @@ export async function addOrUpdatePlayerRow(
   const ownerEmailIdx = header.indexOf("OwnerEmail");
   const guestNameIdx = header.indexOf("GuestName");
   // Compose row
-  let row: string[] = Array(header.length).fill("");
+  const row: string[] = Array(header.length).fill("");
   row[nameIdx] = player.name;
   row[emailIdx] = player.email;
   row[statusIdx] = player.status;
@@ -255,7 +258,11 @@ export async function ensureMasterSheetExists(): Promise<sheets_v4.Schema$SheetP
     valueInputOption: "RAW",
     requestBody: { values: [MASTER_HEADERS] },
   });
-  return resp.data.replies?.[0]?.addSheet?.properties!;
+  const properties = resp.data.replies?.[0]?.addSheet?.properties;
+  if (!properties) {
+    throw new Error("Failed to create sheet - no properties returned");
+  }
+  return properties;
 }
 
 /**
@@ -273,9 +280,9 @@ export async function getAllMatchesMetadata(): Promise<MatchMetadata[]> {
   if (rows.length < 2) return [];
   const headers = rows[0];
   return rows.slice(1).map((row) => {
-    const obj: any = {};
+    const obj: Record<string, string> = {};
     headers.forEach((h, i) => (obj[h] = row[i] ?? ""));
-    return obj as MatchMetadata;
+    return obj as unknown as MatchMetadata;
   });
 }
 

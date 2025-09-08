@@ -1,15 +1,14 @@
-import { parse, isSameDay } from "date-fns";
-import { headers } from "next/headers";
-import { z } from "zod";
-
-import type { MatchMetadata } from "@/lib/types";
-
 import { auth } from "@/lib/auth";
 import {
   createMatchSheet,
   getAllMatchesMetadata,
   addMatchMetadata,
 } from "@/lib/google-sheets";
+import { parse, isSameDay } from "date-fns";
+import { headers } from "next/headers";
+import { z } from "zod";
+
+import type { MatchMetadata } from "@/lib/types";
 
 // GET /api/matches: Returns all matches from the master sheet
 export async function GET(req: Request) {

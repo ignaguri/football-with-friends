@@ -1,8 +1,9 @@
 "use client";
 
-import { ShareDrawer } from "./share-drawer";
 import { CalendarDownload } from "@/components/calendar-download";
 import { capitalize } from "@/lib/utils";
+
+import { ShareDrawer } from "./share-drawer";
 
 interface MatchHeaderProps {
   matchTitle: string;

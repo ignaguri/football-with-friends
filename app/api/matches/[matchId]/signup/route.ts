@@ -1,7 +1,6 @@
-import { headers } from "next/headers";
-
 import { auth } from "@/lib/auth";
 import { addOrUpdatePlayerRow, getSheetNameById } from "@/lib/google-sheets";
+import { headers } from "next/headers";
 
 export async function POST(
   req: Request,
@@ -24,7 +23,7 @@ export async function POST(
       return new Response("Missing fields", { status: 400 });
     }
     // Compose guest display name
-    let name = guestName
+    const name = guestName
       ? `${guestName} (Guest of ${ownerName})`
       : `Guest of ${ownerName}`;
     // Generate unique guest email

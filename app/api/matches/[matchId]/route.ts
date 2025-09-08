@@ -1,7 +1,3 @@
-import { headers } from "next/headers";
-
-import type { MatchMetadata } from "@/lib/types";
-
 import { auth } from "@/lib/auth";
 import {
   getMatchSheetData,
@@ -9,6 +5,9 @@ import {
   getSheetNameById,
 } from "@/lib/google-sheets";
 import { updateMatchMetadata, deleteMatchMetadata } from "@/lib/google-sheets";
+import { headers } from "next/headers";
+
+import type { MatchMetadata } from "@/lib/types";
 
 export async function GET(
   request: Request,
@@ -68,7 +67,7 @@ export async function PATCH(
   try {
     await updateMatchMetadata(matchId, updates);
     return new Response("OK", { status: 200 });
-  } catch (e) {
+  } catch {
     return new Response("Match not found", { status: 404 });
   }
 }
@@ -87,7 +86,7 @@ export async function DELETE(
   try {
     await deleteMatchMetadata(matchId);
     return new Response("OK", { status: 200 });
-  } catch (e) {
+  } catch {
     return new Response("Match not found", { status: 404 });
   }
 }

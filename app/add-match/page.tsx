@@ -1,5 +1,10 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { useSession } from "@/lib/auth-client";
+import { isApiErrorKey } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -8,20 +13,16 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import { useSession } from "@/lib/auth-client";
-
 function AddMatchForm() {
   const t = useTranslations();
+  const tErrors = useTranslations("errors");
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const user = session?.user;
   const isAdmin = user?.role === "admin";
   const [error, setError] = useState<string | null>(null);
   const addMatchSchema = z.object({
-    date: z.date({ required_error: t("addMatch.dateRequired") }),
+    date: z.date({ error: t("addMatch.dateRequired") }),
     time: z
       .string()
       .regex(/^\d{2}:\d{2}$/, t("addMatch.timeFormat"))
@@ -99,9 +100,11 @@ function AddMatchForm() {
         try {
           const data = await res.json();
           if (data?.error && typeof data.error === "string") {
-            errorMsg = t(data.error as any, {
-              defaultValue: t("addMatch.error"),
-            });
+            if (isApiErrorKey(data.error)) {
+              errorMsg = tErrors(data.error);
+            } else {
+              errorMsg = data.error;
+            }
           }
         } catch {
           // fallback to text
@@ -121,8 +124,8 @@ function AddMatchForm() {
       setTimeout(() => {
         router.push(`/matches/${encodeURIComponent(matchId)}`);
       }, 800);
-    } catch (err: any) {
-      setError(err.message || t("errors.unknownError"));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("errors.unknownError"));
     }
   }
 

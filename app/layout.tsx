@@ -1,12 +1,12 @@
 import "./globals.css";
-import { Montserrat, Fira_Mono } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Wrapper, WrapperWithQuery } from "@/components/wrapper";
 import { createMetadata } from "@/lib/metadata";
+import { Montserrat, Fira_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-sans" });
 const firaMono = Fira_Mono({

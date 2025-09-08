@@ -1,12 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useEffect } from "react";
-import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { client, useSession } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function Page() {
   const tSignin = useTranslations("signin");
@@ -14,7 +13,7 @@ export default function Page() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
 
-  async function handleGoogleSignIn() {
+  const handleGoogleSignIn = useCallback(async () => {
     try {
       await client.signIn.social({
         provider: "google",
@@ -34,13 +33,13 @@ export default function Page() {
         error instanceof Error ? error.message : tShared("errorOccurred"),
       );
     }
-  }
+  }, [router, tShared, tSignin]);
 
   useEffect(() => {
     if (!isPending && !session) {
       handleGoogleSignIn();
     }
-  }, [isPending, session]);
+  }, [isPending, session, handleGoogleSignIn]);
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center">
