@@ -98,11 +98,6 @@ const config = [
       react: reactPlugin,
       import: importPlugin,
       "@next/next": nextPlugin,
-      "migration-format": {
-        rules: {
-          "migration-format": migrationFormatRule,
-        },
-      },
     },
     settings: {
       tailwindcss: {

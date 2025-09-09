@@ -2,16 +2,18 @@
 // Remote migration CLI script for Turso database
 
 // Load environment variables first
-import "dotenv/config";
+import { config } from "dotenv";
 
-import {
-  MigrationRunner,
-  MigrationError,
-  MigrationStatusError,
-} from "@/lib/database/migrator";
-import { getTursoEnv } from "@/lib/env";
+// Load .env.prod, fallback to .env
+config({ path: ".env.prod" });
+config({ path: ".env" });
 
 async function main() {
+  // Dynamic import after environment is loaded
+  const { MigrationRunner, MigrationError, MigrationStatusError } =
+    await import("@/lib/database/migrator");
+  const { getTursoEnv } = await import("@/lib/env");
+
   const command = process.argv[2];
 
   // Validate environment for remote migrations

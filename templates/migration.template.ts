@@ -1,4 +1,5 @@
 // Migration template - Copy this file to migrations/ directory and rename
+// File should be named: YYYYMMDDHHMMSS-description.ts
 
 import type { Kysely, Migration } from "kysely";
 

@@ -90,7 +90,7 @@ export class MigrationStatusError extends Error {
 
 export class MigrationRunner {
   private migrator: KyselyMigrator;
-  private db: Kysely<any>;
+  private db: Kysely<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   constructor(migrationFolder?: string) {
     this.db = getDatabase();
@@ -170,8 +170,17 @@ export class MigrationRunner {
           SELECT name, timestamp FROM kysely_migration ORDER BY timestamp ASC
         `.execute(this.db);
         executedMigrations = result.rows;
-      } catch {
-        return { executed: [], pending: [] };
+      } catch (error) {
+        // If no migration table exists, all migration files are pending
+        try {
+          const migrationFiles = await this.migrator.getMigrations();
+          return {
+            executed: [],
+            pending: migrationFiles.map((m) => m.name),
+          };
+        } catch (migrationError) {
+          return { executed: [], pending: [] };
+        }
       }
 
       // Get all migration files
@@ -200,6 +209,16 @@ export class MigrationRunner {
     pending: MigrationFileInfo[];
   }> {
     const status = await this.getMigrationStatus();
+
+    // If no migration table exists, all migrations are pending
+    if (status.executed.length === 0 && status.pending.length === 0) {
+      const migrationFiles = await this.migrator.getMigrations();
+      return {
+        executed: [],
+        pending: migrationFiles as MigrationFileInfo[],
+      };
+    }
+
     const migrationFiles = await this.migrator.getMigrations();
 
     const executedMigrations: ExecutedMigration[] = [];

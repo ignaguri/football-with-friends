@@ -8,15 +8,15 @@ import { admin } from "better-auth/plugins";
 function getDatabaseConfig() {
   const environment = env;
 
-  // For auth, use Turso in production, local database otherwise
-  if (environment.NODE_ENV === "production") {
+  // Use Turso if STORAGE_PROVIDER is turso, otherwise use local database
+  if (environment.STORAGE_PROVIDER === "turso") {
     const tursoEnv = getTursoEnv();
     return new LibsqlDialect({
       url: tursoEnv.TURSO_DATABASE_URL,
       authToken: tursoEnv.TURSO_AUTH_TOKEN,
     });
   } else {
-    // Use local database for auth in development
+    // Use local database for auth when using google-sheets or local-db storage
     const localDbEnv = getLocalDbEnv();
     return new LibsqlDialect({
       url: localDbEnv.LOCAL_DATABASE_URL,

@@ -100,7 +100,7 @@ export function getLocalDbEnv() {
     environment.STORAGE_PROVIDER === "local-db"
   ) {
     return {
-      LOCAL_DATABASE_URL: environment.LOCAL_DATABASE_URL,
+      LOCAL_DATABASE_URL: (environment as any).LOCAL_DATABASE_URL,
     };
   }
   throw new Error(

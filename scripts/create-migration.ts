@@ -15,7 +15,8 @@ function generateMigrationTemplate(
   name: string,
   description: string,
 ): MigrationTemplate {
-  const timestamp = new Date().toISOString().split("T")[0].replace(/-/g, "-");
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[-:T]/g, "").split(".")[0]; // Format: YYYYMMDDHHMMSS
   const migrationName = `${timestamp}-${name}`;
 
   const content = `// ${description}
@@ -123,7 +124,7 @@ Examples:
   pnpm create-migration update-match-schema "Update match table with new fields"
 
 The migration file will be created in the migrations/ directory with the format:
-  YYYY-MM-DD-<name>.ts
+  YYYYMMDDHHMMSS-<name>.ts
     `);
     process.exit(0);
   }

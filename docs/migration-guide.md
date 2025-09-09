@@ -18,7 +18,7 @@ pnpm create-migration add-user-preferences
 pnpm create-migration add-user-preferences "Add user preferences table with settings"
 ```
 
-This will create a file like `migrations/2024-01-15-add-user-preferences.ts` with a proper template.
+This will create a file like `migrations/20240115162947-add-user-preferences.ts` with a proper template.
 
 ### 2. Edit the Migration
 
@@ -102,14 +102,14 @@ pnpm migrate-remote status
 Migration files must follow this format:
 
 ```
-YYYY-MM-DD-description.ts
+YYYYMMDDHHMMSS-description.ts
 ```
 
 Examples:
 
-- `2024-01-15-add-user-preferences.ts`
-- `2024-01-16-update-match-schema.ts`
-- `2024-01-17-add-indexes.ts`
+- `20240115162947-add-user-preferences.ts`
+- `20240116143022-update-match-schema.ts`
+- `20240117110533-add-indexes.ts`
 
 ### File Structure
 

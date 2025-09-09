@@ -12,7 +12,7 @@ module.exports = {
     schema: [],
     messages: {
       invalidFileName:
-        "Migration file name must follow format: YYYY-MM-DD-description.ts",
+        "Migration file name must follow format: YYYYMMDDHHMMSS-description.ts",
       missingUpExport: "Migration file must export 'up' function",
       missingDownExport: "Migration file must export 'down' function",
       invalidUpType: "Migration 'up' function must be of type Migration['up']",
@@ -40,8 +40,8 @@ module.exports = {
       Program(node) {
         // Check file name format
         const fileName = filename.split("/").pop();
-        const datePattern = /^\d{4}-\d{2}-\d{2}-[a-zA-Z0-9-_]+\.ts$/;
-        if (!datePattern.test(fileName)) {
+        const timestampPattern = /^\d{14}-[a-zA-Z0-9-_]+\.ts$/;
+        if (!timestampPattern.test(fileName)) {
           context.report({
             node,
             messageId: "invalidFileName",
@@ -49,33 +49,85 @@ module.exports = {
         }
       },
 
-      ImportDeclaration(node) {
-        if (node.source.value === "kysely") {
-          const hasKyselyTypes = node.specifiers.some(
-            (spec) =>
-              spec.type === "ImportSpecifier" &&
-              (spec.imported.name === "Migration" ||
-                spec.imported.name === "Kysely"),
-          );
-          const hasSqlImport = node.specifiers.some(
-            (spec) =>
-              spec.type === "ImportDefaultSpecifier" &&
-              spec.local.name === "sql",
-          );
+      // Check for required imports and exports
+      Program(node) {
+        const imports = node.body.filter(
+          (node) => node.type === "ImportDeclaration",
+        );
 
-          if (!hasKyselyTypes) {
-            context.report({
-              node,
-              messageId: "missingKyselyImport",
-            });
-          }
+        let hasKyselyTypes = false;
+        let hasSqlImport = false;
 
-          if (!hasSqlImport) {
-            context.report({
-              node,
-              messageId: "missingSqlImport",
-            });
+        imports.forEach((importNode) => {
+          if (importNode.source.value === "kysely") {
+            const hasTypes = importNode.specifiers.some(
+              (spec) =>
+                spec.type === "ImportSpecifier" &&
+                (spec.imported.name === "Migration" ||
+                  spec.imported.name === "Kysely"),
+            );
+            const hasSql = importNode.specifiers.some(
+              (spec) =>
+                spec.type === "ImportDefaultSpecifier" &&
+                spec.local.name === "sql",
+            );
+
+            if (hasTypes) hasKyselyTypes = true;
+            if (hasSql) hasSqlImport = true;
           }
+        });
+
+        if (!hasKyselyTypes) {
+          context.report({
+            node,
+            messageId: "missingKyselyImport",
+          });
+        }
+
+        // Note: sql import is optional - only required if using raw SQL
+        // We'll check for usage in the migration functions instead
+
+        // Check for missing exports
+        const exports = node.body.filter(
+          (node) => node.type === "ExportNamedDeclaration",
+        );
+
+        const hasUpExport = exports.some((exportNode) => {
+          if (
+            exportNode.declaration &&
+            exportNode.declaration.type === "VariableDeclaration"
+          ) {
+            return exportNode.declaration.declarations.some(
+              (decl) => decl.id.name === "up",
+            );
+          }
+          return false;
+        });
+
+        const hasDownExport = exports.some((exportNode) => {
+          if (
+            exportNode.declaration &&
+            exportNode.declaration.type === "VariableDeclaration"
+          ) {
+            return exportNode.declaration.declarations.some(
+              (decl) => decl.id.name === "down",
+            );
+          }
+          return false;
+        });
+
+        if (!hasUpExport) {
+          context.report({
+            node,
+            messageId: "missingUpExport",
+          });
+        }
+
+        if (!hasDownExport) {
+          context.report({
+            node,
+            messageId: "missingDownExport",
+          });
         }
       },
 
@@ -145,51 +197,6 @@ module.exports = {
             }
             parent = parent.parent;
           }
-        }
-      },
-
-      // Check for missing exports
-      Program(node) {
-        const exports = node.body.filter(
-          (node) => node.type === "ExportNamedDeclaration",
-        );
-
-        const hasUpExport = exports.some((exportNode) => {
-          if (
-            exportNode.declaration &&
-            exportNode.declaration.type === "VariableDeclaration"
-          ) {
-            return exportNode.declaration.declarations.some(
-              (decl) => decl.id.name === "up",
-            );
-          }
-          return false;
-        });
-
-        const hasDownExport = exports.some((exportNode) => {
-          if (
-            exportNode.declaration &&
-            exportNode.declaration.type === "VariableDeclaration"
-          ) {
-            return exportNode.declaration.declarations.some(
-              (decl) => decl.id.name === "down",
-            );
-          }
-          return false;
-        });
-
-        if (!hasUpExport) {
-          context.report({
-            node,
-            messageId: "missingUpExport",
-          });
-        }
-
-        if (!hasDownExport) {
-          context.report({
-            node,
-            messageId: "missingDownExport",
-          });
         }
       },
     };

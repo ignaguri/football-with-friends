@@ -174,8 +174,8 @@ export class TursoMatchRepository implements MatchRepository {
     let query = this.db
       .selectFrom("matches")
       .selectAll()
-      .orderBy("date", "desc")
-      .orderBy("time", "desc");
+      .orderBy("date", "asc")
+      .orderBy("time", "asc");
 
     if (filters?.status) {
       query = query.where("status", "=", filters.status);
@@ -352,7 +352,7 @@ export class TursoSignupRepository implements SignupRepository {
     let query = this.db
       .selectFrom("signups")
       .selectAll()
-      .orderBy("signed_up_at", "desc");
+      .orderBy("signed_up_at", "asc");
 
     if (filters?.matchId) {
       query = query.where("match_id", "=", filters.matchId);
@@ -559,7 +559,7 @@ export class TursoSignupRepository implements SignupRepository {
       .selectFrom("signups")
       .selectAll()
       .where("added_by_user_id", "=", userId)
-      .orderBy("signed_up_at", "desc")
+      .orderBy("signed_up_at", "asc")
       .execute();
 
     return rows.map(dbSignupToSignup);
@@ -577,7 +577,7 @@ export class TursoMatchInvitationRepository
       .selectFrom("match_invitations")
       .selectAll()
       .where("match_id", "=", matchId)
-      .orderBy("invited_at", "desc")
+      .orderBy("invited_at", "asc")
       .execute();
 
     return rows.map(dbInvitationToInvitation);
@@ -588,7 +588,7 @@ export class TursoMatchInvitationRepository
       .selectFrom("match_invitations")
       .selectAll()
       .where("invited_by_user_id", "=", userId)
-      .orderBy("invited_at", "desc")
+      .orderBy("invited_at", "asc")
       .execute();
 
     return rows.map(dbInvitationToInvitation);
@@ -599,7 +599,7 @@ export class TursoMatchInvitationRepository
       .selectFrom("match_invitations")
       .selectAll()
       .where("email", "=", email)
-      .orderBy("invited_at", "desc")
+      .orderBy("invited_at", "asc")
       .execute();
 
     return rows.map(dbInvitationToInvitation);

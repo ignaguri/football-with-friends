@@ -1,16 +1,18 @@
 #!/usr/bin/env tsx
 // Migration CLI script
 
-// Load environment variables first
-import "dotenv/config";
+// Load environment variables FIRST, before any other imports
+import { config } from "dotenv";
 
-import {
-  MigrationRunner,
-  MigrationError,
-  MigrationStatusError,
-} from "@/lib/database/migrator";
+// Load .env.local for local development, fallback to .env
+config({ path: ".env.local" });
+config({ path: ".env" });
 
 async function main() {
+  // Dynamic import after environment is loaded
+  const { MigrationRunner, MigrationError, MigrationStatusError } =
+    await import("@/lib/database/migrator");
+
   const command = process.argv[2];
   const runner = new MigrationRunner();
 
