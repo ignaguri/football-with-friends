@@ -2,33 +2,36 @@
 
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { Kysely } from "kysely";
+import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 
 import type { Database } from "./schema";
 
 // Database connection configuration
 export function createDatabase(): Kysely<Database> {
-  const storageProvider = process.env.STORAGE_PROVIDER || 'google-sheets';
+  const { STORAGE_PROVIDER, NODE_ENV } = env;
   
-  if (storageProvider === 'local-db') {
+  if (STORAGE_PROVIDER === "local-db") {
     // Local SQLite database for development
+    const localDbEnv = getLocalDbEnv();
     const libsql = new LibsqlDialect({
-      url: process.env.LOCAL_DATABASE_URL || "file:./local.db",
+      url: localDbEnv.LOCAL_DATABASE_URL,
     });
 
     return new Kysely<Database>({
       dialect: libsql,
-      log: process.env.NODE_ENV === 'development' ? ['query'] : [],
+      log: NODE_ENV === "development" ? ["query"] : [],
     });
   } else {
     // Production Turso database
+    const tursoEnv = getTursoEnv();
     const libsql = new LibsqlDialect({
-      url: process.env.TURSO_DATABASE_URL || "",
-      authToken: process.env.TURSO_AUTH_TOKEN || "",
+      url: tursoEnv.TURSO_DATABASE_URL,
+      authToken: tursoEnv.TURSO_AUTH_TOKEN,
     });
 
     return new Kysely<Database>({
       dialect: libsql,
-      log: process.env.NODE_ENV === 'development' ? ['query'] : [],
+      log: NODE_ENV === "development" ? ["query"] : [],
     });
   }
 }

@@ -1,10 +1,12 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
+import { env, getTursoEnv } from "@/lib/env";
 
+const tursoEnv = getTursoEnv();
 const libsql = new LibsqlDialect({
-  url: process.env.TURSO_DATABASE_URL || "",
-  authToken: process.env.TURSO_AUTH_TOKEN || "",
+  url: tursoEnv.TURSO_DATABASE_URL,
+  authToken: tursoEnv.TURSO_AUTH_TOKEN,
 });
 
 export const auth = betterAuth({
@@ -29,8 +31,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
       // mapProfileToUser: (profile) => ({
       //   name: profile.name || `${profile.given_name || ""} ${profile.family_name || ""}`.trim(),
       //   email: profile.email,
