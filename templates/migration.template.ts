@@ -1,9 +1,10 @@
 // Migration template - Copy this file to migrations/ directory and rename
 // File should be named: YYYYMMDDHHMMSS-description.ts
 
+import type { ExtendedDatabase } from "@/lib/database/schema";
 import type { Kysely, Migration } from "kysely";
 
-export const up: Migration["up"] = async (db: Kysely<any>) => {
+export const up: Migration["up"] = async (db: Kysely<ExtendedDatabase>) => {
   // TODO: Implement your migration logic here
 
   // Example: Create a new table
@@ -15,6 +16,17 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   //     col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull(),
   //   )
   //   .execute();
+
+  // Example: Check if table exists using sqlite_master
+  // const tableExists = async (tableName: string): Promise<boolean> => {
+  //   const result = await db
+  //     .selectFrom("sqlite_master")
+  //     .select("name")
+  //     .where("type", "=", "table")
+  //     .where("name", "=", tableName)
+  //     .executeTakeFirst();
+  //   return !!result;
+  // };
 
   // Example: Add a column to existing table
   // await db.schema
@@ -42,7 +54,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   console.log("✅ Migration completed successfully");
 };
 
-export const down: Migration["down"] = async (db: Kysely<any>) => {
+export const down: Migration["down"] = async (db: Kysely<ExtendedDatabase>) => {
   // TODO: Implement rollback logic here
   // This should undo the changes made in the 'up' function
 

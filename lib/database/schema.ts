@@ -66,6 +66,26 @@ export interface Database {
   match_invitations: MatchInvitationsTable;
 }
 
+// SQLite system tables used by migrations and database introspection
+export interface SqliteMasterTable {
+  type: string;
+  name: string;
+  tbl_name: string;
+  rootpage: number;
+  sql: string | null;
+}
+
+export interface KyselyMigrationTable {
+  name: string;
+  timestamp: string;
+}
+
+// Extended database interface that includes SQLite system tables
+export interface ExtendedDatabase extends Database {
+  sqlite_master: SqliteMasterTable;
+  kysely_migration: KyselyMigrationTable;
+}
+
 // Type helpers for operations
 
 export type Location = Selectable<LocationsTable>;

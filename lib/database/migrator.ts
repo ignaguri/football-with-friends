@@ -10,9 +10,10 @@ import {
 } from "kysely";
 import * as path from "path";
 
+import type { ExtendedDatabase } from "./schema";
 import type { Kysely } from "kysely";
 
-import { getDatabase } from "./connection";
+import { getExtendedDatabase } from "./connection";
 
 /**
  * Status of database migrations
@@ -90,10 +91,10 @@ export class MigrationStatusError extends Error {
 
 export class MigrationRunner {
   private migrator: KyselyMigrator;
-  private db: Kysely<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  private db: Kysely<ExtendedDatabase>;
 
   constructor(migrationFolder?: string) {
-    this.db = getDatabase();
+    this.db = getExtendedDatabase();
     const migrationsPath =
       migrationFolder || path.join(process.cwd(), "migrations");
 
