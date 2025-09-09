@@ -2,9 +2,9 @@
 
 import { sql } from "kysely";
 
-import type { Kysely } from "kysely";
+import type { Kysely, Migration } from "kysely";
 
-export async function up(db: Kysely<any>): Promise<void> {
+export const up: Migration["up"] = async (db: Kysely<any>) => {
   // Create locations table
   await db.schema
     .createTable("locations")
@@ -133,9 +133,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 
   console.log("✅ Initial schema created successfully");
-}
+};
 
-export async function down(db: Kysely<any>): Promise<void> {
+export const down: Migration["down"] = async (db: Kysely<any>) => {
   // Drop tables in reverse order to handle foreign key constraints
   await db.schema.dropTable("match_invitations").execute();
   await db.schema.dropTable("signups").execute();
@@ -143,4 +143,4 @@ export async function down(db: Kysely<any>): Promise<void> {
   await db.schema.dropTable("locations").execute();
 
   console.log("↩️ Initial schema rolled back successfully");
-}
+};

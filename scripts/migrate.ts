@@ -4,7 +4,11 @@
 // Load environment variables first
 import "dotenv/config";
 
-import { MigrationRunner } from "@/lib/database/migrator";
+import {
+  MigrationRunner,
+  MigrationError,
+  MigrationStatusError,
+} from "@/lib/database/migrator";
 
 async function main() {
   const command = process.argv[2];
@@ -22,7 +26,17 @@ async function main() {
         }
         console.log("✅ All migrations completed successfully");
       } catch (error) {
-        console.error("❌ Migration failed:", error);
+        if (error instanceof MigrationError) {
+          console.error("❌ Migration error:", error.message);
+          if (error.migrationName) {
+            console.error(`   Migration: ${error.migrationName}`);
+          }
+          if (error.originalError) {
+            console.error("   Original error:", error.originalError);
+          }
+        } else {
+          console.error("❌ Migration failed:", error);
+        }
         process.exit(1);
       }
       break;
@@ -49,8 +63,35 @@ async function main() {
       try {
         const status = await runner.getMigrationStatus();
         console.log("Migration status:", status);
+
+        // Show detailed information
+        const details = await runner.getMigrationDetails();
+        console.log(`\n📋 Detailed Status:`);
+        console.log(`   Executed: ${details.executed.length} migrations`);
+        console.log(`   Pending: ${details.pending.length} migrations`);
+
+        if (details.executed.length > 0) {
+          console.log(`\n✅ Executed migrations:`);
+          details.executed.forEach((m) => {
+            console.log(`   - ${m.name} (${m.timestamp})`);
+          });
+        }
+
+        if (details.pending.length > 0) {
+          console.log(`\n⏳ Pending migrations:`);
+          details.pending.forEach((m) => {
+            console.log(`   - ${m.name}`);
+          });
+        }
       } catch (error) {
-        console.error("❌ Failed to get migration status:", error);
+        if (error instanceof MigrationStatusError) {
+          console.error("❌ Migration status error:", error.message);
+          if (error.originalError) {
+            console.error("   Original error:", error.originalError);
+          }
+        } else {
+          console.error("❌ Failed to get migration status:", error);
+        }
         process.exit(1);
       }
       break;

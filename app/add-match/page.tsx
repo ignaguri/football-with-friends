@@ -33,8 +33,8 @@ function AddMatchForm() {
         },
         { message: t("addMatch.timeIncrement") },
       ),
-    courtNumber: z.string().optional(),
-    costCourt: z.string().optional(),
+    locationId: z.string().optional(),
+    costPerPlayer: z.string().optional(),
   });
   type AddMatchFormValues = z.infer<typeof addMatchSchema>;
   const {
@@ -46,8 +46,8 @@ function AddMatchForm() {
     defaultValues: {
       date: undefined,
       time: "",
-      courtNumber: "",
-      costCourt: "",
+      locationId: "",
+      costPerPlayer: "",
     },
   });
   const [redirecting, setRedirecting] = useState(false);
@@ -77,8 +77,8 @@ function AddMatchForm() {
   async function onSubmit({
     date,
     time,
-    courtNumber,
-    costCourt,
+    locationId,
+    costPerPlayer,
   }: AddMatchFormValues) {
     setError(null);
     try {
@@ -88,8 +88,8 @@ function AddMatchForm() {
         date: formattedDate,
         time,
       };
-      if (courtNumber) payload.courtNumber = courtNumber;
-      if (costCourt) payload.costCourt = costCourt;
+      if (locationId) payload.locationId = locationId;
+      if (costPerPlayer) payload.costPerPlayer = costPerPlayer;
       const res = await fetch("/api/matches", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,7 +191,7 @@ function AddMatchForm() {
           {t("addMatch.courtNumber")}
         </label>
         <Controller
-          name="courtNumber"
+          name="locationId"
           control={control}
           render={({ field }) => (
             <Input
@@ -209,7 +209,7 @@ function AddMatchForm() {
           {t("addMatch.costCourt")}
         </label>
         <Controller
-          name="costCourt"
+          name="costPerPlayer"
           control={control}
           render={({ field }) => (
             <Input

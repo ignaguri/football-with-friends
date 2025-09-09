@@ -57,15 +57,7 @@ export class MatchService {
     // Validate match data
     this.validateMatchData(matchData);
 
-    // Check for duplicate matches on the same date
-    const existsOnDate = await this.matchRepository.existsOnDate(
-      matchData.date,
-    );
-    if (existsOnDate) {
-      throw new Error("A match already exists on this date");
-    }
-
-    // Ensure location exists
+    // Ensure location exists first
     const location = await this.locationRepository.findById(
       matchData.locationId,
     );
@@ -73,6 +65,15 @@ export class MatchService {
       throw new Error("Location not found");
     }
 
+    // Check for duplicate matches on the same date (right before creation)
+    const existsOnDate = await this.matchRepository.existsOnDate(
+      matchData.date,
+    );
+    if (existsOnDate) {
+      throw new Error("A match already exists on this date");
+    }
+
+    // Create the match immediately after the duplicate check
     return this.matchRepository.create({
       ...matchData,
       createdByUserId: createdBy.id,
