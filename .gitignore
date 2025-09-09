@@ -45,3 +45,5 @@ certificates
 
 # next-intl
 locales/**/*.d.json.ts
+# Sentry Config File
+.env.sentry-build-plugin
