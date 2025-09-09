@@ -125,6 +125,9 @@ importers:
       googleapis:
         specifier: ^159.0.0
         version: 159.0.0
+      kysely:
+        specifier: ^0.28.5
+        version: 0.28.5
       libsql:
         specifier: ^0.5.22
         version: 0.5.22

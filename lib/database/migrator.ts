@@ -27,7 +27,7 @@ export class MigrationRunner {
    * Run all pending migrations
    */
   async runPendingMigrations(): Promise<{
-    error?: Error;
+    error?: unknown;
     results?: MigrationResult[];
   }> {
     const result = await this.migrator.migrateToLatest();
@@ -53,7 +53,7 @@ export class MigrationRunner {
    * Rollback migrations
    */
   async rollback(steps: number = 1): Promise<{
-    error?: Error;
+    error?: unknown;
     results?: MigrationResult[];
   }> {
     const result = await this.migrator.migrateDown();

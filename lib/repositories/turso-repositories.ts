@@ -667,7 +667,7 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
 
     const result = await this.db
       .deleteFrom('match_invitations')
-      .where('invited_at', '<', cutoffIso)
+      .where('invited_at', '<', cutoffIso as any)
       .where('status', '=', 'pending')
       .executeTakeFirst();
 

@@ -37,7 +37,7 @@ export async function POST(
         status: status as any,
       };
 
-      await matchService.addGuestPlayer(guestData, user);
+      await matchService.addGuestPlayer(matchId, guestData, user);
       return new Response("OK", { status: 200 });
     } else {
       // Regular user signup
