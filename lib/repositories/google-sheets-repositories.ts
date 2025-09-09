@@ -13,6 +13,7 @@ import {
   getSheetNameById,
 } from "@/lib/google-sheets";
 import { parse, isSameDay } from "date-fns";
+import { nanoid } from "nanoid";
 
 import type {
   LocationRepository,
@@ -254,7 +255,7 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
     const guestOwnerId = getValue("OwnerEmail");
 
     return {
-      id: `${matchId}-${getValue("Email")}-${Date.now()}`, // Generate ID
+      id: nanoid(), // Generate ID
       matchId,
       userId: isGuest ? undefined : getValue("Email"), // Use email as user ID for now
       playerName: getValue("Name"),
@@ -372,7 +373,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
 
     // Return the created signup
     return {
-      id: `${signupData.matchId}-${signupData.playerEmail}-${Date.now()}`,
+      id: nanoid(),
       matchId: signupData.matchId,
       userId: signupData.userId,
       playerName: signupData.playerName,
@@ -430,7 +431,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
       : `Guest of ${guestData.ownerName}`;
 
     // Generate unique guest email
-    const playerEmail = `guest-${Math.random().toString(36).slice(2, 10)}`;
+    const playerEmail = `guest-${nanoid(8)}`;
 
     await addOrUpdatePlayerRow(sheetName, {
       name,
@@ -443,7 +444,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
     });
 
     return {
-      id: `${guestData.matchId}-${playerEmail}-${Date.now()}`,
+      id: nanoid(),
       matchId: guestData.matchId,
       userId: undefined,
       playerName: name,
@@ -504,7 +505,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
     const guestOwnerId = getValue("OwnerEmail");
 
     return {
-      id: `${matchId}-${getValue("Email")}-${Date.now()}`,
+      id: nanoid(),
       matchId,
       userId: isGuest ? undefined : getValue("Email"),
       playerName: getValue("Name"),

@@ -2,6 +2,7 @@
 
 import { getDatabase } from "@/lib/database/connection";
 import { sql } from "kysely";
+import { nanoid } from "nanoid";
 
 import type {
   LocationRepository,
@@ -29,9 +30,9 @@ import type {
   PlayerStatus,
 } from "@/lib/domain/types";
 
-// Helper function to generate IDs
+// Helper function to generate IDs using nanoid
 function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  return nanoid();
 }
 
 // Helper function to convert database row to domain object
