@@ -1,7 +1,7 @@
+import { env, getTursoEnv } from "@/lib/env";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
-import { env, getTursoEnv } from "@/lib/env";
 
 const tursoEnv = getTursoEnv();
 const libsql = new LibsqlDialect({

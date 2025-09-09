@@ -2,7 +2,11 @@ import { auth } from "@/lib/auth";
 import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 
-import type { User, CreateGuestSignupData } from "@/lib/domain/types";
+import type {
+  User,
+  CreateGuestSignupData,
+  PlayerStatus,
+} from "@/lib/domain/types";
 
 export async function POST(
   req: Request,
@@ -11,7 +15,7 @@ export async function POST(
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user as User | undefined;
-    
+
     if (!user) {
       return new Response("Unauthorized", { status: 401 });
     }
@@ -23,7 +27,7 @@ export async function POST(
     if (body.isGuest) {
       // Guest signup
       const { ownerName, ownerEmail, guestName, status } = body;
-      
+
       if (!ownerName || !ownerEmail || typeof status !== "string") {
         return new Response("Missing fields", { status: 400 });
       }
@@ -34,7 +38,7 @@ export async function POST(
         ownerUserId: user.id,
         ownerName,
         ownerEmail,
-        status: status as any,
+        status: status as PlayerStatus,
       };
 
       await matchService.addGuestPlayer(matchId, guestData, user);
@@ -42,11 +46,11 @@ export async function POST(
     } else {
       // Regular user signup
       const { playerName, playerEmail, status } = body;
-      
+
       const playerData = {
         playerName: playerName || user.name,
         playerEmail: playerEmail || user.email,
-        status,
+        status: status as PlayerStatus,
       };
 
       await matchService.signUpUser(matchId, user, playerData);
@@ -54,25 +58,28 @@ export async function POST(
     }
   } catch (error) {
     console.error("Error processing signup:", error);
-    
+
     if (error instanceof Error) {
-      if (error.message.includes('not found')) {
+      if (error.message.includes("not found")) {
         return new Response("Match not found", { status: 404 });
       }
-      if (error.message.includes('already signed up')) {
+      if (error.message.includes("already signed up")) {
         return new Response("Already signed up", { status: 409 });
       }
-      if (error.message.includes('full')) {
+      if (error.message.includes("full")) {
         return new Response("Match is full", { status: 409 });
       }
-      if (error.message.includes('must be signed up')) {
+      if (error.message.includes("must be signed up")) {
         return new Response("Must be signed up to add guests", { status: 400 });
       }
-      if (error.message.includes('Missing fields') || error.message.includes('required')) {
+      if (
+        error.message.includes("Missing fields") ||
+        error.message.includes("required")
+      ) {
         return new Response("Missing fields", { status: 400 });
       }
     }
-    
+
     return new Response("Internal server error", { status: 500 });
   }
 }

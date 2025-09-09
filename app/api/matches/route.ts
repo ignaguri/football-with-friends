@@ -9,8 +9,8 @@ import type { MatchFilters, CreateMatchData, User } from "@/lib/domain/types";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type") as 'past' | 'upcoming' | null;
-    
+    const type = searchParams.get("type") as "past" | "upcoming" | null;
+
     const filters: MatchFilters = {};
     if (type) {
       filters.type = type;
@@ -21,8 +21,8 @@ export async function GET(req: Request) {
 
     return Response.json({ matches });
   } catch (error) {
-    console.error('Error fetching matches:', error);
-    return Response.json({ error: 'Failed to fetch matches' }, { status: 500 });
+    console.error("Error fetching matches:", error);
+    return Response.json({ error: "Failed to fetch matches" }, { status: 500 });
   }
 }
 
@@ -40,14 +40,17 @@ export async function POST(req: Request) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
     const user = session?.user as User | undefined;
-    
+
     if (!user || user.role !== "admin") {
-      return Response.json({ error: "errors.unauthorizedApi" }, { status: 401 });
+      return Response.json(
+        { error: "errors.unauthorizedApi" },
+        { status: 401 },
+      );
     }
 
     const body = await req.json();
     const parsed = matchSchema.safeParse(body);
-    
+
     if (!parsed.success) {
       return Response.json(
         { error: "errors.invalidInput", details: parsed.error.format() },
@@ -55,12 +58,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const { date, time, locationId, maxPlayers, costPerPlayer, shirtCost } = parsed.data;
-    
+    const { date, time, locationId, maxPlayers, costPerPlayer, shirtCost } =
+      parsed.data;
+
     const matchData: CreateMatchData = {
       date,
       time,
-      locationId: locationId || 'default',
+      locationId: locationId || "default",
       maxPlayers: maxPlayers || 10,
       costPerPlayer,
       shirtCost,
@@ -72,16 +76,25 @@ export async function POST(req: Request) {
 
     return Response.json({ match });
   } catch (error) {
-    console.error('Error creating match:', error);
-    
+    console.error("Error creating match:", error);
+
     if (error instanceof Error) {
-      if (error.message.includes('already exists')) {
-        return Response.json({ error: "errors.duplicateDate" }, { status: 409 });
+      if (error.message.includes("already exists")) {
+        return Response.json(
+          { error: "errors.duplicateDate" },
+          { status: 409 },
+        );
       }
-      if (error.message.includes('administrators')) {
-        return Response.json({ error: "errors.unauthorizedApi" }, { status: 401 });
+      if (error.message.includes("administrators")) {
+        return Response.json(
+          { error: "errors.unauthorizedApi" },
+          { status: 401 },
+        );
       }
-      if (error.message.includes('required') || error.message.includes('Invalid')) {
+      if (
+        error.message.includes("required") ||
+        error.message.includes("Invalid")
+      ) {
         return Response.json({ error: "errors.invalidInput" }, { status: 400 });
       }
     }

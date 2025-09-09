@@ -1,15 +1,15 @@
 // Database connection utility for Kysely with Turso/LibSQL
 
+import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { Kysely } from "kysely";
-import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 
 import type { Database } from "./schema";
 
 // Database connection configuration
 export function createDatabase(): Kysely<Database> {
   const { STORAGE_PROVIDER, NODE_ENV } = env;
-  
+
   if (STORAGE_PROVIDER === "local-db") {
     // Local SQLite database for development
     const localDbEnv = getLocalDbEnv();

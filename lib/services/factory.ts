@@ -1,18 +1,22 @@
 // Service factory for dependency injection
 
-import { MatchService } from './match-service';
-import { getRepositoryFactory, type AppRepositoryFactory } from '@/lib/repositories/factory';
+import {
+  getRepositoryFactory,
+  type AppRepositoryFactory,
+} from "@/lib/repositories/factory";
+
+import { MatchService } from "./match-service";
 
 export class ServiceFactory {
   public readonly matchService: MatchService;
 
   constructor(repositoryFactory?: AppRepositoryFactory) {
     const repos = repositoryFactory || getRepositoryFactory();
-    
+
     this.matchService = new MatchService(
       repos.matches,
       repos.signups,
-      repos.locations
+      repos.locations,
     );
   }
 }
@@ -40,6 +44,8 @@ export function resetServiceFactory(): void {
 /**
  * Create a service factory with specific repositories (useful for testing)
  */
-export function createServiceFactory(repositoryFactory: AppRepositoryFactory): ServiceFactory {
+export function createServiceFactory(
+  repositoryFactory: AppRepositoryFactory,
+): ServiceFactory {
   return new ServiceFactory(repositoryFactory);
 }

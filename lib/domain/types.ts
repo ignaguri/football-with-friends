@@ -5,7 +5,12 @@ export const PLAYER_STATUSES = ["PAID", "PENDING", "CANCELLED"] as const;
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number];
 
 // Signup types to track how a player was added
-export const SIGNUP_TYPES = ["self", "guest", "admin_added", "invitation"] as const;
+export const SIGNUP_TYPES = [
+  "self",
+  "guest",
+  "admin_added",
+  "invitation",
+] as const;
 export type SignupType = (typeof SIGNUP_TYPES)[number];
 
 // Match status types
@@ -36,7 +41,7 @@ export interface Match {
   createdByUserId: string;
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Populated fields (from joins)
   location?: Location;
   signups?: Signup[];
@@ -55,7 +60,7 @@ export interface Signup {
   addedByUserId: string; // tracks who added this signup
   signedUpAt: Date;
   updatedAt: Date;
-  
+
   // Populated fields (from joins)
   user?: User;
   guestOwner?: User;
@@ -67,10 +72,10 @@ export interface MatchInvitation {
   matchId: string;
   email: string;
   invitedByUserId: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: "pending" | "accepted" | "declined";
   invitedAt: Date;
   respondedAt?: Date;
-  
+
   // Populated fields (from joins)
   match?: Match;
   invitedByUser?: User;
@@ -82,7 +87,7 @@ export interface User {
   name: string;
   email: string;
   image?: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +101,7 @@ export interface CreateLocationData {
   courtCount?: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateLocationData extends Partial<CreateLocationData> {}
 
 export interface CreateMatchData {
@@ -108,7 +114,8 @@ export interface CreateMatchData {
   createdByUserId: string;
 }
 
-export interface UpdateMatchData extends Partial<Omit<CreateMatchData, 'createdByUserId'>> {
+export interface UpdateMatchData
+  extends Partial<Omit<CreateMatchData, "createdByUserId">> {
   status?: MatchStatus;
 }
 
@@ -123,7 +130,9 @@ export interface CreateSignupData {
   addedByUserId: string;
 }
 
-export interface UpdateSignupData extends Partial<Omit<CreateSignupData, 'matchId' | 'addedByUserId'>> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface UpdateSignupData
+  extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId">> {}
 
 export interface CreateGuestSignupData {
   matchId: string;
@@ -144,7 +153,7 @@ export interface CreateInvitationData {
 
 export interface MatchFilters {
   status?: MatchStatus;
-  type?: 'past' | 'upcoming';
+  type?: "past" | "upcoming";
   userId?: string; // matches where user is signed up
   locationId?: string;
   dateFrom?: string;
@@ -193,7 +202,7 @@ export interface MatchMetadata {
 // API Error handling types
 export const API_ERROR_KEYS = [
   "duplicateDate",
-  "missingFields", 
+  "missingFields",
   "invalidInput",
   "unauthorizedApi",
   "noMatchId",

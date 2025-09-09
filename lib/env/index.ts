@@ -1,6 +1,6 @@
-// Typed environment exports with validation
+import type { ValidatedEnvironment } from "./validator";
 
-import { validateEnvironment, type ValidatedEnvironment } from "./validator";
+import { validateEnvironment } from "./validator";
 
 // Global validated environment cache
 let validatedEnv: ValidatedEnvironment | null = null;
@@ -58,7 +58,7 @@ export function getEnvErrors(): string[] | null {
     if (error instanceof Error) {
       // Parse error message to extract individual validation errors
       const lines = error.message.split("\n");
-      return lines.filter(line => line.startsWith("❌"));
+      return lines.filter((line) => line.startsWith("❌"));
     }
     return [String(error)];
   }
@@ -74,28 +74,38 @@ export const env = getEnv();
  */
 export function getGoogleSheetsEnv() {
   const environment = getEnv();
-  if (environment.STORAGE_PROVIDER !== 'google-sheets') {
-    throw new Error('Google Sheets environment variables are not available when STORAGE_PROVIDER is not "google-sheets"');
+  if (environment.STORAGE_PROVIDER !== "google-sheets") {
+    throw new Error(
+      'Google Sheets environment variables are not available when STORAGE_PROVIDER is not "google-sheets"',
+    );
   }
-  return environment as any;
+  return environment as ValidatedEnvironment;
 }
 
 export function getTursoEnv() {
   const environment = getEnv();
-  if (environment.STORAGE_PROVIDER !== 'turso') {
-    throw new Error('Turso environment variables are not available when STORAGE_PROVIDER is not "turso"');
+  if (environment.STORAGE_PROVIDER !== "turso") {
+    throw new Error(
+      'Turso environment variables are not available when STORAGE_PROVIDER is not "turso"',
+    );
   }
-  return environment as any;
+  return environment as ValidatedEnvironment;
 }
 
 export function getLocalDbEnv() {
   const environment = getEnv();
-  if (environment.STORAGE_PROVIDER !== 'local-db') {
-    throw new Error('Local DB environment variables are not available when STORAGE_PROVIDER is not "local-db"');
+  if (environment.STORAGE_PROVIDER !== "local-db") {
+    throw new Error(
+      'Local DB environment variables are not available when STORAGE_PROVIDER is not "local-db"',
+    );
   }
-  return environment as any;
+  return environment as ValidatedEnvironment;
 }
 
 // Re-export types and utilities
 export type { ValidatedEnvironment } from "./validator";
-export { validateEnvironment, getRequiredVariables, generateEnvTemplate } from "./validator";
+export {
+  generateEnvTemplate,
+  getRequiredVariables,
+  validateEnvironment,
+} from "./validator";

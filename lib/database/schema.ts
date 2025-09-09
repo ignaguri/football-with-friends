@@ -25,7 +25,7 @@ export interface MatchesTable {
   location_id: string;
   date: string; // YYYY-MM-DD format
   time: string; // HH:MM format
-  status: 'upcoming' | 'cancelled' | 'completed';
+  status: "upcoming" | "cancelled" | "completed";
   max_players: number;
   cost_per_player: string | null;
   shirt_cost: string | null;
@@ -40,8 +40,8 @@ export interface SignupsTable {
   user_id: string | null; // nullable for guests
   player_name: string;
   player_email: string;
-  status: 'PAID' | 'PENDING' | 'CANCELLED';
-  signup_type: 'self' | 'guest' | 'admin_added' | 'invitation';
+  status: "PAID" | "PENDING" | "CANCELLED";
+  signup_type: "self" | "guest" | "admin_added" | "invitation";
   guest_owner_id: string | null; // for guest signups
   added_by_user_id: string;
   signed_up_at: ColumnType<Date, string | undefined, never>;
@@ -53,7 +53,7 @@ export interface MatchInvitationsTable {
   match_id: string;
   email: string;
   invited_by_user_id: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: "pending" | "accepted" | "declined";
   invited_at: ColumnType<Date, string | undefined, never>;
   responded_at: ColumnType<Date, string | undefined, string> | null;
 }

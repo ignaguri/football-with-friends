@@ -1,8 +1,14 @@
 // Turso/LibSQL implementation of repository interfaces using Kysely
 
+import { getDatabase } from "@/lib/database/connection";
 import { sql } from "kysely";
-import { getDatabase } from '@/lib/database/connection';
 
+import type {
+  LocationRepository,
+  MatchRepository,
+  SignupRepository,
+  MatchInvitationRepository,
+} from "./interfaces";
 import type {
   Location,
   Match,
@@ -21,14 +27,7 @@ import type {
   MatchDetails,
   SignupWithDetails,
   PlayerStatus,
-} from '@/lib/domain/types';
-
-import type {
-  LocationRepository,
-  MatchRepository,
-  SignupRepository,
-  MatchInvitationRepository,
-} from './interfaces';
+} from "@/lib/domain/types";
 
 // Helper function to generate IDs
 function generateId(): string {
@@ -40,8 +39,8 @@ function dbLocationToLocation(row: any): Location {
   return {
     id: row.id,
     name: row.name,
-    address: row.address || '',
-    coordinates: row.coordinates || '',
+    address: row.address || "",
+    coordinates: row.coordinates || "",
     courtCount: row.court_count,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -98,9 +97,9 @@ export class TursoLocationRepository implements LocationRepository {
 
   async findAll(): Promise<Location[]> {
     const rows = await this.db
-      .selectFrom('locations')
+      .selectFrom("locations")
       .selectAll()
-      .orderBy('name', 'asc')
+      .orderBy("name", "asc")
       .execute();
 
     return rows.map(dbLocationToLocation);
@@ -108,9 +107,9 @@ export class TursoLocationRepository implements LocationRepository {
 
   async findById(id: string): Promise<Location | null> {
     const row = await this.db
-      .selectFrom('locations')
+      .selectFrom("locations")
       .selectAll()
-      .where('id', '=', id)
+      .where("id", "=", id)
       .executeTakeFirst();
 
     return row ? dbLocationToLocation(row) : null;
@@ -130,10 +129,7 @@ export class TursoLocationRepository implements LocationRepository {
       updated_at: now,
     };
 
-    await this.db
-      .insertInto('locations')
-      .values(newLocation)
-      .execute();
+    await this.db.insertInto("locations").values(newLocation).execute();
 
     return dbLocationToLocation(newLocation);
   }
@@ -142,30 +138,31 @@ export class TursoLocationRepository implements LocationRepository {
     const now = new Date().toISOString();
 
     await this.db
-      .updateTable('locations')
+      .updateTable("locations")
       .set({
         ...(updates.name && { name: updates.name }),
         ...(updates.address !== undefined && { address: updates.address }),
-        ...(updates.coordinates !== undefined && { coordinates: updates.coordinates }),
-        ...(updates.courtCount !== undefined && { court_count: updates.courtCount }),
+        ...(updates.coordinates !== undefined && {
+          coordinates: updates.coordinates,
+        }),
+        ...(updates.courtCount !== undefined && {
+          court_count: updates.courtCount,
+        }),
         updated_at: now,
       })
-      .where('id', '=', id)
+      .where("id", "=", id)
       .execute();
 
     const updated = await this.findById(id);
     if (!updated) {
-      throw new Error('Location not found after update');
+      throw new Error("Location not found after update");
     }
 
     return updated;
   }
 
   async delete(id: string): Promise<void> {
-    await this.db
-      .deleteFrom('locations')
-      .where('id', '=', id)
-      .execute();
+    await this.db.deleteFrom("locations").where("id", "=", id).execute();
   }
 }
 
@@ -175,34 +172,34 @@ export class TursoMatchRepository implements MatchRepository {
 
   async findAll(filters?: MatchFilters): Promise<Match[]> {
     let query = this.db
-      .selectFrom('matches')
+      .selectFrom("matches")
       .selectAll()
-      .orderBy('date', 'desc')
-      .orderBy('time', 'desc');
+      .orderBy("date", "desc")
+      .orderBy("time", "desc");
 
     if (filters?.status) {
-      query = query.where('status', '=', filters.status);
+      query = query.where("status", "=", filters.status);
     }
 
     if (filters?.type) {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      if (filters.type === 'past') {
-        query = query.where('date', '<', today);
-      } else if (filters.type === 'upcoming') {
-        query = query.where('date', '>=', today);
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      if (filters.type === "past") {
+        query = query.where("date", "<", today);
+      } else if (filters.type === "upcoming") {
+        query = query.where("date", ">=", today);
       }
     }
 
     if (filters?.locationId) {
-      query = query.where('location_id', '=', filters.locationId);
+      query = query.where("location_id", "=", filters.locationId);
     }
 
     if (filters?.dateFrom) {
-      query = query.where('date', '>=', filters.dateFrom);
+      query = query.where("date", ">=", filters.dateFrom);
     }
 
     if (filters?.dateTo) {
-      query = query.where('date', '<=', filters.dateTo);
+      query = query.where("date", "<=", filters.dateTo);
     }
 
     const rows = await query.execute();
@@ -211,35 +208,38 @@ export class TursoMatchRepository implements MatchRepository {
 
   async findById(id: string): Promise<Match | null> {
     const row = await this.db
-      .selectFrom('matches')
+      .selectFrom("matches")
       .selectAll()
-      .where('id', '=', id)
+      .where("id", "=", id)
       .executeTakeFirst();
 
     return row ? dbMatchToMatch(row) : null;
   }
 
-  async findByIdWithDetails(id: string, userId?: string): Promise<MatchDetails | null> {
+  async findByIdWithDetails(
+    id: string,
+    userId?: string,
+  ): Promise<MatchDetails | null> {
     const match = await this.findById(id);
     if (!match) return null;
 
     // Get location
     const location = await this.db
-      .selectFrom('locations')
+      .selectFrom("locations")
       .selectAll()
-      .where('id', '=', match.locationId)
+      .where("id", "=", match.locationId)
       .executeTakeFirst();
 
     if (!location) {
-      throw new Error('Location not found for match');
+      throw new Error("Location not found for match");
     }
 
     // Get signups
     const signupRows = await this.db
-      .selectFrom('signups')
+      .selectFrom("signups")
       .selectAll()
-      .where('match_id', '=', id)
-      .orderBy('signed_up_at', 'asc')
+      .where("match_id", "=", id)
+      .orderBy("signed_up_at", "asc")
       .execute();
 
     const signups = signupRows.map(dbSignupToSignup);
@@ -248,8 +248,12 @@ export class TursoMatchRepository implements MatchRepository {
     const availableSpots = Math.max(0, match.maxPlayers - signups.length);
 
     // Check if user is signed up
-    const isUserSignedUp = userId ? signups.some(s => s.userId === userId) : undefined;
-    const userSignup = userId ? signups.find(s => s.userId === userId) : undefined;
+    const isUserSignedUp = userId
+      ? signups.some((s) => s.userId === userId)
+      : undefined;
+    const userSignup = userId
+      ? signups.find((s) => s.userId === userId)
+      : undefined;
 
     return {
       ...match,
@@ -257,9 +261,9 @@ export class TursoMatchRepository implements MatchRepository {
       signups,
       createdByUser: {
         id: match.createdByUserId,
-        name: 'Admin', // TODO: Get from BetterAuth user table
-        email: '',
-        role: 'admin',
+        name: "Admin", // TODO: Get from BetterAuth user table
+        email: "",
+        role: "admin",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -278,7 +282,7 @@ export class TursoMatchRepository implements MatchRepository {
       location_id: matchData.locationId,
       date: matchData.date,
       time: matchData.time,
-      status: 'upcoming' as const,
+      status: "upcoming" as const,
       max_players: matchData.maxPlayers || 10,
       cost_per_player: matchData.costPerPlayer || null,
       shirt_cost: matchData.shirtCost || null,
@@ -287,10 +291,7 @@ export class TursoMatchRepository implements MatchRepository {
       updated_at: now,
     };
 
-    await this.db
-      .insertInto('matches')
-      .values(newMatch)
-      .execute();
+    await this.db.insertInto("matches").values(newMatch).execute();
 
     return dbMatchToMatch(newMatch);
   }
@@ -299,23 +300,29 @@ export class TursoMatchRepository implements MatchRepository {
     const now = new Date().toISOString();
 
     await this.db
-      .updateTable('matches')
+      .updateTable("matches")
       .set({
         ...(updates.locationId && { location_id: updates.locationId }),
         ...(updates.date && { date: updates.date }),
         ...(updates.time && { time: updates.time }),
         ...(updates.status && { status: updates.status }),
-        ...(updates.maxPlayers !== undefined && { max_players: updates.maxPlayers }),
-        ...(updates.costPerPlayer !== undefined && { cost_per_player: updates.costPerPlayer }),
-        ...(updates.shirtCost !== undefined && { shirt_cost: updates.shirtCost }),
+        ...(updates.maxPlayers !== undefined && {
+          max_players: updates.maxPlayers,
+        }),
+        ...(updates.costPerPlayer !== undefined && {
+          cost_per_player: updates.costPerPlayer,
+        }),
+        ...(updates.shirtCost !== undefined && {
+          shirt_cost: updates.shirtCost,
+        }),
         updated_at: now,
       })
-      .where('id', '=', id)
+      .where("id", "=", id)
       .execute();
 
     const updated = await this.findById(id);
     if (!updated) {
-      throw new Error('Match not found after update');
+      throw new Error("Match not found after update");
     }
 
     return updated;
@@ -323,17 +330,14 @@ export class TursoMatchRepository implements MatchRepository {
 
   async delete(id: string): Promise<void> {
     // Cascade delete will handle signups and invitations
-    await this.db
-      .deleteFrom('matches')
-      .where('id', '=', id)
-      .execute();
+    await this.db.deleteFrom("matches").where("id", "=", id).execute();
   }
 
   async existsOnDate(date: string): Promise<boolean> {
     const result = await this.db
-      .selectFrom('matches')
-      .select(sql`1`.as('exists'))
-      .where('date', '=', date)
+      .selectFrom("matches")
+      .select(sql`1`.as("exists"))
+      .where("date", "=", date)
       .executeTakeFirst();
 
     return Boolean(result);
@@ -346,24 +350,24 @@ export class TursoSignupRepository implements SignupRepository {
 
   async findAll(filters?: SignupFilters): Promise<Signup[]> {
     let query = this.db
-      .selectFrom('signups')
+      .selectFrom("signups")
       .selectAll()
-      .orderBy('signed_up_at', 'desc');
+      .orderBy("signed_up_at", "desc");
 
     if (filters?.matchId) {
-      query = query.where('match_id', '=', filters.matchId);
+      query = query.where("match_id", "=", filters.matchId);
     }
 
     if (filters?.userId) {
-      query = query.where('user_id', '=', filters.userId);
+      query = query.where("user_id", "=", filters.userId);
     }
 
     if (filters?.status) {
-      query = query.where('status', '=', filters.status);
+      query = query.where("status", "=", filters.status);
     }
 
     if (filters?.signupType) {
-      query = query.where('signup_type', '=', filters.signupType);
+      query = query.where("signup_type", "=", filters.signupType);
     }
 
     const rows = await query.execute();
@@ -380,9 +384,9 @@ export class TursoSignupRepository implements SignupRepository {
 
   async findById(id: string): Promise<Signup | null> {
     const row = await this.db
-      .selectFrom('signups')
+      .selectFrom("signups")
       .selectAll()
-      .where('id', '=', id)
+      .where("id", "=", id)
       .executeTakeFirst();
 
     return row ? dbSignupToSignup(row) : null;
@@ -394,13 +398,13 @@ export class TursoSignupRepository implements SignupRepository {
 
     // Get match details
     const matchRow = await this.db
-      .selectFrom('matches')
+      .selectFrom("matches")
       .selectAll()
-      .where('id', '=', signup.matchId)
+      .where("id", "=", signup.matchId)
       .executeTakeFirst();
 
     if (!matchRow) {
-      throw new Error('Match not found for signup');
+      throw new Error("Match not found for signup");
     }
 
     return {
@@ -408,9 +412,9 @@ export class TursoSignupRepository implements SignupRepository {
       match: dbMatchToMatch(matchRow),
       addedByUser: {
         id: signup.addedByUserId,
-        name: 'User',
+        name: "User",
         email: signup.addedByUserId,
-        role: 'user',
+        role: "user",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -419,10 +423,10 @@ export class TursoSignupRepository implements SignupRepository {
 
   async isUserSignedUp(matchId: string, userId: string): Promise<boolean> {
     const result = await this.db
-      .selectFrom('signups')
-      .select(sql`1`.as('exists'))
-      .where('match_id', '=', matchId)
-      .where('user_id', '=', userId)
+      .selectFrom("signups")
+      .select(sql`1`.as("exists"))
+      .where("match_id", "=", matchId)
+      .where("user_id", "=", userId)
       .executeTakeFirst();
 
     return Boolean(result);
@@ -430,9 +434,9 @@ export class TursoSignupRepository implements SignupRepository {
 
   async getSignupCount(matchId: string): Promise<number> {
     const result = await this.db
-      .selectFrom('signups')
-      .select(sql`COUNT(*)`.as('count'))
-      .where('match_id', '=', matchId)
+      .selectFrom("signups")
+      .select(sql`COUNT(*)`.as("count"))
+      .where("match_id", "=", matchId)
       .executeTakeFirst();
 
     return Number(result?.count || 0);
@@ -448,7 +452,7 @@ export class TursoSignupRepository implements SignupRepository {
       user_id: signupData.userId || null,
       player_name: signupData.playerName,
       player_email: signupData.playerEmail,
-      status: signupData.status || 'PENDING',
+      status: signupData.status || "PENDING",
       signup_type: signupData.signupType,
       guest_owner_id: signupData.guestOwnerId || null,
       added_by_user_id: signupData.addedByUserId,
@@ -456,10 +460,7 @@ export class TursoSignupRepository implements SignupRepository {
       updated_at: now,
     };
 
-    await this.db
-      .insertInto('signups')
-      .values(newSignup)
-      .execute();
+    await this.db.insertInto("signups").values(newSignup).execute();
 
     return dbSignupToSignup(newSignup);
   }
@@ -468,32 +469,31 @@ export class TursoSignupRepository implements SignupRepository {
     const now = new Date().toISOString();
 
     await this.db
-      .updateTable('signups')
+      .updateTable("signups")
       .set({
         ...(updates.userId !== undefined && { user_id: updates.userId }),
         ...(updates.playerName && { player_name: updates.playerName }),
         ...(updates.playerEmail && { player_email: updates.playerEmail }),
         ...(updates.status && { status: updates.status }),
         ...(updates.signupType && { signup_type: updates.signupType }),
-        ...(updates.guestOwnerId !== undefined && { guest_owner_id: updates.guestOwnerId }),
+        ...(updates.guestOwnerId !== undefined && {
+          guest_owner_id: updates.guestOwnerId,
+        }),
         updated_at: now,
       })
-      .where('id', '=', id)
+      .where("id", "=", id)
       .execute();
 
     const updated = await this.findById(id);
     if (!updated) {
-      throw new Error('Signup not found after update');
+      throw new Error("Signup not found after update");
     }
 
     return updated;
   }
 
   async delete(id: string): Promise<void> {
-    await this.db
-      .deleteFrom('signups')
-      .where('id', '=', id)
-      .execute();
+    await this.db.deleteFrom("signups").where("id", "=", id).execute();
   }
 
   async addGuest(guestData: CreateGuestSignupData): Promise<Signup> {
@@ -514,18 +514,15 @@ export class TursoSignupRepository implements SignupRepository {
       user_id: null,
       player_name: name,
       player_email: playerEmail,
-      status: guestData.status || 'PENDING',
-      signup_type: 'guest' as const,
+      status: guestData.status || "PENDING",
+      signup_type: "guest" as const,
       guest_owner_id: guestData.ownerUserId,
       added_by_user_id: guestData.ownerUserId,
       signed_up_at: now,
       updated_at: now,
     };
 
-    await this.db
-      .insertInto('signups')
-      .values(newSignup)
-      .execute();
+    await this.db.insertInto("signups").values(newSignup).execute();
 
     return dbSignupToSignup(newSignup);
   }
@@ -538,15 +535,15 @@ export class TursoSignupRepository implements SignupRepository {
       playerEmail: string;
       status?: string;
     },
-    adminId: string
+    adminId: string,
   ): Promise<Signup> {
     return this.create({
       matchId,
       userId: playerData.userId,
       playerName: playerData.playerName,
       playerEmail: playerData.playerEmail,
-      status: (playerData.status as PlayerStatus) || 'PENDING',
-      signupType: 'admin_added',
+      status: (playerData.status as PlayerStatus) || "PENDING",
+      signupType: "admin_added",
       addedByUserId: adminId,
     });
   }
@@ -559,10 +556,10 @@ export class TursoSignupRepository implements SignupRepository {
 
   async findAddedByUser(userId: string): Promise<Signup[]> {
     const rows = await this.db
-      .selectFrom('signups')
+      .selectFrom("signups")
       .selectAll()
-      .where('added_by_user_id', '=', userId)
-      .orderBy('signed_up_at', 'desc')
+      .where("added_by_user_id", "=", userId)
+      .orderBy("signed_up_at", "desc")
       .execute();
 
     return rows.map(dbSignupToSignup);
@@ -570,15 +567,17 @@ export class TursoSignupRepository implements SignupRepository {
 }
 
 // Turso Match Invitation Repository
-export class TursoMatchInvitationRepository implements MatchInvitationRepository {
+export class TursoMatchInvitationRepository
+  implements MatchInvitationRepository
+{
   private db = getDatabase();
 
   async findByMatchId(matchId: string): Promise<MatchInvitation[]> {
     const rows = await this.db
-      .selectFrom('match_invitations')
+      .selectFrom("match_invitations")
       .selectAll()
-      .where('match_id', '=', matchId)
-      .orderBy('invited_at', 'desc')
+      .where("match_id", "=", matchId)
+      .orderBy("invited_at", "desc")
       .execute();
 
     return rows.map(dbInvitationToInvitation);
@@ -586,10 +585,10 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
 
   async findByInviterId(userId: string): Promise<MatchInvitation[]> {
     const rows = await this.db
-      .selectFrom('match_invitations')
+      .selectFrom("match_invitations")
       .selectAll()
-      .where('invited_by_user_id', '=', userId)
-      .orderBy('invited_at', 'desc')
+      .where("invited_by_user_id", "=", userId)
+      .orderBy("invited_at", "desc")
       .execute();
 
     return rows.map(dbInvitationToInvitation);
@@ -597,10 +596,10 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
 
   async findByEmail(email: string): Promise<MatchInvitation[]> {
     const rows = await this.db
-      .selectFrom('match_invitations')
+      .selectFrom("match_invitations")
       .selectAll()
-      .where('email', '=', email)
-      .orderBy('invited_at', 'desc')
+      .where("email", "=", email)
+      .orderBy("invited_at", "desc")
       .execute();
 
     return rows.map(dbInvitationToInvitation);
@@ -615,39 +614,42 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
       match_id: invitationData.matchId,
       email: invitationData.email,
       invited_by_user_id: invitationData.invitedByUserId,
-      status: 'pending' as const,
+      status: "pending" as const,
       invited_at: now,
       responded_at: null,
     };
 
     await this.db
-      .insertInto('match_invitations')
+      .insertInto("match_invitations")
       .values(newInvitation)
       .execute();
 
     return dbInvitationToInvitation(newInvitation);
   }
 
-  async updateStatus(id: string, status: 'accepted' | 'declined'): Promise<MatchInvitation> {
+  async updateStatus(
+    id: string,
+    status: "accepted" | "declined",
+  ): Promise<MatchInvitation> {
     const now = new Date().toISOString();
 
     await this.db
-      .updateTable('match_invitations')
+      .updateTable("match_invitations")
       .set({
         status,
         responded_at: now,
       })
-      .where('id', '=', id)
+      .where("id", "=", id)
       .execute();
 
     const updated = await this.db
-      .selectFrom('match_invitations')
+      .selectFrom("match_invitations")
       .selectAll()
-      .where('id', '=', id)
+      .where("id", "=", id)
       .executeTakeFirst();
 
     if (!updated) {
-      throw new Error('Invitation not found after update');
+      throw new Error("Invitation not found after update");
     }
 
     return dbInvitationToInvitation(updated);
@@ -655,8 +657,8 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
 
   async delete(id: string): Promise<void> {
     await this.db
-      .deleteFrom('match_invitations')
-      .where('id', '=', id)
+      .deleteFrom("match_invitations")
+      .where("id", "=", id)
       .execute();
   }
 
@@ -666,9 +668,9 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
     const cutoffIso = cutoffDate.toISOString();
 
     const result = await this.db
-      .deleteFrom('match_invitations')
-      .where('invited_at', '<', cutoffIso as any)
-      .where('status', '=', 'pending')
+      .deleteFrom("match_invitations")
+      .where("invited_at", "<", cutoffIso as any)
+      .where("status", "=", "pending")
       .executeTakeFirst();
 
     return Number(result.numDeletedRows || 0);

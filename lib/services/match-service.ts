@@ -10,15 +10,14 @@ import type {
   CreateSignupData,
   CreateGuestSignupData,
   Signup,
-  SignupWithDetails,
   User,
-} from '@/lib/domain/types';
-
+  PlayerStatus,
+} from "@/lib/domain/types";
 import type {
   MatchRepository,
   SignupRepository,
   LocationRepository,
-} from '@/lib/repositories/interfaces';
+} from "@/lib/repositories/interfaces";
 
 export class MatchService {
   constructor(
@@ -37,31 +36,41 @@ export class MatchService {
   /**
    * Get a match by ID with full details
    */
-  async getMatchDetails(matchId: string, userId?: string): Promise<MatchDetails | null> {
+  async getMatchDetails(
+    matchId: string,
+    userId?: string,
+  ): Promise<MatchDetails | null> {
     return this.matchRepository.findByIdWithDetails(matchId, userId);
   }
 
   /**
    * Create a new match (admin only)
    */
-  async createMatch(matchData: CreateMatchData, createdBy: User): Promise<Match> {
-    if (createdBy.role !== 'admin') {
-      throw new Error('Only administrators can create matches');
+  async createMatch(
+    matchData: CreateMatchData,
+    createdBy: User,
+  ): Promise<Match> {
+    if (createdBy.role !== "admin") {
+      throw new Error("Only administrators can create matches");
     }
 
     // Validate match data
     this.validateMatchData(matchData);
 
     // Check for duplicate matches on the same date
-    const existsOnDate = await this.matchRepository.existsOnDate(matchData.date);
+    const existsOnDate = await this.matchRepository.existsOnDate(
+      matchData.date,
+    );
     if (existsOnDate) {
-      throw new Error('A match already exists on this date');
+      throw new Error("A match already exists on this date");
     }
 
     // Ensure location exists
-    const location = await this.locationRepository.findById(matchData.locationId);
+    const location = await this.locationRepository.findById(
+      matchData.locationId,
+    );
     if (!location) {
-      throw new Error('Location not found');
+      throw new Error("Location not found");
     }
 
     return this.matchRepository.create({
@@ -73,29 +82,37 @@ export class MatchService {
   /**
    * Update a match (admin only)
    */
-  async updateMatch(matchId: string, updates: UpdateMatchData, updatedBy: User): Promise<Match> {
-    if (updatedBy.role !== 'admin') {
-      throw new Error('Only administrators can update matches');
+  async updateMatch(
+    matchId: string,
+    updates: UpdateMatchData,
+    updatedBy: User,
+  ): Promise<Match> {
+    if (updatedBy.role !== "admin") {
+      throw new Error("Only administrators can update matches");
     }
 
     const existingMatch = await this.matchRepository.findById(matchId);
     if (!existingMatch) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     // If updating location, ensure it exists
     if (updates.locationId) {
-      const location = await this.locationRepository.findById(updates.locationId);
+      const location = await this.locationRepository.findById(
+        updates.locationId,
+      );
       if (!location) {
-        throw new Error('Location not found');
+        throw new Error("Location not found");
       }
     }
 
     // If updating date, check for duplicates (excluding current match)
     if (updates.date && updates.date !== existingMatch.date) {
-      const existsOnDate = await this.matchRepository.existsOnDate(updates.date);
+      const existsOnDate = await this.matchRepository.existsOnDate(
+        updates.date,
+      );
       if (existsOnDate) {
-        throw new Error('A match already exists on this date');
+        throw new Error("A match already exists on this date");
       }
     }
 
@@ -106,13 +123,13 @@ export class MatchService {
    * Delete a match (admin only)
    */
   async deleteMatch(matchId: string, deletedBy: User): Promise<void> {
-    if (deletedBy.role !== 'admin') {
-      throw new Error('Only administrators can delete matches');
+    if (deletedBy.role !== "admin") {
+      throw new Error("Only administrators can delete matches");
     }
 
     const existingMatch = await this.matchRepository.findById(matchId);
     if (!existingMatch) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     // Check if match has signups
@@ -128,32 +145,39 @@ export class MatchService {
   /**
    * Sign up a user for a match
    */
-  async signUpUser(matchId: string, user: User, playerData?: {
-    playerName?: string;
-    playerEmail?: string;
-    status?: string;
-  }): Promise<Signup> {
+  async signUpUser(
+    matchId: string,
+    user: User,
+    playerData?: {
+      playerName?: string;
+      playerEmail?: string;
+      status?: string;
+    },
+  ): Promise<Signup> {
     // Validate match exists
     const match = await this.matchRepository.findById(matchId);
     if (!match) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     // Check if match is still open
-    if (match.status !== 'upcoming') {
-      throw new Error('Cannot sign up for this match');
+    if (match.status !== "upcoming") {
+      throw new Error("Cannot sign up for this match");
     }
 
     // Check if user is already signed up
-    const isAlreadySignedUp = await this.signupRepository.isUserSignedUp(matchId, user.id);
+    const isAlreadySignedUp = await this.signupRepository.isUserSignedUp(
+      matchId,
+      user.id,
+    );
     if (isAlreadySignedUp) {
-      throw new Error('User is already signed up for this match');
+      throw new Error("User is already signed up for this match");
     }
 
     // Check capacity
     const currentSignups = await this.signupRepository.getSignupCount(matchId);
     if (currentSignups >= match.maxPlayers) {
-      throw new Error('Match is full');
+      throw new Error("Match is full");
     }
 
     const signupData: CreateSignupData = {
@@ -161,8 +185,8 @@ export class MatchService {
       userId: user.id,
       playerName: playerData?.playerName || user.name,
       playerEmail: playerData?.playerEmail || user.email,
-      status: (playerData?.status as any) || 'PENDING',
-      signupType: 'self',
+      status: (playerData?.status as PlayerStatus) || "PENDING",
+      signupType: "self",
       addedByUserId: user.id,
     };
 
@@ -175,29 +199,32 @@ export class MatchService {
   async addGuestPlayer(
     matchId: string,
     guestData: CreateGuestSignupData,
-    addedBy: User
+    addedBy: User,
   ): Promise<Signup> {
     // Validate match exists
     const match = await this.matchRepository.findById(matchId);
     if (!match) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     // Check if match is still open
-    if (match.status !== 'upcoming') {
-      throw new Error('Cannot add guests to this match');
+    if (match.status !== "upcoming") {
+      throw new Error("Cannot add guests to this match");
     }
 
     // Verify the owner is signed up (business rule)
-    const isOwnerSignedUp = await this.signupRepository.isUserSignedUp(matchId, addedBy.id);
+    const isOwnerSignedUp = await this.signupRepository.isUserSignedUp(
+      matchId,
+      addedBy.id,
+    );
     if (!isOwnerSignedUp) {
-      throw new Error('You must be signed up to add guests');
+      throw new Error("You must be signed up to add guests");
     }
 
     // Check capacity
     const currentSignups = await this.signupRepository.getSignupCount(matchId);
     if (currentSignups >= match.maxPlayers) {
-      throw new Error('Match is full');
+      throw new Error("Match is full");
     }
 
     return this.signupRepository.addGuest({
@@ -219,43 +246,47 @@ export class MatchService {
       playerEmail: string;
       status?: string;
     },
-    admin: User
+    admin: User,
   ): Promise<Signup> {
-    if (admin.role !== 'admin') {
-      throw new Error('Only administrators can add players directly');
+    if (admin.role !== "admin") {
+      throw new Error("Only administrators can add players directly");
     }
 
     // Validate match exists
     const match = await this.matchRepository.findById(matchId);
     if (!match) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     // If userId provided, check if user is already signed up
     if (playerData.userId) {
       const isAlreadySignedUp = await this.signupRepository.isUserSignedUp(
         matchId,
-        playerData.userId
+        playerData.userId,
       );
       if (isAlreadySignedUp) {
-        throw new Error('User is already signed up for this match');
+        throw new Error("User is already signed up for this match");
       }
     }
 
-    return this.signupRepository.addPlayerByAdmin(matchId, playerData, admin.id);
+    return this.signupRepository.addPlayerByAdmin(
+      matchId,
+      playerData,
+      admin.id,
+    );
   }
 
   /**
    * Admin: Remove a player from a match
    */
   async removePlayerByAdmin(signupId: string, admin: User): Promise<void> {
-    if (admin.role !== 'admin') {
-      throw new Error('Only administrators can remove players');
+    if (admin.role !== "admin") {
+      throw new Error("Only administrators can remove players");
     }
 
     const signup = await this.signupRepository.findById(signupId);
     if (!signup) {
-      throw new Error('Signup not found');
+      throw new Error("Signup not found");
     }
 
     await this.signupRepository.removePlayerByAdmin(signupId, admin.id);
@@ -274,24 +305,25 @@ export class MatchService {
   async updateSignup(
     signupId: string,
     updates: { status?: string },
-    updatedBy: User
+    updatedBy: User,
   ): Promise<Signup> {
     const signup = await this.signupRepository.findById(signupId);
     if (!signup) {
-      throw new Error('Signup not found');
+      throw new Error("Signup not found");
     }
 
     // Authorization: only admin or the user who added the signup can update it
-    const canUpdate = updatedBy.role === 'admin' || 
-                     updatedBy.id === signup.addedByUserId ||
-                     updatedBy.id === signup.userId;
-    
+    const canUpdate =
+      updatedBy.role === "admin" ||
+      updatedBy.id === signup.addedByUserId ||
+      updatedBy.id === signup.userId;
+
     if (!canUpdate) {
-      throw new Error('Not authorized to update this signup');
+      throw new Error("Not authorized to update this signup");
     }
 
     return this.signupRepository.update(signupId, {
-      status: updates.status as any,
+      status: updates.status as PlayerStatus,
     });
   }
 
@@ -305,30 +337,44 @@ export class MatchService {
   /**
    * Check if a user can add more guests to a match
    */
-  async canUserAddGuests(matchId: string, userId: string): Promise<{
+  async canUserAddGuests(
+    matchId: string,
+    userId: string,
+  ): Promise<{
     canAdd: boolean;
     reason?: string;
     remainingSpots: number;
   }> {
     const match = await this.matchRepository.findById(matchId);
     if (!match) {
-      return { canAdd: false, reason: 'Match not found', remainingSpots: 0 };
+      return { canAdd: false, reason: "Match not found", remainingSpots: 0 };
     }
 
-    if (match.status !== 'upcoming') {
-      return { canAdd: false, reason: 'Match is not open for signups', remainingSpots: 0 };
+    if (match.status !== "upcoming") {
+      return {
+        canAdd: false,
+        reason: "Match is not open for signups",
+        remainingSpots: 0,
+      };
     }
 
-    const isUserSignedUp = await this.signupRepository.isUserSignedUp(matchId, userId);
+    const isUserSignedUp = await this.signupRepository.isUserSignedUp(
+      matchId,
+      userId,
+    );
     if (!isUserSignedUp) {
-      return { canAdd: false, reason: 'You must be signed up to add guests', remainingSpots: 0 };
+      return {
+        canAdd: false,
+        reason: "You must be signed up to add guests",
+        remainingSpots: 0,
+      };
     }
 
     const currentSignups = await this.signupRepository.getSignupCount(matchId);
     const remainingSpots = Math.max(0, match.maxPlayers - currentSignups);
 
     if (remainingSpots === 0) {
-      return { canAdd: false, reason: 'Match is full', remainingSpots: 0 };
+      return { canAdd: false, reason: "Match is full", remainingSpots: 0 };
     }
 
     return { canAdd: true, remainingSpots };
@@ -346,16 +392,16 @@ export class MatchService {
   }> {
     const match = await this.matchRepository.findById(matchId);
     if (!match) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     const signups = await this.signupRepository.findByMatchId(matchId);
 
     return {
       totalSignups: signups.length,
-      paidSignups: signups.filter(s => s.status === 'PAID').length,
-      pendingSignups: signups.filter(s => s.status === 'PENDING').length,
-      guestSignups: signups.filter(s => s.signupType === 'guest').length,
+      paidSignups: signups.filter((s) => s.status === "PAID").length,
+      pendingSignups: signups.filter((s) => s.status === "PENDING").length,
+      guestSignups: signups.filter((s) => s.signupType === "guest").length,
       availableSpots: Math.max(0, match.maxPlayers - signups.length),
     };
   }
@@ -365,33 +411,33 @@ export class MatchService {
    */
   private validateMatchData(matchData: CreateMatchData): void {
     if (!matchData.date || !matchData.time) {
-      throw new Error('Date and time are required');
+      throw new Error("Date and time are required");
     }
 
     // Validate date format (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(matchData.date)) {
-      throw new Error('Invalid date format. Use YYYY-MM-DD');
+      throw new Error("Invalid date format. Use YYYY-MM-DD");
     }
 
     // Validate time format (HH:MM)
     const timeRegex = /^\d{2}:\d{2}$/;
     if (!timeRegex.test(matchData.time)) {
-      throw new Error('Invalid time format. Use HH:MM');
+      throw new Error("Invalid time format. Use HH:MM");
     }
 
     // Validate maxPlayers
     if (matchData.maxPlayers !== undefined && matchData.maxPlayers < 2) {
-      throw new Error('Match must allow at least 2 players');
+      throw new Error("Match must allow at least 2 players");
     }
 
     // Validate date is not in the past
     const matchDate = new Date(matchData.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     if (matchDate < today) {
-      throw new Error('Match date cannot be in the past');
+      throw new Error("Match date cannot be in the past");
     }
   }
 }

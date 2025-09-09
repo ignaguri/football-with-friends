@@ -1,7 +1,6 @@
 // Google Sheets implementation of repository interfaces
 // This wraps existing Google Sheets functionality in the new repository pattern
 
-import { parse, isSameDay } from "date-fns";
 import {
   getAllMatchesMetadata,
   getMatchMetadataById,
@@ -12,8 +11,15 @@ import {
   getMatchSheetData,
   addOrUpdatePlayerRow,
   getSheetNameById,
-} from '@/lib/google-sheets';
+} from "@/lib/google-sheets";
+import { parse, isSameDay } from "date-fns";
 
+import type {
+  LocationRepository,
+  MatchRepository,
+  SignupRepository,
+  MatchInvitationRepository,
+} from "./interfaces";
 import type {
   Location,
   Match,
@@ -33,22 +39,15 @@ import type {
   SignupWithDetails,
   MatchMetadata,
   PlayerStatus,
-} from '@/lib/domain/types';
-
-import type {
-  LocationRepository,
-  MatchRepository,
-  SignupRepository,
-  MatchInvitationRepository,
-} from './interfaces';
+} from "@/lib/domain/types";
 
 // Google Sheets Location Repository (minimal implementation)
 export class GoogleSheetsLocationRepository implements LocationRepository {
   private defaultLocation: Location = {
-    id: 'default',
-    name: 'Default Court',
-    address: '',
-    coordinates: '',
+    id: "default",
+    name: "Default Court",
+    address: "",
+    coordinates: "",
     courtCount: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -59,19 +58,25 @@ export class GoogleSheetsLocationRepository implements LocationRepository {
   }
 
   async findById(id: string): Promise<Location | null> {
-    return id === 'default' ? this.defaultLocation : null;
+    return id === "default" ? this.defaultLocation : null;
   }
 
   async create(location: CreateLocationData): Promise<Location> {
-    throw new Error('Creating locations not supported in Google Sheets implementation');
+    throw new Error(
+      "Creating locations not supported in Google Sheets implementation",
+    );
   }
 
   async update(id: string, updates: UpdateLocationData): Promise<Location> {
-    throw new Error('Updating locations not supported in Google Sheets implementation');
+    throw new Error(
+      "Updating locations not supported in Google Sheets implementation",
+    );
   }
 
   async delete(id: string): Promise<void> {
-    throw new Error('Deleting locations not supported in Google Sheets implementation');
+    throw new Error(
+      "Deleting locations not supported in Google Sheets implementation",
+    );
   }
 }
 
@@ -86,10 +91,10 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
       matches = matches.filter((match) => {
         if (!match.date) return false;
         const matchDate = parse(match.date, "yyyy-MM-dd", new Date());
-        
-        if (filters.type === 'past') {
+
+        if (filters.type === "past") {
           return matchDate < new Date(today.setHours(0, 0, 0, 0));
-        } else if (filters.type === 'upcoming') {
+        } else if (filters.type === "upcoming") {
           return matchDate >= new Date(today.setHours(0, 0, 0, 0));
         }
         return true;
@@ -97,7 +102,7 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
     }
 
     if (filters?.status) {
-      matches = matches.filter(match => match.status === filters.status);
+      matches = matches.filter((match) => match.status === filters.status);
     }
 
     return matches;
@@ -108,13 +113,16 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
     return metadata ? this.metadataToMatch(metadata) : null;
   }
 
-  async findByIdWithDetails(id: string, userId?: string): Promise<MatchDetails | null> {
+  async findByIdWithDetails(
+    id: string,
+    userId?: string,
+  ): Promise<MatchDetails | null> {
     const metadata = await getMatchMetadataById(id);
     if (!metadata) return null;
 
     const match = this.metadataToMatch(metadata);
     const sheetName = await getSheetNameById(id);
-    
+
     let signups: Signup[] = [];
     if (sheetName) {
       const data = await getMatchSheetData(sheetName);
@@ -124,23 +132,27 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
       }
     }
 
-    const location = await new GoogleSheetsLocationRepository().findById('default');
-    
+    const location = await new GoogleSheetsLocationRepository().findById(
+      "default",
+    );
+
     return {
       ...match,
       location: location!,
       signups,
-      createdByUser: { 
-        id: 'unknown', 
-        name: 'Admin', 
-        email: '', 
-        role: 'admin' as const,
+      createdByUser: {
+        id: "unknown",
+        name: "Admin",
+        email: "",
+        role: "admin" as const,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       availableSpots: Math.max(0, match.maxPlayers - signups.length),
-      isUserSignedUp: userId ? signups.some(s => s.userId === userId) : undefined,
-      userSignup: userId ? signups.find(s => s.userId === userId) : undefined,
+      isUserSignedUp: userId
+        ? signups.some((s) => s.userId === userId)
+        : undefined,
+      userSignup: userId ? signups.find((s) => s.userId === userId) : undefined,
     };
   }
 
@@ -148,7 +160,7 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
     // Check for duplicate dates
     const exists = await this.existsOnDate(matchData.date);
     if (exists) {
-      throw new Error('Match already exists on this date');
+      throw new Error("Match already exists on this date");
     }
 
     // Generate sheet name and create the match sheet/tab
@@ -184,7 +196,7 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
 
     const updatedMetadata = await getMatchMetadataById(id);
     if (!updatedMetadata) {
-      throw new Error('Match not found after update');
+      throw new Error("Match not found after update");
     }
 
     return this.metadataToMatch(updatedMetadata);
@@ -197,7 +209,7 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
   async existsOnDate(date: string): Promise<boolean> {
     const allMatches = await getAllMatchesMetadata();
     const newDate = parse(date, "yyyy-MM-dd", new Date());
-    
+
     return allMatches.some((m) => {
       if (!m.date) return false;
       const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
@@ -208,40 +220,49 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
   private metadataToMatch(metadata: MatchMetadata): Match {
     return {
       id: metadata.matchId,
-      locationId: 'default',
+      locationId: "default",
       date: metadata.date,
       time: metadata.time,
-      status: metadata.status === 'upcoming' ? 'upcoming' : 
-             metadata.status === 'cancelled' ? 'cancelled' : 
-             metadata.status === 'completed' ? 'completed' : 'upcoming',
+      status:
+        metadata.status === "upcoming"
+          ? "upcoming"
+          : metadata.status === "cancelled"
+            ? "cancelled"
+            : metadata.status === "completed"
+              ? "completed"
+              : "upcoming",
       maxPlayers: 10, // Default max players
       costPerPlayer: metadata.costCourt,
       shirtCost: metadata.costShirts,
-      createdByUserId: 'admin',
+      createdByUserId: "admin",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
   }
 
-  private rowToSignup(row: string[], header: string[], matchId: string): Signup {
+  private rowToSignup(
+    row: string[],
+    header: string[],
+    matchId: string,
+  ): Signup {
     const getValue = (columnName: string) => {
       const index = header.indexOf(columnName);
-      return index >= 0 ? (row[index] || '') : '';
+      return index >= 0 ? row[index] || "" : "";
     };
 
-    const isGuest = getValue('IsGuest') === '1';
-    const guestOwnerId = getValue('OwnerEmail');
+    const isGuest = getValue("IsGuest") === "1";
+    const guestOwnerId = getValue("OwnerEmail");
 
     return {
-      id: `${matchId}-${getValue('Email')}-${Date.now()}`, // Generate ID
+      id: `${matchId}-${getValue("Email")}-${Date.now()}`, // Generate ID
       matchId,
-      userId: isGuest ? undefined : getValue('Email'), // Use email as user ID for now
-      playerName: getValue('Name'),
-      playerEmail: getValue('Email'),
-      status: this.mapStatus(getValue('Status')),
-      signupType: isGuest ? 'guest' : 'self',
+      userId: isGuest ? undefined : getValue("Email"), // Use email as user ID for now
+      playerName: getValue("Name"),
+      playerEmail: getValue("Email"),
+      status: this.mapStatus(getValue("Status")),
+      signupType: isGuest ? "guest" : "self",
       guestOwnerId: isGuest && guestOwnerId ? guestOwnerId : undefined,
-      addedByUserId: isGuest && guestOwnerId ? guestOwnerId : getValue('Email'),
+      addedByUserId: isGuest && guestOwnerId ? guestOwnerId : getValue("Email"),
       signedUpAt: new Date(),
       updatedAt: new Date(),
     };
@@ -249,10 +270,14 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
 
   private mapStatus(status: string): PlayerStatus {
     switch (status.toUpperCase()) {
-      case 'PAID': return 'PAID';
-      case 'PENDING': return 'PENDING';
-      case 'CANCELLED': return 'CANCELLED';
-      default: return 'PENDING';
+      case "PAID":
+        return "PAID";
+      case "PENDING":
+        return "PENDING";
+      case "CANCELLED":
+        return "CANCELLED";
+      default:
+        return "PENDING";
     }
   }
 }
@@ -261,7 +286,9 @@ export class GoogleSheetsMatchRepository implements MatchRepository {
 export class GoogleSheetsSignupRepository implements SignupRepository {
   async findAll(filters?: SignupFilters): Promise<Signup[]> {
     if (!filters?.matchId) {
-      throw new Error('findAll requires matchId filter for Google Sheets implementation');
+      throw new Error(
+        "findAll requires matchId filter for Google Sheets implementation",
+      );
     }
     return this.findByMatchId(filters.matchId);
   }
@@ -279,19 +306,21 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
 
   async findByUserId(userId: string): Promise<Signup[]> {
     // This would require iterating through all matches, not efficient
-    throw new Error('findByUserId not efficiently supported in Google Sheets implementation');
+    throw new Error(
+      "findByUserId not efficiently supported in Google Sheets implementation",
+    );
   }
 
   async findById(id: string): Promise<Signup | null> {
     // Parse ID to get match and email info
-    const parts = id.split('-');
+    const parts = id.split("-");
     if (parts.length < 3) return null;
-    
+
     const matchId = parts[0];
     const email = parts[1];
-    
+
     const signups = await this.findByMatchId(matchId);
-    return signups.find(s => s.playerEmail === email) || null;
+    return signups.find((s) => s.playerEmail === email) || null;
   }
 
   async findByIdWithDetails(id: string): Promise<SignupWithDetails | null> {
@@ -300,7 +329,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
 
     const matchRepo = new GoogleSheetsMatchRepository();
     const match = await matchRepo.findById(signup.matchId);
-    
+
     if (!match) return null;
 
     return {
@@ -308,9 +337,9 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
       match,
       addedByUser: {
         id: signup.addedByUserId,
-        name: 'User',
+        name: "User",
         email: signup.addedByUserId,
-        role: 'user',
+        role: "user",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -319,7 +348,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
 
   async isUserSignedUp(matchId: string, userId: string): Promise<boolean> {
     const signups = await this.findByMatchId(matchId);
-    return signups.some(s => s.userId === userId);
+    return signups.some((s) => s.userId === userId);
   }
 
   async getSignupCount(matchId: string): Promise<number> {
@@ -330,14 +359,14 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
   async create(signupData: CreateSignupData): Promise<Signup> {
     const sheetName = await getSheetNameById(signupData.matchId);
     if (!sheetName) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     await addOrUpdatePlayerRow(sheetName, {
       name: signupData.playerName,
       email: signupData.playerEmail,
-      status: signupData.status || 'PENDING',
-      isGuest: signupData.signupType === 'guest',
+      status: signupData.status || "PENDING",
+      isGuest: signupData.signupType === "guest",
       ownerEmail: signupData.guestOwnerId,
     });
 
@@ -348,7 +377,7 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
       userId: signupData.userId,
       playerName: signupData.playerName,
       playerEmail: signupData.playerEmail,
-      status: signupData.status || 'PENDING',
+      status: signupData.status || "PENDING",
       signupType: signupData.signupType,
       guestOwnerId: signupData.guestOwnerId,
       addedByUserId: signupData.addedByUserId,
@@ -360,19 +389,19 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
   async update(id: string, updates: UpdateSignupData): Promise<Signup> {
     const signup = await this.findById(id);
     if (!signup) {
-      throw new Error('Signup not found');
+      throw new Error("Signup not found");
     }
 
     const sheetName = await getSheetNameById(signup.matchId);
     if (!sheetName) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     await addOrUpdatePlayerRow(sheetName, {
       name: updates.playerName || signup.playerName,
       email: signup.playerEmail,
       status: updates.status || signup.status,
-      isGuest: signup.signupType === 'guest',
+      isGuest: signup.signupType === "guest",
       ownerEmail: signup.guestOwnerId,
     });
 
@@ -384,27 +413,29 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
   }
 
   async delete(id: string): Promise<void> {
-    throw new Error('Delete signup not supported in Google Sheets implementation');
+    throw new Error(
+      "Delete signup not supported in Google Sheets implementation",
+    );
   }
 
   async addGuest(guestData: CreateGuestSignupData): Promise<Signup> {
     const sheetName = await getSheetNameById(guestData.matchId);
     if (!sheetName) {
-      throw new Error('Match not found');
+      throw new Error("Match not found");
     }
 
     // Compose guest display name
     const name = guestData.guestName
       ? `${guestData.guestName} (Guest of ${guestData.ownerName})`
       : `Guest of ${guestData.ownerName}`;
-    
+
     // Generate unique guest email
     const playerEmail = `guest-${Math.random().toString(36).slice(2, 10)}`;
 
     await addOrUpdatePlayerRow(sheetName, {
       name,
       email: playerEmail,
-      status: guestData.status || 'PENDING',
+      status: guestData.status || "PENDING",
       isGuest: true,
       ownerEmail: guestData.ownerEmail,
       guestName: guestData.guestName,
@@ -417,8 +448,8 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
       userId: undefined,
       playerName: name,
       playerEmail,
-      status: guestData.status || 'PENDING',
-      signupType: 'guest',
+      status: guestData.status || "PENDING",
+      signupType: "guest",
       guestOwnerId: guestData.ownerUserId,
       addedByUserId: guestData.ownerUserId,
       signedUpAt: new Date(),
@@ -426,50 +457,62 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
     };
   }
 
-  async addPlayerByAdmin(matchId: string, playerData: {
-    userId?: string;
-    playerName: string;
-    playerEmail: string;
-    status?: string;
-  }, adminId: string): Promise<Signup> {
+  async addPlayerByAdmin(
+    matchId: string,
+    playerData: {
+      userId?: string;
+      playerName: string;
+      playerEmail: string;
+      status?: string;
+    },
+    adminId: string,
+  ): Promise<Signup> {
     return this.create({
       matchId,
       userId: playerData.userId,
       playerName: playerData.playerName,
       playerEmail: playerData.playerEmail,
-      status: (playerData.status as PlayerStatus) || 'PENDING',
-      signupType: 'admin_added',
+      status: (playerData.status as PlayerStatus) || "PENDING",
+      signupType: "admin_added",
       addedByUserId: adminId,
     });
   }
 
   async removePlayerByAdmin(signupId: string, adminId: string): Promise<void> {
-    throw new Error('Remove player by admin not supported in Google Sheets implementation');
+    throw new Error(
+      "Remove player by admin not supported in Google Sheets implementation",
+    );
   }
 
   async findAddedByUser(userId: string): Promise<Signup[]> {
-    throw new Error('findAddedByUser not efficiently supported in Google Sheets implementation');
+    throw new Error(
+      "findAddedByUser not efficiently supported in Google Sheets implementation",
+    );
   }
 
-  private rowToSignup(row: string[], header: string[], matchId: string): Signup {
+  private rowToSignup(
+    row: string[],
+    header: string[],
+    matchId: string,
+  ): Signup {
     const getValue = (columnName: string) => {
       const index = header.indexOf(columnName);
-      return index >= 0 ? (row[index] || '') : '';
+      return index >= 0 ? row[index] || "" : "";
     };
 
-    const isGuest = getValue('IsGuest') === '1';
-    const guestOwnerId = getValue('OwnerEmail');
+    const isGuest = getValue("IsGuest") === "1";
+    const guestOwnerId = getValue("OwnerEmail");
 
     return {
-      id: `${matchId}-${getValue('Email')}-${Date.now()}`,
+      id: `${matchId}-${getValue("Email")}-${Date.now()}`,
       matchId,
-      userId: isGuest ? undefined : getValue('Email'),
-      playerName: getValue('Name'),
-      playerEmail: getValue('Email'),
-      status: this.mapStatus(getValue('Status')),
-      signupType: isGuest ? 'guest' : 'self',
+      userId: isGuest ? undefined : getValue("Email"),
+      playerName: getValue("Name"),
+      playerEmail: getValue("Email"),
+      status: this.mapStatus(getValue("Status")),
+      signupType: isGuest ? "guest" : "self",
       guestOwnerId: isGuest && guestOwnerId ? guestOwnerId : undefined,
-      addedByUserId: isGuest && guestOwnerId ? guestOwnerId : getValue('Email'),
+      addedByUserId: isGuest && guestOwnerId ? guestOwnerId : getValue("Email"),
       signedUpAt: new Date(),
       updatedAt: new Date(),
     };
@@ -477,16 +520,22 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
 
   private mapStatus(status: string): PlayerStatus {
     switch (status.toUpperCase()) {
-      case 'PAID': return 'PAID';
-      case 'PENDING': return 'PENDING';
-      case 'CANCELLED': return 'CANCELLED';
-      default: return 'PENDING';
+      case "PAID":
+        return "PAID";
+      case "PENDING":
+        return "PENDING";
+      case "CANCELLED":
+        return "CANCELLED";
+      default:
+        return "PENDING";
     }
   }
 }
 
 // Google Sheets Match Invitation Repository (not implemented)
-export class GoogleSheetsMatchInvitationRepository implements MatchInvitationRepository {
+export class GoogleSheetsMatchInvitationRepository
+  implements MatchInvitationRepository
+{
   async findByMatchId(matchId: string): Promise<MatchInvitation[]> {
     return []; // Not supported in Google Sheets
   }
@@ -500,15 +549,24 @@ export class GoogleSheetsMatchInvitationRepository implements MatchInvitationRep
   }
 
   async create(invitation: CreateInvitationData): Promise<MatchInvitation> {
-    throw new Error('Invitations not supported in Google Sheets implementation');
+    throw new Error(
+      "Invitations not supported in Google Sheets implementation",
+    );
   }
 
-  async updateStatus(id: string, status: 'accepted' | 'declined'): Promise<MatchInvitation> {
-    throw new Error('Invitations not supported in Google Sheets implementation');
+  async updateStatus(
+    id: string,
+    status: "accepted" | "declined",
+  ): Promise<MatchInvitation> {
+    throw new Error(
+      "Invitations not supported in Google Sheets implementation",
+    );
   }
 
   async delete(id: string): Promise<void> {
-    throw new Error('Invitations not supported in Google Sheets implementation');
+    throw new Error(
+      "Invitations not supported in Google Sheets implementation",
+    );
   }
 
   async deleteExpired(olderThanDays: number): Promise<number> {

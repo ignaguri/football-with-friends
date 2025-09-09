@@ -17,7 +17,7 @@ import type {
   SignupFilters,
   MatchDetails,
   SignupWithDetails,
-} from '@/lib/domain/types';
+} from "@/lib/domain/types";
 
 // Location Repository Interface
 export interface LocationRepository {
@@ -62,7 +62,10 @@ export interface MatchRepository {
   /**
    * Find a match by ID with full details (location, signups, etc.)
    */
-  findByIdWithDetails(id: string, userId?: string): Promise<MatchDetails | null>;
+  findByIdWithDetails(
+    id: string,
+    userId?: string,
+  ): Promise<MatchDetails | null>;
 
   /**
    * Create a new match
@@ -145,12 +148,16 @@ export interface SignupRepository {
   /**
    * Admin-only: Add a player to a match (can override capacity)
    */
-  addPlayerByAdmin(matchId: string, playerData: {
-    userId?: string;
-    playerName: string;
-    playerEmail: string;
-    status?: string;
-  }, adminId: string): Promise<Signup>;
+  addPlayerByAdmin(
+    matchId: string,
+    playerData: {
+      userId?: string;
+      playerName: string;
+      playerEmail: string;
+      status?: string;
+    },
+    adminId: string,
+  ): Promise<Signup>;
 
   /**
    * Admin-only: Remove a player from a match
@@ -188,7 +195,10 @@ export interface MatchInvitationRepository {
   /**
    * Update invitation status (accept/decline)
    */
-  updateStatus(id: string, status: 'accepted' | 'declined'): Promise<MatchInvitation>;
+  updateStatus(
+    id: string,
+    status: "accepted" | "declined",
+  ): Promise<MatchInvitation>;
 
   /**
    * Delete an invitation
@@ -220,5 +230,7 @@ export interface TransactionalRepository {
   /**
    * Execute operations within a transaction
    */
-  withTransaction<T>(operation: (repos: RepositoryFactory) => Promise<T>): Promise<T>;
+  withTransaction<T>(
+    operation: (repos: RepositoryFactory) => Promise<T>,
+  ): Promise<T>;
 }
