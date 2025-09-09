@@ -1,9 +1,11 @@
 import { google } from "googleapis";
+import { getGoogleSheetsEnv } from "@/lib/env";
 
 import type { MatchMetadata } from "@/lib/types";
 import type { sheets_v4 } from "googleapis";
 
-const SPREADSHEET_ID = process.env.GOOGLE_SHEETS_ID || "<YOUR_SPREADSHEET_ID>";
+const env = getGoogleSheetsEnv();
+const SPREADSHEET_ID = env.GOOGLE_SHEETS_ID;
 
 // Auth setup (service account)
 function getSheetsClient() {
@@ -11,8 +13,8 @@ function getSheetsClient() {
     version: "v4",
     auth: new google.auth.GoogleAuth({
       credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
+        client_email: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(
           /\\n/g,
           "\n",
         ),
@@ -30,8 +32,8 @@ function getSheetsWriteClient() {
     version: "v4",
     auth: new google.auth.GoogleAuth({
       credentials: {
-        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-        private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
+        client_email: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(
           /\\n/g,
           "\n",
         ),

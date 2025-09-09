@@ -63,8 +63,9 @@ let repositoryFactory: AppRepositoryFactory | null = null;
  */
 export function getRepositoryFactory(): AppRepositoryFactory {
   if (!repositoryFactory) {
-    const provider = (process.env.STORAGE_PROVIDER as StorageProvider) || 'google-sheets';
-    repositoryFactory = new AppRepositoryFactory(provider);
+    // Import env here to avoid circular dependencies
+    const { env } = require("@/lib/env");
+    repositoryFactory = new AppRepositoryFactory(env.STORAGE_PROVIDER);
   }
   return repositoryFactory;
 }
