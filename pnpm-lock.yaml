@@ -122,6 +122,9 @@ importers:
       googleapis:
         specifier: ^159.0.0
         version: 159.0.0
+      libsql:
+        specifier: ^0.5.22
+        version: 0.5.22
       lucide-react:
         specifier: ^0.542.0
         version: 0.542.0(react@19.1.1)

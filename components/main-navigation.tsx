@@ -87,71 +87,73 @@ export function MainNavigation({
         </NavigationMenu>
       </div>
       {/* Mobile Burger Menu */}
-      <div className="md:hidden">
-        <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <button
-              aria-label="Open menu"
-              className="rounded p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <Menu className="size-6" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-64 p-0">
-            <SheetTitle>
-              <span className="sr-only">Main Menu</span>
-            </SheetTitle>
-            <nav className="flex flex-col gap-2 p-6">
-              <Link
-                href="/"
-                className="text-lg font-medium"
-                tabIndex={0}
-                onClick={onMobileNavigate}
+      {user && (
+        <div className="md:hidden">
+          <Sheet open={isMobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                aria-label="Open menu"
+                className="rounded p-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                {t("shared.home")}
-              </Link>
-              {user && (
+                <Menu className="size-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-64 p-0">
+              <SheetTitle>
+                <span className="sr-only">Main Menu</span>
+              </SheetTitle>
+              <nav className="flex flex-col gap-2 p-6">
                 <Link
-                  href="/matches"
+                  href="/"
                   className="text-lg font-medium"
                   tabIndex={0}
                   onClick={onMobileNavigate}
                 >
-                  {t("nav.matches")}
+                  {t("shared.home")}
                 </Link>
-              )}
-              {user?.role === "admin" && (
-                <>
+                {user && (
                   <Link
-                    href="/add-match"
+                    href="/matches"
                     className="text-lg font-medium"
                     tabIndex={0}
                     onClick={onMobileNavigate}
                   >
-                    {t("nav.addMatch")}
+                    {t("nav.matches")}
                   </Link>
-                  <Link
-                    href="/organizer"
-                    className="text-lg font-medium"
-                    tabIndex={0}
-                    onClick={onMobileNavigate}
-                  >
-                    {t("nav.organizer")}
-                  </Link>
-                </>
-              )}
-              <Link
-                href="/rules"
-                className="text-lg font-medium"
-                tabIndex={0}
-                onClick={onMobileNavigate}
-              >
-                {t("nav.rules")}
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </div>
+                )}
+                {user?.role === "admin" && (
+                  <>
+                    <Link
+                      href="/add-match"
+                      className="text-lg font-medium"
+                      tabIndex={0}
+                      onClick={onMobileNavigate}
+                    >
+                      {t("nav.addMatch")}
+                    </Link>
+                    <Link
+                      href="/organizer"
+                      className="text-lg font-medium"
+                      tabIndex={0}
+                      onClick={onMobileNavigate}
+                    >
+                      {t("nav.organizer")}
+                    </Link>
+                  </>
+                )}
+                <Link
+                  href="/rules"
+                  className="text-lg font-medium"
+                  tabIndex={0}
+                  onClick={onMobileNavigate}
+                >
+                  {t("nav.rules")}
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
+      )}
     </>
   );
 }

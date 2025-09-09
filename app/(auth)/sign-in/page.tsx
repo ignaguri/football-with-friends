@@ -1,45 +1,59 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { client, useSession } from "@/lib/auth-client";
+import { client } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { toast } from "sonner";
 
 export default function Page() {
   const tSignin = useTranslations("signin");
   const tShared = useTranslations("shared");
   const router = useRouter();
-  const { data: session, isPending } = useSession();
 
   const handleGoogleSignIn = useCallback(async () => {
+    console.log("🚀 Starting Google sign-in process");
+
     try {
+      console.log("📡 Initiating OAuth flow with Google");
+
       await client.signIn.social({
         provider: "google",
         callbackURL: "/",
         fetchOptions: {
           onError: ({ error }) => {
+            console.error("❌ Google OAuth error:", {
+              message: error.message,
+              status: error.status,
+              code: error.code,
+              timestamp: new Date().toISOString(),
+            });
             toast.error(error.message || tShared("errorOccurred"));
           },
           onSuccess: () => {
+            console.log("✅ Google OAuth successful, redirecting to home");
             toast.success(tSignin("signInSuccess"));
             router.push("/");
           },
         },
       });
+
+      console.log(
+        "🔄 OAuth redirect initiated, user should see Google account selection",
+      );
     } catch (error: unknown) {
+      console.error("💥 Unexpected error during Google sign-in:", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString(),
+      });
+
       toast.error(
         error instanceof Error ? error.message : tShared("errorOccurred"),
       );
     }
   }, [router, tShared, tSignin]);
-
-  useEffect(() => {
-    if (!isPending && !session) {
-      handleGoogleSignIn();
-    }
-  }, [isPending, session, handleGoogleSignIn]);
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center">
