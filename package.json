@@ -12,7 +12,10 @@
     "migrate": "tsx scripts/migrate.ts",
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",
-    "migrate:status": "tsx scripts/migrate.ts status"
+    "migrate:status": "tsx scripts/migrate.ts status",
+    "validate-env": "tsx scripts/validate-env.ts",
+    "env:check": "tsx scripts/validate-env.ts check",
+    "env:template": "tsx scripts/validate-env.ts template"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
