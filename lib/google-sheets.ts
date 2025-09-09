@@ -4,11 +4,25 @@ import { google } from "googleapis";
 import type { MatchMetadata } from "@/lib/types";
 import type { sheets_v4 } from "googleapis";
 
-const env = getGoogleSheetsEnv();
-const SPREADSHEET_ID = env.GOOGLE_SHEETS_ID;
+// Lazy load environment variables to avoid build-time errors
+let env: ReturnType<typeof getGoogleSheetsEnv> | null = null;
+let SPREADSHEET_ID: string | null = null;
+
+function getEnv() {
+  if (!env) {
+    env = getGoogleSheetsEnv();
+    SPREADSHEET_ID = env.GOOGLE_SHEETS_ID;
+  }
+  return { env, SPREADSHEET_ID: SPREADSHEET_ID! };
+}
+
+function getSpreadsheetId(): string {
+  return getEnv().SPREADSHEET_ID;
+}
 
 // Auth setup (service account)
 function getSheetsClient() {
+  const { env } = getEnv();
   return google.sheets({
     version: "v4",
     auth: new google.auth.GoogleAuth({
@@ -28,6 +42,7 @@ function getSheetsClient() {
 
 // Use write scope for write operations
 function getSheetsWriteClient() {
+  const { env } = getEnv();
   return google.sheets({
     version: "v4",
     auth: new google.auth.GoogleAuth({
@@ -62,7 +77,7 @@ function columnToLetter(col: number): string {
 export async function listMatchSheets(): Promise<sheets_v4.Schema$Sheet[]> {
   const sheets = getSheetsClient();
   const response = await sheets.spreadsheets.get({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
   });
   // Exclude master sheet (assume first sheet is master, or filter by name)
   return (response.data.sheets || []).filter(
@@ -79,7 +94,7 @@ export async function createMatchSheet(
 ): Promise<sheets_v4.Schema$SheetProperties> {
   const sheets = getSheetsWriteClient();
   const response = await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     requestBody: {
       requests: [
         {
@@ -99,7 +114,7 @@ export async function createMatchSheet(
 
   // Write header row: Name, Email, Status
   await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     range: `${matchName}!A1:C1`,
     valueInputOption: "RAW",
     requestBody: { values: [["Name", "Email", "Status"]] },
@@ -117,7 +132,7 @@ export async function getMatchSheetData(
   const sheets = getSheetsClient();
   const range = `${sheetName}`;
   const response = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     range,
   });
   return response.data.values || [];
@@ -158,7 +173,7 @@ export async function addOrUpdatePlayerRow(
   }
   if (needsUpdate) {
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SPREADSHEET_ID,
+      spreadsheetId: getSpreadsheetId(),
       range: `${sheetName}!A1`,
       valueInputOption: "RAW",
       requestBody: { values: [header] },
@@ -183,7 +198,7 @@ export async function addOrUpdatePlayerRow(
   if (player.isGuest) {
     const range = `${sheetName}!A1`;
     await sheets.spreadsheets.values.append({
-      spreadsheetId: SPREADSHEET_ID,
+      spreadsheetId: getSpreadsheetId(),
       range,
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",
@@ -197,7 +212,7 @@ export async function addOrUpdatePlayerRow(
         const lastColLetter = columnToLetter(header.length);
         const range = `${sheetName}!A${i + 1}:${lastColLetter}${i + 1}`;
         await sheets.spreadsheets.values.update({
-          spreadsheetId: SPREADSHEET_ID,
+          spreadsheetId: getSpreadsheetId(),
           range,
           valueInputOption: "RAW",
           requestBody: { values: [row] },
@@ -209,7 +224,7 @@ export async function addOrUpdatePlayerRow(
     if (!found) {
       const range = `${sheetName}!A1`;
       await sheets.spreadsheets.values.append({
-        spreadsheetId: SPREADSHEET_ID,
+        spreadsheetId: getSpreadsheetId(),
         range,
         valueInputOption: "RAW",
         insertDataOption: "INSERT_ROWS",
@@ -241,21 +256,23 @@ const MASTER_HEADERS: (keyof MatchMetadata)[] = [
  */
 export async function ensureMasterSheetExists(): Promise<sheets_v4.Schema$SheetProperties> {
   const sheets = getSheetsWriteClient();
-  const meta = await sheets.spreadsheets.get({ spreadsheetId: SPREADSHEET_ID });
+  const meta = await sheets.spreadsheets.get({
+    spreadsheetId: getSpreadsheetId(),
+  });
   const found = (meta.data.sheets || []).find(
     (s) => s.properties?.title === MASTER_SHEET_NAME,
   );
   if (found) return found.properties!;
   // Create the master sheet
   const resp = await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     requestBody: {
       requests: [{ addSheet: { properties: { title: MASTER_SHEET_NAME } } }],
     },
   });
   // Write header row
   await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     range: `${MASTER_SHEET_NAME}!A1:K1`,
     valueInputOption: "RAW",
     requestBody: { values: [MASTER_HEADERS] },
@@ -275,7 +292,7 @@ export async function getAllMatchesMetadata(): Promise<MatchMetadata[]> {
   const sheets = getSheetsClient();
   const range = `${MASTER_SHEET_NAME}`;
   const resp = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     range,
   });
   const rows = resp.data.values || [];
@@ -300,7 +317,7 @@ export async function addMatchMetadata(meta: MatchMetadata) {
     h === "sheetName" ? sheetNameFormula : (meta[h] ?? ""),
   );
   await sheets.spreadsheets.values.append({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     range: `${MASTER_SHEET_NAME}!A1:K1`,
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
@@ -323,7 +340,7 @@ export async function updateMatchMetadata(
   const row = MASTER_HEADERS.map((h) => updated[h] ?? "");
   const range = `${MASTER_SHEET_NAME}!A${idx + 2}:K${idx + 2}`;
   await sheets.spreadsheets.values.update({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     range,
     valueInputOption: "RAW",
     requestBody: { values: [row] },
@@ -340,7 +357,7 @@ export async function deleteMatchMetadata(matchId: string) {
   if (idx === -1) throw new Error("Match not found");
   // Delete the row (Google Sheets API: deleteDimension)
   await sheets.spreadsheets.batchUpdate({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
     requestBody: {
       requests: [
         {
@@ -376,7 +393,7 @@ export async function getSheetNameById(
 ): Promise<string | null> {
   const sheets = getSheetsClient();
   const response = await sheets.spreadsheets.get({
-    spreadsheetId: SPREADSHEET_ID,
+    spreadsheetId: getSpreadsheetId(),
   });
   const sheet = (response.data.sheets || []).find(
     (s) => s.properties?.sheetId?.toString() === sheetId,

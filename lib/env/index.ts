@@ -79,7 +79,7 @@ export function getGoogleSheetsEnv() {
       'Google Sheets environment variables are not available when STORAGE_PROVIDER is not "google-sheets"',
     );
   }
-  return environment as ValidatedEnvironment;
+  return environment as any;
 }
 
 export function getTursoEnv() {
@@ -89,7 +89,7 @@ export function getTursoEnv() {
       'Turso environment variables are not available when STORAGE_PROVIDER is not "turso"',
     );
   }
-  return environment as ValidatedEnvironment;
+  return environment as any;
 }
 
 export function getLocalDbEnv() {
@@ -99,7 +99,7 @@ export function getLocalDbEnv() {
       'Local DB environment variables are not available when STORAGE_PROVIDER is not "local-db"',
     );
   }
-  return environment as ValidatedEnvironment;
+  return environment as any;
 }
 
 // Re-export types and utilities

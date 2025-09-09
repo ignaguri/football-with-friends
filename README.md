@@ -39,6 +39,15 @@
    ```
 3. **Set up environment variables:**
    - Copy `.env.example` to `.env` and fill in the required values.
+   - For local development, set `STORAGE_PROVIDER=local-db` in your `.env` file.
+
+4. **Set up the local database (for development):**
+   ```bash
+   pnpm setup-local-db
+   # or
+   npm run setup-local-db
+   ```
+   This creates all necessary tables for both BetterAuth and the app functionality.
 
 ### Running the App
 
@@ -52,6 +61,20 @@ yarn dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000) to use the app.
+
+### Database Management
+
+The app supports multiple storage providers:
+
+- **Local Development**: Uses SQLite with `STORAGE_PROVIDER=local-db`
+- **Production**: Uses Turso with `STORAGE_PROVIDER=turso`
+- **Legacy**: Uses Google Sheets with `STORAGE_PROVIDER=google-sheets`
+
+#### Local Database Commands
+
+- **Setup database**: `pnpm setup-local-db` - Creates all required tables
+- **Run migrations**: `pnpm migrate:up` - Runs pending migrations
+- **Check migration status**: `pnpm migrate:status` - Shows migration status
 
 ## Contributing
 

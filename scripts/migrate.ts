@@ -1,6 +1,9 @@
 #!/usr/bin/env tsx
 // Migration CLI script
 
+// Load environment variables first
+import "dotenv/config";
+
 import { MigrationRunner } from "@/lib/database/migrator";
 
 async function main() {

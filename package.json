@@ -13,6 +13,7 @@
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",
     "migrate:status": "tsx scripts/migrate.ts status",
+    "setup-local-db": "tsx scripts/setup-local-db.ts",
     "validate-env": "tsx scripts/validate-env.ts",
     "env:check": "tsx scripts/validate-env.ts check",
     "env:template": "tsx scripts/validate-env.ts template"

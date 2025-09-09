@@ -1,13 +1,31 @@
-import { env, getTursoEnv } from "@/lib/env";
+import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 
-const tursoEnv = getTursoEnv();
-const libsql = new LibsqlDialect({
-  url: tursoEnv.TURSO_DATABASE_URL,
-  authToken: tursoEnv.TURSO_AUTH_TOKEN,
-});
+// Get database configuration based on storage provider
+function getDatabaseConfig() {
+  const environment = env;
+
+  if (environment.STORAGE_PROVIDER === "turso") {
+    const tursoEnv = getTursoEnv();
+    return new LibsqlDialect({
+      url: tursoEnv.TURSO_DATABASE_URL,
+      authToken: tursoEnv.TURSO_AUTH_TOKEN,
+    });
+  } else if (environment.STORAGE_PROVIDER === "local-db") {
+    const localDbEnv = getLocalDbEnv();
+    return new LibsqlDialect({
+      url: localDbEnv.LOCAL_DATABASE_URL,
+    });
+  } else {
+    throw new Error(
+      `Unsupported storage provider: ${environment.STORAGE_PROVIDER}`,
+    );
+  }
+}
+
+const databaseDialect = getDatabaseConfig();
 
 export const auth = betterAuth({
   appName: "Fulbo con los pibes",
@@ -16,7 +34,7 @@ export const auth = betterAuth({
     "https://football-with-friends-*.vercel.app",
   ],
   database: {
-    dialect: libsql,
+    dialect: databaseDialect,
     type: "sqlite",
   },
   user: {
