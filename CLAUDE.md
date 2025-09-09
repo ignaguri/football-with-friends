@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Linting**: `pnpm lint`
 - **Secure development**: `pnpm dev:secure` (HTTPS)
 - **Install dependencies**: `pnpm install`
+- **Validate environment**: `pnpm validate-env` (see Environment Configuration section)
 
 ## Architecture Overview
 
@@ -58,8 +59,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ESLint errors ignored during production builds (see next.config.ts:10)
 - Sentry integration with source map uploads
 
-### Environment Requirements
-Essential environment variables:
-- `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` - Database connection
-- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - OAuth
-- `GOOGLE_SHEETS_ID` / `GOOGLE_SERVICE_ACCOUNT_*` - Sheets integration
+### Environment Configuration
+The app uses a comprehensive environment validation system:
+
+**Storage Provider Selection**: Set `STORAGE_PROVIDER` to:
+- `google-sheets` - Use Google Sheets (current production)
+- `turso` - Use Turso database (production recommended)  
+- `local-db` - Use local SQLite (development)
+
+**Environment Validation**:
+- `pnpm validate-env` - Validate current environment (default command)
+- `pnpm validate-env requirements [provider]` - Show required variables
+- `pnpm validate-env template [provider]` - Generate .env template
+- `pnpm validate-env help` - Show all available commands
+- Automatic validation on app startup (exits in development, logs in production)
+- Validates conditionally based on STORAGE_PROVIDER setting
+
+**Required Variables** (vary by storage provider):
+- `BETTER_AUTH_SECRET` - Authentication encryption key
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - OAuth
+- Storage-specific variables (validated automatically)
