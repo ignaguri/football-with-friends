@@ -13,10 +13,17 @@
     "migrate:up": "tsx scripts/migrate.ts up",
     "migrate:down": "tsx scripts/migrate.ts down",
     "migrate:status": "tsx scripts/migrate.ts status",
+    "migrate-remote": "tsx scripts/migrate-remote.ts",
+    "migrate-remote:up": "tsx scripts/migrate-remote.ts up",
+    "migrate-remote:down": "tsx scripts/migrate-remote.ts down",
+    "migrate-remote:status": "tsx scripts/migrate-remote.ts status",
+    "migrate-remote:dry-run": "tsx scripts/migrate-remote.ts dry-run",
+    "create-migration": "tsx scripts/create-migration.ts",
     "setup-local-db": "tsx scripts/setup-local-db.ts",
     "validate-env": "tsx scripts/validate-env.ts",
     "env:check": "tsx scripts/validate-env.ts check",
-    "env:template": "tsx scripts/validate-env.ts template"
+    "env:template": "tsx scripts/validate-env.ts template",
+    "prepare": "husky"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -99,7 +106,9 @@
     "eslint-plugin-tailwindcss": "^3.18.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.2.0",
+    "husky": "^9.1.7",
     "import-in-the-middle": "^1.14.2",
+    "lint-staged": "^16.1.6",
     "postcss": "^8.5.5",
     "require-in-the-middle": "^7.5.2",
     "tailwindcss": "3.4.17",
@@ -117,6 +126,16 @@
     "onlyBuiltDependencies": [
       "sharp",
       "unrs-resolver"
+    ]
+  },
+  "lint-staged": {
+    "migrations/**/*.ts": [
+      "eslint --fix",
+      "tsc --noEmit"
+    ],
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
     ]
   }
 }

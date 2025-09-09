@@ -10,6 +10,8 @@ import {
 } from "kysely";
 import * as path from "path";
 
+import type { Kysely } from "kysely";
+
 import { getDatabase } from "./connection";
 
 /**
@@ -88,14 +90,15 @@ export class MigrationStatusError extends Error {
 
 export class MigrationRunner {
   private migrator: KyselyMigrator;
+  private db: Kysely<any>;
 
   constructor(migrationFolder?: string) {
-    const db = getDatabase();
+    this.db = getDatabase();
     const migrationsPath =
       migrationFolder || path.join(process.cwd(), "migrations");
 
     this.migrator = new KyselyMigrator({
-      db,
+      db: this.db,
       provider: new FileMigrationProvider({
         fs,
         path,
@@ -159,15 +162,13 @@ export class MigrationRunner {
    * Get migration status
    */
   async getMigrationStatus(): Promise<MigrationStatus> {
-    const db = getDatabase();
-
     try {
       // Try to get executed migrations directly using raw SQL
       let executedMigrations: ExecutedMigration[] = [];
       try {
         const result = await sql<ExecutedMigration>`
           SELECT name, timestamp FROM kysely_migration ORDER BY timestamp ASC
-        `.execute(db);
+        `.execute(this.db);
         executedMigrations = result.rows;
       } catch {
         return { executed: [], pending: [] };
@@ -207,10 +208,9 @@ export class MigrationRunner {
     for (const file of migrationFiles) {
       if (status.executed.includes(file.name)) {
         // Get execution timestamp from database
-        const db = getDatabase();
         const result = await sql<ExecutedMigration>`
-          SELECT name, timestamp FROM kysely_migration WHERE name = ${file.name}
-        `.execute(db);
+            SELECT name, timestamp FROM kysely_migration WHERE name = ${file.name}
+          `.execute(this.db);
 
         const record = result.rows[0] as ExecutedMigration | undefined;
         if (record) {
@@ -244,6 +244,61 @@ export class MigrationRunner {
   async getPendingMigrationCount(): Promise<number> {
     const status = await this.getMigrationStatus();
     return status.pending.length;
+  }
+
+  /**
+   * Validate database connection
+   */
+  async validateConnection(): Promise<boolean> {
+    try {
+      await this.db
+        .selectFrom("sqlite_master")
+        .select("name")
+        .limit(1)
+        .execute();
+      return true;
+    } catch (error) {
+      console.error("Database connection validation failed:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Get database information
+   */
+  async getDatabaseInfo(): Promise<{
+    provider: string;
+    url: string;
+    isConnected: boolean;
+  }> {
+    const isConnected = await this.validateConnection();
+
+    // Try to get environment info
+    let provider = "unknown";
+    let url = "unknown";
+
+    try {
+      const { env } = await import("@/lib/env");
+      provider = env.STORAGE_PROVIDER;
+
+      if (provider === "turso") {
+        const { getTursoEnv } = await import("@/lib/env");
+        const tursoEnv = getTursoEnv();
+        url = tursoEnv.TURSO_DATABASE_URL.replace(/\/\/.*@/, "//***@");
+      } else if (provider === "local-db") {
+        const { getLocalDbEnv } = await import("@/lib/env");
+        const localEnv = getLocalDbEnv();
+        url = localEnv.LOCAL_DATABASE_URL;
+      }
+    } catch {
+      // Environment not available
+    }
+
+    return {
+      provider,
+      url,
+      isConnected,
+    };
   }
 }
 
