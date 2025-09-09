@@ -1,6 +1,13 @@
 // Repository factory for dependency injection and configuration
 
-import type { RepositoryFactory } from './interfaces';
+import type { 
+  RepositoryFactory, 
+  LocationRepository, 
+  MatchRepository, 
+  SignupRepository, 
+  MatchInvitationRepository 
+} from './interfaces';
+
 import {
   GoogleSheetsLocationRepository,
   GoogleSheetsMatchRepository,
@@ -8,15 +15,22 @@ import {
   GoogleSheetsMatchInvitationRepository,
 } from './google-sheets-repositories';
 
+import {
+  TursoLocationRepository,
+  TursoMatchRepository,
+  TursoSignupRepository,
+  TursoMatchInvitationRepository,
+} from './turso-repositories';
+
 // Configuration type
-export type StorageProvider = 'google-sheets' | 'turso';
+export type StorageProvider = 'google-sheets' | 'turso' | 'local-db';
 
 // Repository factory implementation
 export class AppRepositoryFactory implements RepositoryFactory {
-  public readonly locations: GoogleSheetsLocationRepository;
-  public readonly matches: GoogleSheetsMatchRepository;
-  public readonly signups: GoogleSheetsSignupRepository;
-  public readonly invitations: GoogleSheetsMatchInvitationRepository;
+  public readonly locations: LocationRepository;
+  public readonly matches: MatchRepository;
+  public readonly signups: SignupRepository;
+  public readonly invitations: MatchInvitationRepository;
 
   constructor(provider: StorageProvider = 'google-sheets') {
     switch (provider) {
@@ -28,8 +42,12 @@ export class AppRepositoryFactory implements RepositoryFactory {
         break;
       
       case 'turso':
-        // TODO: Implement Turso repositories
-        throw new Error('Turso repositories not yet implemented');
+      case 'local-db':
+        this.locations = new TursoLocationRepository();
+        this.matches = new TursoMatchRepository();
+        this.signups = new TursoSignupRepository();
+        this.invitations = new TursoMatchInvitationRepository();
+        break;
       
       default:
         throw new Error(`Unknown storage provider: ${provider}`);

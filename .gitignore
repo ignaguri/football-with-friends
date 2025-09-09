@@ -41,6 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# local development databases
+local.db*
+*.sqlite*
+
 certificates
 
 # next-intl

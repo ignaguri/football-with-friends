@@ -8,7 +8,11 @@
     "typecheck": "tsc --noEmit",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "migrate": "tsx scripts/migrate.ts",
+    "migrate:up": "tsx scripts/migrate.ts up",
+    "migrate:down": "tsx scripts/migrate.ts down",
+    "migrate:status": "tsx scripts/migrate.ts status"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -94,6 +98,7 @@
     "postcss": "^8.5.5",
     "require-in-the-middle": "^7.5.2",
     "tailwindcss": "3.4.17",
+    "tsx": "^4.20.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.0"
   },
