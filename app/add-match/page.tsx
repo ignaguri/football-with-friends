@@ -1,27 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useGetLocations } from "@/hooks/use-locations";
+import { MatchForm, type MatchFormValues } from "@/components/forms/match-form";
 import { useSession } from "@/lib/auth-client";
 import { isApiErrorKey } from "@/lib/types";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
-
-import type { Location } from "@/lib/domain/types";
 
 function AddMatchForm() {
   const t = useTranslations();
@@ -32,39 +17,6 @@ function AddMatchForm() {
   const isAdmin = user?.role === "admin";
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch locations for the selector
-  const { data: locationsData, isLoading: isLoadingLocations } =
-    useGetLocations();
-  const locations: Location[] = locationsData?.locations || [];
-  const addMatchSchema = z.object({
-    date: z.date({ error: t("addMatch.dateRequired") }),
-    time: z
-      .string()
-      .regex(/^\d{2}:\d{2}$/, t("addMatch.timeFormat"))
-      .refine(
-        (val) => {
-          const [, minutes] = val.split(":");
-          return minutes === "00" || minutes === "30";
-        },
-        { message: t("addMatch.timeIncrement") },
-      ),
-    locationId: z.string().min(1, "Location is required"),
-    costPerPlayer: z.string().optional(),
-  });
-  type AddMatchFormValues = z.infer<typeof addMatchSchema>;
-  const {
-    handleSubmit,
-    control,
-    formState: { isSubmitting, errors },
-  } = useForm<AddMatchFormValues>({
-    resolver: zodResolver(addMatchSchema),
-    defaultValues: {
-      date: undefined,
-      time: "",
-      locationId: locations[0]?.id || "",
-      costPerPlayer: "",
-    },
-  });
   const [redirecting, setRedirecting] = useState(false);
 
   if (isPending) {
@@ -94,7 +46,7 @@ function AddMatchForm() {
     time,
     locationId,
     costPerPlayer,
-  }: AddMatchFormValues) {
+  }: MatchFormValues) {
     setError(null);
     try {
       // Format date as YYYY-MM-DD
@@ -129,7 +81,7 @@ function AddMatchForm() {
         throw new Error(errorMsg);
       }
       const data = await res.json();
-      const matchId = data.match?.matchId;
+      const matchId = data.match?.id;
       if (!matchId) {
         throw new Error(t("errors.noMatchId"));
       }
@@ -145,122 +97,14 @@ function AddMatchForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="mt-4 flex min-h-[80dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6"
-    >
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium">{t("shared.date")}</label>
-        <Controller
-          name="date"
-          control={control}
-          render={({ field }) => (
-            <>
-              <Calendar
-                mode="single"
-                selected={field.value}
-                onSelect={field.onChange}
-                hidden={{ before: new Date() }}
-                className="w-full"
-              />
-              {errors.date && (
-                <div className="mt-1 text-sm text-destructive">
-                  {t("addMatch.dateRequired")}
-                </div>
-              )}
-            </>
-          )}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium" htmlFor="match-time">
-          {t("shared.time")}
-        </label>
-        <Controller
-          name="time"
-          control={control}
-          render={({ field }) => (
-            <>
-              <Input
-                {...field}
-                id="match-time"
-                type="time"
-                step="1800"
-                placeholder="HH:mm"
-                required
-                disabled={isSubmitting}
-              />
-              {errors.time && (
-                <div className="mt-1 text-sm text-destructive">
-                  {errors.time.message === "Time must be in HH:mm format."
-                    ? t("addMatch.timeFormat")
-                    : t("addMatch.timeIncrement")}
-                </div>
-              )}
-            </>
-          )}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium" htmlFor="location-select">
-          Location
-        </label>
-        <Controller
-          name="locationId"
-          control={control}
-          render={({ field }) => (
-            <>
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-                disabled={isSubmitting || isLoadingLocations}
-              >
-                <SelectTrigger id="location-select">
-                  <SelectValue placeholder="Select a location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                      {location.address && ` - ${location.address}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.locationId && (
-                <div className="mt-1 text-sm text-destructive">
-                  {errors.locationId.message}
-                </div>
-              )}
-            </>
-          )}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium" htmlFor="cost-court">
-          {t("addMatch.costCourt")}
-        </label>
-        <Controller
-          name="costPerPlayer"
-          control={control}
-          render={({ field }) => (
-            <Input
-              {...field}
-              id="cost-court"
-              type="number"
-              placeholder={t("addMatch.costPlaceholder")}
-              disabled={isSubmitting}
-            />
-          )}
-        />
-      </div>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isSubmitting || redirecting}
-      >
-        {isSubmitting || redirecting ? t("addMatch.adding") : t("addMatch.add")}
-      </Button>
+    <div className="mt-4 flex min-h-[80dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6">
+      <MatchForm
+        onSubmit={onSubmit}
+        isSubmitting={redirecting}
+        submitText={t("addMatch.add")}
+        submitLoadingText={t("addMatch.adding")}
+        className="flex-1"
+      />
       {redirecting && (
         <div className="mt-2 text-center text-sm text-muted-foreground">
           {t("addMatch.redirecting")}
@@ -269,7 +113,7 @@ function AddMatchForm() {
       {error && (
         <div className="text-center text-sm text-destructive">{error}</div>
       )}
-    </form>
+    </div>
   );
 }
 

@@ -204,8 +204,13 @@ export default function OrganizerDashboard() {
                             <AlertDialogCancel>
                               {t("shared.cancel")}
                             </AlertDialogCancel>
-                            <AlertDialogAction>
-                              {t("organizer.deleteConfirm")}
+                            <AlertDialogAction
+                              onClick={() => _handleDelete(m.matchId)}
+                              disabled={isDeleting}
+                            >
+                              {isDeleting
+                                ? t("organizer.deleting")
+                                : t("organizer.deleteConfirm")}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

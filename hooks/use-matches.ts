@@ -132,6 +132,28 @@ async function signupPlayer({
   return response;
 }
 
+type UpdateSignupData = {
+  matchId: string;
+  signupId: string;
+  status: string;
+};
+
+async function updateSignup({
+  matchId,
+  signupId,
+  status,
+}: UpdateSignupData): Promise<Response> {
+  const response = await fetch(`/api/matches/${matchId}/signup/${signupId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update signup");
+  }
+  return response;
+}
+
 // --- Mutation Hooks ---
 
 export function useAddMatch() {
@@ -171,6 +193,18 @@ export function useSignupPlayer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: signupPlayer,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["match", variables.matchId],
+      });
+    },
+  });
+}
+
+export function useUpdateSignup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateSignup,
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["match", variables.matchId],

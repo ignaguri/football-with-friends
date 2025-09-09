@@ -25,6 +25,7 @@ export interface MatchDetailsDisplay {
 }
 
 export interface PlayerDisplay {
+  Id: string;
   Name: string;
   Email: string;
   Status: string;
@@ -80,6 +81,7 @@ export function matchDetailsToDisplay(
   matchDetails: MatchDetails,
 ): MatchDetailsDisplay {
   const header = [
+    "Id",
     "Name",
     "Email",
     "Status",
@@ -89,6 +91,7 @@ export function matchDetailsToDisplay(
   ];
 
   const players: PlayerDisplay[] = matchDetails.signups.map((signup) => ({
+    Id: signup.id,
     Name: signup.playerName,
     Email: signup.playerEmail,
     Status: signup.status,
@@ -159,6 +162,7 @@ export function locationToDisplay(location: Location): {
  */
 export function signupToPlayerDisplay(signup: Signup): PlayerDisplay {
   return {
+    Id: signup.id,
     Name: signup.playerName,
     Email: signup.playerEmail,
     Status: signup.status,
