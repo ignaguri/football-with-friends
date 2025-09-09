@@ -1,12 +1,11 @@
-import type { Config } from "tailwindcss";
+import svgToDataUri from "mini-svg-data-uri";
+import tailwindcssAnimate from "tailwindcss-animate";
 
-const svgToDataUri = require("mini-svg-data-uri");
-const {
-  default: flattenColorPalette,
-} = require("tailwindcss/lib/util/flattenColorPalette");
+import type { Config } from "tailwindcss";
+import type { PluginAPI } from "tailwindcss/types/config";
 
 const config = {
-  darkMode: ["class"],
+  darkMode: "class",
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -83,29 +82,29 @@ const config = {
     },
   },
   plugins: [
-    require("tailwindcss-animate"),
+    tailwindcssAnimate,
     addVariablesForColors,
-    function ({ matchUtilities, theme }: any) {
+    function ({ matchUtilities, theme }: PluginAPI) {
       matchUtilities(
         {
-          "bg-grid": (value: any) => ({
+          "bg-grid": (value: string) => ({
             backgroundImage: `url("${svgToDataUri(
               `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
             )}")`,
           }),
-          "bg-grid-small": (value: any) => ({
+          "bg-grid-small": (value: string) => ({
             backgroundImage: `url("${svgToDataUri(
               `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="8" height="8" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`,
             )}")`,
           }),
-          "bg-dot": (value: any) => ({
+          "bg-dot": (value: string) => ({
             backgroundImage: `url("${svgToDataUri(
               `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="1.6257413380501518"></circle></svg>`,
             )}")`,
           }),
         },
         {
-          values: flattenColorPalette(theme("backgroundColor")),
+          values: theme("backgroundColor"),
           type: "color",
         },
       );
@@ -113,11 +112,25 @@ const config = {
   ],
 } satisfies Config;
 
-function addVariablesForColors({ addBase, theme }: any) {
-  let allColors = flattenColorPalette(theme("colors"));
-  let newVars = Object.fromEntries(
-    Object.entries(allColors).map(([key, val]) => [`--${key}`, val]),
-  );
+function addVariablesForColors({ addBase, theme }: PluginAPI) {
+  const colors = theme("colors");
+  const newVars: Record<string, string> = {};
+
+  // Helper function to recursively flatten color objects
+  function flattenColors(obj: Record<string, unknown>, prefix = ""): void {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+      if (typeof value === "string") {
+        newVars[`--${prefix}${key}`] = value;
+      } else if (typeof value === "object" && value !== null) {
+        flattenColors(value as Record<string, unknown>, `${prefix}${key}-`);
+      }
+    });
+  }
+
+  if (colors) {
+    flattenColors(colors as Record<string, unknown>);
+  }
 
   addBase({
     ":root": newVars,

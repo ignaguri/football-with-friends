@@ -1,5 +1,11 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useGetMatch, useSignupPlayer } from "@/hooks/use-matches";
+import { useSession } from "@/lib/auth-client";
+import { PLAYER_STATUSES } from "@/lib/types";
+import { formatMatchTitle } from "@/lib/utils";
 import {
   useReactTable,
   getCoreRowModel,
@@ -19,12 +25,6 @@ import { MatchHeader } from "./components/match-header";
 import { MatchStats } from "./components/match-stats";
 import { NotifyOrganizerDialog } from "./components/notify-organizer-dialog";
 import { PlayersTable } from "./components/players-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useGetMatch, useSignupPlayer } from "@/hooks/use-matches";
-import { useSession } from "@/lib/auth-client";
-import { PLAYER_STATUSES } from "@/lib/types";
-import { formatMatchTitle } from "@/lib/utils";
 
 interface Player {
   [key: string]: string;
@@ -86,7 +86,18 @@ export default function MatchClientPage() {
     CANCELLED: t("status.cancelled"),
   };
 
-  const handleSignup = (payload: any, successMessage: string) => {
+  const handleSignup = (
+    payload: {
+      playerName?: string;
+      playerEmail?: string;
+      status: string;
+      isGuest?: boolean;
+      ownerName?: string;
+      ownerEmail?: string;
+      guestName?: string;
+    },
+    successMessage: string,
+  ) => {
     signupMutation.mutate(
       { matchId, payload },
       {
@@ -229,7 +240,7 @@ export default function MatchClientPage() {
         },
       },
     ],
-    [user, signupMutation.isPending, matchTitle, t, statusLabelMap],
+    [user, signupMutation.isPending, matchTitle, t, handleMarkAsPaid],
   );
 
   const table = useReactTable({

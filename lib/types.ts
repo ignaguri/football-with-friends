@@ -24,3 +24,20 @@ export interface Match {
   costCourt?: string;
   costShirts?: string;
 }
+
+// API Error handling types
+export const API_ERROR_KEYS = [
+  "duplicateDate",
+  "missingFields",
+  "invalidInput",
+  "unauthorizedApi",
+  "noMatchId",
+  "unknownError",
+] as const;
+
+export type ApiErrorKey = (typeof API_ERROR_KEYS)[number];
+
+// Type guard to check if a string is a valid API error key
+export function isApiErrorKey(key: string): key is ApiErrorKey {
+  return API_ERROR_KEYS.includes(key as ApiErrorKey);
+}

@@ -1,0 +1,14 @@
+---
+description: Auto-invoke Context7 MCP for code examples, setup/configuration steps, or library/API documentation requests.
+globs:
+alwaysApply: false
+---
+
+# Use Context7 MCP for Documentation
+
+When the user requests code examples, setup or configuration steps, or library/API documentation, automatically use the Context7 MCP tool to provide up-to-date and relevant information.
+
+@context {
+"match": "when the user requests code examples, setup or configuration steps, or library/API documentation",
+"tool": "context7"
+}

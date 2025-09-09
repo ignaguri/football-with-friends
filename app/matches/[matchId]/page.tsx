@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-
-import MatchClientPage from "./match-client-page";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 import { createMetadata } from "@/lib/metadata";
 import { formatMatchTitle } from "@/lib/utils";
+
+import type { Metadata } from "next";
+
+import MatchClientPage from "./match-client-page";
 
 export async function generateMetadata({
   params,

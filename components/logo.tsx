@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -12,13 +13,12 @@ export function Logo() {
   }, [resolvedTheme]);
 
   return (
-    <img
+    <Image
       src={logoSrc}
       alt="Fútbol con los pibes Logo"
       width={44}
       height={44}
       className="size-11"
-      style={{ width: 44, height: 44 }}
       loading="lazy"
     />
   );

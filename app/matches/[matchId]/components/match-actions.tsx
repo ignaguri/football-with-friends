@@ -1,7 +1,5 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,6 +12,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 interface User {
   name?: string | null;
@@ -45,7 +44,7 @@ export function MatchActions({
 }: MatchActionsProps) {
   const t = useTranslations();
   return (
-    <div className="mt-8 flex w-full flex-col justify-center gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-sm md:flex-row md:items-center md:justify-between">
+    <div className="mt-8 flex w-full flex-col justify-center gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-xs md:flex-row md:items-center md:justify-between">
       <div className="text-center md:text-left">
         <h2 className="text-xl font-bold">
           {isPlayerInMatch ? t("actions.in") : t("actions.wantToPlay")}

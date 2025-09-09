@@ -1,16 +1,5 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useState, useRef, useEffect } from "react";
-
-import type { UserWithRole } from "@/lib/auth-types";
-
-import { LanguageSwitcher } from "./language-switcher";
-import { Logo } from "./logo";
-import { ThemeToggle } from "./theme-toggle";
 import { MainNavigation } from "@/components/main-navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,6 +11,17 @@ import {
 } from "@/components/ui/dialog";
 import UserCard from "@/components/user-card";
 import { useSession, signOut } from "@/lib/auth-client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useState, useRef, useEffect } from "react";
+
+import type { UserWithRole } from "@/lib/auth-types";
+
+import { LanguageSwitcher } from "./language-switcher";
+import { Logo } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Wrapper(props: { children: React.ReactNode }) {
   const t = useTranslations();
@@ -193,7 +193,7 @@ export function Wrapper(props: { children: React.ReactNode }) {
 
 const queryClient = new QueryClient();
 
-export function WrapperWithQuery(props: { children: React.ReactNode | any }) {
+export function WrapperWithQuery(props: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {props.children}

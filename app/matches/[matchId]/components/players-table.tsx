@@ -1,8 +1,5 @@
 "use client";
 
-import { flexRender, type Table as TableType } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
-
 import {
   Table,
   TableBody,
@@ -11,6 +8,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { flexRender, type Table as TableType } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
 
 interface PlayersTableProps<TData> {
   table: TableType<TData>;

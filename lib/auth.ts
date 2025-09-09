@@ -40,4 +40,29 @@ export const auth = betterAuth({
     },
   },
   plugins: [admin()],
+  logger: {
+    level: "info",
+    disabled: false,
+  },
+  callbacks: {
+    after: [
+      {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        matcher(context: any) {
+          return (
+            context.path === "/sign-in/social" && context.method === "POST"
+          );
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        handler(context: any) {
+          // eslint-disable-next-line no-console
+          console.log("🔐 Google OAuth callback triggered:", {
+            provider: context.body?.provider,
+            timestamp: new Date().toISOString(),
+            userAgent: context.request?.headers?.["user-agent"],
+          });
+        },
+      },
+    ],
+  },
 });
