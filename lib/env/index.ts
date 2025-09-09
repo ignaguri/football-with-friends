@@ -94,12 +94,18 @@ export function getTursoEnv() {
 
 export function getLocalDbEnv() {
   const environment = getEnv();
-  if (environment.STORAGE_PROVIDER !== "local-db") {
-    throw new Error(
-      'Local DB environment variables are not available when STORAGE_PROVIDER is not "local-db"',
-    );
+  // LOCAL_DATABASE_URL is available for google-sheets and local-db providers
+  if (
+    environment.STORAGE_PROVIDER === "google-sheets" ||
+    environment.STORAGE_PROVIDER === "local-db"
+  ) {
+    return {
+      LOCAL_DATABASE_URL: environment.LOCAL_DATABASE_URL,
+    };
   }
-  return environment as any;
+  throw new Error(
+    'Local DB environment variables are not available when STORAGE_PROVIDER is not "google-sheets" or "local-db"',
+  );
 }
 
 // Re-export types and utilities

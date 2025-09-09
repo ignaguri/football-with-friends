@@ -1,22 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { Match, MatchMetadata } from "@/lib/types";
+import type {
+  MatchDisplay,
+  MatchDetailsDisplay,
+} from "@/lib/mappers/display-mappers";
 
 // --- Types ---
 
 export type Player = Record<string, string>;
 
-export interface MatchDetails {
-  header: string[];
-  players: Player[];
-  meta: MatchMetadata;
-}
+// Re-export display types for convenience
+export type {
+  MatchDetailsDisplay,
+  MatchDisplay,
+} from "@/lib/mappers/display-mappers";
 
 export type MatchesResponse = {
-  matches: MatchMetadata[];
+  matches: MatchDisplay[];
 };
 
-export type MatchDetailsResponse = MatchDetails;
+export type MatchDetailsResponse = MatchDetailsDisplay;
 
 // --- API Functions ---
 
@@ -59,8 +62,8 @@ export function useGetMatch(matchId: string) {
 // --- Mutation API Functions ---
 
 async function addMatch(
-  newMatch: Omit<MatchMetadata, "matchId" | "sheetName" | "sheetGid">,
-): Promise<Match> {
+  newMatch: Omit<MatchDisplay, "matchId" | "name">,
+): Promise<MatchDisplay> {
   const response = await fetch("/api/matches", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -78,7 +81,7 @@ async function updateMatch({
   updates,
 }: {
   matchId: string;
-  updates: Partial<MatchMetadata>;
+  updates: Partial<MatchDisplay>;
 }): Promise<Response> {
   const response = await fetch(`/api/matches/${matchId}`, {
     method: "PATCH",

@@ -16,6 +16,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
 import type { PlayerStatus } from "@/lib/types";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 
@@ -168,7 +169,7 @@ export default function MatchClientPage() {
     return "secondary";
   }
 
-  const columns: ColumnDef<Player>[] = useMemo(
+  const columns: ColumnDef<PlayerDisplay>[] = useMemo(
     () => [
       {
         accessorKey: "Name",

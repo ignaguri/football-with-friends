@@ -39,7 +39,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { MatchMetadata } from "@/lib/types";
+import type { MatchDisplay } from "@/lib/mappers/display-mappers";
 
 import { EditMatchForm } from "./edit-match-form";
 import { PlayerDrawer } from "./player-drawer";
@@ -59,7 +59,7 @@ export default function OrganizerDashboard() {
 
   const matches = matchesData?.matches || [];
 
-  const [editingMatch, setEditingMatch] = useState<MatchMetadata | null>(null);
+  const [editingMatch, setEditingMatch] = useState<MatchDisplay | null>(null);
   const [playerDrawerMatchId, setPlayerDrawerMatchId] = useState<string | null>(
     null,
   );
@@ -77,7 +77,7 @@ export default function OrganizerDashboard() {
     });
   };
 
-  function handleEditClick(match: MatchMetadata) {
+  function handleEditClick(match: MatchDisplay) {
     setEditingMatch(match);
   }
 
@@ -85,7 +85,7 @@ export default function OrganizerDashboard() {
     setEditingMatch(null);
   }
 
-  function handleEditSave(updated: MatchMetadata) {
+  function handleEditSave(updated: MatchDisplay) {
     updateMatch(
       { matchId: updated.matchId, updates: updated },
       {

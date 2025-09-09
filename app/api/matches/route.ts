@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth";
+import { matchToDisplay } from "@/lib/mappers/display-mappers";
 import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 import { z } from "zod";
 
 import type { MatchFilters, CreateMatchData, User } from "@/lib/domain/types";
+import type { MatchDisplay } from "@/lib/mappers/display-mappers";
 
 // GET /api/matches: Returns all matches
 export async function GET(req: Request) {
@@ -19,7 +21,10 @@ export async function GET(req: Request) {
     const { matchService } = getServiceFactory();
     const matches = await matchService.getAllMatches(filters);
 
-    return Response.json({ matches });
+    // Convert domain objects to display format
+    const matchDisplays: MatchDisplay[] = matches.map(matchToDisplay);
+
+    return Response.json({ matches: matchDisplays });
   } catch (error) {
     console.error("Error fetching matches:", error);
     return Response.json({ error: "Failed to fetch matches" }, { status: 500 });

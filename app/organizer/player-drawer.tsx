@@ -23,6 +23,8 @@ import { capitalize, formatMatchTitle } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
+
 interface PlayerDrawerProps {
   matchId: string | null;
   isOpen: boolean;
@@ -52,7 +54,7 @@ export function PlayerDrawer({
     matchData?.meta?.sheetName ||
     "";
 
-  function handleCancelPlayer(player: Record<string, string>) {
+  function handleCancelPlayer(player: PlayerDisplay) {
     if (!matchId) return;
     cancelPlayer(
       {

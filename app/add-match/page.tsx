@@ -3,6 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useGetLocations } from "@/hooks/use-locations";
 import { useSession } from "@/lib/auth-client";
 import { isApiErrorKey } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +21,8 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import type { Location } from "@/lib/domain/types";
+
 function AddMatchForm() {
   const t = useTranslations();
   const tErrors = useTranslations("errors");
@@ -21,6 +31,11 @@ function AddMatchForm() {
   const user = session?.user;
   const isAdmin = user?.role === "admin";
   const [error, setError] = useState<string | null>(null);
+
+  // Fetch locations for the selector
+  const { data: locationsData, isLoading: isLoadingLocations } =
+    useGetLocations();
+  const locations: Location[] = locationsData?.locations || [];
   const addMatchSchema = z.object({
     date: z.date({ error: t("addMatch.dateRequired") }),
     time: z
@@ -33,7 +48,7 @@ function AddMatchForm() {
         },
         { message: t("addMatch.timeIncrement") },
       ),
-    locationId: z.string().optional(),
+    locationId: z.string().min(1, "Location is required"),
     costPerPlayer: z.string().optional(),
   });
   type AddMatchFormValues = z.infer<typeof addMatchSchema>;
@@ -46,7 +61,7 @@ function AddMatchForm() {
     defaultValues: {
       date: undefined,
       time: "",
-      locationId: "",
+      locationId: locations[0]?.id || "",
       costPerPlayer: "",
     },
   });
@@ -187,20 +202,37 @@ function AddMatchForm() {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium" htmlFor="court-number">
-          {t("addMatch.courtNumber")}
+        <label className="text-sm font-medium" htmlFor="location-select">
+          Location
         </label>
         <Controller
           name="locationId"
           control={control}
           render={({ field }) => (
-            <Input
-              {...field}
-              id="court-number"
-              type="text"
-              placeholder={t("addMatch.courtPlaceholder")}
-              disabled={isSubmitting}
-            />
+            <>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                disabled={isSubmitting || isLoadingLocations}
+              >
+                <SelectTrigger id="location-select">
+                  <SelectValue placeholder="Select a location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((location) => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                      {location.address && ` - ${location.address}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.locationId && (
+                <div className="mt-1 text-sm text-destructive">
+                  {errors.locationId.message}
+                </div>
+              )}
+            </>
           )}
         />
       </div>

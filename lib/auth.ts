@@ -3,25 +3,24 @@ import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
 
-// Get database configuration based on storage provider
+// Get database configuration for authentication
+// Auth always needs a database, regardless of match data storage provider
 function getDatabaseConfig() {
   const environment = env;
 
-  if (environment.STORAGE_PROVIDER === "turso") {
+  // For auth, use Turso in production, local database otherwise
+  if (environment.NODE_ENV === "production") {
     const tursoEnv = getTursoEnv();
     return new LibsqlDialect({
       url: tursoEnv.TURSO_DATABASE_URL,
       authToken: tursoEnv.TURSO_AUTH_TOKEN,
     });
-  } else if (environment.STORAGE_PROVIDER === "local-db") {
+  } else {
+    // Use local database for auth in development
     const localDbEnv = getLocalDbEnv();
     return new LibsqlDialect({
       url: localDbEnv.LOCAL_DATABASE_URL,
     });
-  } else {
-    throw new Error(
-      `Unsupported storage provider: ${environment.STORAGE_PROVIDER}`,
-    );
   }
 }
 

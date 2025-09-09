@@ -65,6 +65,14 @@ const GoogleSheetsEnvSchema = z.object({
       (key) => key.includes("-----BEGIN PRIVATE KEY-----"),
       "GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY must be a valid private key",
     ),
+  // Auth database (required for authentication)
+  LOCAL_DATABASE_URL: z
+    .string()
+    .default("file:./local.db")
+    .refine(
+      (url) => url.startsWith("file:"),
+      "LOCAL_DATABASE_URL must be a file: URL",
+    ),
 });
 
 // Turso database specific environment schema

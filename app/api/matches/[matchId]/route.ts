@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
+import { matchDetailsToDisplay } from "@/lib/mappers/display-mappers";
 import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 
 import type { UpdateMatchData, User } from "@/lib/domain/types";
+import type { MatchDetailsDisplay } from "@/lib/mappers/display-mappers";
 
 export async function GET(
   request: Request,
@@ -22,40 +24,11 @@ export async function GET(
       return new Response("Not found", { status: 404 });
     }
 
-    // Format response to match existing API structure
-    const header = [
-      "Name",
-      "Email",
-      "Status",
-      "IsGuest",
-      "OwnerEmail",
-      "GuestName",
-    ];
-    const players = matchDetails.signups.map((signup) => ({
-      Name: signup.playerName,
-      Email: signup.playerEmail,
-      Status: signup.status,
-      IsGuest: signup.signupType === "guest" ? "1" : "0",
-      OwnerEmail: signup.guestOwnerId || "",
-      GuestName: signup.signupType === "guest" ? signup.playerName : "",
-    }));
+    // Convert to display format using mapper
+    const displayData: MatchDetailsDisplay =
+      matchDetailsToDisplay(matchDetails);
 
-    return Response.json({
-      header,
-      players,
-      meta: {
-        matchId: matchDetails.id,
-        sheetName: `${matchDetails.date} ${matchDetails.time}`,
-        sheetGid: matchDetails.id,
-        date: matchDetails.date,
-        time: matchDetails.time,
-        courtNumber: matchDetails.location?.name || "1",
-        status: matchDetails.status,
-        costCourt: matchDetails.costPerPlayer || "",
-        costShirts: matchDetails.shirtCost || "",
-      },
-      matchDetails, // Include full details for enhanced functionality
-    });
+    return Response.json(displayData);
   } catch (error) {
     console.error("Error fetching match data:", error);
     return new Response("Not found", { status: 404 });

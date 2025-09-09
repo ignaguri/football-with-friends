@@ -5,9 +5,15 @@ import { format, isValid, parse } from "date-fns";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import type { Match, MatchMetadata } from "@/lib/types";
+import type { MatchDisplay } from "@/lib/mappers/display-mappers";
 
-function MatchTable({ matches, title }: { matches: Match[]; title: string }) {
+function MatchTable({
+  matches,
+  title,
+}: {
+  matches: MatchDisplay[];
+  title: string;
+}) {
   const t = useTranslations();
   return (
     <div className="w-full p-4">
@@ -108,17 +114,8 @@ function MatchesList({
     );
   }
 
-  // Map MatchMetadata[] to Match[]
-  const matches: Match[] = (data?.matches || []).map((meta: MatchMetadata) => ({
-    matchId: meta.matchId,
-    name: meta.sheetName,
-    date: meta.date,
-    time: meta.time,
-    status: meta.status,
-    courtNumber: meta.courtNumber,
-    costCourt: meta.costCourt,
-    costShirts: meta.costShirts,
-  }));
+  // Data is already in display format from API
+  const matches: MatchDisplay[] = data?.matches || [];
 
   return <MatchTable matches={matches} title={title} />;
 }

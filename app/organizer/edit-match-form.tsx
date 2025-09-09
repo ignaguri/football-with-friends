@@ -16,24 +16,24 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { MatchMetadata } from "@/lib/types";
+import type { MatchDisplay } from "@/lib/mappers/display-mappers";
 
 const matchSchema = z.object({
   matchId: z.string(),
+  name: z.string(),
   date: z.string().min(1, "Date is required"),
   time: z.string().min(1, "Time is required"),
   courtNumber: z.string(),
   status: z.string(),
   costCourt: z.string(),
   costShirts: z.string(),
-  // Add other fields from MatchMetadata that are not in the form but need to be passed through
-  sheetName: z.string(),
-  sheetGid: z.string(),
+  maxPlayers: z.number(),
+  availableSpots: z.number(),
 });
 
 type EditMatchFormProps = {
-  match: MatchMetadata;
-  onSave: (match: MatchMetadata) => void;
+  match: MatchDisplay;
+  onSave: (match: MatchDisplay) => void;
   onCancel: () => void;
   isSaving?: boolean;
 };
