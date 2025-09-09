@@ -1,107 +1,91 @@
 import { auth } from "@/lib/auth";
-import {
-  createMatchSheet,
-  getAllMatchesMetadata,
-  addMatchMetadata,
-} from "@/lib/google-sheets";
-import { parse, isSameDay } from "date-fns";
+import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 import { z } from "zod";
 
-import type { MatchMetadata } from "@/lib/types";
+import type { MatchFilters, CreateMatchData, User } from "@/lib/domain/types";
 
-// GET /api/matches: Returns all matches from the master sheet
+// GET /api/matches: Returns all matches
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const type = searchParams.get("type");
-  const matches = await getAllMatchesMetadata();
+  try {
+    const { searchParams } = new URL(req.url);
+    const type = searchParams.get("type") as 'past' | 'upcoming' | null;
+    
+    const filters: MatchFilters = {};
+    if (type) {
+      filters.type = type;
+    }
 
-  if (!type) {
+    const { matchService } = getServiceFactory();
+    const matches = await matchService.getAllMatches(filters);
+
     return Response.json({ matches });
+  } catch (error) {
+    console.error('Error fetching matches:', error);
+    return Response.json({ error: 'Failed to fetch matches' }, { status: 500 });
   }
-
-  const today = new Date();
-  let filtered = matches;
-  if (type === "past") {
-    filtered = matches.filter((m) => {
-      if (!m.date) return false;
-      const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
-      return matchDate < new Date(today.setHours(0, 0, 0, 0));
-    });
-  } else if (type === "upcoming") {
-    filtered = matches.filter((m) => {
-      if (!m.date) return false;
-      const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
-      return matchDate >= new Date(today.setHours(0, 0, 0, 0));
-    });
-  }
-  return Response.json({ matches: filtered });
 }
 
 const matchSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
   time: z.string().regex(/^\d{2}:\d{2}$/), // HH:mm
-  courtNumber: z.string().optional(),
-  costCourt: z.string().optional(),
-  costShirts: z.string().optional(),
-  status: z.string().optional(),
+  locationId: z.string().optional(),
+  maxPlayers: z.number().min(2).optional(),
+  costPerPlayer: z.string().optional(),
+  shirtCost: z.string().optional(),
 });
 
-// POST /api/matches: Add a new match (sheet + metadata, organizer only)
+// POST /api/matches: Add a new match (admin only)
 export async function POST(req: Request) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const user = session?.user;
-  if (!user || user.role !== "admin") {
-    return Response.json({ error: "errors.unauthorizedApi" }, { status: 401 });
-  }
-  const body = await req.json();
-  const parsed = matchSchema.safeParse(body);
-  if (!parsed.success) {
-    return Response.json(
-      { error: "errors.invalidInput", details: parsed.error.format() },
-      { status: 400 },
-    );
-  }
-  const { date, time, courtNumber, costCourt, costShirts, status } =
-    parsed.data;
-  if (!date || !time) {
-    return Response.json({ error: "errors.missingFields" }, { status: 400 });
-  }
-  // Prevent duplicate matches on the same day
-  const allMatches = await getAllMatchesMetadata();
-  const newDate = parse(date, "yyyy-MM-dd", new Date());
-  const hasSameDay = allMatches.some((m) => {
-    if (!m.date) return false;
-    const matchDate = parse(m.date, "yyyy-MM-dd", new Date());
-    return isSameDay(newDate, matchDate);
-  });
-  if (hasSameDay) {
-    return Response.json(
-      { error: "errors.duplicateDate" },
-      {
-        status: 409,
-      },
-    );
-  }
-  // Generate a sheet name and create the match sheet/tab
-  const sheetName = `${date} ${time}`;
-  const sheetProps = await createMatchSheet(sheetName);
-  const sheetGid = sheetProps.sheetId?.toString() || "";
-  // Use sheetGid as matchId
-  const matchId = sheetGid;
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user as User | undefined;
+    
+    if (!user || user.role !== "admin") {
+      return Response.json({ error: "errors.unauthorizedApi" }, { status: 401 });
+    }
 
-  const meta: MatchMetadata = {
-    matchId,
-    sheetName,
-    sheetGid,
-    date: String(date), // YYYY-MM-DD
-    time: String(time),
-    courtNumber: courtNumber || "",
-    status: status || "upcoming",
-    costCourt: costCourt || "",
-    costShirts: costShirts || "",
-  };
+    const body = await req.json();
+    const parsed = matchSchema.safeParse(body);
+    
+    if (!parsed.success) {
+      return Response.json(
+        { error: "errors.invalidInput", details: parsed.error.format() },
+        { status: 400 },
+      );
+    }
 
-  await addMatchMetadata(meta);
-  return Response.json({ match: meta });
+    const { date, time, locationId, maxPlayers, costPerPlayer, shirtCost } = parsed.data;
+    
+    const matchData: CreateMatchData = {
+      date,
+      time,
+      locationId: locationId || 'default',
+      maxPlayers: maxPlayers || 10,
+      costPerPlayer,
+      shirtCost,
+      createdByUserId: user.id,
+    };
+
+    const { matchService } = getServiceFactory();
+    const match = await matchService.createMatch(matchData, user);
+
+    return Response.json({ match });
+  } catch (error) {
+    console.error('Error creating match:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('already exists')) {
+        return Response.json({ error: "errors.duplicateDate" }, { status: 409 });
+      }
+      if (error.message.includes('administrators')) {
+        return Response.json({ error: "errors.unauthorizedApi" }, { status: 401 });
+      }
+      if (error.message.includes('required') || error.message.includes('Invalid')) {
+        return Response.json({ error: "errors.invalidInput" }, { status: 400 });
+      }
+    }
+
+    return Response.json({ error: "errors.unknownError" }, { status: 500 });
+  }
 }
