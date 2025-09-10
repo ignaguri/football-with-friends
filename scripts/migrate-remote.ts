@@ -5,7 +5,7 @@
 import { config } from "dotenv";
 
 // Load .env.prod, fallback to .env
-config({ path: ".env.prod" });
+config({ path: ".env.production" });
 config({ path: ".env" });
 
 async function main() {

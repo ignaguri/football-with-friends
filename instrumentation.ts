@@ -23,12 +23,21 @@ export async function register() {
       console.error("⚠️  Continuing with potentially invalid environment");
     }
 
-    await import("./sentry.server.config");
+    // Only load Sentry in production
+    if (process.env.NODE_ENV === "production") {
+      await import("./sentry.server.config");
+    }
   }
 
   if (process.env.NEXT_RUNTIME === "edge") {
-    await import("./sentry.edge.config");
+    // Only load Sentry in production
+    if (process.env.NODE_ENV === "production") {
+      await import("./sentry.edge.config");
+    }
   }
 }
 
-export const onRequestError = Sentry.captureRequestError;
+export const onRequestError =
+  process.env.NODE_ENV === "production"
+    ? Sentry.captureRequestError
+    : undefined;

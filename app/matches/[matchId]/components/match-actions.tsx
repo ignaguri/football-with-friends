@@ -59,9 +59,18 @@ export function MatchActions({
       </div>
 
       {user && !isPlayerInMatch && !isCancelled && (
-        <Button onClick={onJoin} disabled={isSigningUp || spotsLeft < 1}>
-          {isSigningUp ? t("actions.joining") : t("actions.join")}
-        </Button>
+        <div className="flex flex-col gap-2 md:flex-row">
+          <Button onClick={onJoin} disabled={isSigningUp || spotsLeft < 1}>
+            {isSigningUp ? t("actions.joining") : t("actions.join")}
+          </Button>
+          <Button
+            onClick={onAddGuest}
+            disabled={isSigningUp || spotsLeft < 1}
+            variant="secondary"
+          >
+            {t("actions.signUpGuest")}
+          </Button>
+        </div>
       )}
 
       {user && isPlayerInMatch && (
