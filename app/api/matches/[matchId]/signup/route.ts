@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getServiceFactory } from "@/lib/services/factory";
+import * as Sentry from "@sentry/nextjs";
 import { headers } from "next/headers";
 
 import type {
@@ -17,6 +18,9 @@ export async function POST(
     const user = session?.user as User | undefined;
 
     if (!user) {
+      Sentry.captureMessage("Unauthorized signup attempt", {
+        level: "warning",
+      });
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -24,11 +28,29 @@ export async function POST(
     const body = await req.json();
     const { matchService } = getServiceFactory();
 
+    // Add Sentry context for debugging
+    Sentry.setContext("signup_request", {
+      matchId,
+      userId: user.id,
+      userEmail: user.email,
+      isGuest: body.isGuest,
+      hasGuestName: !!body.guestName,
+    });
+
     if (body.isGuest) {
       // Guest signup
       const { ownerName, ownerEmail, guestName, status } = body;
 
       if (!ownerName || !ownerEmail || typeof status !== "string") {
+        Sentry.captureMessage("Guest signup missing required fields", {
+          level: "error",
+          extra: {
+            hasOwnerName: !!ownerName,
+            hasOwnerEmail: !!ownerEmail,
+            statusType: typeof status,
+            guestName,
+          },
+        });
         return new Response("Missing fields", { status: 400 });
       }
 
@@ -41,8 +63,42 @@ export async function POST(
         status: status as PlayerStatus,
       };
 
-      await matchService.addGuestPlayer(matchId, guestData, user);
-      return new Response("OK", { status: 200 });
+      try {
+        await matchService.addGuestPlayer(matchId, guestData, user);
+
+        Sentry.captureMessage("Guest successfully added to match", {
+          level: "info",
+          extra: {
+            matchId,
+            guestName,
+            ownerEmail,
+            ownerName,
+          },
+        });
+
+        return new Response("OK", { status: 200 });
+      } catch (guestError) {
+        Sentry.captureException(guestError, {
+          tags: {
+            operation: "add_guest_player",
+            matchId,
+          },
+          extra: {
+            guestName,
+            ownerEmail,
+            ownerName,
+            userId: user.id,
+          },
+        });
+
+        console.error("Error adding guest player:", guestError);
+        return new Response(
+          guestError instanceof Error
+            ? guestError.message
+            : "Failed to add guest",
+          { status: 400 },
+        );
+      }
     } else {
       // Regular user signup
       const { playerName, playerEmail, status } = body;
@@ -53,10 +109,48 @@ export async function POST(
         status: status as PlayerStatus,
       };
 
-      await matchService.signUpUser(matchId, user, playerData);
-      return new Response("OK", { status: 200 });
+      try {
+        await matchService.signUpUser(matchId, user, playerData);
+
+        Sentry.captureMessage("User successfully signed up for match", {
+          level: "info",
+          extra: {
+            matchId,
+            playerEmail: playerData.playerEmail,
+            playerName: playerData.playerName,
+          },
+        });
+
+        return new Response("OK", { status: 200 });
+      } catch (signupError) {
+        Sentry.captureException(signupError, {
+          tags: {
+            operation: "signup_user",
+            matchId,
+          },
+          extra: {
+            playerEmail: playerData.playerEmail,
+            playerName: playerData.playerName,
+            userId: user.id,
+          },
+        });
+
+        console.error("Error signing up user:", signupError);
+        return new Response(
+          signupError instanceof Error
+            ? signupError.message
+            : "Failed to sign up",
+          { status: 400 },
+        );
+      }
     }
   } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        operation: "signup_api",
+      },
+    });
+
     console.error("Error processing signup:", error);
 
     if (error instanceof Error) {

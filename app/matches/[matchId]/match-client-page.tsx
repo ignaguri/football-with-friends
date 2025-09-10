@@ -10,6 +10,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { PLAYER_STATUSES } from "@/lib/types";
 import { formatMatchTitle } from "@/lib/utils";
+import * as Sentry from "@sentry/nextjs";
 import {
   useReactTable,
   getCoreRowModel,
@@ -109,8 +110,35 @@ export default function MatchClientPage() {
       {
         onSuccess: () => {
           toast.success(successMessage);
+
+          // Log successful signup to Sentry
+          Sentry.captureMessage("Signup successful", "info", {
+            extra: {
+              matchId,
+              isGuest: payload.isGuest,
+              guestName: payload.guestName,
+              playerEmail: payload.playerEmail,
+              playerName: payload.playerName,
+            },
+          });
         },
         onError: (error) => {
+          // Log signup errors to Sentry
+          Sentry.captureException(error, {
+            tags: {
+              operation: "client_signup",
+              matchId,
+            },
+            extra: {
+              isGuest: payload.isGuest,
+              guestName: payload.guestName,
+              playerEmail: payload.playerEmail,
+              playerName: payload.playerName,
+              errorMessage: error.message,
+            },
+          });
+
+          console.error("Signup error:", error);
           toast.error(error.message || t("shared.errorOccurred"));
         },
       },
@@ -193,6 +221,16 @@ export default function MatchClientPage() {
 
   function handleAddGuest(guestName?: string) {
     if (!user) return;
+
+    // Add Sentry logging for guest invitation attempts
+    console.log("Attempting to add guest:", {
+      matchId,
+      guestName,
+      ownerEmail: user.email,
+      ownerName: user.name,
+      isPlayerInMatch,
+    });
+
     handleSignup(
       {
         isGuest: true,

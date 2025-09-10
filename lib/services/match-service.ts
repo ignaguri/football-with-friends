@@ -226,15 +226,6 @@ export class MatchService {
       throw new Error("Cannot add guests to this match");
     }
 
-    // Verify the owner is signed up (business rule)
-    const isOwnerSignedUp = await this.signupRepository.isUserSignedUp(
-      matchId,
-      addedBy.id,
-    );
-    if (!isOwnerSignedUp) {
-      throw new Error("You must be signed up to add guests");
-    }
-
     // Check capacity
     const currentSignups = await this.signupRepository.getSignupCount(matchId);
     if (currentSignups >= match.maxPlayers) {
