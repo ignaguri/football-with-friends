@@ -104,6 +104,7 @@
     "error": "Failed to load matches: {message}",
     "table": {
       "court": "Court",
+      "maxPlayers": "Max Players",
       "costCourt": "Cost Court",
       "costShirts": "Cost Shirts"
     },
@@ -116,7 +117,17 @@
     "updateSuccess": "Match updated successfully",
     "updateError": "Failed to update match",
     "deleteSuccess": "Match deleted successfully",
-    "deleteError": "Failed to delete match"
+    "deleteError": "Failed to delete match",
+    "tabs": {
+      "matches": "Matches",
+      "locations": "Locations",
+      "courts": "Courts"
+    },
+    "viewPlayers": "View Players",
+    "viewMatch": "View Match",
+    "editMatch": "Edit Match",
+    "editMatchDesc": "Update the match details below and save your changes.",
+    "noMatches": "No matches found"
   },
   "signin": {
     "signInWithGoogle": "Sign in with Google",
@@ -138,7 +149,16 @@
     "timeFormat": "Time must be in HH:mm format.",
     "timeIncrement": "Time must be in 30-minute increments (e.g. 18:00, 18:30)",
     "courtPlaceholder": "Court #",
-    "costPlaceholder": "Cost per person"
+    "costPlaceholder": "Cost per person",
+    "location": "Location",
+    "locationRequired": "Location is required",
+    "selectLocation": "Select a location",
+    "court": "Court (Optional)",
+    "selectCourt": "Select a court (optional)",
+    "noSpecificCourt": "No specific court",
+    "maxPlayers": "Max Players",
+    "maxPlayersMin": "Max players must be at least 1",
+    "maxPlayersMax": "Max players cannot exceed 50"
   },
   "errors": {
     "duplicateDate": "A match already exists for this date.",
@@ -185,11 +205,77 @@
     "status": "Status",
     "actions": "Actions",
     "date": "Date",
-    "time": "Time"
+    "time": "Time",
+    "createSuccess": "Item created successfully",
+    "updateSuccess": "Item updated successfully",
+    "deleteSuccess": "Item deleted successfully",
+    "createError": "Failed to create item",
+    "updateError": "Failed to update item",
+    "deleteError": "Failed to delete item",
+    "deleteConfirm": "Are you sure you want to delete this item?",
+    "error": "Error: {message}"
   },
   "status": {
     "paid": "Paid",
     "pending": "Pending",
-    "cancelled": "Cancelled"
+    "cancelled": "Cancelled",
+    "inactive": "Inactive"
+  },
+  "locations": {
+    "title": "Locations",
+    "addLocation": "Add Location",
+    "addLocationDesc": "Create a new sports venue location.",
+    "editLocation": "Edit Location",
+    "editLocationDesc": "Update the location details below and save your changes.",
+    "name": "Location Name",
+    "namePlaceholder": "e.g., Central Park, Sports Complex",
+    "address": "Address",
+    "addressPlaceholder": "Street address",
+    "coordinates": "Coordinates",
+    "coordinatesPlaceholder": "Latitude, Longitude",
+    "courtCount": "Court Count",
+    "create": "Create Location",
+    "creating": "Creating...",
+    "update": "Update Location",
+    "updating": "Updating...",
+    "delete": "Delete",
+    "noLocations": "No locations found. Add a location to get started.",
+    "createSuccess": "Location created successfully",
+    "createError": "Failed to create location",
+    "updateSuccess": "Location updated successfully",
+    "updateError": "Failed to update location",
+    "deleteSuccess": "Location deleted successfully",
+    "deleteError": "Failed to delete location",
+    "error": "Failed to load locations: {message}"
+  },
+  "courts": {
+    "title": "Courts",
+    "loading": "Loading courts...",
+    "addCourt": "Add Court",
+    "createTitle": "Create New Court",
+    "createDesc": "Add a new court to a location. Courts help organize matches within venues.",
+    "editTitle": "Edit Court",
+    "editDesc": "Update the court information below.",
+    "location": "Location",
+    "selectLocation": "Select a location",
+    "courtName": "Court Name",
+    "courtNamePlaceholder": "e.g., Court 1, Field A",
+    "description": "Description (Optional)",
+    "descriptionPlaceholder": "Additional details about this court",
+    "active": "Active",
+    "activeDesc": "This court is available for matches",
+    "cancel": "Cancel",
+    "create": "Create Court",
+    "creating": "Creating...",
+    "update": "Update Court",
+    "updating": "Updating...",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Are you sure you want to delete this court?",
+    "noCourts": "No courts found. Create your first court to get started.",
+    "createSuccess": "Court created successfully",
+    "updateSuccess": "Court updated successfully",
+    "deleteSuccess": "Court deleted successfully",
+    "unknownLocation": "Unknown Location"
   }
 }

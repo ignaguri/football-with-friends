@@ -105,6 +105,7 @@
     "error": "No se pudieron cargar los partidos: {message}",
     "table": {
       "court": "Cancha",
+      "maxPlayers": "Máx. Jugadores",
       "costCourt": "Costo cancha",
       "costShirts": "Costo pecheras"
     },
@@ -117,7 +118,17 @@
     "updateSuccess": "Partido actualizado con éxito",
     "updateError": "No se pudo actualizar el partido",
     "deleteSuccess": "Partido eliminado con éxito",
-    "deleteError": "No se pudo eliminar el partido"
+    "deleteError": "No se pudo eliminar el partido",
+    "tabs": {
+      "matches": "Partidos",
+      "locations": "Predios",
+      "courts": "Canchas"
+    },
+    "viewPlayers": "Ver Jugadores",
+    "viewMatch": "Ver Partido",
+    "editMatch": "Editar Partido",
+    "editMatchDesc": "Actualizá los detalles del partido abajo y guardá los cambios.",
+    "noMatches": "No se encontraron partidos"
   },
   "signin": {
     "signInWithGoogle": "Iniciar sesión con Google",
@@ -139,7 +150,16 @@
     "timeFormat": "La hora debe estar en formato HH:mm.",
     "timeIncrement": "La hora debe estar en incrementos de 30 minutos (ej. 18:00, 18:30)",
     "courtPlaceholder": "Cancha #",
-    "costPlaceholder": "Costo por persona"
+    "costPlaceholder": "Costo por persona",
+    "location": "Ubicación",
+    "locationRequired": "La ubicación es requerida",
+    "selectLocation": "Seleccioná una ubicación",
+    "court": "Cancha (Opcional)",
+    "selectCourt": "Seleccioná una cancha (opcional)",
+    "noSpecificCourt": "Sin cancha específica",
+    "maxPlayers": "Máx. Jugadores",
+    "maxPlayersMin": "Máx. jugadores debe ser al menos 1",
+    "maxPlayersMax": "Máx. jugadores no puede exceder 50"
   },
   "errors": {
     "duplicateDate": "Ya existe un partido para esta fecha.",
@@ -188,11 +208,77 @@
     "status": "Estado",
     "actions": "Acciones",
     "date": "Fecha",
-    "time": "Hora"
+    "time": "Hora",
+    "createSuccess": "Elemento creado exitosamente",
+    "updateSuccess": "Elemento actualizado exitosamente",
+    "deleteSuccess": "Elemento eliminado exitosamente",
+    "createError": "Error al crear elemento",
+    "updateError": "Error al actualizar elemento",
+    "deleteError": "Error al eliminar elemento",
+    "deleteConfirm": "¿Estás seguro de que querés eliminar este elemento?",
+    "error": "Error: {message}"
   },
   "status": {
     "paid": "Pagado",
     "pending": "Pendiente",
-    "cancelled": "Cancelado"
+    "cancelled": "Cancelado",
+    "inactive": "Inactiva"
+  },
+  "locations": {
+    "title": "Predios",
+    "addLocation": "Agregar Predio",
+    "addLocationDesc": "Crear una nueva ubicación de cancha deportiva.",
+    "editLocation": "Editar Ubicación",
+    "editLocationDesc": "Actualizá los detalles del predio abajo y guardá los cambios.",
+    "name": "Nombre del Predio",
+    "namePlaceholder": "ej., Parque Central, Complejo Deportivo",
+    "address": "Dirección",
+    "addressPlaceholder": "Dirección de la calle",
+    "coordinates": "Coordenadas",
+    "coordinatesPlaceholder": "Latitud, Longitud",
+    "courtCount": "Cantidad de Canchas",
+    "create": "Crear Predio",
+    "creating": "Creando...",
+    "update": "Actualizar Predio",
+    "updating": "Actualizando...",
+    "delete": "Eliminar",
+    "noLocations": "No se encontraron predios. Agregá un predio para empezar.",
+    "createSuccess": "Predio creado exitosamente",
+    "createError": "No se pudo crear el predio",
+    "updateSuccess": "Predio actualizado exitosamente",
+    "updateError": "No se pudo actualizar el predio",
+    "deleteSuccess": "Predio eliminado exitosamente",
+    "deleteError": "No se pudo eliminar la ubicación",
+    "error": "No se pudieron cargar los predios: {message}"
+  },
+  "courts": {
+    "title": "Canchas",
+    "loading": "Cargando canchas...",
+    "addCourt": "Agregar Cancha",
+    "createTitle": "Crear Nueva Cancha",
+    "createDesc": "Agregá una nueva cancha a una ubicación. Las canchas ayudan a organizar partidos dentro de los lugares.",
+    "editTitle": "Editar Cancha",
+    "editDesc": "Actualizá la información de la cancha abajo.",
+    "location": "Predio",
+    "selectLocation": "Seleccioná un predio",
+    "courtName": "Nombre de la Cancha",
+    "courtNamePlaceholder": "ej., Cancha 1, Campo A",
+    "description": "Descripción (Opcional)",
+    "descriptionPlaceholder": "Detalles adicionales sobre esta cancha",
+    "active": "Activa",
+    "activeDesc": "Esta cancha está disponible para partidos",
+    "cancel": "Cancelar",
+    "create": "Crear Cancha",
+    "creating": "Creando...",
+    "update": "Actualizar Cancha",
+    "updating": "Actualizando...",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Estás seguro de que querés eliminar esta cancha?",
+    "noCourts": "No se encontraron canchas. Creá tu primera cancha para empezar.",
+    "createSuccess": "Cancha creada con éxito",
+    "updateSuccess": "Cancha actualizada con éxito",
+    "deleteSuccess": "Cancha eliminada con éxito",
+    "unknownLocation": "Predio Desconocido"
   }
 }
