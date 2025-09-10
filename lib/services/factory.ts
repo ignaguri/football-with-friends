@@ -5,10 +5,12 @@ import {
   type AppRepositoryFactory,
 } from "@/lib/repositories/factory";
 
+import { CourtService } from "./court-service";
 import { MatchService } from "./match-service";
 
 export class ServiceFactory {
   public readonly matchService: MatchService;
+  public readonly courtService: CourtService;
 
   constructor(repositoryFactory?: AppRepositoryFactory) {
     const repos = repositoryFactory || getRepositoryFactory();
@@ -17,7 +19,9 @@ export class ServiceFactory {
       repos.matches,
       repos.signups,
       repos.locations,
+      repos.courts,
     );
+    this.courtService = new CourtService(repos.courts);
   }
 }
 

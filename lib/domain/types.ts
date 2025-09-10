@@ -29,9 +29,23 @@ export interface Location {
   updatedAt: Date;
 }
 
+export interface Court {
+  id: string;
+  locationId: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields (from joins)
+  location?: Location;
+}
+
 export interface Match {
   id: string;
   locationId: string;
+  courtId?: string;
   date: string; // ISO date string YYYY-MM-DD
   time: string; // HH:MM format
   status: MatchStatus;
@@ -44,6 +58,7 @@ export interface Match {
 
   // Populated fields (from joins)
   location?: Location;
+  court?: Court;
   signups?: Signup[];
   createdByUser?: User;
 }
@@ -104,8 +119,19 @@ export interface CreateLocationData {
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateLocationData extends Partial<CreateLocationData> {}
 
+export interface CreateCourtData {
+  locationId: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface UpdateCourtData extends Partial<CreateCourtData> {}
+
 export interface CreateMatchData {
   locationId: string;
+  courtId?: string;
   date: string;
   time: string;
   maxPlayers?: number;
@@ -171,6 +197,7 @@ export interface SignupFilters {
 
 export interface MatchDetails extends Match {
   location: Location;
+  court?: Court;
   signups: Signup[];
   createdByUser: User;
   availableSpots: number;

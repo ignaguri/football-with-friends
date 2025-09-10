@@ -2,11 +2,14 @@
 
 import type {
   Location,
+  Court,
   Match,
   Signup,
   MatchInvitation,
   CreateLocationData,
   UpdateLocationData,
+  CreateCourtData,
+  UpdateCourtData,
   CreateMatchData,
   UpdateMatchData,
   CreateSignupData,
@@ -45,6 +48,63 @@ export interface LocationRepository {
    * Delete a location
    */
   delete(id: string): Promise<void>;
+}
+
+// Court Repository Interface
+export interface CourtRepository {
+  /**
+   * Find all courts
+   */
+  findAll(): Promise<Court[]>;
+
+  /**
+   * Find courts by location ID
+   */
+  findByLocationId(locationId: string): Promise<Court[]>;
+
+  /**
+   * Find active courts by location ID
+   */
+  findActiveByLocationId(locationId: string): Promise<Court[]>;
+
+  /**
+   * Find a court by ID
+   */
+  findById(id: string): Promise<Court | null>;
+
+  /**
+   * Find a court by ID with location details
+   */
+  findByIdWithLocation(id: string): Promise<Court | null>;
+
+  /**
+   * Create a new court
+   */
+  create(court: CreateCourtData): Promise<Court>;
+
+  /**
+   * Update an existing court
+   */
+  update(id: string, updates: UpdateCourtData): Promise<Court>;
+
+  /**
+   * Delete a court
+   */
+  delete(id: string): Promise<void>;
+
+  /**
+   * Check if a court name already exists for a location
+   */
+  existsByName(
+    locationId: string,
+    name: string,
+    excludeId?: string,
+  ): Promise<boolean>;
+
+  /**
+   * Get court count for a location
+   */
+  getCountByLocationId(locationId: string): Promise<number>;
 }
 
 // Match Repository Interface
@@ -214,6 +274,7 @@ export interface MatchInvitationRepository {
 // Repository factory interface for dependency injection
 export interface RepositoryFactory {
   locations: LocationRepository;
+  courts: CourtRepository;
   matches: MatchRepository;
   signups: SignupRepository;
   invitations: MatchInvitationRepository;

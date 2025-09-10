@@ -11,6 +11,10 @@ export interface MatchDisplay {
   time: string;
   status: string;
   courtNumber: string;
+  courtName?: string;
+  courtId?: string;
+  locationId: string;
+  locationName: string;
   costCourt: string;
   costShirts: string;
   maxPlayers: number;
@@ -66,7 +70,11 @@ export function matchToDisplay(match: Match): MatchDisplay {
     date: match.date,
     time: match.time,
     status: match.status,
-    courtNumber: match.location?.name || "1",
+    courtNumber: match.court?.name || "1?",
+    courtName: match.court?.name,
+    courtId: match.courtId,
+    locationId: match.locationId,
+    locationName: match.location?.name || "Unknown Location",
     costCourt: match.costPerPlayer || "",
     costShirts: match.shirtCost || "",
     maxPlayers: match.maxPlayers,
@@ -100,13 +108,18 @@ export function matchDetailsToDisplay(
     GuestName: signup.signupType === "guest" ? signup.playerName : "",
   }));
 
+  // Format court display: "Court Name (Location Name)" or just "Location Name" if no court
+  const courtDisplay = matchDetails.court?.name
+    ? `${matchDetails.court.name} (${matchDetails.location?.name || "Unknown Location"})`
+    : matchDetails.location?.name || "Unknown Location";
+
   const meta: MatchMetaDisplay = {
     matchId: matchDetails.id,
     sheetName: `${matchDetails.date} ${matchDetails.time}`,
     sheetGid: matchDetails.id,
     date: matchDetails.date,
     time: matchDetails.time,
-    courtNumber: matchDetails.location?.name || "1",
+    courtNumber: courtDisplay,
     status: matchDetails.status,
     costCourt: matchDetails.costPerPlayer || "",
     costShirts: matchDetails.shirtCost || "",
