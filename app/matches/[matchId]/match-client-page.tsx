@@ -10,7 +10,16 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { PLAYER_STATUSES } from "@/lib/types";
 import { formatMatchTitle } from "@/lib/utils";
-import * as Sentry from "@sentry/nextjs";
+// Import Sentry only in production
+let Sentry: any = null;
+if (process.env.NODE_ENV === "production") {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Sentry = require("@sentry/nextjs");
+  } catch {
+    // Sentry not available
+  }
+}
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,7 +27,7 @@ import {
 } from "@tanstack/react-table";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
@@ -31,10 +40,6 @@ import { MatchHeader } from "./components/match-header";
 import { MatchStats } from "./components/match-stats";
 import { NotifyOrganizerDialog } from "./components/notify-organizer-dialog";
 import { PlayersTable } from "./components/players-table";
-
-interface Player {
-  [key: string]: string;
-}
 
 export default function MatchClientPage() {
   const { matchId: rawMatchId } = useParams<{ matchId: string }>();
@@ -87,12 +92,6 @@ export default function MatchClientPage() {
     [matchTitle, matchUrl],
   );
 
-  const statusLabelMap = {
-    PAID: t("status.paid"),
-    PENDING: t("status.pending"),
-    CANCELLED: t("status.cancelled"),
-  };
-
   const handleSignup = (
     payload: {
       playerName?: string;
@@ -112,33 +111,38 @@ export default function MatchClientPage() {
           toast.success(successMessage);
 
           // Log successful signup to Sentry
-          Sentry.captureMessage("Signup successful", "info", {
-            extra: {
-              matchId,
-              isGuest: payload.isGuest,
-              guestName: payload.guestName,
-              playerEmail: payload.playerEmail,
-              playerName: payload.playerName,
-            },
-          });
+          if (Sentry) {
+            Sentry.captureMessage("Signup successful", {
+              level: "info",
+              extra: {
+                matchId,
+                isGuest: payload.isGuest,
+                guestName: payload.guestName,
+                playerEmail: payload.playerEmail,
+                playerName: payload.playerName,
+              },
+            });
+          }
         },
         onError: (error) => {
           // Log signup errors to Sentry
-          Sentry.captureException(error, {
-            tags: {
-              operation: "client_signup",
-              matchId,
-            },
-            extra: {
-              isGuest: payload.isGuest,
-              guestName: payload.guestName,
-              playerEmail: payload.playerEmail,
-              playerName: payload.playerName,
-              errorMessage: error.message,
-            },
-          });
+          if (Sentry) {
+            Sentry.captureException(error, {
+              tags: {
+                operation: "client_signup",
+                matchId,
+              },
+              extra: {
+                isGuest: payload.isGuest,
+                guestName: payload.guestName,
+                playerEmail: payload.playerEmail,
+                playerName: payload.playerName,
+                errorMessage: error.message,
+              },
+            });
+          }
 
-          console.error("Signup error:", error);
+          // Error logged to Sentry above
           toast.error(error.message || t("shared.errorOccurred"));
         },
       },
@@ -157,38 +161,39 @@ export default function MatchClientPage() {
     );
   }
 
-  function handleMarkAsPaid(playerEmail: string, playerName: string) {
-    // Validate input
-    if (!playerEmail || !playerName) {
-      toast.error(t("shared.errorOccurred"));
-      return;
-    }
+  const handleMarkAsPaid = useCallback(
+    (playerEmail: string, playerName: string) => {
+      // Validate input
+      if (!playerEmail || !playerName) {
+        toast.error(t("shared.errorOccurred"));
+        return;
+      }
 
-    // Find the player's signup ID
-    const player = players.find((p) => p.Email === playerEmail);
-    if (!player?.Id) {
-      console.error("Player not found for email:", playerEmail);
-      toast.error(t("shared.errorOccurred"));
-      return;
-    }
+      // Find the player's signup ID
+      const player = players.find((p) => p.Email === playerEmail);
+      if (!player?.Id) {
+        toast.error(t("shared.errorOccurred"));
+        return;
+      }
 
-    updateSignupMutation.mutate(
-      {
-        matchId,
-        signupId: player.Id,
-        status: PLAYER_STATUSES[0], // PAID
-      },
-      {
-        onSuccess: () => {
-          toast.success(t("matchDetail.markPaidSuccess"));
+      updateSignupMutation.mutate(
+        {
+          matchId,
+          signupId: player.Id,
+          status: PLAYER_STATUSES[0], // PAID
         },
-        onError: (error) => {
-          console.error("Error updating signup:", error);
-          toast.error(error.message || t("shared.errorOccurred"));
+        {
+          onSuccess: () => {
+            toast.success(t("matchDetail.markPaidSuccess"));
+          },
+          onError: (error) => {
+            toast.error(error.message || t("shared.errorOccurred"));
+          },
         },
-      },
-    );
-  }
+      );
+    },
+    [matchId, players, updateSignupMutation, t],
+  );
 
   function handleCancel() {
     if (!user) return;
@@ -196,7 +201,6 @@ export default function MatchClientPage() {
     // Find the current user's signup
     const player = players.find((p) => p.Email === user.email);
     if (!player?.Id) {
-      console.error("User signup not found for email:", user.email);
       toast.error(t("shared.errorOccurred"));
       return;
     }
@@ -212,7 +216,6 @@ export default function MatchClientPage() {
           toast.success(t("matchDetail.cancelSuccess"));
         },
         onError: (error) => {
-          console.error("Error canceling signup:", error);
           toast.error(error.message || t("shared.errorOccurred"));
         },
       },
@@ -223,13 +226,20 @@ export default function MatchClientPage() {
     if (!user) return;
 
     // Add Sentry logging for guest invitation attempts
-    console.log("Attempting to add guest:", {
-      matchId,
-      guestName,
-      ownerEmail: user.email,
-      ownerName: user.name,
-      isPlayerInMatch,
-    });
+    if (Sentry) {
+      Sentry.addBreadcrumb({
+        category: "guest-invitation",
+        message: "Attempting to add guest",
+        level: "info",
+        data: {
+          matchId,
+          guestName,
+          ownerEmail: user.email,
+          ownerName: user.name,
+          isPlayerInMatch,
+        },
+      });
+    }
 
     handleSignup(
       {
@@ -251,8 +261,14 @@ export default function MatchClientPage() {
     return "secondary";
   }
 
-  const columns: ColumnDef<PlayerDisplay>[] = useMemo(
-    () => [
+  const columns: ColumnDef<PlayerDisplay>[] = useMemo(() => {
+    const statusLabelMap = {
+      PAID: t("status.paid"),
+      PENDING: t("status.pending"),
+      CANCELLED: t("status.cancelled"),
+    };
+
+    return [
       {
         accessorKey: "Name",
         header: t("shared.name"),
@@ -322,16 +338,8 @@ export default function MatchClientPage() {
           );
         },
       },
-    ],
-    [
-      user,
-      signupMutation.isPending,
-      updateSignupMutation.isPending,
-      matchTitle,
-      t,
-      handleMarkAsPaid,
-    ],
-  );
+    ];
+  }, [user, updateSignupMutation.isPending, matchTitle, t, handleMarkAsPaid]);
 
   const table = useReactTable({
     data: players,
