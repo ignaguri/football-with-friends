@@ -2,7 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGetMatch, useSignupPlayer } from "@/hooks/use-matches";
+import {
+  useGetMatch,
+  useSignupPlayer,
+  useUpdateSignup,
+} from "@/hooks/use-matches";
 import { useSession } from "@/lib/auth-client";
 import { PLAYER_STATUSES } from "@/lib/types";
 import { formatMatchTitle } from "@/lib/utils";
@@ -16,6 +20,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
 import type { PlayerStatus } from "@/lib/types";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 
@@ -50,6 +55,7 @@ export default function MatchClientPage() {
   const { players = [], meta: matchMeta } = matchData || {};
 
   const signupMutation = useSignupPlayer();
+  const updateSignupMutation = useUpdateSignup();
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
@@ -124,25 +130,64 @@ export default function MatchClientPage() {
   }
 
   function handleMarkAsPaid(playerEmail: string, playerName: string) {
-    handleSignup(
+    // Validate input
+    if (!playerEmail || !playerName) {
+      toast.error(t("shared.errorOccurred"));
+      return;
+    }
+
+    // Find the player's signup ID
+    const player = players.find((p) => p.Email === playerEmail);
+    if (!player?.Id) {
+      console.error("Player not found for email:", playerEmail);
+      toast.error(t("shared.errorOccurred"));
+      return;
+    }
+
+    updateSignupMutation.mutate(
       {
-        playerName,
-        playerEmail,
+        matchId,
+        signupId: player.Id,
         status: PLAYER_STATUSES[0], // PAID
       },
-      t("matchDetail.markPaidSuccess"),
+      {
+        onSuccess: () => {
+          toast.success(t("matchDetail.markPaidSuccess"));
+        },
+        onError: (error) => {
+          console.error("Error updating signup:", error);
+          toast.error(error.message || t("shared.errorOccurred"));
+        },
+      },
     );
   }
 
   function handleCancel() {
     if (!user) return;
-    handleSignup(
+
+    // Find the current user's signup
+    const player = players.find((p) => p.Email === user.email);
+    if (!player?.Id) {
+      console.error("User signup not found for email:", user.email);
+      toast.error(t("shared.errorOccurred"));
+      return;
+    }
+
+    updateSignupMutation.mutate(
       {
-        playerName: user.name,
-        playerEmail: user.email,
+        matchId,
+        signupId: player.Id,
         status: "CANCELLED",
       },
-      t("matchDetail.cancelSuccess"),
+      {
+        onSuccess: () => {
+          toast.success(t("matchDetail.cancelSuccess"));
+        },
+        onError: (error) => {
+          console.error("Error canceling signup:", error);
+          toast.error(error.message || t("shared.errorOccurred"));
+        },
+      },
     );
   }
 
@@ -168,7 +213,7 @@ export default function MatchClientPage() {
     return "secondary";
   }
 
-  const columns: ColumnDef<Player>[] = useMemo(
+  const columns: ColumnDef<PlayerDisplay>[] = useMemo(
     () => [
       {
         accessorKey: "Name",
@@ -230,7 +275,7 @@ export default function MatchClientPage() {
                   size="sm"
                   variant="outline"
                   onClick={() => handleMarkAsPaid(player.Email, player.Name)}
-                  disabled={signupMutation.isPending}
+                  disabled={updateSignupMutation.isPending}
                 >
                   {t("matchDetail.markPaid")}
                 </Button>
@@ -240,7 +285,14 @@ export default function MatchClientPage() {
         },
       },
     ],
-    [user, signupMutation.isPending, matchTitle, t, handleMarkAsPaid],
+    [
+      user,
+      signupMutation.isPending,
+      updateSignupMutation.isPending,
+      matchTitle,
+      t,
+      handleMarkAsPaid,
+    ],
   );
 
   const table = useReactTable({
@@ -295,7 +347,7 @@ export default function MatchClientPage() {
       <PlayersTable
         table={table}
         columnsCount={columns.length}
-        isPending={signupMutation.isPending}
+        isPending={signupMutation.isPending || updateSignupMutation.isPending}
       />
       <MatchActions
         user={user}

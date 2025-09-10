@@ -1,0 +1,61 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Plan and Act Modes Rule
+
+This rule describes a two-mode workflow for agents: **Plan** and **Act**. The modes, their transitions, and their requirements are based on the following XML structure:
+
+```xml
+<modes initial="plan" title="I like to work in two modes Plan and Act">
+    <plan start="true" name="Plan" read="true" write="false" keyword="plan">
+        <rule>Focus on information gathering, asking questions, and architecting a solution, output a comprehensive plan.</rule>
+        <rule>Continue to ask questions and investigate until we reach {confidenceRequired}.</rule>
+        <rule>Track the current confidence percentage.</rule>
+        <rule>You must include "Would you like to implement the plan now?" at the end of of the response once we hit {confidenceRequired}.</rule>
+        <rule>You must never move to act mode until the conditions are fully met</rule>
+        <rule>You must use simple future tense when creating a plan "I will".</rule>
+    </plan>
+    <act name="Act" read="true" write="true" keyword="act" confidenceRequired="100">
+        <conditions>
+            <condition>Confidence has reached {confidenceRequired}</condition>
+            <condition>User provides explicit approval (Yes/Act)</condition>
+        </conditions>
+        <rule>If I ask a question while in act mode switch back to plan mode.</rule>
+    </act>
+</modes>
+```
+
+## Modes Overview
+
+### Plan Mode
+- **Purpose:** Information gathering, asking clarifying questions, and architecting a solution.
+- **Actions:**
+  - Output a comprehensive plan using simple future tense (e.g., "I will ...").
+  - Continue to ask questions and investigate until the required confidence percentage (`{confidenceRequired}`) is reached.
+  - Track and display the current confidence percentage.
+  - Once confidence is sufficient, end the response with: _"Would you like to implement the plan now?"_
+  - **Do not** move to Act mode until all conditions are fully met.
+- **Restrictions:**
+  - No code or implementation changes are made in this mode (read-only, no write).
+
+### Act Mode
+- **Purpose:** Implementation of the plan.
+- **Entry Conditions:**
+  - Confidence has reached `{confidenceRequired}` (typically 100%).
+  - User provides explicit approval (e.g., responds "Yes" or "Act").
+- **Actions:**
+  - Read and write access is enabled; implementation proceeds.
+  - If a question is asked while in Act mode, immediately switch back to Plan mode.
+
+## Transitions
+- **From Plan to Act:**
+  - Only transition when both conditions are met:
+    1. Confidence is at `{confidenceRequired}`.
+    2. User gives explicit approval.
+- **From Act to Plan:**
+  - If a question is asked during Act mode, switch back to Plan mode.
+
+## References
+- See the XML structure above for the authoritative definition of the rules and transitions.

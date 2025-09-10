@@ -1,0 +1,2 @@
+# Run lint-staged to validate staged files
+# npx lint-staged // Uncomment when lint passes

@@ -12,6 +12,8 @@ import unusedImports from "eslint-plugin-unused-imports";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 
+import migrationFormatRule from "./eslint-rules/migration-format.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -108,6 +110,20 @@ const config = [
       ...commonRules,
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/consistent-type-imports": "error",
+    },
+  },
+  // Migration files specific rules
+  {
+    files: ["migrations/**/*.ts"],
+    plugins: {
+      "migration-format": {
+        rules: {
+          "migration-format": migrationFormatRule,
+        },
+      },
+    },
+    rules: {
+      "migration-format/migration-format": "error",
     },
   }, // JavaScript & MJS files
   {

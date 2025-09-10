@@ -1,53 +1,36 @@
 import { auth } from "@/lib/auth";
-import {
-  getMatchSheetData,
-  getMatchMetadataById,
-  getSheetNameById,
-} from "@/lib/google-sheets";
-import { updateMatchMetadata, deleteMatchMetadata } from "@/lib/google-sheets";
+import { matchDetailsToDisplay } from "@/lib/mappers/display-mappers";
+import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 
-import type { MatchMetadata } from "@/lib/types";
+import type { UpdateMatchData, User } from "@/lib/domain/types";
+import type { MatchDetailsDisplay } from "@/lib/mappers/display-mappers";
 
 export async function GET(
   request: Request,
   context: { params: Promise<{ matchId: string }> },
 ) {
-  const { matchId } = await context.params;
-  // Use matchId as the sheetGid (sheetId)
-  const meta = await getMatchMetadataById(matchId);
-  if (!meta) {
-    console.error("Match metadata not found for matchId:", matchId);
-    return new Response("Not found", { status: 404 });
-  }
-  // Get the actual tab name by sheetId
-  const sheetName = await getSheetNameById(matchId);
-  if (!sheetName) {
-    console.error("Sheet/tab not found for sheetId:", matchId);
-    return new Response("Not found", { status: 404 });
-  }
   try {
-    const data = await getMatchSheetData(sheetName);
-    if (!data || data.length === 0) {
-      console.error("Match sheet data not found for matchId:", matchId);
+    const { matchId } = await context.params;
+
+    // Get user from session for personalized data
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user as User | undefined;
+
+    const { matchService } = getServiceFactory();
+    const matchDetails = await matchService.getMatchDetails(matchId, user?.id);
+
+    if (!matchDetails) {
       return new Response("Not found", { status: 404 });
     }
-    // Assume first row is header
-    const header = data[0];
-    const players = data.slice(1).map((row) => {
-      const player: Record<string, string> = {};
-      header.forEach((col, i) => {
-        player[col] = row[i] || "";
-      });
-      return player;
-    });
-    return Response.json({
-      header,
-      players,
-      meta,
-    });
-  } catch (e) {
-    console.error("Error fetching match data:", e);
+
+    // Convert to display format using mapper
+    const displayData: MatchDetailsDisplay =
+      matchDetailsToDisplay(matchDetails);
+
+    return Response.json(displayData);
+  } catch (error) {
+    console.error("Error fetching match data:", error);
     return new Response("Not found", { status: 404 });
   }
 }
@@ -57,36 +40,71 @@ export async function PATCH(
   req: Request,
   context: { params: Promise<{ matchId: string }> },
 ) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const user = session?.user;
-  if (!user || user.role !== "admin") {
-    return new Response("Unauthorized", { status: 401 });
-  }
-  const { matchId } = await context.params;
-  const updates: Partial<MatchMetadata> = await req.json();
   try {
-    await updateMatchMetadata(matchId, updates);
-    return new Response("OK", { status: 200 });
-  } catch {
-    return new Response("Match not found", { status: 404 });
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user as User | undefined;
+
+    if (!user || user.role !== "admin") {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { matchId } = await context.params;
+    const updates: UpdateMatchData = await req.json();
+
+    const { matchService } = getServiceFactory();
+    const updatedMatch = await matchService.updateMatch(matchId, updates, user);
+
+    return Response.json({ match: updatedMatch });
+  } catch (error) {
+    console.error("Error updating match:", error);
+
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        return new Response("Match not found", { status: 404 });
+      }
+      if (error.message.includes("administrators")) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      if (error.message.includes("already exists")) {
+        return new Response("Duplicate date", { status: 409 });
+      }
+    }
+
+    return new Response("Internal server error", { status: 500 });
   }
 }
 
-// DELETE: Remove match metadata (admin only)
+// DELETE: Remove match (admin only)
 export async function DELETE(
   req: Request,
   context: { params: Promise<{ matchId: string }> },
 ) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const user = session?.user;
-  if (!user || user.role !== "admin") {
-    return new Response("Unauthorized", { status: 401 });
-  }
-  const { matchId } = await context.params;
   try {
-    await deleteMatchMetadata(matchId);
+    const session = await auth.api.getSession({ headers: await headers() });
+    const user = session?.user as User | undefined;
+
+    if (!user || user.role !== "admin") {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const { matchId } = await context.params;
+
+    const { matchService } = getServiceFactory();
+    await matchService.deleteMatch(matchId, user);
+
     return new Response("OK", { status: 200 });
-  } catch {
-    return new Response("Match not found", { status: 404 });
+  } catch (error) {
+    console.error("Error deleting match:", error);
+
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        return new Response("Match not found", { status: 404 });
+      }
+      if (error.message.includes("administrators")) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+    }
+
+    return new Response("Internal server error", { status: 500 });
   }
 }

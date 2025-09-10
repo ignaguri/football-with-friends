@@ -18,10 +18,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetMatch, useSignupPlayer } from "@/hooks/use-matches";
+import { useGetMatch, useUpdateSignup } from "@/hooks/use-matches";
 import { capitalize, formatMatchTitle } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+
+import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
 
 interface PlayerDrawerProps {
   matchId: string | null;
@@ -44,7 +46,7 @@ export function PlayerDrawer({
   const t = useTranslations();
   const { data: matchData, isLoading, isError, error } = useGetMatch(matchId!);
 
-  const { mutate: cancelPlayer, isPending: isCancelling } = useSignupPlayer();
+  const { mutate: cancelPlayer, isPending: isCancelling } = useUpdateSignup();
 
   const players = matchData?.players || [];
   const matchTitle =
@@ -52,22 +54,28 @@ export function PlayerDrawer({
     matchData?.meta?.sheetName ||
     "";
 
-  function handleCancelPlayer(player: Record<string, string>) {
-    if (!matchId) return;
+  function handleCancelPlayer(player: PlayerDisplay) {
+    if (!matchId || !player.Id) {
+      console.error("Missing matchId or player ID:", {
+        matchId,
+        playerId: player.Id,
+      });
+      toast.error(t("playerDrawer.cancelError"));
+      return;
+    }
+
     cancelPlayer(
       {
         matchId,
-        payload: {
-          playerName: player.Name,
-          playerEmail: player.Email,
-          status: "CANCELLED",
-        },
+        signupId: player.Id,
+        status: "CANCELLED",
       },
       {
         onSuccess: () => {
           toast.success(t("playerDrawer.cancelSuccess", { name: player.Name }));
         },
         onError: (e: unknown) => {
+          console.error("Error canceling player:", e);
           toast.error(
             e instanceof Error ? e.message : t("playerDrawer.cancelError"),
           );
