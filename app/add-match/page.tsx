@@ -45,6 +45,7 @@ function AddMatchForm() {
     date,
     time,
     locationId,
+    courtId,
     costPerPlayer,
   }: MatchFormValues) {
     setError(null);
@@ -56,6 +57,7 @@ function AddMatchForm() {
         time,
       };
       if (locationId) payload.locationId = locationId;
+      if (courtId) payload.courtId = courtId;
       if (costPerPlayer) payload.costPerPlayer = costPerPlayer;
       const res = await fetch("/api/matches", {
         method: "POST",

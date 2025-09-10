@@ -6,17 +6,21 @@ import { nanoid } from "nanoid";
 
 import type {
   LocationRepository,
+  CourtRepository,
   MatchRepository,
   SignupRepository,
   MatchInvitationRepository,
 } from "./interfaces";
 import type {
   Location,
+  Court,
   Match,
   Signup,
   MatchInvitation,
   CreateLocationData,
   UpdateLocationData,
+  CreateCourtData,
+  UpdateCourtData,
   CreateMatchData,
   UpdateMatchData,
   CreateSignupData,
@@ -48,10 +52,24 @@ function dbLocationToLocation(row: any): Location {
   };
 }
 
+// Helper function to convert database row to court domain object
+function dbCourtToCourt(row: any): Court {
+  return {
+    id: row.id,
+    locationId: row.location_id,
+    name: row.name,
+    description: row.description || "",
+    isActive: Boolean(row.is_active),
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
 function dbMatchToMatch(row: any): Match {
   return {
     id: row.id,
     locationId: row.location_id,
+    courtId: row.court_id || undefined,
     date: row.date,
     time: row.time,
     status: row.status,
@@ -62,6 +80,39 @@ function dbMatchToMatch(row: any): Match {
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
+}
+
+// Helper function to convert database row with court and location data to match domain object
+function dbMatchWithCourtToMatch(row: any): Match {
+  const match = dbMatchToMatch(row);
+
+  // Add court information if it exists
+  if (row.court_name) {
+    match.court = {
+      id: row.court_id,
+      locationId: row.location_id,
+      name: row.court_name,
+      description: row.court_description || "",
+      isActive: Boolean(row.court_is_active),
+      createdAt: new Date(row.court_created_at),
+      updatedAt: new Date(row.court_updated_at),
+    };
+  }
+
+  // Add location information if it exists
+  if (row.location_name) {
+    match.location = {
+      id: row.location_id,
+      name: row.location_name,
+      address: row.location_address || "",
+      coordinates: row.location_coordinates || "",
+      courtCount: row.location_court_count || 1,
+      createdAt: new Date(row.location_created_at),
+      updatedAt: new Date(row.location_updated_at),
+    };
+  }
+
+  return match;
 }
 
 function dbSignupToSignup(row: any): Signup {
@@ -167,6 +218,173 @@ export class TursoLocationRepository implements LocationRepository {
   }
 }
 
+// Turso Court Repository
+export class TursoCourtRepository implements CourtRepository {
+  private db = getDatabase();
+
+  async findAll(): Promise<Court[]> {
+    const rows = await this.db
+      .selectFrom("courts")
+      .selectAll()
+      .orderBy("location_id", "asc")
+      .orderBy("name", "asc")
+      .execute();
+
+    return rows.map(dbCourtToCourt);
+  }
+
+  async findByLocationId(locationId: string): Promise<Court[]> {
+    const rows = await this.db
+      .selectFrom("courts")
+      .selectAll()
+      .where("location_id", "=", locationId)
+      .orderBy("name", "asc")
+      .execute();
+
+    return rows.map(dbCourtToCourt);
+  }
+
+  async findActiveByLocationId(locationId: string): Promise<Court[]> {
+    const rows = await this.db
+      .selectFrom("courts")
+      .selectAll()
+      .where("location_id", "=", locationId)
+      .where("is_active", "=", true)
+      .orderBy("name", "asc")
+      .execute();
+
+    return rows.map(dbCourtToCourt);
+  }
+
+  async findById(id: string): Promise<Court | null> {
+    const row = await this.db
+      .selectFrom("courts")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+
+    return row ? dbCourtToCourt(row) : null;
+  }
+
+  async findByIdWithLocation(id: string): Promise<Court | null> {
+    const row = await this.db
+      .selectFrom("courts")
+      .leftJoin("locations", "courts.location_id", "locations.id")
+      .select([
+        "courts.id",
+        "courts.location_id",
+        "courts.name",
+        "courts.description",
+        "courts.is_active",
+        "courts.created_at",
+        "courts.updated_at",
+        "locations.id as location_id",
+        "locations.name as location_name",
+        "locations.address as location_address",
+        "locations.coordinates as location_coordinates",
+        "locations.court_count as location_court_count",
+        "locations.created_at as location_created_at",
+        "locations.updated_at as location_updated_at",
+      ])
+      .where("courts.id", "=", id)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    const court = dbCourtToCourt(row);
+    if (row.location_id) {
+      court.location = {
+        id: row.location_id,
+        name: row.location_name || "Unknown Location",
+        address: row.location_address || "",
+        coordinates: row.location_coordinates || "",
+        courtCount: row.location_court_count || 1,
+        createdAt: new Date(row.location_created_at || new Date()),
+        updatedAt: new Date(row.location_updated_at || new Date()),
+      };
+    }
+
+    return court;
+  }
+
+  async create(court: CreateCourtData): Promise<Court> {
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    const newCourt = {
+      id,
+      location_id: court.locationId,
+      name: court.name,
+      description: court.description || null,
+      is_active: court.isActive ?? true,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await this.db.insertInto("courts").values(newCourt).execute();
+
+    return dbCourtToCourt(newCourt);
+  }
+
+  async update(id: string, updates: UpdateCourtData): Promise<Court> {
+    const now = new Date().toISOString();
+    const updateData: any = {
+      updated_at: now,
+    };
+
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.description !== undefined)
+      updateData.description = updates.description;
+    if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+
+    await this.db
+      .updateTable("courts")
+      .set(updateData)
+      .where("id", "=", id)
+      .execute();
+
+    const updated = await this.findById(id);
+    if (!updated) {
+      throw new Error(`Court with id ${id} not found after update`);
+    }
+
+    return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db.deleteFrom("courts").where("id", "=", id).execute();
+  }
+
+  async existsByName(
+    locationId: string,
+    name: string,
+    excludeId?: string,
+  ): Promise<boolean> {
+    let query = this.db
+      .selectFrom("courts")
+      .select("id")
+      .where("location_id", "=", locationId)
+      .where("name", "=", name);
+
+    if (excludeId) {
+      query = query.where("id", "!=", excludeId);
+    }
+
+    const row = await query.executeTakeFirst();
+    return !!row;
+  }
+
+  async getCountByLocationId(locationId: string): Promise<number> {
+    const result = await this.db
+      .selectFrom("courts")
+      .select((eb) => eb.fn.count("id").as("count"))
+      .where("location_id", "=", locationId)
+      .executeTakeFirst();
+
+    return Number(result?.count || 0);
+  }
+}
+
 // Turso Match Repository
 export class TursoMatchRepository implements MatchRepository {
   private db = getDatabase();
@@ -174,37 +392,65 @@ export class TursoMatchRepository implements MatchRepository {
   async findAll(filters?: MatchFilters): Promise<Match[]> {
     let query = this.db
       .selectFrom("matches")
-      .selectAll()
-      .orderBy("date", "asc")
-      .orderBy("time", "asc");
+      .leftJoin("courts", "matches.court_id", "courts.id")
+      .leftJoin("locations", "matches.location_id", "locations.id")
+      .select([
+        "matches.id",
+        "matches.location_id",
+        "matches.court_id",
+        "matches.date",
+        "matches.time",
+        "matches.status",
+        "matches.max_players",
+        "matches.cost_per_player",
+        "matches.shirt_cost",
+        "matches.created_by_user_id",
+        "matches.created_at",
+        "matches.updated_at",
+        "courts.id as court_id",
+        "courts.name as court_name",
+        "courts.description as court_description",
+        "courts.is_active as court_is_active",
+        "courts.created_at as court_created_at",
+        "courts.updated_at as court_updated_at",
+        "locations.id as location_id",
+        "locations.name as location_name",
+        "locations.address as location_address",
+        "locations.coordinates as location_coordinates",
+        "locations.court_count as location_court_count",
+        "locations.created_at as location_created_at",
+        "locations.updated_at as location_updated_at",
+      ])
+      .orderBy("matches.date", "asc")
+      .orderBy("matches.time", "asc");
 
     if (filters?.status) {
-      query = query.where("status", "=", filters.status);
+      query = query.where("matches.status", "=", filters.status);
     }
 
     if (filters?.type) {
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       if (filters.type === "past") {
-        query = query.where("date", "<", today);
+        query = query.where("matches.date", "<", today);
       } else if (filters.type === "upcoming") {
-        query = query.where("date", ">=", today);
+        query = query.where("matches.date", ">=", today);
       }
     }
 
     if (filters?.locationId) {
-      query = query.where("location_id", "=", filters.locationId);
+      query = query.where("matches.location_id", "=", filters.locationId);
     }
 
     if (filters?.dateFrom) {
-      query = query.where("date", ">=", filters.dateFrom);
+      query = query.where("matches.date", ">=", filters.dateFrom);
     }
 
     if (filters?.dateTo) {
-      query = query.where("date", "<=", filters.dateTo);
+      query = query.where("matches.date", "<=", filters.dateTo);
     }
 
     const rows = await query.execute();
-    return rows.map(dbMatchToMatch);
+    return rows.map(dbMatchWithCourtToMatch);
   }
 
   async findById(id: string): Promise<Match | null> {
@@ -235,6 +481,20 @@ export class TursoMatchRepository implements MatchRepository {
       throw new Error("Location not found for match");
     }
 
+    // Get court if courtId exists
+    let court = null;
+    if (match.courtId) {
+      const courtRow = await this.db
+        .selectFrom("courts")
+        .selectAll()
+        .where("id", "=", match.courtId)
+        .executeTakeFirst();
+
+      if (courtRow) {
+        court = dbCourtToCourt(courtRow);
+      }
+    }
+
     // Get signups
     const signupRows = await this.db
       .selectFrom("signups")
@@ -259,6 +519,7 @@ export class TursoMatchRepository implements MatchRepository {
     return {
       ...match,
       location: dbLocationToLocation(location),
+      court: court || undefined,
       signups,
       createdByUser: {
         id: match.createdByUserId,
@@ -281,6 +542,7 @@ export class TursoMatchRepository implements MatchRepository {
     const newMatch = {
       id,
       location_id: matchData.locationId,
+      court_id: matchData.courtId || null,
       date: matchData.date,
       time: matchData.time,
       status: "upcoming" as const,
@@ -304,6 +566,7 @@ export class TursoMatchRepository implements MatchRepository {
       .updateTable("matches")
       .set({
         ...(updates.locationId && { location_id: updates.locationId }),
+        ...(updates.courtId !== undefined && { court_id: updates.courtId }),
         ...(updates.date && { date: updates.date }),
         ...(updates.time && { time: updates.time }),
         ...(updates.status && { status: updates.status }),

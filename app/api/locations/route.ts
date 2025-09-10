@@ -1,5 +1,7 @@
 import { getRepositoryFactory } from "@/lib/repositories/factory";
 
+import type { NextRequest } from "next/server";
+
 // GET /api/locations: Returns all locations
 export async function GET() {
   try {
@@ -11,6 +13,23 @@ export async function GET() {
     console.error("Error fetching locations:", error);
     return Response.json(
       { error: "Failed to fetch locations" },
+      { status: 500 },
+    );
+  }
+}
+
+// POST /api/locations: Create a new location
+export async function POST(request: NextRequest) {
+  try {
+    const locationData = await request.json();
+    const { locations } = getRepositoryFactory();
+
+    const newLocation = await locations.create(locationData);
+    return Response.json({ location: newLocation }, { status: 201 });
+  } catch (error) {
+    console.error("Error creating location:", error);
+    return Response.json(
+      { error: "Failed to create location" },
       { status: 500 },
     );
   }

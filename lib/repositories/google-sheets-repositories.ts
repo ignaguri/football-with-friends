@@ -17,17 +17,21 @@ import { nanoid } from "nanoid";
 
 import type {
   LocationRepository,
+  CourtRepository,
   MatchRepository,
   SignupRepository,
   MatchInvitationRepository,
 } from "./interfaces";
 import type {
   Location,
+  Court,
   Match,
   Signup,
   MatchInvitation,
   CreateLocationData,
   UpdateLocationData,
+  CreateCourtData,
+  UpdateCourtData,
   CreateMatchData,
   UpdateMatchData,
   CreateSignupData,
@@ -78,6 +82,66 @@ export class GoogleSheetsLocationRepository implements LocationRepository {
     throw new Error(
       "Deleting locations not supported in Google Sheets implementation",
     );
+  }
+}
+
+// Google Sheets Court Repository (placeholder implementation)
+export class GoogleSheetsCourtRepository implements CourtRepository {
+  async findAll(): Promise<Court[]> {
+    // Google Sheets doesn't support courts yet
+    return [];
+  }
+
+  async findByLocationId(locationId: string): Promise<Court[]> {
+    // Google Sheets doesn't support courts yet
+    return [];
+  }
+
+  async findActiveByLocationId(locationId: string): Promise<Court[]> {
+    // Google Sheets doesn't support courts yet
+    return [];
+  }
+
+  async findById(id: string): Promise<Court | null> {
+    // Google Sheets doesn't support courts yet
+    return null;
+  }
+
+  async findByIdWithLocation(id: string): Promise<Court | null> {
+    // Google Sheets doesn't support courts yet
+    return null;
+  }
+
+  async create(court: CreateCourtData): Promise<Court> {
+    throw new Error(
+      "Creating courts not supported in Google Sheets implementation",
+    );
+  }
+
+  async update(id: string, updates: UpdateCourtData): Promise<Court> {
+    throw new Error(
+      "Updating courts not supported in Google Sheets implementation",
+    );
+  }
+
+  async delete(id: string): Promise<void> {
+    throw new Error(
+      "Deleting courts not supported in Google Sheets implementation",
+    );
+  }
+
+  async existsByName(
+    locationId: string,
+    name: string,
+    excludeId?: string,
+  ): Promise<boolean> {
+    // Google Sheets doesn't support courts yet
+    return false;
+  }
+
+  async getCountByLocationId(locationId: string): Promise<number> {
+    // Google Sheets doesn't support courts yet
+    return 0;
   }
 }
 

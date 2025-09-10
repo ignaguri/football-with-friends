@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useGetActiveCourtsByLocationId } from "@/hooks/use-courts";
 import { useGetLocations } from "@/hooks/use-locations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -25,7 +26,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { Location } from "@/lib/domain/types";
+import type { Location, Court } from "@/lib/domain/types";
 
 // Base schema without translations - will be extended
 const baseMatchSchema = z.object({
@@ -41,6 +42,12 @@ const baseMatchSchema = z.object({
       { message: "Time must be in 30-minute increments" },
     ),
   locationId: z.string().min(1, "Location is required"),
+  courtId: z.string().optional(),
+  maxPlayers: z
+    .number()
+    .min(1, "Max players must be at least 1")
+    .max(50, "Max players cannot exceed 50")
+    .default(10),
   costPerPlayer: z.string().optional(),
   costShirts: z.string().optional(),
 });
@@ -75,7 +82,11 @@ export function MatchForm({
   // Fetch locations for the selector
   const { data: locationsData, isLoading: isLoadingLocations } =
     useGetLocations();
-  const locations: Location[] = locationsData?.locations || [];
+  const locations: Location[] = (locationsData?.locations || []).map((loc) => ({
+    ...loc,
+    createdAt: new Date(loc.createdAt),
+    updatedAt: new Date(loc.updatedAt),
+  }));
 
   // Create schema with translations
   const matchSchema = z.object({
@@ -90,7 +101,12 @@ export function MatchForm({
         },
         { message: t("addMatch.timeIncrement") },
       ),
-    locationId: z.string().min(1, "Location is required"),
+    locationId: z.string().min(1, t("addMatch.locationRequired")),
+    courtId: z.string().optional(),
+    maxPlayers: z
+      .number()
+      .min(1, t("addMatch.maxPlayersMin"))
+      .max(50, t("addMatch.maxPlayersMax")),
     costPerPlayer: z.string().optional(),
     costShirts: z.string().optional(),
   });
@@ -101,14 +117,31 @@ export function MatchForm({
       date: defaultValues.date || new Date(),
       time: defaultValues.time || "",
       locationId: defaultValues.locationId || locations[0]?.id || "",
+      courtId: defaultValues.courtId || "none",
+      maxPlayers: defaultValues.maxPlayers || 10,
       costPerPlayer: defaultValues.costPerPlayer || "",
       costShirts: defaultValues.costShirts || "",
     },
     mode: "onChange",
   });
 
+  // Watch locationId to fetch courts when location changes
+  const selectedLocationId = form.watch("locationId");
+  const { data: courtsData, isLoading: isLoadingCourts } =
+    useGetActiveCourtsByLocationId(selectedLocationId);
+  const courts: Court[] = (courtsData?.courts || []).map((court: Court) => ({
+    ...court,
+    createdAt: new Date(court.createdAt),
+    updatedAt: new Date(court.updatedAt),
+  }));
+
   function handleSubmit(values: MatchFormValues) {
-    onSubmit(values);
+    // Convert "none" back to empty string for courtId
+    const processedValues = {
+      ...values,
+      courtId: values.courtId === "none" ? "" : values.courtId,
+    };
+    onSubmit(processedValues);
   }
 
   return (
@@ -164,15 +197,21 @@ export function MatchForm({
           name="locationId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="location-select">Location</FormLabel>
+              <FormLabel htmlFor="location-select">
+                {t("addMatch.location")}
+              </FormLabel>
               <FormControl>
                 <Select
                   value={field.value}
-                  onValueChange={field.onChange}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    // Reset court selection when location changes
+                    form.setValue("courtId", "none");
+                  }}
                   disabled={isSubmitting || isLoadingLocations}
                 >
                   <SelectTrigger id="location-select">
-                    <SelectValue placeholder="Select a location" />
+                    <SelectValue placeholder={t("addMatch.selectLocation")} />
                   </SelectTrigger>
                   <SelectContent>
                     {locations.map((location) => (
@@ -183,6 +222,70 @@ export function MatchForm({
                     ))}
                   </SelectContent>
                 </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="courtId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="court-select">
+                {t("addMatch.court")}
+              </FormLabel>
+              <FormControl>
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={
+                    isSubmitting || isLoadingCourts || !selectedLocationId
+                  }
+                >
+                  <SelectTrigger id="court-select">
+                    <SelectValue placeholder={t("addMatch.selectCourt")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      {t("addMatch.noSpecificCourt")}
+                    </SelectItem>
+                    {courts.map((court) => (
+                      <SelectItem key={court.id} value={court.id}>
+                        {court.name}
+                        {court.description && ` - ${court.description}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="maxPlayers"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="max-players">
+                {t("addMatch.maxPlayers")}
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  id="max-players"
+                  type="number"
+                  min="1"
+                  max="50"
+                  placeholder="10"
+                  disabled={isSubmitting}
+                  onChange={(e) =>
+                    field.onChange(parseInt(e.target.value) || 10)
+                  }
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

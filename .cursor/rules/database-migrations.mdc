@@ -1,0 +1,49 @@
+---
+description: Database migration management with Kysely and Turso
+globs: migrations/*.ts,scripts/migrate*.ts,scripts/create-migration.ts,lib/database/migrator.ts,templates/migration.template.ts
+---
+
+# Database Migration Management
+
+## Quick Commands
+
+- **Create migration**: `pnpm create-migration <name>`
+- **Run locally**: `pnpm migrate up`
+- **Check status**: `pnpm migrate status`
+- **Rollback**: `pnpm migrate down [n]`
+- **Deploy to production**: `pnpm migrate-remote up`
+
+## Migration File Structure
+
+Every migration in [migrations/](mdc:migrations/) must export:
+
+```typescript
+import { sql } from "kysely";
+import type { Kysely, Migration } from "kysely";
+
+export const up: Migration["up"] = async (db: Kysely<any>) => {
+  // Implementation here
+  console.log("✅ Migration completed");
+};
+
+export const down: Migration["down"] = async (db: Kysely<any>) => {
+  // Rollback implementation here
+  console.log("↩️ Migration rolled back");
+};
+```
+
+## Key Rules
+
+- Use [MigrationRunner](mdc:lib/database/migrator.ts) class for programmatic access
+- Generate migrations with [create-migration script](mdc:scripts/create-migration.ts)
+- Use [migration template](mdc:templates/migration.template.ts) as reference
+- Always include console.log statements for feedback
+- Write reversible migrations (both up and down)
+- Test locally before deploying to production
+- Use descriptive names: `YYYYMMDDHHMMSS-description.ts`
+- Never edit existing migrations - create new ones instead
+
+## Environment Setup
+
+- Local: `STORAGE_PROVIDER=local-db`
+- Production: `STORAGE_PROVIDER=turso` with Turso credentials

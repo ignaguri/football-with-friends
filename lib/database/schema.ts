@@ -23,6 +23,7 @@ export interface LocationsTable {
 export interface MatchesTable {
   id: Generated<string>;
   location_id: string;
+  court_id: string | null;
   date: string; // YYYY-MM-DD format
   time: string; // HH:MM format
   status: "upcoming" | "cancelled" | "completed";
@@ -48,6 +49,16 @@ export interface SignupsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface CourtsTable {
+  id: Generated<string>;
+  location_id: string;
+  name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 export interface MatchInvitationsTable {
   id: Generated<string>;
   match_id: string;
@@ -62,6 +73,7 @@ export interface MatchInvitationsTable {
 export interface Database {
   locations: LocationsTable;
   matches: MatchesTable;
+  courts: CourtsTable;
   signups: SignupsTable;
   match_invitations: MatchInvitationsTable;
 }
@@ -99,6 +111,10 @@ export type MatchUpdate = Updateable<MatchesTable>;
 export type Signup = Selectable<SignupsTable>;
 export type NewSignup = Insertable<SignupsTable>;
 export type SignupUpdate = Updateable<SignupsTable>;
+
+export type Court = Selectable<CourtsTable>;
+export type NewCourt = Insertable<CourtsTable>;
+export type CourtUpdate = Updateable<CourtsTable>;
 
 export type MatchInvitation = Selectable<MatchInvitationsTable>;
 export type NewMatchInvitation = Insertable<MatchInvitationsTable>;

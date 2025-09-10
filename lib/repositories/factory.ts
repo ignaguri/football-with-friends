@@ -3,6 +3,7 @@
 import type {
   RepositoryFactory,
   LocationRepository,
+  CourtRepository,
   MatchRepository,
   SignupRepository,
   MatchInvitationRepository,
@@ -10,12 +11,14 @@ import type {
 
 import {
   GoogleSheetsLocationRepository,
+  GoogleSheetsCourtRepository,
   GoogleSheetsMatchRepository,
   GoogleSheetsSignupRepository,
   GoogleSheetsMatchInvitationRepository,
 } from "./google-sheets-repositories";
 import {
   TursoLocationRepository,
+  TursoCourtRepository,
   TursoMatchRepository,
   TursoSignupRepository,
   TursoMatchInvitationRepository,
@@ -27,6 +30,7 @@ export type StorageProvider = "google-sheets" | "turso" | "local-db";
 // Repository factory implementation
 export class AppRepositoryFactory implements RepositoryFactory {
   public readonly locations: LocationRepository;
+  public readonly courts: CourtRepository;
   public readonly matches: MatchRepository;
   public readonly signups: SignupRepository;
   public readonly invitations: MatchInvitationRepository;
@@ -35,6 +39,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
     switch (provider) {
       case "google-sheets":
         this.locations = new GoogleSheetsLocationRepository();
+        this.courts = new GoogleSheetsCourtRepository();
         this.matches = new GoogleSheetsMatchRepository();
         this.signups = new GoogleSheetsSignupRepository();
         this.invitations = new GoogleSheetsMatchInvitationRepository();
@@ -43,6 +48,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
       case "turso":
       case "local-db":
         this.locations = new TursoLocationRepository();
+        this.courts = new TursoCourtRepository();
         this.matches = new TursoMatchRepository();
         this.signups = new TursoSignupRepository();
         this.invitations = new TursoMatchInvitationRepository();

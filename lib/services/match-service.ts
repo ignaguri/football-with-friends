@@ -17,6 +17,7 @@ import type {
   MatchRepository,
   SignupRepository,
   LocationRepository,
+  CourtRepository,
 } from "@/lib/repositories/interfaces";
 
 export class MatchService {
@@ -24,6 +25,7 @@ export class MatchService {
     private matchRepository: MatchRepository,
     private signupRepository: SignupRepository,
     private locationRepository: LocationRepository,
+    private courtRepository: CourtRepository,
   ) {}
 
   /**
@@ -63,6 +65,17 @@ export class MatchService {
     );
     if (!location) {
       throw new Error("Location not found");
+    }
+
+    // If courtId is provided, validate it belongs to the location
+    if (matchData.courtId) {
+      const court = await this.courtRepository.findById(matchData.courtId);
+      if (!court) {
+        throw new Error("Court not found");
+      }
+      if (court.locationId !== matchData.locationId) {
+        throw new Error("Court does not belong to the selected location");
+      }
     }
 
     // Check for duplicate matches on the same date (right before creation)

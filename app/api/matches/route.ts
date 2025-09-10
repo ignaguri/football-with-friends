@@ -35,6 +35,7 @@ const matchSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD
   time: z.string().regex(/^\d{2}:\d{2}$/), // HH:mm
   locationId: z.string().optional(),
+  courtId: z.string().optional(),
   maxPlayers: z.number().min(2).optional(),
   costPerPlayer: z.string().optional(),
   shirtCost: z.string().optional(),
@@ -63,13 +64,21 @@ export async function POST(req: Request) {
       );
     }
 
-    const { date, time, locationId, maxPlayers, costPerPlayer, shirtCost } =
-      parsed.data;
+    const {
+      date,
+      time,
+      locationId,
+      courtId,
+      maxPlayers,
+      costPerPlayer,
+      shirtCost,
+    } = parsed.data;
 
     const matchData: CreateMatchData = {
       date,
       time,
       locationId: locationId || "default",
+      courtId,
       maxPlayers: maxPlayers || 10,
       costPerPlayer,
       shirtCost,

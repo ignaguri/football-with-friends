@@ -2,6 +2,9 @@
   "mcpServers": {
     "Sentry": {
       "url": "https://mcp.sentry.dev/mcp/prostcounter/football-with-friends"
+    },
+    "vercel": {
+      "url": "https://mcp.vercel.com/team_B8pEsqGbLXmdY2a56mjB7kkt/prj_VYOxXbrVRqb7GdnThlvZtX2Zobsj"
     }
   }
 }

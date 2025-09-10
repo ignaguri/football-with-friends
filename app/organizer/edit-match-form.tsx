@@ -26,7 +26,9 @@ export function EditMatchForm({
       ...match,
       date: format(values.date, "yyyy-MM-dd"),
       time: values.time,
-      courtNumber: values.locationId,
+      locationId: values.locationId,
+      courtId: values.courtId === "none" ? undefined : values.courtId,
+      maxPlayers: values.maxPlayers,
       costCourt: values.costPerPlayer || "",
       costShirts: values.costShirts || "",
     };
@@ -39,7 +41,9 @@ export function EditMatchForm({
         defaultValues={{
           date: new Date(match.date),
           time: match.time,
-          locationId: match.courtNumber || "",
+          locationId: match.locationId || "",
+          courtId: match.courtId || "none",
+          maxPlayers: match.maxPlayers || 10,
           costPerPlayer: match.costCourt || "",
           costShirts: match.costShirts || "",
         }}
