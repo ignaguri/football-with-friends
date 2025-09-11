@@ -100,6 +100,7 @@ function AddMatchForm() {
 
   return (
     <div className="mt-4 flex min-h-[80dvh] w-full max-w-sm flex-col gap-6 overflow-y-auto rounded-lg border bg-background p-4 shadow-md sm:p-6">
+      <h1 className="text-2xl font-bold text-center">{t("addMatch.title")}</h1>
       <MatchForm
         onSubmit={onSubmit}
         isSubmitting={redirecting}
