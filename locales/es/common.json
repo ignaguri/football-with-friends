@@ -135,13 +135,13 @@
     "signInSuccess": "Inicio de sesión exitoso"
   },
   "addMatch": {
-    "title": "Agregar partido",
+    "title": "Crear partido",
     "mustSignIn": "Debés iniciar sesión.",
-    "unauthorized": "No estás autorizado para agregar partidos.",
+    "unauthorized": "No estás autorizado para crear partidos.",
     "courtNumber": "Número de cancha (opcional)",
     "costCourt": "Costo por persona (opcional)",
-    "add": "+ Agregar partido",
-    "adding": "Agregando...",
+    "add": "+ Crear partido",
+    "adding": "Creando...",
     "save": "Guardar",
     "created": "¡Partido creado! Redirigiendo a la página del partido...",
     "redirecting": "¡Partido creado! Redirigiendo...",
@@ -159,7 +159,9 @@
     "noSpecificCourt": "Sin cancha específica",
     "maxPlayers": "Máx. Jugadores",
     "maxPlayersMin": "Máx. jugadores debe ser al menos 1",
-    "maxPlayersMax": "Máx. jugadores no puede exceder 50"
+    "maxPlayersMax": "Máx. jugadores no puede exceder 50",
+    "selectDate": "Seleccionar fecha",
+    "selectTime": "Seleccionar hora"
   },
   "errors": {
     "duplicateDate": "Ya existe un partido para esta fecha.",
