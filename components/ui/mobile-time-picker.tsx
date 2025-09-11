@@ -23,10 +23,12 @@ interface MobileTimePickerProps {
   id?: string;
 }
 
-// Generate time slots in 30-minute increments
-function generateTimeSlots(): string[] {
+// Generate time slots in 30-minute increments.
+// By default, time slots start from 15 (3 PM) to 24 (midnight) as matches are only allowed from 3 PM onwards.
+// To change the range, adjust the startHour and endHour parameters.
+function generateTimeSlots(startHour: number = 15, endHour: number = 24): string[] {
   const slots: string[] = [];
-  for (let hour = 15; hour < 24; hour++) {
+  for (let hour = startHour; hour < endHour; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
       const timeString = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
       slots.push(timeString);
