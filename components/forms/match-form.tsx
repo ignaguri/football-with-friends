@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Form,
   FormField,
@@ -11,6 +10,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MobileDatePicker } from "@/components/ui/mobile-date-picker";
+import { MobileTimePicker } from "@/components/ui/mobile-time-picker";
 import {
   Select,
   SelectContent,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useGetActiveCourtsByLocationId } from "@/hooks/use-courts";
 import { useGetLocations } from "@/hooks/use-locations";
+import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import React from "react";
@@ -148,21 +150,22 @@ export function MatchForm({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className={`flex flex-col gap-4 ${className}`}
+        className={cn("flex flex-col gap-3 sm:gap-4", className)}
       >
         <FormField
           control={form.control}
           name="date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("shared.date")}</FormLabel>
               <FormControl>
-                <Calendar
-                  mode="single"
-                  selected={field.value}
-                  onSelect={field.onChange}
-                  hidden={{ before: new Date() }}
-                  className="w-full"
+                <MobileDatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  label={t("shared.date")}
+                  placeholder={t("addMatch.selectDate")}
+                  disabled={isSubmitting}
+                  required
+                  id="match-date"
                 />
               </FormControl>
               <FormMessage />
@@ -175,16 +178,15 @@ export function MatchForm({
           name="time"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="match-time">{t("shared.time")}</FormLabel>
               <FormControl>
-                <Input
-                  {...field}
-                  id="match-time"
-                  type="time"
-                  step="1800"
-                  placeholder="HH:mm"
+                <MobileTimePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  label={t("shared.time")}
+                  placeholder={t("addMatch.selectTime")}
+                  disabled={isSubmitting}
                   required
-                  disabled={isSubmitting}
+                  id="match-time"
                 />
               </FormControl>
               <FormMessage />
@@ -192,156 +194,163 @@ export function MatchForm({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="locationId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="location-select">
-                {t("addMatch.location")}
-              </FormLabel>
-              <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value);
-                    // Reset court selection when location changes
-                    form.setValue("courtId", "none");
-                  }}
-                  disabled={isSubmitting || isLoadingLocations}
-                >
-                  <SelectTrigger id="location-select">
-                    <SelectValue placeholder={t("addMatch.selectLocation")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map((location) => (
-                      <SelectItem key={location.id} value={location.id}>
-                        {location.name}
-                        {location.address && ` - ${location.address}`}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <FormField
+            control={form.control}
+            name="locationId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="location-select">
+                  {t("addMatch.location")}
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Reset court selection when location changes
+                      form.setValue("courtId", "none");
+                    }}
+                    disabled={isSubmitting || isLoadingLocations}
+                  >
+                    <SelectTrigger id="location-select" className="h-14">
+                      <SelectValue placeholder={t("addMatch.selectLocation")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations.map((location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.name}
+                          {location.address && ` - ${location.address}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="courtId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="court-select">
+                  {t("addMatch.court")}
+                </FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={
+                      isSubmitting || isLoadingCourts || !selectedLocationId
+                    }
+                  >
+                    <SelectTrigger id="court-select" className="h-14">
+                      <SelectValue placeholder={t("addMatch.selectCourt")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        {t("addMatch.noSpecificCourt")}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                      {courts.map((court) => (
+                        <SelectItem key={court.id} value={court.id}>
+                          {court.name}
+                          {court.description && ` - ${court.description}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <FormField
-          control={form.control}
-          name="courtId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="court-select">
-                {t("addMatch.court")}
-              </FormLabel>
-              <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  disabled={
-                    isSubmitting || isLoadingCourts || !selectedLocationId
-                  }
-                >
-                  <SelectTrigger id="court-select">
-                    <SelectValue placeholder={t("addMatch.selectCourt")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      {t("addMatch.noSpecificCourt")}
-                    </SelectItem>
-                    {courts.map((court) => (
-                      <SelectItem key={court.id} value={court.id}>
-                        {court.name}
-                        {court.description && ` - ${court.description}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <FormField
+            control={form.control}
+            name="maxPlayers"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="max-players">
+                  {t("addMatch.maxPlayers")}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    id="max-players"
+                    type="number"
+                    min="1"
+                    max="50"
+                    placeholder="10"
+                    disabled={isSubmitting}
+                    className="h-14"
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || 10)
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="maxPlayers"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="max-players">
-                {t("addMatch.maxPlayers")}
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  id="max-players"
-                  type="number"
-                  min="1"
-                  max="50"
-                  placeholder="10"
-                  disabled={isSubmitting}
-                  onChange={(e) =>
-                    field.onChange(parseInt(e.target.value) || 10)
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="costPerPlayer"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="cost-court">
+                  {t("addMatch.costCourt")}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    id="cost-court"
+                    type="number"
+                    placeholder={t("addMatch.costPlaceholder")}
+                    disabled={isSubmitting}
+                    className="h-14"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="costPerPlayer"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="cost-court">
-                {t("addMatch.costCourt")}
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  id="cost-court"
-                  type="number"
-                  placeholder={t("addMatch.costPlaceholder")}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="costShirts"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel htmlFor="cost-shirts">
+                  {t("organizer.table.costShirts")}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    id="cost-shirts"
+                    type="number"
+                    placeholder={t("addMatch.costPlaceholder")}
+                    disabled={isSubmitting}
+                    className="h-14"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <FormField
-          control={form.control}
-          name="costShirts"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel htmlFor="cost-shirts">
-                {t("organizer.table.costShirts")}
-              </FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  id="cost-shirts"
-                  type="number"
-                  placeholder={t("addMatch.costPlaceholder")}
-                  disabled={isSubmitting}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-3">
           <Button
             type="submit"
             variant="default"
             disabled={!form.formState.isValid || isSubmitting}
-            className="flex-1"
+            className="flex-1 h-14"
           >
             {isSubmitting ? submitLoadingText : submitText}
           </Button>
@@ -351,6 +360,7 @@ export function MatchForm({
               variant="secondary"
               onClick={onCancel}
               disabled={isSubmitting}
+              className="flex-1 h-14"
             >
               {cancelText}
             </Button>
