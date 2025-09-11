@@ -36,7 +36,7 @@ export function EditMatchForm({
   }
 
   return (
-    <div className="p-4">
+    <div className="p-2 sm:p-4">
       <MatchForm
         defaultValues={{
           date: new Date(match.date),
