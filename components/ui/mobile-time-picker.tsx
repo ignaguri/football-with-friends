@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/drawer";
 import { Label } from "@/components/ui/label";
 import { ClockIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 interface MobileTimePickerProps {
@@ -26,7 +27,10 @@ interface MobileTimePickerProps {
 // Generate time slots in 30-minute increments.
 // By default, time slots start from 15 (3 PM) to 24 (midnight) as matches are only allowed from 3 PM onwards.
 // To change the range, adjust the startHour and endHour parameters.
-function generateTimeSlots(startHour: number = 15, endHour: number = 24): string[] {
+function generateTimeSlots(
+  startHour: number = 15,
+  endHour: number = 24,
+): string[] {
   const slots: string[] = [];
   for (let hour = startHour; hour < endHour; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
@@ -41,11 +45,12 @@ export function MobileTimePicker({
   value,
   onChange,
   label,
-  placeholder = "Select time",
+  placeholder,
   disabled = false,
   required = false,
   id,
 }: MobileTimePickerProps) {
+  const t = useTranslations();
   const [open, setOpen] = React.useState(false);
   const timeSlots = React.useMemo(() => generateTimeSlots(), []);
 
@@ -65,14 +70,14 @@ export function MobileTimePicker({
             className="w-full justify-between font-normal h-12"
             disabled={disabled}
           >
-            {value || placeholder}
+            {value || placeholder || t("addMatch.selectTime")}
             <ClockIcon className="h-4 w-4" />
           </Button>
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Select time</DrawerTitle>
-            <DrawerDescription>Choose a time for your match</DrawerDescription>
+            <DrawerTitle>{t("addMatch.selectTime")}</DrawerTitle>
+            <DrawerDescription>{t("addMatch.selectTime")}</DrawerDescription>
           </DrawerHeader>
           <div className="p-4">
             <div className="grid grid-cols-3 gap-3 max-h-80 overflow-y-auto">

@@ -13,6 +13,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { format, subMonths } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import * as React from "react";
 
 interface MobileDatePickerProps {
@@ -29,11 +30,12 @@ export function MobileDatePicker({
   value,
   onChange,
   label,
-  placeholder = "Select date",
+  placeholder,
   disabled = false,
   required = false,
   id,
 }: MobileDatePickerProps) {
+  const t = useTranslations();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -52,14 +54,16 @@ export function MobileDatePicker({
             className="w-full justify-between font-normal h-12"
             disabled={disabled}
           >
-            {value ? format(value, "PPP") : placeholder}
+            {value
+              ? format(value, "PPP")
+              : placeholder || t("addMatch.selectDate")}
             <CalendarIcon className="h-4 w-4" />
           </Button>
         </DrawerTrigger>
         <DrawerContent className="w-auto overflow-hidden p-0">
           <DrawerHeader className="sr-only">
-            <DrawerTitle>Select date</DrawerTitle>
-            <DrawerDescription>Choose a date for your match</DrawerDescription>
+            <DrawerTitle>{t("addMatch.selectDate")}</DrawerTitle>
+            <DrawerDescription>{t("addMatch.selectDate")}</DrawerDescription>
           </DrawerHeader>
           <Calendar
             mode="single"
