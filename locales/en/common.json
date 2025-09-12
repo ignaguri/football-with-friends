@@ -158,7 +158,9 @@
     "noSpecificCourt": "No specific court",
     "maxPlayers": "Max Players",
     "maxPlayersMin": "Max players must be at least 1",
-    "maxPlayersMax": "Max players cannot exceed 50"
+    "maxPlayersMax": "Max players cannot exceed 50",
+    "selectDate": "Select date",
+    "selectTime": "Select time"
   },
   "errors": {
     "duplicateDate": "A match already exists for this date.",

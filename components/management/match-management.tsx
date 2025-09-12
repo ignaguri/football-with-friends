@@ -4,12 +4,12 @@ import { EditMatchForm } from "@/app/organizer/edit-match-form";
 import { PlayerDrawer } from "@/app/organizer/player-drawer";
 import { Button } from "@/components/ui/button";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCrudOperations } from "@/hooks/use-crud-operations";
 import {
@@ -233,30 +233,30 @@ export function MatchManagement({ className }: MatchManagementProps) {
         />
       </div>
 
-      {/* Edit Match Drawer */}
-      <Drawer
+      {/* Edit Match Sheet */}
+      <Sheet
         open={!!editingItem}
         onOpenChange={(open) => {
           if (!open) cancelEdit();
         }}
       >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>{t("organizer.editMatch")}</DrawerTitle>
-            <DrawerDescription>
-              {t("organizer.editMatchDesc")}
-            </DrawerDescription>
-          </DrawerHeader>
-          {editingItem && (
-            <EditMatchForm
-              match={editingItem}
-              onSave={handleEditSave}
-              onCancel={cancelEdit}
-              isSaving={isUpdating}
-            />
-          )}
-        </DrawerContent>
-      </Drawer>
+        <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <SheetTitle>{t("organizer.editMatch")}</SheetTitle>
+            <SheetDescription>{t("organizer.editMatchDesc")}</SheetDescription>
+          </SheetHeader>
+          <div className="overflow-y-auto flex-1">
+            {editingItem && (
+              <EditMatchForm
+                match={editingItem}
+                onSave={handleEditSave}
+                onCancel={cancelEdit}
+                isSaving={isUpdating}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Player Drawer */}
       <PlayerDrawer
