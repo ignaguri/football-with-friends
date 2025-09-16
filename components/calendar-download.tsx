@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
 import { addHours } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { useTranslations } from "next-intl";
 
 interface CalendarDownloadProps {
@@ -74,7 +74,10 @@ export function CalendarDownload({
     );
 
     // Calculate end time (1 hour later)
-    const startDateTime = new Date(`${dateTimeString}:00`);
+    const startDateTime = fromZonedTime(
+      `${dateTimeString}:00`,
+      DEFAULT_TIMEZONE,
+    );
     const end = addHours(startDateTime, 1);
     const endDate = formatInTimeZone(end, DEFAULT_TIMEZONE, "yyyyMMdd");
     const endTime = formatInTimeZone(end, DEFAULT_TIMEZONE, "HHmm");
