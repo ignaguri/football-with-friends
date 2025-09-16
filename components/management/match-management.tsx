@@ -101,9 +101,7 @@ export function MatchManagement({ className }: MatchManagementProps) {
       key: "date" as const,
       label: t("shared.date"),
       render: (match: MatchDisplay & { id: string }) =>
-        match.date
-          ? formatDisplayDate(match.date, "dd MMM yyyy")
-          : "-",
+        match.date ? formatDisplayDate(match.date, "dd MMM yyyy") : "-",
     },
     {
       key: "time" as const,
