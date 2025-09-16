@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetMatches } from "@/hooks/use-matches";
-import { format, isValid, parse } from "date-fns";
+import { formatDisplayDate } from "@/lib/utils/timezone";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -43,18 +43,17 @@ function MatchTable({
               </tr>
             ) : (
               matches.map((match, idx) => {
-                // Only parse YYYY-MM-DD
-                const parsedDate = parse(match.date, "yyyy-MM-dd", new Date());
+                // Format date in Berlin timezone
+                const formattedDate = formatDisplayDate(
+                  match.date,
+                  "dd MMM yyyy",
+                );
                 return (
                   <tr
                     key={match.matchId || match.name || idx}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
-                    <td className="px-4 py-2">
-                      {parsedDate && isValid(parsedDate)
-                        ? format(parsedDate, "dd MMM yyyy")
-                        : "-"}
-                    </td>
+                    <td className="px-4 py-2">{formattedDate || "-"}</td>
                     <td className="px-4 py-2">{match.time || "-"}</td>
                     <td className="px-4 py-2">
                       <Link

@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { parse, addHours } from "date-fns";
+import { DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
+import { addHours } from "date-fns";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { useTranslations } from "next-intl";
 
 interface CalendarDownloadProps {
@@ -55,16 +57,30 @@ export function CalendarDownload({
 
   function handleAddToCalendar() {
     if (!matchMeta?.date || !matchMeta?.time) return;
-    const startDate = matchMeta.date.replace(/-/g, "");
-    const startTime = matchMeta.time.replace(":", "");
-    const startDateTime = parse(
-      `${matchMeta.date} ${matchMeta.time}`,
-      "yyyy-MM-dd HH:mm",
-      new Date(),
+
+    // Create datetime string in Berlin timezone
+    const dateTimeString = `${matchMeta.date} ${matchMeta.time}`;
+
+    // Format start date and time for calendar
+    const startDate = formatInTimeZone(
+      dateTimeString,
+      DEFAULT_TIMEZONE,
+      "yyyyMMdd",
+    );
+    const startTime = formatInTimeZone(
+      dateTimeString,
+      DEFAULT_TIMEZONE,
+      "HHmm",
+    );
+
+    // Calculate end time (1 hour later)
+    const startDateTime = fromZonedTime(
+      `${dateTimeString}:00`,
+      DEFAULT_TIMEZONE,
     );
     const end = addHours(startDateTime, 1);
-    const endDate = end.toISOString().slice(0, 10).replace(/-/g, "");
-    const endTime = end.toTimeString().slice(0, 5).replace(":", "");
+    const endDate = formatInTimeZone(end, DEFAULT_TIMEZONE, "yyyyMMdd");
+    const endTime = formatInTimeZone(end, DEFAULT_TIMEZONE, "HHmm");
     const icsContent = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",

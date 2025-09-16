@@ -30,31 +30,32 @@ import { z } from "zod";
 
 import type { Location, Court } from "@/lib/domain/types";
 
-// Base schema without translations - will be extended
-const baseMatchSchema = z.object({
-  date: z.date(),
-  time: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .refine(
-      (val) => {
-        const [, minutes] = val.split(":");
-        return minutes === "00" || minutes === "30";
-      },
-      { message: "Time must be in 30-minute increments" },
-    ),
-  locationId: z.string().min(1, "Location is required"),
-  courtId: z.string().optional(),
-  maxPlayers: z
-    .number()
-    .min(1, "Max players must be at least 1")
-    .max(50, "Max players cannot exceed 50")
-    .default(10),
-  costPerPlayer: z.string().optional(),
-  costShirts: z.string().optional(),
-});
+// Base schema for form values
+const createMatchFormSchema = () =>
+  z.object({
+    date: z.date(),
+    time: z
+      .string()
+      .regex(/^\d{2}:\d{2}$/)
+      .refine(
+        (val) => {
+          const [, minutes] = val.split(":");
+          return minutes === "00" || minutes === "30";
+        },
+        { message: "Time must be in 30-minute increments" },
+      ),
+    locationId: z.string().min(1, "Location is required"),
+    courtId: z.string().optional(),
+    maxPlayers: z
+      .number()
+      .min(1, "Max players must be at least 1")
+      .max(50, "Max players cannot exceed 50")
+      .default(10),
+    costPerPlayer: z.string().optional(),
+    costShirts: z.string().optional(),
+  });
 
-export type MatchFormValues = z.infer<typeof baseMatchSchema>;
+export type MatchFormValues = z.infer<ReturnType<typeof createMatchFormSchema>>;
 
 interface MatchFormProps {
   defaultValues?: Partial<MatchFormValues>;

@@ -1,6 +1,8 @@
 // Display mappers for frontend-specific data transformation
 // These functions convert domain objects to display-friendly formats
 
+import { formatDisplayDateTime } from "@/lib/utils/timezone";
+
 import type { Match, MatchDetails, Signup, Location } from "@/lib/domain/types";
 
 // Display types for frontend components
@@ -194,28 +196,17 @@ export function formatMatchTitle(
   locale?: string,
 ): string {
   try {
-    const matchDate = new Date(date);
+    // Format the date and time in the app's timezone (Berlin)
+    const format =
+      locale === "es" ? "EEEE, d 'de' MMMM 'de' yyyy" : "EEEE, MMMM d, yyyy";
+    const formattedDate = formatDisplayDateTime(date, time, format);
     const timeStr = time;
 
     if (locale === "es") {
-      return (
-        matchDate.toLocaleDateString("es-ES", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }) + ` a las ${timeStr}`
-      );
+      return `${formattedDate} a las ${timeStr}`;
     }
 
-    return (
-      matchDate.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }) + ` at ${timeStr}`
-    );
+    return `${formattedDate} at ${timeStr}`;
   } catch {
     return `${date} ${time}`;
   }

@@ -1,4 +1,8 @@
 import { MatchForm, type MatchFormValues } from "@/components/forms/match-form";
+import {
+  convertFromAppTimezone,
+  convertToAppTimezone,
+} from "@/lib/utils/timezone";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import React from "react";
@@ -21,10 +25,11 @@ export function EditMatchForm({
   const t = useTranslations();
 
   function onSubmit(values: MatchFormValues) {
-    // Convert back to MatchDisplay format
+    // Convert date to Berlin timezone and format as YYYY-MM-DD
+    const berlinDate = convertToAppTimezone(values.date);
     const updatedMatch: MatchDisplay = {
       ...match,
-      date: format(values.date, "yyyy-MM-dd"),
+      date: format(berlinDate, "yyyy-MM-dd"),
       time: values.time,
       locationId: values.locationId,
       courtId: values.courtId === "none" ? undefined : values.courtId,
@@ -39,7 +44,7 @@ export function EditMatchForm({
     <div className="p-2 sm:p-4">
       <MatchForm
         defaultValues={{
-          date: new Date(match.date),
+          date: convertFromAppTimezone(match.date),
           time: match.time,
           locationId: match.locationId || "",
           courtId: match.courtId || "none",

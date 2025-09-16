@@ -3,6 +3,8 @@
 import { MatchForm, type MatchFormValues } from "@/components/forms/match-form";
 import { useSession } from "@/lib/auth-client";
 import { isApiErrorKey } from "@/lib/types";
+import { convertToAppTimezone } from "@/lib/utils/timezone";
+import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -50,8 +52,9 @@ function AddMatchForm() {
   }: MatchFormValues) {
     setError(null);
     try {
-      // Format date as YYYY-MM-DD
-      const formattedDate = date.toISOString().slice(0, 10); // YYYY-MM-DD
+      // Convert date to Berlin timezone and format as YYYY-MM-DD
+      const berlinDate = convertToAppTimezone(date);
+      const formattedDate = format(berlinDate, "yyyy-MM-dd");
       const payload: Record<string, string> = {
         date: formattedDate,
         time,
