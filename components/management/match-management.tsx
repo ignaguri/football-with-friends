@@ -18,7 +18,7 @@ import {
   useUpdateMatch,
 } from "@/hooks/use-matches";
 import { useSession } from "@/lib/auth-client";
-import { parse, format as formatDate } from "date-fns";
+import { formatDisplayDate } from "@/lib/utils/timezone";
 import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -102,10 +102,7 @@ export function MatchManagement({ className }: MatchManagementProps) {
       label: t("shared.date"),
       render: (match: MatchDisplay & { id: string }) =>
         match.date
-          ? formatDate(
-              parse(match.date, "yyyy-MM-dd", new Date()),
-              "dd MMM yyyy",
-            )
+          ? formatDisplayDate(match.date, "dd MMM yyyy")
           : "-",
     },
     {
