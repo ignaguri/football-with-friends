@@ -13,6 +13,9 @@ const BaseEnvSchema = z.object({
   // Storage configuration
   STORAGE_PROVIDER: StorageProviderSchema.default("google-sheets"),
 
+  // Timezone configuration
+  DEFAULT_TIMEZONE: z.string().default("Europe/Berlin"),
+
   // Authentication (BetterAuth)
   BETTER_AUTH_SECRET: z
     .string()
@@ -217,6 +220,9 @@ export function generateEnvTemplate(storageProvider: string): string {
 
 # Database Configuration
 STORAGE_PROVIDER=${storageProvider}
+
+# Timezone Configuration (defaults to Europe/Berlin)
+DEFAULT_TIMEZONE=Europe/Berlin
 
 # Google OAuth (for BetterAuth)
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
