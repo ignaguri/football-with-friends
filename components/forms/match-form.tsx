@@ -30,8 +30,8 @@ import { z } from "zod";
 
 import type { Location, Court } from "@/lib/domain/types";
 
-// Base schema without translations - will be extended
-const baseMatchSchema = z.object({
+// Base schema for form values
+const createMatchFormSchema = () => z.object({
   date: z.date(),
   time: z
     .string()
@@ -54,7 +54,7 @@ const baseMatchSchema = z.object({
   costShirts: z.string().optional(),
 });
 
-export type MatchFormValues = z.infer<typeof baseMatchSchema>;
+export type MatchFormValues = z.infer<ReturnType<typeof createMatchFormSchema>>;
 
 interface MatchFormProps {
   defaultValues?: Partial<MatchFormValues>;
