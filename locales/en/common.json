@@ -36,7 +36,8 @@
     "unmarkPaidSuccess": "Marked as pending",
     "rejoinSuccess": "Rejoined the match!",
     "cancelSuccess": "You have cancelled your spot.",
-    "guestAddSuccess": "Guest added successfully!"
+    "guestAddSuccess": "Guest added successfully!",
+    "matchCancelled": "This match has been cancelled"
   },
   "share": {
     "title": "Share this match",
@@ -230,7 +231,8 @@
     "pending": "Pending",
     "notConfirmed": "Not Confirmed",
     "cancelled": "Cancelled",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "played": "Played"
   },
   "locations": {
     "title": "Locations",

@@ -37,7 +37,8 @@
     "unmarkPaidSuccess": "Marcado como pendiente",
     "rejoinSuccess": "¡Volviste al partido!",
     "cancelSuccess": "Cancelaste tu lugar.",
-    "guestAddSuccess": "¡Invitado agregado con éxito!"
+    "guestAddSuccess": "¡Invitado agregado con éxito!",
+    "matchCancelled": "Este partido ha sido cancelado"
   },
   "share": {
     "title": "Compartir este partido",
@@ -233,7 +234,8 @@
     "pending": "Pendiente",
     "notConfirmed": "Sin confirmar",
     "cancelled": "Cancelado",
-    "inactive": "Inactiva"
+    "inactive": "Inactiva",
+    "played": "Jugado"
   },
   "locations": {
     "title": "Predios",
