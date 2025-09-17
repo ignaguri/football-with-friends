@@ -25,6 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Internationalization**: next-intl (English/Spanish)
 - **Forms**: React Hook Form with Zod validation
 - **State Management**: TanStack Query for server state
+- **Date/Time**: date-fns and date-fns-tz for timezone-aware operations
 
 ### Directory Structure
 - `app/` - Next.js App Router pages and layouts
@@ -38,6 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `auth.ts` - BetterAuth configuration
   - `google-sheets.ts` - Google Sheets integration
   - `types.ts` - TypeScript type definitions
+  - `utils/timezone.ts` - Timezone utilities and date handling
 - `hooks/` - Custom React hooks
 - `locales/` - Internationalization files
 - `types/` - Global TypeScript types
@@ -78,4 +80,25 @@ The app uses a comprehensive environment validation system:
 **Required Variables** (vary by storage provider):
 - `BETTER_AUTH_SECRET` - Authentication encryption key
 - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - OAuth
+- `DEFAULT_TIMEZONE` - Application timezone (defaults to Europe/Berlin)
 - Storage-specific variables (validated automatically)
+
+### Timezone Handling
+The application implements comprehensive timezone support to ensure consistent date handling:
+
+**Default Timezone**: Europe/Berlin
+- All dates are processed and stored relative to Berlin timezone
+- Prevents day-shifting issues when users create matches from different timezones
+- Configurable via `DEFAULT_TIMEZONE` environment variable
+
+**Key Utilities** (`lib/utils/timezone.ts`):
+- `convertToAppTimezone(date)` - Convert user input to Berlin timezone
+- `formatDateInAppTimezone(date, format)` - Format dates in Berlin timezone
+- `formatDisplayDate(date, format)` - Display dates consistently
+- `formatDisplayDateTime(date, time, format)` - Format date/time combinations
+
+**Implementation**:
+- Form submissions use `convertToAppTimezone()` instead of UTC conversion
+- All date displays use timezone-aware formatting functions
+- Calendar downloads and exports maintain timezone consistency
+- Match listings show dates in Berlin timezone regardless of user location
