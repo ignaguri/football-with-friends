@@ -25,12 +25,16 @@
   "matchDetail": {
     "pay": "Pay",
     "markPaid": "Mark as Paid",
+    "unmarkPaid": "Mark as Pending",
+    "rejoin": "Rejoin Match",
     "viewRules": "View Rules",
     "shareAnywhere": "You can now share it anywhere.",
     "error": "Error",
     "copyFailed": "Failed to copy link to clipboard.",
     "signupSuccess": "Signed up for the match!",
     "markPaidSuccess": "Marked as paid",
+    "unmarkPaidSuccess": "Marked as pending",
+    "rejoinSuccess": "Rejoined the match!",
     "cancelSuccess": "You have cancelled your spot.",
     "guestAddSuccess": "Guest added successfully!"
   },
@@ -127,6 +131,9 @@
     "viewMatch": "View Match",
     "editMatch": "Edit Match",
     "editMatchDesc": "Update the match details below and save your changes.",
+    "cancelMatch": "Cancel Match",
+    "cancelMatchConfirm": "Are you sure you want to cancel the match on {date} at {time}? This action cannot be undone.",
+    "matchCancelledSuccess": "Match cancelled successfully",
     "noMatches": "No matches found"
   },
   "signin": {
@@ -185,6 +192,7 @@
     "email": "Email",
     "cancelling": "Cancelling...",
     "cancelSpot": "Cancel Spot",
+    "cancelGuest": "Cancel Guest",
     "cancelSuccess": "Cancelled {name}'s spot.",
     "cancelError": "Could not cancel player's spot."
   },
@@ -220,6 +228,7 @@
   "status": {
     "paid": "Paid",
     "pending": "Pending",
+    "notConfirmed": "Not Confirmed",
     "cancelled": "Cancelled",
     "inactive": "Inactive"
   },

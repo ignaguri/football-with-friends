@@ -69,6 +69,20 @@ export interface MatchInvitationsTable {
   responded_at: ColumnType<Date, string | undefined, string> | null;
 }
 
+export interface UserTable {
+  id: string;
+  name: string | null;
+  email: string;
+  emailVerified: number;
+  image: string | null;
+  role: string;
+  banned: number | null;
+  banReason: string | null;
+  banExpires: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -76,6 +90,7 @@ export interface Database {
   courts: CourtsTable;
   signups: SignupsTable;
   match_invitations: MatchInvitationsTable;
+  user: UserTable;
 }
 
 // SQLite system tables used by migrations and database introspection

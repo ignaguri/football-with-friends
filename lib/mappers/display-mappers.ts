@@ -31,13 +31,13 @@ export interface MatchDetailsDisplay {
 }
 
 export interface PlayerDisplay {
-  Id: string;
-  Name: string;
-  Email: string;
-  Status: string;
-  IsGuest: string;
-  OwnerEmail: string;
-  GuestName: string;
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  isGuest: boolean;
+  ownerEmail: string;
+  guestName: string;
 }
 
 export interface MatchMetaDisplay {
@@ -91,23 +91,23 @@ export function matchDetailsToDisplay(
   matchDetails: MatchDetails,
 ): MatchDetailsDisplay {
   const header = [
-    "Id",
-    "Name",
-    "Email",
-    "Status",
-    "IsGuest",
-    "OwnerEmail",
-    "GuestName",
+    "id",
+    "name",
+    "email",
+    "status",
+    "isGuest",
+    "ownerEmail",
+    "guestName",
   ];
 
   const players: PlayerDisplay[] = matchDetails.signups.map((signup) => ({
-    Id: signup.id,
-    Name: signup.playerName,
-    Email: signup.playerEmail,
-    Status: signup.status,
-    IsGuest: signup.signupType === "guest" ? "1" : "0",
-    OwnerEmail: signup.guestOwnerId || "",
-    GuestName: signup.signupType === "guest" ? signup.playerName : "",
+    id: signup.id,
+    name: signup.playerName,
+    email: signup.playerEmail,
+    status: signup.status,
+    isGuest: signup.signupType === "guest",
+    ownerEmail: signup.guestOwnerEmail || signup.guestOwnerId || "",
+    guestName: signup.signupType === "guest" ? signup.playerName : "",
   }));
 
   // Format court display: "Court Name (Location Name)" or just "Location Name" if no court
@@ -177,13 +177,13 @@ export function locationToDisplay(location: Location): {
  */
 export function signupToPlayerDisplay(signup: Signup): PlayerDisplay {
   return {
-    Id: signup.id,
-    Name: signup.playerName,
-    Email: signup.playerEmail,
-    Status: signup.status,
-    IsGuest: signup.signupType === "guest" ? "1" : "0",
-    OwnerEmail: signup.guestOwnerId || "",
-    GuestName: signup.signupType === "guest" ? signup.playerName : "",
+    id: signup.id,
+    name: signup.playerName,
+    email: signup.playerEmail,
+    status: signup.status,
+    isGuest: signup.signupType === "guest",
+    ownerEmail: signup.guestOwnerId || "",
+    guestName: signup.signupType === "guest" ? signup.playerName : "",
   };
 }
 

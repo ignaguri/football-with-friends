@@ -80,6 +80,7 @@ export interface Signup {
   user?: User;
   guestOwner?: User;
   addedByUser?: User;
+  guestOwnerEmail?: string; // populated from join
 }
 
 export interface MatchInvitation {

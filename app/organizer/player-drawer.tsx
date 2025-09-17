@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetMatch, useUpdateSignup } from "@/hooks/use-matches";
+import { useSession } from "@/lib/auth-client";
 import { capitalize, formatMatchTitle } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -45,6 +46,8 @@ export function PlayerDrawer({
 }: PlayerDrawerProps) {
   const t = useTranslations();
   const { data: matchData, isLoading, isError, error } = useGetMatch(matchId!);
+  const { data: session } = useSession();
+  const currentUser = session?.user;
 
   const { mutate: cancelPlayer, isPending: isCancelling } = useUpdateSignup();
 
@@ -55,10 +58,10 @@ export function PlayerDrawer({
     "";
 
   function handleCancelPlayer(player: PlayerDisplay) {
-    if (!matchId || !player.Id) {
+    if (!matchId || !player.id) {
       console.error("Missing matchId or player ID:", {
         matchId,
-        playerId: player.Id,
+        playerId: player.id,
       });
       toast.error(t("playerDrawer.cancelError"));
       return;
@@ -67,12 +70,12 @@ export function PlayerDrawer({
     cancelPlayer(
       {
         matchId,
-        signupId: player.Id,
+        signupId: player.id,
         status: "CANCELLED",
       },
       {
         onSuccess: () => {
-          toast.success(t("playerDrawer.cancelSuccess", { name: player.Name }));
+          toast.success(t("playerDrawer.cancelSuccess", { name: player.name }));
         },
         onError: (e: unknown) => {
           console.error("Error canceling player:", e);
@@ -116,27 +119,47 @@ export function PlayerDrawer({
               </TableHeader>
               <TableBody>
                 {players.map((player) => (
-                  <TableRow key={player.Email}>
-                    <TableCell>{player.Name}</TableCell>
-                    <TableCell>{player.Email}</TableCell>
+                  <TableRow key={player.email}>
+                    <TableCell>{player.name}</TableCell>
+                    <TableCell>{player.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getBadgeVariant(player.Status)}>
-                        {player.Status}
+                      <Badge variant={getBadgeVariant(player.status)}>
+                        {player.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {player.Status !== "CANCELLED" ? (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          disabled={isCancelling}
-                          onClick={() => handleCancelPlayer(player)}
-                        >
-                          {isCancelling
-                            ? t("playerDrawer.cancelling")
-                            : t("playerDrawer.cancelSpot")}
-                        </Button>
-                      ) : null}
+                      {player.status !== "CANCELLED" && currentUser && (
+                        <div className="flex items-center gap-2">
+                          {/* Admin can cancel anyone */}
+                          {currentUser.role === "admin" && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={isCancelling}
+                              onClick={() => handleCancelPlayer(player)}
+                            >
+                              {isCancelling
+                                ? t("playerDrawer.cancelling")
+                                : t("playerDrawer.cancelSpot")}
+                            </Button>
+                          )}
+                          {/* Guest owner can cancel their guests */}
+                          {currentUser.role !== "admin" &&
+                            player.isGuest &&
+                            player.ownerEmail === currentUser.email && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={isCancelling}
+                                onClick={() => handleCancelPlayer(player)}
+                              >
+                                {isCancelling
+                                  ? t("playerDrawer.cancelling")
+                                  : t("playerDrawer.cancelGuest")}
+                              </Button>
+                            )}
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
