@@ -26,12 +26,16 @@
   "matchDetail": {
     "pay": "Pagar",
     "markPaid": "Marcar como pagado",
+    "unmarkPaid": "Marcar como pendiente",
+    "rejoin": "Volver al partido",
     "viewRules": "Ver reglas",
     "shareAnywhere": "Ahora podés compartirlo donde quieras.",
     "error": "Error",
     "copyFailed": "No se pudo copiar el enlace al portapapeles.",
     "signupSuccess": "¡Te anotaste al partido!",
     "markPaidSuccess": "Marcado como pagado",
+    "unmarkPaidSuccess": "Marcado como pendiente",
+    "rejoinSuccess": "¡Volviste al partido!",
     "cancelSuccess": "Cancelaste tu lugar.",
     "guestAddSuccess": "¡Invitado agregado con éxito!"
   },
@@ -128,6 +132,9 @@
     "viewMatch": "Ver Partido",
     "editMatch": "Editar Partido",
     "editMatchDesc": "Actualizá los detalles del partido abajo y guardá los cambios.",
+    "cancelMatch": "Cancelar Partido",
+    "cancelMatchConfirm": "¿Estás seguro de que querés cancelar el partido del {date} a las {time}? Esta acción no se puede deshacer.",
+    "matchCancelledSuccess": "Partido cancelado exitosamente",
     "noMatches": "No se encontraron partidos"
   },
   "signin": {
@@ -188,6 +195,7 @@
     "actions": "Acciones",
     "cancelling": "Cancelando...",
     "cancelSpot": "Cancelar lugar",
+    "cancelGuest": "Cancelar invitado",
     "cancelSuccess": "Lugar de {name} cancelado.",
     "cancelError": "No se pudo cancelar el lugar del jugador."
   },
@@ -223,6 +231,7 @@
   "status": {
     "paid": "Pagado",
     "pending": "Pendiente",
+    "notConfirmed": "Sin confirmar",
     "cancelled": "Cancelado",
     "inactive": "Inactiva"
   },
