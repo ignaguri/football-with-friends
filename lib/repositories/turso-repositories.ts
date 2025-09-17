@@ -495,15 +495,36 @@ export class TursoMatchRepository implements MatchRepository {
       }
     }
 
-    // Get signups
+    // Get signups with guest owner information
     const signupRows = await this.db
       .selectFrom("signups")
-      .selectAll()
+      .leftJoin(
+        "user as guest_owner",
+        "signups.guest_owner_id",
+        "guest_owner.id",
+      )
+      .select([
+        "signups.id",
+        "signups.match_id",
+        "signups.user_id",
+        "signups.player_name",
+        "signups.player_email",
+        "signups.status",
+        "signups.signup_type",
+        "signups.guest_owner_id",
+        "signups.added_by_user_id",
+        "signups.signed_up_at",
+        "signups.updated_at",
+        "guest_owner.email as guest_owner_email",
+      ])
       .where("match_id", "=", id)
       .orderBy("signed_up_at", "asc")
       .execute();
 
-    const signups = signupRows.map(dbSignupToSignup);
+    const signups = signupRows.map((row) => ({
+      ...dbSignupToSignup(row),
+      guestOwnerEmail: row.guest_owner_email || undefined,
+    }));
 
     // Calculate available spots
     const availableSpots = Math.max(0, match.maxPlayers - signups.length);
