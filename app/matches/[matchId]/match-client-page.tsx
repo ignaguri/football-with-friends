@@ -474,6 +474,7 @@ export default function MatchClientPage() {
         isCancelled={isCancelled}
         spotsLeft={spotsLeft}
         isSigningUp={signupMutation.isPending}
+        matchStatus={matchMeta?.status || "upcoming"}
         onJoin={handleJoin}
         onCancel={handleCancel}
         onAddGuest={() => setIsGuestDialogOpen(true)}
