@@ -51,7 +51,7 @@
   "stats": {
     "paid": "Paid",
     "cost": "Cost (p.p.)",
-    "court": "Court #"
+    "court": "Court"
   },
   "actions": {
     "in": "You're in!",
