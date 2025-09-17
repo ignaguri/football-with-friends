@@ -189,7 +189,10 @@ export function MatchManagement({ className }: MatchManagementProps) {
       onClick: (match: MatchDisplay & { id: string }) => {
         if (
           confirm(
-            `Are you sure you want to cancel the match on ${match.date} at ${match.time}? This action cannot be undone.`,
+            t("organizer.cancelMatchConfirm", {
+              date: match.date,
+              time: match.time,
+            }),
           )
         ) {
           handleCancelMatch(match);
