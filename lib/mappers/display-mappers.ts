@@ -106,7 +106,7 @@ export function matchDetailsToDisplay(
     email: signup.playerEmail,
     status: signup.status,
     isGuest: signup.signupType === "guest",
-    ownerEmail: signup.guestOwnerId || "",
+    ownerEmail: signup.guestOwnerEmail || signup.guestOwnerId || "",
     guestName: signup.signupType === "guest" ? signup.playerName : "",
   }));
 
