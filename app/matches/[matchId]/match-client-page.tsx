@@ -69,14 +69,14 @@ export default function MatchClientPage() {
 
   const isPlayerInMatch = useMemo(() => {
     if (!user) return false;
-    const player = players.find((p) => p.Email === user.email);
-    return player ? player.Status !== "CANCELLED" : false;
+    const player = players.find((p) => p.email === user.email);
+    return player ? player.status !== "CANCELLED" : false;
   }, [players, user]);
 
   const isCancelled = useMemo(() => {
     if (!user) return false;
-    const player = players.find((p) => p.Email === user.email);
-    return player?.Status === "CANCELLED";
+    const player = players.find((p) => p.email === user.email);
+    return player?.status === "CANCELLED";
   }, [players, user]);
 
   const matchTitle =
@@ -170,8 +170,8 @@ export default function MatchClientPage() {
       }
 
       // Find the player's signup ID
-      const player = players.find((p) => p.Email === playerEmail);
-      if (!player?.Id) {
+      const player = players.find((p) => p.email === playerEmail);
+      if (!player?.id) {
         toast.error(t("shared.errorOccurred"));
         return;
       }
@@ -179,7 +179,7 @@ export default function MatchClientPage() {
       updateSignupMutation.mutate(
         {
           matchId,
-          signupId: player.Id,
+          signupId: player.id,
           status: PLAYER_STATUSES[0], // PAID
         },
         {
@@ -199,8 +199,8 @@ export default function MatchClientPage() {
     if (!user) return;
 
     // Find the current user's signup
-    const player = players.find((p) => p.Email === user.email);
-    if (!player?.Id) {
+    const player = players.find((p) => p.email === user.email);
+    if (!player?.id) {
       toast.error(t("shared.errorOccurred"));
       return;
     }
@@ -208,7 +208,7 @@ export default function MatchClientPage() {
     updateSignupMutation.mutate(
       {
         matchId,
-        signupId: player.Id,
+        signupId: player.id,
         status: "CANCELLED",
       },
       {
@@ -278,7 +278,7 @@ export default function MatchClientPage() {
         header: t("shared.status"),
         cell: ({ row }) => {
           const player = row.original;
-          const status = player.Status?.toUpperCase();
+          const status = player.status?.toUpperCase();
           return (
             <Badge variant={getBadgeVariant(status as PlayerStatus)}>
               {statusLabelMap[status as PlayerStatus] || status}
@@ -291,8 +291,8 @@ export default function MatchClientPage() {
         header: t("shared.actions"),
         cell: ({ row }) => {
           const player = row.original;
-          const status = (player.Status as PlayerStatus)?.toUpperCase();
-          const isCurrentUser = user?.email === player.Email;
+          const status = (player.status as PlayerStatus)?.toUpperCase();
+          const isCurrentUser = user?.email === player.email;
 
           const showPaymentButtons = isCurrentUser && user;
           const showAdminButtons = user?.role === "admin";
@@ -328,7 +328,7 @@ export default function MatchClientPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => handleMarkAsPaid(player.Email, player.Name)}
+                  onClick={() => handleMarkAsPaid(player.email, player.name)}
                   disabled={updateSignupMutation.isPending}
                 >
                   {t("matchDetail.markPaid")}
@@ -352,7 +352,7 @@ export default function MatchClientPage() {
 
   const totalSpots = 10;
   const paidPlayersCount = players.filter(
-    (p) => p.Status === PLAYER_STATUSES[0],
+    (p) => p.status === PLAYER_STATUSES[0],
   ).length;
   const spotsLeft = totalSpots - paidPlayersCount;
 

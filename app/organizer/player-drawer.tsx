@@ -55,10 +55,10 @@ export function PlayerDrawer({
     "";
 
   function handleCancelPlayer(player: PlayerDisplay) {
-    if (!matchId || !player.Id) {
+    if (!matchId || !player.id) {
       console.error("Missing matchId or player ID:", {
         matchId,
-        playerId: player.Id,
+        playerId: player.id,
       });
       toast.error(t("playerDrawer.cancelError"));
       return;
@@ -67,12 +67,12 @@ export function PlayerDrawer({
     cancelPlayer(
       {
         matchId,
-        signupId: player.Id,
+        signupId: player.id,
         status: "CANCELLED",
       },
       {
         onSuccess: () => {
-          toast.success(t("playerDrawer.cancelSuccess", { name: player.Name }));
+          toast.success(t("playerDrawer.cancelSuccess", { name: player.name }));
         },
         onError: (e: unknown) => {
           console.error("Error canceling player:", e);
@@ -116,16 +116,16 @@ export function PlayerDrawer({
               </TableHeader>
               <TableBody>
                 {players.map((player) => (
-                  <TableRow key={player.Email}>
-                    <TableCell>{player.Name}</TableCell>
-                    <TableCell>{player.Email}</TableCell>
+                  <TableRow key={player.email}>
+                    <TableCell>{player.name}</TableCell>
+                    <TableCell>{player.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getBadgeVariant(player.Status)}>
-                        {player.Status}
+                      <Badge variant={getBadgeVariant(player.status)}>
+                        {player.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {player.Status !== "CANCELLED" ? (
+                      {player.status !== "CANCELLED" ? (
                         <Button
                           size="sm"
                           variant="destructive"
