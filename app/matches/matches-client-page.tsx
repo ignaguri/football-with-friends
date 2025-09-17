@@ -77,9 +77,7 @@ function MatchTable({
                   >
                     <td className="px-4 py-2">{formattedDate || "-"}</td>
                     <td className="px-4 py-2">{match.time || "-"}</td>
-                    <td className="px-4 py-2">
-                      {getMatchStatusBadge(match)}
-                    </td>
+                    <td className="px-4 py-2">{getMatchStatusBadge(match)}</td>
                     <td className="px-4 py-2">
                       <Link
                         href={`/matches/${encodeURIComponent(match.matchId)}`}

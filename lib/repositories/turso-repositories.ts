@@ -438,11 +438,9 @@ export class TursoMatchRepository implements MatchRepository {
           ]),
         );
       } else if (filters.type === "upcoming") {
-        query = query.where("matches.date", ">=", today).where(
-          "matches.status",
-          "!=",
-          "cancelled",
-        );
+        query = query
+          .where("matches.date", ">=", today)
+          .where("matches.status", "!=", "cancelled");
       }
     }
 

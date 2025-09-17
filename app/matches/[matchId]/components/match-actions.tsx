@@ -47,25 +47,30 @@ export function MatchActions({
   const t = useTranslations();
 
   // Check if match is in a state where actions should be disabled
-  const isMatchFinished = matchStatus === "cancelled" || matchStatus === "completed";
+  const isMatchFinished =
+    matchStatus === "cancelled" || matchStatus === "completed";
   return (
     <div className="mt-8 flex w-full flex-col justify-center gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-xs md:flex-row md:items-center md:justify-between">
       <div className="text-center md:text-left">
         <h2 className="text-xl font-bold">
           {isMatchFinished
-            ? matchStatus === "cancelled" ? t("status.cancelled") : t("status.played")
-            : isPlayerInMatch ? t("actions.in") : t("actions.wantToPlay")
-          }
+            ? matchStatus === "cancelled"
+              ? t("status.cancelled")
+              : t("status.played")
+            : isPlayerInMatch
+              ? t("actions.in")
+              : t("actions.wantToPlay")}
         </h2>
         <p className="text-sm text-muted-foreground">
           {isMatchFinished
-            ? matchStatus === "cancelled" ? t("matchDetail.matchCancelled") : t("status.played")
+            ? matchStatus === "cancelled"
+              ? t("matchDetail.matchCancelled")
+              : t("status.played")
             : isPlayerInMatch
               ? t("actions.cancelOrGuest")
               : spotsLeft > 0
                 ? t("actions.spotsLeft", { count: spotsLeft })
-                : t("actions.matchFull")
-          }
+                : t("actions.matchFull")}
         </p>
       </div>
 
@@ -92,7 +97,9 @@ export function MatchActions({
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button disabled={isSigningUp} variant="destructive">
-                    {isSigningUp ? t("actions.cancelling") : t("actions.cancel")}
+                    {isSigningUp
+                      ? t("actions.cancelling")
+                      : t("actions.cancel")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
