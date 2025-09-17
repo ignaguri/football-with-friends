@@ -10,16 +10,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { PLAYER_STATUSES } from "@/lib/types";
 import { formatMatchTitle } from "@/lib/utils";
-// Import Sentry only in production
-let Sentry: any = null;
-if (process.env.NODE_ENV === "production") {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    Sentry = require("@sentry/nextjs");
-  } catch {
-    // Sentry not available
-  }
-}
+import { captureException } from "@/lib/utils/sentry";
 import {
   useReactTable,
   getCoreRowModel,
@@ -109,38 +100,22 @@ export default function MatchClientPage() {
       {
         onSuccess: () => {
           toast.success(successMessage);
-
-          // Log successful signup to Sentry
-          if (Sentry) {
-            Sentry.captureMessage("Signup successful", {
-              level: "info",
-              extra: {
-                matchId,
-                isGuest: payload.isGuest,
-                guestName: payload.guestName,
-                playerEmail: payload.playerEmail,
-                playerName: payload.playerName,
-              },
-            });
-          }
         },
         onError: (error) => {
           // Log signup errors to Sentry
-          if (Sentry) {
-            Sentry.captureException(error, {
-              tags: {
-                operation: "client_signup",
-                matchId,
-              },
-              extra: {
-                isGuest: payload.isGuest,
-                guestName: payload.guestName,
-                playerEmail: payload.playerEmail,
-                playerName: payload.playerName,
-                errorMessage: error.message,
-              },
-            });
-          }
+          captureException(error, {
+            tags: {
+              operation: "client_signup",
+              matchId,
+            },
+            extra: {
+              isGuest: payload.isGuest,
+              guestName: payload.guestName,
+              playerEmail: payload.playerEmail,
+              playerName: payload.playerName,
+              errorMessage: error.message,
+            },
+          });
 
           // Error logged to Sentry above
           toast.error(error.message || t("shared.errorOccurred"));
@@ -224,22 +199,6 @@ export default function MatchClientPage() {
 
   function handleAddGuest(guestName?: string) {
     if (!user) return;
-
-    // Add Sentry logging for guest invitation attempts
-    if (Sentry) {
-      Sentry.addBreadcrumb({
-        category: "guest-invitation",
-        message: "Attempting to add guest",
-        level: "info",
-        data: {
-          matchId,
-          guestName,
-          ownerEmail: user.email,
-          ownerName: user.name,
-          isPlayerInMatch,
-        },
-      });
-    }
 
     handleSignup(
       {

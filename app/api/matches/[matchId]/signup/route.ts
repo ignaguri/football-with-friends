@@ -1,15 +1,10 @@
 import { auth } from "@/lib/auth";
 import { getServiceFactory } from "@/lib/services/factory";
-// Import Sentry only in production
-let Sentry: any = null;
-if (process.env.NODE_ENV === "production") {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    Sentry = require("@sentry/nextjs");
-  } catch {
-    // Sentry not available
-  }
-}
+import {
+  captureMessage,
+  captureException,
+  setContext,
+} from "@/lib/utils/sentry";
 import { headers } from "next/headers";
 
 import type {
@@ -27,11 +22,9 @@ export async function POST(
     const user = session?.user as User | undefined;
 
     if (!user) {
-      if (Sentry) {
-        Sentry.captureMessage("Unauthorized signup attempt", {
-          level: "warning",
-        });
-      }
+      captureMessage("Unauthorized signup attempt", {
+        level: "warning",
+      });
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -40,32 +33,28 @@ export async function POST(
     const { matchService } = getServiceFactory();
 
     // Add Sentry context for debugging
-    if (Sentry) {
-      Sentry.setContext("signup_request", {
-        matchId,
-        userId: user.id,
-        userEmail: user.email,
-        isGuest: body.isGuest,
-        hasGuestName: !!body.guestName,
-      });
-    }
+    setContext("signup_request", {
+      matchId,
+      userId: user.id,
+      userEmail: user.email,
+      isGuest: body.isGuest,
+      hasGuestName: !!body.guestName,
+    });
 
     if (body.isGuest) {
       // Guest signup
       const { ownerName, ownerEmail, guestName, status } = body;
 
       if (!ownerName || !ownerEmail || typeof status !== "string") {
-        if (Sentry) {
-          Sentry.captureMessage("Guest signup missing required fields", {
-            level: "error",
-            extra: {
-              hasOwnerName: !!ownerName,
-              hasOwnerEmail: !!ownerEmail,
-              statusType: typeof status,
-              guestName,
-            },
-          });
-        }
+        captureMessage("Guest signup missing required fields", {
+          level: "error",
+          extra: {
+            hasOwnerName: !!ownerName,
+            hasOwnerEmail: !!ownerEmail,
+            statusType: typeof status,
+            guestName,
+          },
+        });
         return new Response("Missing fields", { status: 400 });
       }
 
@@ -81,34 +70,30 @@ export async function POST(
       try {
         await matchService.addGuestPlayer(matchId, guestData, user);
 
-        if (Sentry) {
-          Sentry.captureMessage("Guest successfully added to match", {
-            level: "info",
-            extra: {
-              matchId,
-              guestName,
-              ownerEmail,
-              ownerName,
-            },
-          });
-        }
+        captureMessage("Guest successfully added to match", {
+          level: "info",
+          extra: {
+            matchId,
+            guestName,
+            ownerEmail,
+            ownerName,
+          },
+        });
 
         return new Response("OK", { status: 200 });
       } catch (guestError) {
-        if (Sentry) {
-          Sentry.captureException(guestError, {
-            tags: {
-              operation: "add_guest_player",
-              matchId,
-            },
-            extra: {
-              guestName,
-              ownerEmail,
-              ownerName,
-              userId: user.id,
-            },
-          });
-        }
+        captureException(guestError, {
+          tags: {
+            operation: "add_guest_player",
+            matchId,
+          },
+          extra: {
+            guestName,
+            ownerEmail,
+            ownerName,
+            userId: user.id,
+          },
+        });
 
         // Error logged to Sentry above
         return new Response(
@@ -131,32 +116,28 @@ export async function POST(
       try {
         await matchService.signUpUser(matchId, user, playerData);
 
-        if (Sentry) {
-          Sentry.captureMessage("User successfully signed up for match", {
-            level: "info",
-            extra: {
-              matchId,
-              playerEmail: playerData.playerEmail,
-              playerName: playerData.playerName,
-            },
-          });
-        }
+        captureMessage("User successfully signed up for match", {
+          level: "info",
+          extra: {
+            matchId,
+            playerEmail: playerData.playerEmail,
+            playerName: playerData.playerName,
+          },
+        });
 
         return new Response("OK", { status: 200 });
       } catch (signupError) {
-        if (Sentry) {
-          Sentry.captureException(signupError, {
-            tags: {
-              operation: "signup_user",
-              matchId,
-            },
-            extra: {
-              playerEmail: playerData.playerEmail,
-              playerName: playerData.playerName,
-              userId: user.id,
-            },
-          });
-        }
+        captureException(signupError, {
+          tags: {
+            operation: "signup_user",
+            matchId,
+          },
+          extra: {
+            playerEmail: playerData.playerEmail,
+            playerName: playerData.playerName,
+            userId: user.id,
+          },
+        });
 
         // Error logged to Sentry above
         return new Response(
@@ -168,13 +149,11 @@ export async function POST(
       }
     }
   } catch (error) {
-    if (Sentry) {
-      Sentry.captureException(error, {
-        tags: {
-          operation: "signup_api",
-        },
-      });
-    }
+    captureException(error, {
+      tags: {
+        operation: "signup_api",
+      },
+    });
 
     // Error logged to Sentry above
 
