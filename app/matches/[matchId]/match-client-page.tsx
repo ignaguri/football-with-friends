@@ -22,7 +22,7 @@ import { useMemo, useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
-import type { PlayerStatus } from "@/lib/types";
+import type { MatchStatus, PlayerStatus } from "@/lib/types";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 
 import { GuestSignupDialog } from "./components/guest-signup-dialog";
@@ -45,7 +45,6 @@ export default function MatchClientPage() {
   const {
     data: matchData,
     isLoading: isMatchLoading,
-    // isError: isMatchError,
     error: matchError,
   } = useGetMatch(matchId);
 
@@ -474,6 +473,7 @@ export default function MatchClientPage() {
         isCancelled={isCancelled}
         spotsLeft={spotsLeft}
         isSigningUp={signupMutation.isPending}
+        matchStatus={matchMeta?.status as MatchStatus}
         onJoin={handleJoin}
         onCancel={handleCancel}
         onAddGuest={() => setIsGuestDialogOpen(true)}

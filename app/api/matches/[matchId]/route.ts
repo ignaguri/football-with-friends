@@ -7,7 +7,7 @@ import type { UpdateMatchData, User } from "@/lib/domain/types";
 import type { MatchDetailsDisplay } from "@/lib/mappers/display-mappers";
 
 export async function GET(
-  request: Request,
+  _req: Request,
   context: { params: Promise<{ matchId: string }> },
 ) {
   try {
@@ -76,7 +76,7 @@ export async function PATCH(
 
 // DELETE: Remove match (admin only)
 export async function DELETE(
-  req: Request,
+  _req: Request,
   context: { params: Promise<{ matchId: string }> },
 ) {
   try {

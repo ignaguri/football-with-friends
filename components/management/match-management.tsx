@@ -181,7 +181,11 @@ export function MatchManagement({ className }: MatchManagementProps) {
       label: t("organizer.edit"),
       variant: "secondary" as const,
       onClick: (match: MatchDisplay & { id: string }) => startEdit(match),
-      disabled: () => isDeleting || isUpdating,
+      disabled: (match: MatchDisplay & { id: string }) =>
+        isDeleting ||
+        isUpdating ||
+        match.status === "cancelled" ||
+        match.status === "completed",
     },
     {
       label: t("organizer.cancelMatch"),

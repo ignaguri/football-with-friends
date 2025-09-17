@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { useGetMatches } from "@/hooks/use-matches";
 import { formatDisplayDate } from "@/lib/utils/timezone";
 import Link from "next/link";
@@ -15,6 +16,24 @@ function MatchTable({
   title: string;
 }) {
   const t = useTranslations();
+
+  function getMatchStatusBadge(match: MatchDisplay) {
+    if (match.status === "cancelled") {
+      return (
+        <Badge variant="destructive" className="ml-2">
+          {t("status.cancelled")}
+        </Badge>
+      );
+    }
+    if (match.status === "completed") {
+      return (
+        <Badge variant="success" className="ml-2">
+          {t("status.played")}
+        </Badge>
+      );
+    }
+    return null;
+  }
   return (
     <div className="w-full p-4">
       <h2 className="mb-4 text-2xl font-bold">{title}</h2>
@@ -28,6 +47,9 @@ function MatchTable({
               <th className="px-4 py-2 text-left text-sm font-semibold">
                 {t("shared.time")}
               </th>
+              <th className="px-4 py-2 text-left text-sm font-semibold">
+                {t("shared.status")}
+              </th>
               <th className="px-4 py-2"></th>
             </tr>
           </thead>
@@ -35,7 +57,7 @@ function MatchTable({
             {matches.length === 0 ? (
               <tr>
                 <td
-                  colSpan={3}
+                  colSpan={4}
                   className="px-4 py-4 text-center text-gray-400 dark:text-gray-500"
                 >
                   {t("matches.none")}
@@ -55,6 +77,7 @@ function MatchTable({
                   >
                     <td className="px-4 py-2">{formattedDate || "-"}</td>
                     <td className="px-4 py-2">{match.time || "-"}</td>
+                    <td className="px-4 py-2">{getMatchStatusBadge(match)}</td>
                     <td className="px-4 py-2">
                       <Link
                         href={`/matches/${encodeURIComponent(match.matchId)}`}

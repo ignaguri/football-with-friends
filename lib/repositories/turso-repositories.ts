@@ -431,9 +431,16 @@ export class TursoMatchRepository implements MatchRepository {
     if (filters?.type) {
       const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
       if (filters.type === "past") {
-        query = query.where("matches.date", "<", today);
+        query = query.where((eb) =>
+          eb.or([
+            eb("matches.date", "<", today),
+            eb("matches.status", "=", "cancelled"),
+          ]),
+        );
       } else if (filters.type === "upcoming") {
-        query = query.where("matches.date", ">=", today);
+        query = query
+          .where("matches.date", ">=", today)
+          .where("matches.status", "!=", "cancelled");
       }
     }
 
