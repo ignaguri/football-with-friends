@@ -27,7 +27,7 @@ function MatchTable({
     }
     if (match.status === "completed") {
       return (
-        <Badge variant="played" className="ml-2">
+        <Badge variant="success" className="ml-2">
           {t("status.played")}
         </Badge>
       );

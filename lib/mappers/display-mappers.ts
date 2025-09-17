@@ -3,7 +3,14 @@
 
 import { formatDisplayDateTime } from "@/lib/utils/timezone";
 
-import type { Match, MatchDetails, Signup, Location } from "@/lib/domain/types";
+import type {
+  Match,
+  MatchDetails,
+  Signup,
+  Location,
+  MatchStatus,
+  PlayerStatus,
+} from "@/lib/domain/types";
 
 // Display types for frontend components
 export interface MatchDisplay {
@@ -11,7 +18,7 @@ export interface MatchDisplay {
   name: string;
   date: string;
   time: string;
-  status: string;
+  status: MatchStatus;
   courtNumber: string;
   courtName?: string;
   courtId?: string;
@@ -34,7 +41,7 @@ export interface PlayerDisplay {
   id: string;
   name: string;
   email: string;
-  status: string;
+  status: PlayerStatus;
   isGuest: boolean;
   ownerEmail: string;
   guestName: string;
@@ -47,7 +54,7 @@ export interface MatchMetaDisplay {
   date: string;
   time: string;
   courtNumber: string;
-  status: string;
+  status: MatchStatus;
   costCourt: string;
   costShirts: string;
 }

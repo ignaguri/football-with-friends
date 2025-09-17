@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
+import { useMemo } from "react";
+
+import type { MatchStatus } from "@/lib/domain/types";
 
 interface User {
   name?: string | null;
@@ -27,7 +30,7 @@ interface MatchActionsProps {
   isCancelled: boolean;
   spotsLeft: number;
   isSigningUp: boolean;
-  matchStatus: string;
+  matchStatus: MatchStatus;
   onJoin: () => void;
   onCancel: () => void;
   onAddGuest: () => void;
@@ -49,29 +52,35 @@ export function MatchActions({
   // Check if match is in a state where actions should be disabled
   const isMatchFinished =
     matchStatus === "cancelled" || matchStatus === "completed";
+
+  // Memoized display logic for better readability
+  const titleText = useMemo(() => {
+    if (isMatchFinished) {
+      return matchStatus === "cancelled"
+        ? t("status.cancelled")
+        : t("status.played");
+    }
+    return isPlayerInMatch ? t("actions.in") : t("actions.wantToPlay");
+  }, [isMatchFinished, matchStatus, isPlayerInMatch, t]);
+
+  const descriptionText = useMemo(() => {
+    if (isMatchFinished) {
+      return matchStatus === "cancelled"
+        ? t("matchDetail.matchCancelled")
+        : t("status.played");
+    }
+    if (isPlayerInMatch) {
+      return t("actions.cancelOrGuest");
+    }
+    return spotsLeft > 0
+      ? t("actions.spotsLeft", { count: spotsLeft })
+      : t("actions.matchFull");
+  }, [isMatchFinished, matchStatus, isPlayerInMatch, spotsLeft, t]);
   return (
     <div className="mt-8 flex w-full flex-col justify-center gap-2 rounded-lg border bg-card p-4 text-card-foreground shadow-xs md:flex-row md:items-center md:justify-between">
       <div className="text-center md:text-left">
-        <h2 className="text-xl font-bold">
-          {isMatchFinished
-            ? matchStatus === "cancelled"
-              ? t("status.cancelled")
-              : t("status.played")
-            : isPlayerInMatch
-              ? t("actions.in")
-              : t("actions.wantToPlay")}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {isMatchFinished
-            ? matchStatus === "cancelled"
-              ? t("matchDetail.matchCancelled")
-              : t("status.played")
-            : isPlayerInMatch
-              ? t("actions.cancelOrGuest")
-              : spotsLeft > 0
-                ? t("actions.spotsLeft", { count: spotsLeft })
-                : t("actions.matchFull")}
-        </p>
+        <h2 className="text-xl font-bold">{titleText}</h2>
+        <p className="text-sm text-muted-foreground">{descriptionText}</p>
       </div>
 
       {/* Hide all action buttons for finished matches */}
