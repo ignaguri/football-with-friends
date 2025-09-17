@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetMatch, useUpdateSignup } from "@/hooks/use-matches";
+import { useSession } from "@/lib/auth-client";
 import { capitalize, formatMatchTitle } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -45,6 +46,8 @@ export function PlayerDrawer({
 }: PlayerDrawerProps) {
   const t = useTranslations();
   const { data: matchData, isLoading, isError, error } = useGetMatch(matchId!);
+  const { data: session } = useSession();
+  const currentUser = session?.user;
 
   const { mutate: cancelPlayer, isPending: isCancelling } = useUpdateSignup();
 
@@ -125,18 +128,38 @@ export function PlayerDrawer({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {player.status !== "CANCELLED" ? (
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          disabled={isCancelling}
-                          onClick={() => handleCancelPlayer(player)}
-                        >
-                          {isCancelling
-                            ? t("playerDrawer.cancelling")
-                            : t("playerDrawer.cancelSpot")}
-                        </Button>
-                      ) : null}
+                      {player.status !== "CANCELLED" && currentUser && (
+                        <div className="flex items-center gap-2">
+                          {/* Admin can cancel anyone */}
+                          {currentUser.role === "admin" && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={isCancelling}
+                              onClick={() => handleCancelPlayer(player)}
+                            >
+                              {isCancelling
+                                ? t("playerDrawer.cancelling")
+                                : t("playerDrawer.cancelSpot")}
+                            </Button>
+                          )}
+                          {/* Guest owner can cancel their guests */}
+                          {currentUser.role !== "admin" &&
+                            player.isGuest &&
+                            player.ownerEmail === currentUser.email && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={isCancelling}
+                                onClick={() => handleCancelPlayer(player)}
+                              >
+                                {isCancelling
+                                  ? t("playerDrawer.cancelling")
+                                  : t("playerDrawer.cancelGuest")}
+                              </Button>
+                            )}
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

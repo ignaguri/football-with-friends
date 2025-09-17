@@ -23,6 +23,7 @@ import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 import type { MatchDisplay } from "@/lib/mappers/display-mappers";
 
@@ -139,6 +140,24 @@ export function MatchManagement({ className }: MatchManagementProps) {
     },
   ];
 
+  const handleCancelMatch = (match: MatchDisplay & { id: string }) => {
+    const updates = {
+      status: "cancelled" as const,
+    };
+
+    updateMatch(
+      { matchId: match.matchId, updates },
+      {
+        onSuccess: () => {
+          toast.success(t("organizer.matchCancelledSuccess"));
+        },
+        onError: (e: unknown) => {
+          // Error handling is done by the mutation
+        },
+      },
+    );
+  };
+
   const actions = [
     {
       label: t("organizer.viewMatch"),
@@ -163,6 +182,21 @@ export function MatchManagement({ className }: MatchManagementProps) {
       variant: "secondary" as const,
       onClick: (match: MatchDisplay & { id: string }) => startEdit(match),
       disabled: () => isDeleting || isUpdating,
+    },
+    {
+      label: t("organizer.cancelMatch"),
+      variant: "destructive" as const,
+      onClick: (match: MatchDisplay & { id: string }) => {
+        if (
+          confirm(
+            `Are you sure you want to cancel the match on ${match.date} at ${match.time}? This action cannot be undone.`,
+          )
+        ) {
+          handleCancelMatch(match);
+        }
+      },
+      disabled: (match: MatchDisplay & { id: string }) =>
+        isDeleting || isUpdating || match.status === "cancelled",
     },
     {
       label: t("organizer.delete"),
