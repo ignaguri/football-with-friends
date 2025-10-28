@@ -3,6 +3,7 @@
 import { EditMatchForm } from "@/app/organizer/edit-match-form";
 import { PlayerDrawer } from "@/app/organizer/player-drawer";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Sheet,
   SheetContent,
@@ -53,25 +54,33 @@ export function MatchManagement({ className }: MatchManagementProps) {
     null,
   );
 
-  const { editingItem, startEdit, cancelEdit, handleDelete } =
-    useCrudOperations<MatchDisplay & { id: string }>({
-      createItem: async () => {
-        throw new Error("Create not implemented for matches");
-      },
-      updateItem: async () => {
-        throw new Error("Update not implemented for matches");
-      },
-      deleteItem: (id: string) =>
-        new Promise((resolve, reject) => {
-          deleteMatch(id, {
-            onSuccess: () => resolve(),
-            onError: reject,
-          });
-        }),
-      successMessages: {
-        delete: t("organizer.deleteSuccess"),
-      },
-    });
+  const {
+    editingItem,
+    itemToDelete,
+    startEdit,
+    cancelEdit,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    deleteConfirmMessage,
+  } = useCrudOperations<MatchDisplay & { id: string }>({
+    createItem: async () => {
+      throw new Error("Create not implemented for matches");
+    },
+    updateItem: async () => {
+      throw new Error("Update not implemented for matches");
+    },
+    deleteItem: (id: string) =>
+      new Promise((resolve, reject) => {
+        deleteMatch(id, {
+          onSuccess: () => resolve(),
+          onError: reject,
+        });
+      }),
+    successMessages: {
+      delete: t("organizer.deleteSuccess"),
+    },
+  });
 
   function handleEditSave(updated: MatchDisplay) {
     // Convert MatchDisplay to UpdateMatchData format
@@ -80,6 +89,7 @@ export function MatchManagement({ className }: MatchManagementProps) {
       courtId: updated.courtId,
       date: updated.date,
       time: updated.time,
+      maxPlayers: updated.maxPlayers,
       costPerPlayer: updated.costCourt || undefined,
       shirtCost: updated.costShirts || undefined,
     };
@@ -208,7 +218,7 @@ export function MatchManagement({ className }: MatchManagementProps) {
     {
       label: t("organizer.delete"),
       variant: "destructive" as const,
-      onClick: (match: MatchDisplay & { id: string }) => handleDelete(match),
+      onClick: (match: MatchDisplay & { id: string }) => requestDelete(match),
       disabled: () => isDeleting || isUpdating,
     },
     {
@@ -301,6 +311,17 @@ export function MatchManagement({ className }: MatchManagementProps) {
         onOpenChange={(isOpen) => {
           if (!isOpen) setPlayerDrawerMatchId(null);
         }}
+      />
+
+      <ConfirmDialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => !open && cancelDelete()}
+        title={t("shared.confirmDelete")}
+        description={deleteConfirmMessage}
+        confirmText={t("shared.delete")}
+        cancelText={t("shared.cancel")}
+        onConfirm={confirmDelete}
+        variant="destructive"
       />
     </div>
   );

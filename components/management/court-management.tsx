@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -72,11 +73,15 @@ export function CourtManagement({ className }: CourtManagementProps) {
 
   const {
     editingItem,
+    itemToDelete,
     startEdit,
     cancelEdit,
     handleCreate,
     handleUpdate,
-    handleDelete,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    deleteConfirmMessage,
   } = useCrudOperations({
     createItem: (values: CourtFormValues) =>
       new Promise<Court>((resolve, reject) => {
@@ -197,7 +202,7 @@ export function CourtManagement({ className }: CourtManagementProps) {
     {
       label: t("courts.delete"),
       variant: "destructive" as const,
-      onClick: handleDelete,
+      onClick: requestDelete,
       disabled: () => deleteCourtMutation.isPending,
     },
   ];
@@ -448,6 +453,17 @@ export function CourtManagement({ className }: CourtManagementProps) {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => !open && cancelDelete()}
+        title={t("shared.confirmDelete")}
+        description={deleteConfirmMessage}
+        confirmText={t("shared.delete")}
+        cancelText={t("shared.cancel")}
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }
