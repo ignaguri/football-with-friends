@@ -1,6 +1,16 @@
 {
-  "name": "Futbol con los pibes",
+  "name": "Fútbol con los pibes",
   "short_name": "Fulbo",
+  "description": "Organize, join, and manage your football matches with friends and local community",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "hsl(var(--background))",
+  "theme_color": "hsl(var(--primary))",
+  "orientation": "portrait-primary",
+  "categories": ["sports", "social", "lifestyle"],
+  "lang": "en",
+  "dir": "auto",
+  "scope": "/",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -13,9 +23,84 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home screen showing upcoming matches"
+    },
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop view of match listings"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Match",
+      "short_name": "New Match",
+      "description": "Create a new football match",
+      "url": "/add-match",
+      "icons": [
+        {
+          "src": "/icons/new-match.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "My Matches",
+      "short_name": "My Matches",
+      "description": "View my upcoming matches",
+      "url": "/matches?filter=mine",
+      "icons": [
+        {
+          "src": "/icons/my-matches.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Browse Matches",
+      "short_name": "Browse",
+      "description": "Browse all available matches",
+      "url": "/matches",
+      "icons": [
+        {
+          "src": "/icons/browse-matches.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }

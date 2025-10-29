@@ -71,16 +71,6 @@ export async function POST(
       try {
         await matchService.addGuestPlayer(matchId, guestData, user);
 
-        captureMessage("Guest successfully added to match", {
-          level: "info",
-          extra: {
-            matchId,
-            guestName,
-            ownerEmail,
-            ownerName,
-          },
-        });
-
         return new Response("OK", { status: 200 });
       } catch (guestError) {
         captureException(guestError, {
@@ -116,15 +106,6 @@ export async function POST(
 
       try {
         await matchService.signUpUser(matchId, user, playerData);
-
-        captureMessage("User successfully signed up for match", {
-          level: "info",
-          extra: {
-            matchId,
-            playerEmail: playerData.playerEmail,
-            playerName: playerData.playerName,
-          },
-        });
 
         return new Response("OK", { status: 200 });
       } catch (signupError) {

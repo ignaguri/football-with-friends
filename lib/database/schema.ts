@@ -83,6 +83,72 @@ export interface UserTable {
   updatedAt: number;
 }
 
+// Push notification tables
+export interface PushSubscriptionsTable {
+  id: Generated<string>;
+  user_id: string;
+  endpoint: string;
+  p256dh_key: string;
+  auth_key: string;
+  user_agent: string | null;
+  browser_info: string | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+  last_used: ColumnType<Date, string | undefined, string>;
+  active: boolean;
+  vapid_subject: string | null;
+}
+
+export interface NotificationPreferencesTable {
+  id: Generated<string>;
+  user_id: string;
+  match_reminders: boolean;
+  match_updates: boolean;
+  player_changes: boolean;
+  new_matches: boolean;
+  match_cancelled: boolean;
+  reminder_times: string; // JSON array
+  quiet_hours_start: number;
+  quiet_hours_end: number;
+  timezone: string;
+  location_radius_km: number;
+  preferred_locations: string | null; // JSON array
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
+export interface NotificationQueueTable {
+  id: Generated<string>;
+  user_id: string;
+  match_id: string | null;
+  notification_type: string;
+  title: string;
+  body: string;
+  image_url: string | null;
+  actions: string | null; // JSON array
+  data: string | null; // JSON object
+  scheduled_for: string; // ISO date string
+  sent_at: string | null; // ISO date string
+  failed_at: string | null; // ISO date string
+  failure_reason: string | null;
+  retry_count: number;
+  max_retries: number;
+  priority: "low" | "normal" | "high";
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface NotificationHistoryTable {
+  id: Generated<string>;
+  user_id: string;
+  match_id: string | null;
+  notification_type: string;
+  title: string;
+  body: string;
+  sent_at: string; // ISO date string
+  clicked_at: string | null; // ISO date string
+  dismissed_at: string | null; // ISO date string
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -91,6 +157,10 @@ export interface Database {
   signups: SignupsTable;
   match_invitations: MatchInvitationsTable;
   user: UserTable;
+  push_subscriptions: PushSubscriptionsTable;
+  notification_preferences: NotificationPreferencesTable;
+  notification_queue: NotificationQueueTable;
+  notification_history: NotificationHistoryTable;
 }
 
 // SQLite system tables used by migrations and database introspection
@@ -134,3 +204,21 @@ export type CourtUpdate = Updateable<CourtsTable>;
 export type MatchInvitation = Selectable<MatchInvitationsTable>;
 export type NewMatchInvitation = Insertable<MatchInvitationsTable>;
 export type MatchInvitationUpdate = Updateable<MatchInvitationsTable>;
+
+export type PushSubscription = Selectable<PushSubscriptionsTable>;
+export type NewPushSubscription = Insertable<PushSubscriptionsTable>;
+export type PushSubscriptionUpdate = Updateable<PushSubscriptionsTable>;
+
+export type NotificationPreferences = Selectable<NotificationPreferencesTable>;
+export type NewNotificationPreferences =
+  Insertable<NotificationPreferencesTable>;
+export type NotificationPreferencesUpdate =
+  Updateable<NotificationPreferencesTable>;
+
+export type NotificationQueue = Selectable<NotificationQueueTable>;
+export type NewNotificationQueue = Insertable<NotificationQueueTable>;
+export type NotificationQueueUpdate = Updateable<NotificationQueueTable>;
+
+export type NotificationHistory = Selectable<NotificationHistoryTable>;
+export type NewNotificationHistory = Insertable<NotificationHistoryTable>;
+export type NotificationHistoryUpdate = Updateable<NotificationHistoryTable>;
