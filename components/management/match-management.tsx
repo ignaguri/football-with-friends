@@ -1,7 +1,26 @@
 "use client";
 
+import { ExternalLink, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import React, { useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import type { MatchDisplay } from "@/lib/mappers/display-mappers";
+
+import { ManagementTable } from "./management-table-simple";
 import { EditMatchForm } from "@/app/organizer/edit-match-form";
 import { PlayerDrawer } from "@/app/organizer/player-drawer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -11,6 +30,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useCrudOperations } from "@/hooks/use-crud-operations";
 import {
   useGetMatches,
@@ -19,15 +39,6 @@ import {
 } from "@/hooks/use-matches";
 import { useSession } from "@/lib/auth-client";
 import { formatDisplayDate } from "@/lib/utils/timezone";
-import { ExternalLink } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import React, { useState } from "react";
-import { toast } from "sonner";
-
-import type { MatchDisplay } from "@/lib/mappers/display-mappers";
-
-import { ManagementTable } from "./management-table-simple";
 
 interface MatchManagementProps {
   className?: string;
@@ -44,7 +55,8 @@ export function MatchManagement({ className }: MatchManagementProps) {
     isLoading: isLoadingMatches,
     error: matchesError,
   } = useGetMatches();
-  const { mutate: deleteMatch, isPending: isDeleting } = useDeleteMatch();
+  const { mutateAsync: deleteMatchMutation, isPending: isDeleting } =
+    useDeleteMatch();
   const { mutate: updateMatch, isPending: isUpdating } = useUpdateMatch();
 
   const matches = matchesData?.matches || [];
@@ -52,26 +64,58 @@ export function MatchManagement({ className }: MatchManagementProps) {
   const [playerDrawerMatchId, setPlayerDrawerMatchId] = useState<string | null>(
     null,
   );
+  const [cancelDialogMatch, setCancelDialogMatch] = useState<
+    (MatchDisplay & { id: string }) | null
+  >(null);
+  const [cancellingMatchId, setCancellingMatchId] = useState<string | null>(
+    null,
+  );
+  const [deletingMatchId, setDeletingMatchId] = useState<string | null>(null);
 
-  const { editingItem, startEdit, cancelEdit, handleDelete } =
-    useCrudOperations<MatchDisplay & { id: string }>({
-      createItem: async () => {
-        throw new Error("Create not implemented for matches");
-      },
-      updateItem: async () => {
-        throw new Error("Update not implemented for matches");
-      },
-      deleteItem: (id: string) =>
-        new Promise((resolve, reject) => {
-          deleteMatch(id, {
-            onSuccess: () => resolve(),
-            onError: reject,
-          });
-        }),
-      successMessages: {
-        delete: t("organizer.deleteSuccess"),
-      },
-    });
+  const emptyStateComponent = (
+    <div className="flex flex-col items-center justify-center py-8 space-y-4">
+      <div className="rounded-full bg-muted p-3">
+        <Plus className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <div className="text-center space-y-2">
+        <h3 className="text-sm font-medium">{t("organizer.noMatchesTitle")}</h3>
+        <p className="text-sm text-muted-foreground">
+          {t("organizer.noMatchesDescription")}
+        </p>
+      </div>
+      <Button asChild>
+        <a href="/add-match">
+          <Plus className="mr-2 h-4 w-4" />
+          {t("organizer.createFirstMatch")}
+        </a>
+      </Button>
+    </div>
+  );
+
+  const { editingItem, startEdit, cancelEdit } = useCrudOperations<
+    MatchDisplay & { id: string }
+  >({
+    createItem: async () => {
+      throw new Error("Create not implemented for matches");
+    },
+    updateItem: async () => {
+      throw new Error("Update not implemented for matches");
+    },
+    deleteItem: async () => {
+      throw new Error("Delete not implemented for matches");
+    },
+  });
+
+  const handleDeleteMatch = (match: MatchDisplay & { id: string }) => {
+    if (confirm(t("organizer.deleteMatchConfirm"))) {
+      setDeletingMatchId(match.matchId);
+      deleteMatchMutation(match.matchId, {
+        onSettled: () => {
+          setDeletingMatchId(null);
+        },
+      });
+    }
+  };
 
   function handleEditSave(updated: MatchDisplay) {
     // Convert MatchDisplay to UpdateMatchData format
@@ -141,6 +185,7 @@ export function MatchManagement({ className }: MatchManagementProps) {
   ];
 
   const handleCancelMatch = (match: MatchDisplay & { id: string }) => {
+    setCancellingMatchId(match.matchId);
     const updates = {
       status: "cancelled" as const,
     };
@@ -150,75 +195,112 @@ export function MatchManagement({ className }: MatchManagementProps) {
       {
         onSuccess: () => {
           toast.success(t("organizer.matchCancelledSuccess"));
+          setCancellingMatchId(null);
         },
         onError: (e: unknown) => {
-          // Error handling is done by the mutation
+          setCancellingMatchId(null);
         },
       },
     );
   };
 
-  const actions = [
-    {
-      label: t("organizer.viewMatch"),
-      variant: "outline" as const,
-      onClick: (match: MatchDisplay & { id: string }) =>
-        router.push(`/matches/${encodeURIComponent(match.matchId)}`),
-      render: (match: MatchDisplay & { id: string }) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            router.push(`/matches/${encodeURIComponent(match.matchId)}`)
-          }
-        >
-          <ExternalLink className="h-4 w-4 sm:mr-1" />
-          <span className="hidden sm:block">{t("organizer.viewMatch")}</span>
-        </Button>
-      ),
-    },
-    {
-      label: t("organizer.edit"),
-      variant: "secondary" as const,
-      onClick: (match: MatchDisplay & { id: string }) => startEdit(match),
-      disabled: (match: MatchDisplay & { id: string }) =>
-        isDeleting ||
-        isUpdating ||
-        match.status === "cancelled" ||
-        match.status === "completed",
-    },
-    {
-      label: t("organizer.cancelMatch"),
-      variant: "destructive" as const,
-      onClick: (match: MatchDisplay & { id: string }) => {
-        if (
-          confirm(
-            t("organizer.cancelMatchConfirm", {
-              date: match.date,
-              time: match.time,
-            }),
-          )
-        ) {
-          handleCancelMatch(match);
-        }
+  const handleCancelDialogConfirm = () => {
+    if (cancelDialogMatch) {
+      handleCancelMatch(cancelDialogMatch);
+      setCancelDialogMatch(null);
+    }
+  };
+
+  const handleCancelDialogCancel = () => {
+    setCancelDialogMatch(null);
+  };
+
+  const actions = useMemo(
+    () => [
+      {
+        label: t("organizer.viewMatch"),
+        variant: "outline" as const,
+        onClick: (match: MatchDisplay & { id: string }) =>
+          router.push(`/matches/${encodeURIComponent(match.matchId)}`),
+        render: (match: MatchDisplay & { id: string }) => (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              router.push(`/matches/${encodeURIComponent(match.matchId)}`)
+            }
+          >
+            <ExternalLink className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:block">{t("organizer.viewMatch")}</span>
+          </Button>
+        ),
       },
-      disabled: (match: MatchDisplay & { id: string }) =>
-        isDeleting || isUpdating || match.status === "cancelled",
-    },
-    {
-      label: t("organizer.delete"),
-      variant: "destructive" as const,
-      onClick: (match: MatchDisplay & { id: string }) => handleDelete(match),
-      disabled: () => isDeleting || isUpdating,
-    },
-    {
-      label: t("organizer.viewPlayers"),
-      variant: "outline" as const,
-      onClick: (match: MatchDisplay & { id: string }) =>
-        setPlayerDrawerMatchId(match.matchId),
-      disabled: () => isDeleting || isUpdating,
-    },
-  ];
+      {
+        label: t("organizer.edit"),
+        variant: "secondary" as const,
+        onClick: (match: MatchDisplay & { id: string }) => startEdit(match),
+        disabled: (match: MatchDisplay & { id: string }) =>
+          isDeleting ||
+          isUpdating ||
+          match.status === "cancelled" ||
+          match.status === "completed",
+        tooltip: (match: MatchDisplay & { id: string }) => {
+          if (match.status === "cancelled")
+            return t("organizer.cannotEditCancelled");
+          if (match.status === "completed")
+            return t("organizer.cannotEditCompleted");
+          if (isDeleting || isUpdating)
+            return t("organizer.cannotEditWhileProcessing");
+          return null;
+        },
+      },
+      {
+        label: t("organizer.cancelMatch"),
+        variant: "destructive" as const,
+        onClick: (match: MatchDisplay & { id: string }) => {
+          setCancelDialogMatch(match);
+        },
+        disabled: (match: MatchDisplay & { id: string }) =>
+          cancellingMatchId === match.matchId || match.status === "cancelled",
+        isLoading: (match: MatchDisplay & { id: string }) =>
+          cancellingMatchId === match.matchId,
+        tooltip: (match: MatchDisplay & { id: string }) => {
+          if (match.status === "cancelled")
+            return t("organizer.cannotCancelCancelled");
+          if (cancellingMatchId === match.matchId)
+            return t("organizer.cancellingMatch");
+          return null;
+        },
+      },
+      {
+        label: t("organizer.delete"),
+        variant: "destructive" as const,
+        onClick: (match: MatchDisplay & { id: string }) =>
+          handleDeleteMatch(match),
+        disabled: (match: MatchDisplay & { id: string }) =>
+          deletingMatchId === match.matchId,
+        isLoading: (match: MatchDisplay & { id: string }) =>
+          deletingMatchId === match.matchId,
+      },
+      {
+        label: t("organizer.viewPlayers"),
+        variant: "outline" as const,
+        onClick: (match: MatchDisplay & { id: string }) =>
+          setPlayerDrawerMatchId(match.matchId),
+        disabled: () => isDeleting || isUpdating,
+      },
+    ],
+    [
+      t,
+      isDeleting,
+      isUpdating,
+      startEdit,
+      handleDeleteMatch,
+      handleCancelMatch,
+      setPlayerDrawerMatchId,
+      router,
+    ],
+  );
 
   if (isPending || isLoadingMatches) {
     return (
@@ -259,49 +341,84 @@ export function MatchManagement({ className }: MatchManagementProps) {
   }
 
   return (
-    <div className={className}>
-      <div className="mt-4 overflow-x-auto rounded-lg border bg-white shadow dark:bg-gray-900">
-        <ManagementTable
-          items={matches.map((match) => ({ ...match, id: match.matchId }))}
-          columns={columns}
-          actions={actions}
-          emptyMessage={t("organizer.noMatches")}
+    <TooltipProvider>
+      <div className={className}>
+        <div className="mt-4 overflow-x-auto rounded-lg border bg-white shadow dark:bg-gray-900">
+          <ManagementTable
+            items={matches.map((match) => ({ ...match, id: match.matchId }))}
+            columns={columns}
+            actions={actions}
+            emptyMessage={t("organizer.noMatches")}
+            emptyStateComponent={emptyStateComponent}
+          />
+        </div>
+
+        {/* Edit Match Sheet */}
+        <Sheet
+          open={!!editingItem}
+          onOpenChange={(open) => {
+            if (!open) cancelEdit();
+          }}
+        >
+          <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
+            <SheetHeader className="pb-4">
+              <SheetTitle>{t("organizer.editMatch")}</SheetTitle>
+              <SheetDescription>
+                {t("organizer.editMatchDesc")}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="overflow-y-auto flex-1">
+              {editingItem && (
+                <EditMatchForm
+                  match={editingItem}
+                  onSave={handleEditSave}
+                  onCancel={cancelEdit}
+                  isSaving={isUpdating}
+                />
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Player Drawer */}
+        <PlayerDrawer
+          matchId={playerDrawerMatchId}
+          isOpen={!!playerDrawerMatchId}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setPlayerDrawerMatchId(null);
+          }}
         />
+
+        {/* Cancel Match Confirmation Dialog */}
+        <AlertDialog
+          open={!!cancelDialogMatch}
+          onOpenChange={(open) => {
+            if (!open) setCancelDialogMatch(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("organizer.cancelMatch")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {cancelDialogMatch
+                  ? t("organizer.cancelMatchConfirm", {
+                      date: cancelDialogMatch.date,
+                      time: cancelDialogMatch.time,
+                    })
+                  : ""}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={handleCancelDialogCancel}>
+                {t("shared.cancel")}
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleCancelDialogConfirm}>
+                {t("organizer.cancelMatch")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
-
-      {/* Edit Match Sheet */}
-      <Sheet
-        open={!!editingItem}
-        onOpenChange={(open) => {
-          if (!open) cancelEdit();
-        }}
-      >
-        <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
-          <SheetHeader className="pb-4">
-            <SheetTitle>{t("organizer.editMatch")}</SheetTitle>
-            <SheetDescription>{t("organizer.editMatchDesc")}</SheetDescription>
-          </SheetHeader>
-          <div className="overflow-y-auto flex-1">
-            {editingItem && (
-              <EditMatchForm
-                match={editingItem}
-                onSave={handleEditSave}
-                onCancel={cancelEdit}
-                isSaving={isUpdating}
-              />
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Player Drawer */}
-      <PlayerDrawer
-        matchId={playerDrawerMatchId}
-        isOpen={!!playerDrawerMatchId}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setPlayerDrawerMatchId(null);
-        }}
-      />
-    </div>
+    </TooltipProvider>
   );
 }

@@ -1,14 +1,14 @@
 "use client";
 
+import { ShareDrawer } from "./share-drawer";
 import { CalendarDownload } from "@/components/calendar-download";
 import { capitalize } from "@/lib/utils";
-
-import { ShareDrawer } from "./share-drawer";
 
 interface MatchHeaderProps {
   matchTitle: string;
   matchMeta: { date: string; time: string };
   matchUrl: string;
+  location?: string;
   isShareDrawerOpen: boolean;
   onShareDrawerOpenChange: (open: boolean) => void;
   shareText: string;
@@ -18,6 +18,7 @@ export function MatchHeader({
   matchTitle,
   matchMeta,
   matchUrl,
+  location,
   isShareDrawerOpen,
   onShareDrawerOpenChange,
   shareText,
@@ -29,6 +30,7 @@ export function MatchHeader({
           matchMeta={matchMeta}
           matchTitle={matchTitle}
           matchUrl={matchUrl}
+          location={location}
         />
         <ShareDrawer
           open={isShareDrawerOpen}

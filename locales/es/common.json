@@ -68,7 +68,8 @@
     "cancelled": "Cancelaste tu lugar."
   },
   "players": {
-    "updating": "Actualizando jugadores..."
+    "updating": "Actualizando jugadores...",
+    "noPlayers": "Aún no hay jugadores anotados"
   },
   "guest": {
     "title": "Anotar invitado",
@@ -82,7 +83,8 @@
     "trigger": "Ya pagué",
     "title": "Si ya pagaste, podés avisarle al organizador por WhatsApp",
     "send": "Mandar mensaje por WhatsApp",
-    "sent": "Ya mandé el mensaje"
+    "sent": "Ya mandé el mensaje",
+    "whatsappMessage": "Hola! Ya pagué mi partido para el {date} - {name}"
   },
   "rules": {
     "title": "Reglas e Información",
@@ -136,7 +138,16 @@
     "cancelMatch": "Cancelar Partido",
     "cancelMatchConfirm": "¿Estás seguro de que querés cancelar el partido del {date} a las {time}? Esta acción no se puede deshacer.",
     "matchCancelledSuccess": "Partido cancelado exitosamente",
-    "noMatches": "No se encontraron partidos"
+    "deleteMatchConfirm": "¿Estás seguro de que querés eliminar este partido? Esta acción no se puede deshacer.",
+    "noMatches": "No se encontraron partidos",
+    "cannotEditCancelled": "No se pueden editar partidos cancelados",
+    "cannotEditCompleted": "No se pueden editar partidos completados",
+    "cannotEditWhileProcessing": "No se puede editar mientras otra operación está en progreso",
+    "cannotCancelCancelled": "El partido ya está cancelado",
+    "cancellingMatch": "Cancelando partido...",
+    "noMatchesTitle": "Aún no hay partidos",
+    "noMatchesDescription": "Comenzá creando tu primer partido de fútbol.",
+    "createFirstMatch": "Crear tu primer partido"
   },
   "signin": {
     "signInWithGoogle": "Iniciar sesión con Google",

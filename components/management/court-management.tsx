@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import type { Court, Location } from "@/lib/domain/types";
+
+import { ManagementTable } from "./management-table-simple";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,15 +37,16 @@ import {
 } from "@/hooks/use-courts";
 import { useCrudOperations } from "@/hooks/use-crud-operations";
 import { useGetLocations } from "@/hooks/use-locations";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-import type { Court, Location } from "@/lib/domain/types";
-
-import { ManagementTable } from "./management-table-simple";
+interface RawLocation {
+  id: string;
+  name: string;
+  address?: string;
+  coordinates?: string;
+  courtCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const courtSchema = z.object({
   locationId: z.string().min(1, "Location is required"),
@@ -62,7 +72,7 @@ export function CourtManagement({ className }: CourtManagementProps) {
   const deleteCourtMutation = useDeleteCourt();
 
   const locations: Location[] = (locationsData?.locations || []).map(
-    (loc: any) => ({
+    (loc: RawLocation): Location => ({
       ...loc,
       createdAt: new Date(loc.createdAt),
       updatedAt: new Date(loc.updatedAt),

@@ -1,16 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  useGetMatch,
-  useSignupPlayer,
-  useUpdateSignup,
-} from "@/hooks/use-matches";
-import { useSession } from "@/lib/auth-client";
-import { PLAYER_STATUSES } from "@/lib/types";
-import { formatMatchTitle } from "@/lib/utils";
-import { captureException } from "@/lib/utils/sentry";
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,6 +20,17 @@ import { MatchHeader } from "./components/match-header";
 import { MatchStats } from "./components/match-stats";
 import { NotifyOrganizerDialog } from "./components/notify-organizer-dialog";
 import { PlayersTable } from "./components/players-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  useGetMatch,
+  useSignupPlayer,
+  useUpdateSignup,
+} from "@/hooks/use-matches";
+import { useSession } from "@/lib/auth-client";
+import { PLAYER_STATUSES } from "@/lib/types";
+import { formatMatchTitle } from "@/lib/utils";
+import { captureException } from "@/lib/utils/sentry";
 
 export default function MatchClientPage() {
   const { matchId: rawMatchId } = useParams<{ matchId: string }>();
@@ -135,8 +135,13 @@ export default function MatchClientPage() {
     );
   }
 
-  const handleMarkAsPaid = useCallback(
-    (playerEmail: string, playerName: string) => {
+  const handleUpdatePlayerStatus = useCallback(
+    (
+      playerEmail: string,
+      playerName: string,
+      newStatus: string,
+      successMessage: string,
+    ) => {
       // Validate input
       if (!playerEmail || !playerName) {
         toast.error(t("shared.errorOccurred"));
@@ -154,11 +159,11 @@ export default function MatchClientPage() {
         {
           matchId,
           signupId: player.id,
-          status: PLAYER_STATUSES[0], // PAID
+          status: newStatus,
         },
         {
           onSuccess: () => {
-            toast.success(t("matchDetail.markPaidSuccess"));
+            toast.success(successMessage);
           },
           onError: (error) => {
             toast.error(error.message || t("shared.errorOccurred"));
@@ -169,38 +174,28 @@ export default function MatchClientPage() {
     [matchId, players, updateSignupMutation, t],
   );
 
-  const handleUnmarkAsPaid = useCallback(
+  const handleMarkAsPaid = useCallback(
     (playerEmail: string, playerName: string) => {
-      // Validate input
-      if (!playerEmail || !playerName) {
-        toast.error(t("shared.errorOccurred"));
-        return;
-      }
-
-      // Find the player's signup ID
-      const player = players.find((p) => p.email === playerEmail);
-      if (!player?.id) {
-        toast.error(t("shared.errorOccurred"));
-        return;
-      }
-
-      updateSignupMutation.mutate(
-        {
-          matchId,
-          signupId: player.id,
-          status: PLAYER_STATUSES[1], // PENDING
-        },
-        {
-          onSuccess: () => {
-            toast.success(t("matchDetail.unmarkPaidSuccess"));
-          },
-          onError: (error) => {
-            toast.error(error.message || t("shared.errorOccurred"));
-          },
-        },
+      handleUpdatePlayerStatus(
+        playerEmail,
+        playerName,
+        PLAYER_STATUSES[0],
+        t("matchDetail.markPaidSuccess"),
       );
     },
-    [matchId, players, updateSignupMutation, t],
+    [handleUpdatePlayerStatus, t],
+  );
+
+  const handleUnmarkAsPaid = useCallback(
+    (playerEmail: string, playerName: string) => {
+      handleUpdatePlayerStatus(
+        playerEmail,
+        playerName,
+        PLAYER_STATUSES[1],
+        t("matchDetail.unmarkPaidSuccess"),
+      );
+    },
+    [handleUpdatePlayerStatus, t],
   );
 
   function handleCancel() {
@@ -232,36 +227,14 @@ export default function MatchClientPage() {
 
   const handleRejoin = useCallback(
     (playerEmail: string, playerName: string) => {
-      // Validate input
-      if (!playerEmail || !playerName) {
-        toast.error(t("shared.errorOccurred"));
-        return;
-      }
-
-      // Find the player's signup ID
-      const player = players.find((p) => p.email === playerEmail);
-      if (!player?.id) {
-        toast.error(t("shared.errorOccurred"));
-        return;
-      }
-
-      updateSignupMutation.mutate(
-        {
-          matchId,
-          signupId: player.id,
-          status: PLAYER_STATUSES[1], // PENDING
-        },
-        {
-          onSuccess: () => {
-            toast.success(t("matchDetail.rejoinSuccess"));
-          },
-          onError: (error) => {
-            toast.error(error.message || t("shared.errorOccurred"));
-          },
-        },
+      handleUpdatePlayerStatus(
+        playerEmail,
+        playerName,
+        PLAYER_STATUSES[1],
+        t("matchDetail.rejoinSuccess"),
       );
     },
-    [matchId, players, updateSignupMutation, t],
+    [handleUpdatePlayerStatus, t],
   );
 
   function handleAddGuest(guestName?: string) {
@@ -343,7 +316,7 @@ export default function MatchClientPage() {
                     className="bg-blue-600 text-white hover:bg-blue-700"
                   >
                     <a
-                      href="http://paypal.me/federicolucero510"
+                      href={process.env.NEXT_PUBLIC_PAYPAL_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -422,7 +395,7 @@ export default function MatchClientPage() {
     onSortingChange: setSorting,
   });
 
-  const totalSpots = 10;
+  const totalSpots = matchData?.matchDetails?.maxPlayers || 10;
   const paidPlayersCount = players.filter(
     (p) => p.status === PLAYER_STATUSES[0],
   ).length;
@@ -452,6 +425,7 @@ export default function MatchClientPage() {
           time: matchMeta?.time || "",
         }}
         matchUrl={matchUrl}
+        location={matchData?.matchDetails?.location?.address}
         isShareDrawerOpen={isShareDrawerOpen}
         onShareDrawerOpenChange={setIsShareDrawerOpen}
         shareText={shareText}

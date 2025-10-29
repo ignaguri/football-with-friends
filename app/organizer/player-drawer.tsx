@@ -119,7 +119,7 @@ export function PlayerDrawer({
               </TableHeader>
               <TableBody>
                 {players.map((player) => (
-                  <TableRow key={player.email}>
+                  <TableRow key={player.id}>
                     <TableCell>{player.name}</TableCell>
                     <TableCell>{player.email}</TableCell>
                     <TableCell>

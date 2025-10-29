@@ -1,6 +1,16 @@
 "use client";
 
+import { Loader2, MoreHorizontal } from "lucide-react";
+import { useTranslations } from "next-intl";
+import React from "react";
+
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -9,12 +19,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import React from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Column<T> {
   key: keyof T | string;
   label: string;
-  render?: (item: T, value: any) => React.ReactNode;
+  render?: (item: T, value: unknown) => React.ReactNode;
   className?: string;
 }
 
@@ -30,6 +44,8 @@ interface Action<T> {
   size?: "default" | "sm" | "lg" | "icon";
   onClick: (item: T) => void;
   disabled?: (item: T) => boolean;
+  isLoading?: (item: T) => boolean;
+  tooltip?: (item: T) => string | null;
   className?: string;
 }
 
@@ -38,6 +54,7 @@ interface ManagementTableProps<T> {
   columns: Column<T>[];
   actions: Action<T>[];
   emptyMessage?: string;
+  emptyStateComponent?: React.ReactNode;
 }
 
 export function ManagementTable<T extends { id: string }>({
@@ -45,10 +62,18 @@ export function ManagementTable<T extends { id: string }>({
   columns,
   actions,
   emptyMessage = "No items found",
+  emptyStateComponent,
 }: ManagementTableProps<T>) {
-  function getValue(item: T, key: keyof T | string): any {
+  const t = useTranslations();
+
+  function getValue(item: T, key: keyof T | string): unknown {
     if (typeof key === "string" && key.includes(".")) {
-      return key.split(".").reduce((obj, k) => obj?.[k], item as any);
+      return key
+        .split(".")
+        .reduce(
+          (obj, k) => (obj as Record<string, unknown>)?.[k],
+          item as unknown,
+        );
     }
     return item[key as keyof T];
   }
@@ -61,7 +86,7 @@ export function ManagementTable<T extends { id: string }>({
             {columns.map((column, index) => (
               <TableHead key={index}>{column.label}</TableHead>
             ))}
-            {actions.length > 0 && <TableHead>Actions</TableHead>}
+            {actions.length > 0 && <TableHead>{t("shared.actions")}</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -70,7 +95,7 @@ export function ManagementTable<T extends { id: string }>({
               colSpan={columns.length + (actions.length > 0 ? 1 : 0)}
               className="text-center text-muted-foreground"
             >
-              {emptyMessage}
+              {emptyStateComponent || emptyMessage}
             </TableCell>
           </TableRow>
         </TableBody>
@@ -95,25 +120,81 @@ export function ManagementTable<T extends { id: string }>({
               const value = getValue(item, column.key);
               return (
                 <TableCell key={index} className={column.className}>
-                  {column.render ? column.render(item, value) : value}
+                  {column.render ? column.render(item, value) : String(value)}
                 </TableCell>
               );
             })}
             {actions.length > 0 && (
               <TableCell>
-                <div className="flex space-x-2">
-                  {actions.map((action, index) => (
-                    <Button
-                      key={index}
-                      variant={action.variant || "outline"}
-                      size={action.size || "sm"}
-                      onClick={() => action.onClick(item)}
-                      disabled={action.disabled?.(item) || false}
-                      className={action.className}
-                    >
-                      {action.label}
-                    </Button>
-                  ))}
+                {/* Desktop: Show all buttons inline */}
+                <div className="hidden md:flex space-x-2">
+                  {actions.map((action, index) => {
+                    const isDisabled = action.disabled?.(item) || false;
+                    const tooltip = action.tooltip?.(item);
+                    const button = (
+                      <Button
+                        key={index}
+                        variant={action.variant || "outline"}
+                        size={action.size || "sm"}
+                        onClick={() => action.onClick(item)}
+                        disabled={isDisabled}
+                        className={action.className}
+                      >
+                        {action.isLoading?.(item) && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        {action.label}
+                      </Button>
+                    );
+
+                    if (isDisabled && tooltip) {
+                      return (
+                        <Tooltip key={index}>
+                          <TooltipTrigger asChild>{button}</TooltipTrigger>
+                          <TooltipContent>{tooltip}</TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+
+                    return button;
+                  })}
+                </div>
+                {/* Mobile: Show dropdown menu */}
+                <div className="md:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {actions.map((action, index) => {
+                        const isDisabled =
+                          action.disabled?.(item) ||
+                          action.isLoading?.(item) ||
+                          false;
+                        const tooltip = action.tooltip?.(item);
+                        const label =
+                          tooltip && isDisabled
+                            ? `${action.label} (${tooltip})`
+                            : action.label;
+
+                        return (
+                          <DropdownMenuItem
+                            key={index}
+                            onClick={() => action.onClick(item)}
+                            disabled={isDisabled}
+                            className={action.className}
+                          >
+                            {action.isLoading?.(item) && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            {label}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </TableCell>
             )}
