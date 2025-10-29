@@ -1,5 +1,8 @@
 "use client";
 
+import { flexRender, type Table as TableType } from "@tanstack/react-table";
+import { useTranslations } from "next-intl";
+
 import {
   Table,
   TableBody,
@@ -8,8 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { flexRender, type Table as TableType } from "@tanstack/react-table";
-import { useTranslations } from "next-intl";
 
 interface PlayersTableProps<TData> {
   table: TableType<TData>;
@@ -67,6 +68,15 @@ export function PlayersTable<TData>({
           <TableRow>
             <TableCell colSpan={columnsCount} className="h-24 text-center">
               {t("players.updating")}
+            </TableCell>
+          </TableRow>
+        ) : table.getRowModel().rows.length === 0 ? (
+          <TableRow>
+            <TableCell
+              colSpan={columnsCount}
+              className="h-24 text-center text-muted-foreground"
+            >
+              {t("players.noPlayers")}
             </TableCell>
           </TableRow>
         ) : (

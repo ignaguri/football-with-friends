@@ -1,13 +1,14 @@
 #!/usr/bin/env tsx
 // Environment validation CLI tool
 
+import fs from "fs";
+import path from "path";
+
 import {
   validateEnvironment,
   getRequiredVariables,
   generateEnvTemplate,
 } from "@/lib/env/validator";
-import fs from "fs";
-import path from "path";
 
 // Colors for console output
 const colors = {

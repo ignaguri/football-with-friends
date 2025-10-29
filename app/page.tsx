@@ -1,12 +1,13 @@
 "use client";
 
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Suspense } from "react";
+
 import { SignInButton, SignInFallback } from "@/components/sign-in-btn";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "@/lib/auth-client";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { Suspense } from "react";
 
 const StaticContent = () => {
   const t = useTranslations("home");

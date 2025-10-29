@@ -4,11 +4,6 @@ import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
   serverExternalPackages: ["@libsql/client", "@libsql/kysely-libsql", "libsql"],
   webpack: (config) => {
     // Handle libsql native modules

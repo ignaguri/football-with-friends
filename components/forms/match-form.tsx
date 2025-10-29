@@ -1,5 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import type { Location, Court } from "@/lib/domain/types";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -22,13 +30,6 @@ import {
 import { useGetActiveCourtsByLocationId } from "@/hooks/use-courts";
 import { useGetLocations } from "@/hooks/use-locations";
 import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-import type { Location, Court } from "@/lib/domain/types";
 
 // Base schema for form values
 const createMatchFormSchema = () =>

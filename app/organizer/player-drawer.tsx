@@ -1,5 +1,11 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+
+import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,11 +27,6 @@ import {
 import { useGetMatch, useUpdateSignup } from "@/hooks/use-matches";
 import { useSession } from "@/lib/auth-client";
 import { capitalize, formatMatchTitle } from "@/lib/utils";
-import * as Sentry from "@sentry/nextjs";
-import { useTranslations } from "next-intl";
-import { toast } from "sonner";
-
-import type { PlayerDisplay } from "@/lib/mappers/display-mappers";
 
 interface PlayerDrawerProps {
   matchId: string | null;
@@ -130,7 +131,7 @@ export function PlayerDrawer({
               </TableHeader>
               <TableBody>
                 {players.map((player) => (
-                  <TableRow key={player.email}>
+                  <TableRow key={player.id}>
                     <TableCell>{player.name}</TableCell>
                     <TableCell>{player.email}</TableCell>
                     <TableCell>

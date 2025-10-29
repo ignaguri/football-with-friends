@@ -117,7 +117,6 @@ export interface CreateLocationData {
   courtCount?: number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateLocationData extends Partial<CreateLocationData> {}
 
 export interface CreateCourtData {
@@ -127,7 +126,6 @@ export interface CreateCourtData {
   isActive?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateCourtData extends Partial<CreateCourtData> {}
 
 export interface CreateMatchData {
@@ -157,7 +155,6 @@ export interface CreateSignupData {
   addedByUserId: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface UpdateSignupData
   extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId">> {}
 

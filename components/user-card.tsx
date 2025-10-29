@@ -1,5 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+
+import type { Session } from "@/lib/auth-types";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,11 +16,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { signOut, useSession } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-
-import type { Session } from "@/lib/auth-types";
 
 export default function UserCard(props: {
   session: Session | null;

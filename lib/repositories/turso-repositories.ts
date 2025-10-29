@@ -1,6 +1,5 @@
 // Turso/LibSQL implementation of repository interfaces using Kysely
 
-import { getDatabase } from "@/lib/database/connection";
 import { sql } from "kysely";
 import { nanoid } from "nanoid";
 
@@ -33,6 +32,8 @@ import type {
   SignupWithDetails,
   PlayerStatus,
 } from "@/lib/domain/types";
+
+import { getDatabase } from "@/lib/database/connection";
 
 // Helper function to generate IDs using nanoid
 function generateId(): string {

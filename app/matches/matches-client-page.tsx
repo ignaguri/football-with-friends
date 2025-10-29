@@ -1,12 +1,13 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { useGetMatches } from "@/hooks/use-matches";
-import { formatDisplayDate } from "@/lib/utils/timezone";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import type { MatchDisplay } from "@/lib/mappers/display-mappers";
+
+import { Badge } from "@/components/ui/badge";
+import { useGetMatches } from "@/hooks/use-matches";
+import { formatDisplayDate } from "@/lib/utils/timezone";
 
 function MatchTable({
   matches,

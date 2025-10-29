@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useTranslations } from "next-intl";
 
 interface NotifyOrganizerDialogProps {
   displayDate: string;
@@ -36,8 +37,11 @@ export function NotifyOrganizerDialog({
         </DialogHeader>
         <DialogFooter className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
           <a
-            href={`https://wa.me/4917662232065?text=${encodeURIComponent(
-              `Hola! Ya pagué mi partido para el ${displayDate} - ${userName}`,
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_ORGANIZER_WHATSAPP}?text=${encodeURIComponent(
+              t("notify.whatsappMessage", {
+                date: displayDate,
+                name: userName,
+              }),
             )}`}
             target="_blank"
             rel="noopener noreferrer"

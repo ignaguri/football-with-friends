@@ -1,7 +1,8 @@
-import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
+
+import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 
 // Get database configuration for authentication
 // Auth always needs a database, regardless of match data storage provider
@@ -66,13 +67,12 @@ export const auth = betterAuth({
   callbacks: {
     after: [
       {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         matcher(context: any) {
           return (
             context.path === "/sign-in/social" && context.method === "POST"
           );
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         handler(context: any) {
           // eslint-disable-next-line no-console
           console.log("🔐 Google OAuth callback triggered:", {

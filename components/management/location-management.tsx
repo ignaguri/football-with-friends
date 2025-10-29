@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import type { Location } from "@/lib/domain/types";
+
+import { ManagementTable } from "./management-table-simple";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
@@ -27,13 +36,16 @@ import {
   useUpdateLocation,
   useDeleteLocation,
 } from "@/hooks/use-locations";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-import { ManagementTable } from "./management-table-simple";
+interface RawLocation {
+  id: string;
+  name: string;
+  address?: string;
+  coordinates?: string;
+  courtCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 const locationSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -69,11 +81,13 @@ export function LocationManagement({
   const { mutate: updateLocation, isPending: isUpdating } = useUpdateLocation();
   const { mutate: deleteLocation, isPending: isDeleting } = useDeleteLocation();
 
-  const locations = (locationsData?.locations || []).map((loc: any) => ({
-    ...loc,
-    createdAt: new Date(loc.createdAt),
-    updatedAt: new Date(loc.updatedAt),
-  }));
+  const locations = (locationsData?.locations || []).map(
+    (loc: RawLocation): Location => ({
+      ...loc,
+      createdAt: new Date(loc.createdAt),
+      updatedAt: new Date(loc.updatedAt),
+    }),
+  );
 
   const {
     editingItem,
@@ -88,7 +102,7 @@ export function LocationManagement({
     deleteConfirmMessage,
   } = useCrudOperations({
     createItem: (values: LocationFormValues) =>
-      new Promise<any>((resolve, reject) => {
+      new Promise<Location>((resolve, reject) => {
         createLocation(values, {
           onSuccess: (data) => {
             onLocationChange?.();
@@ -98,7 +112,7 @@ export function LocationManagement({
         });
       }),
     updateItem: (id: string, values: LocationFormValues) =>
-      new Promise<any>((resolve, reject) => {
+      new Promise<Location>((resolve, reject) => {
         updateLocation(
           { locationId: id, updates: values },
           {
@@ -156,7 +170,7 @@ export function LocationManagement({
     {
       key: "address" as const,
       label: t("locations.address"),
-      render: (location: any) => location.address || "-",
+      render: (location: Location) => location.address || "-",
     },
     {
       key: "courtCount" as const,
@@ -175,7 +189,7 @@ export function LocationManagement({
     editForm.reset();
   };
 
-  const handleEditClick = (location: any) => {
+  const handleEditClick = (location: Location) => {
     startEdit(location);
     editForm.reset({
       name: location.name,

@@ -1,8 +1,9 @@
-import { getGoogleSheetsEnv } from "@/lib/env";
 import { google } from "googleapis";
 
 import type { MatchMetadata } from "@/lib/types";
 import type { sheets_v4 } from "googleapis";
+
+import { getGoogleSheetsEnv } from "@/lib/env";
 
 // Lazy load environment variables to avoid build-time errors
 let env: ReturnType<typeof getGoogleSheetsEnv> | null = null;

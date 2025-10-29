@@ -1,12 +1,11 @@
 // Service factory for dependency injection
 
+import { CourtService } from "./court-service";
+import { MatchService } from "./match-service";
 import {
   getRepositoryFactory,
   type AppRepositoryFactory,
 } from "@/lib/repositories/factory";
-
-import { CourtService } from "./court-service";
-import { MatchService } from "./match-service";
 
 export class ServiceFactory {
   public readonly matchService: MatchService;

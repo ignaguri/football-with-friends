@@ -1,10 +1,11 @@
-import { auth } from "@/lib/auth";
-import { matchDetailsToDisplay } from "@/lib/mappers/display-mappers";
-import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 
 import type { UpdateMatchData, User } from "@/lib/domain/types";
 import type { MatchDetailsDisplay } from "@/lib/mappers/display-mappers";
+
+import { auth } from "@/lib/auth";
+import { matchDetailsToDisplay } from "@/lib/mappers/display-mappers";
+import { getServiceFactory } from "@/lib/services/factory";
 
 export async function GET(
   _req: Request,

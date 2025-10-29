@@ -1,10 +1,3 @@
-import { auth } from "@/lib/auth";
-import { getServiceFactory } from "@/lib/services/factory";
-import {
-  captureMessage,
-  captureException,
-  setContext,
-} from "@/lib/utils/sentry";
 import { headers } from "next/headers";
 
 import type {
@@ -12,6 +5,14 @@ import type {
   CreateGuestSignupData,
   PlayerStatus,
 } from "@/lib/domain/types";
+
+import { auth } from "@/lib/auth";
+import { getServiceFactory } from "@/lib/services/factory";
+import {
+  captureMessage,
+  captureException,
+  setContext,
+} from "@/lib/utils/sentry";
 
 export async function POST(
   req: Request,

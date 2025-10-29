@@ -29,9 +29,14 @@ const BaseEnvSchema = z.object({
 
   // App URL configuration
   NEXT_PUBLIC_BASE_URL: z
-    .string()
     .url("NEXT_PUBLIC_BASE_URL must be a valid URL")
     .optional(),
+
+  // External service URLs
+  NEXT_PUBLIC_PAYPAL_URL: z
+    .url("NEXT_PUBLIC_PAYPAL_URL must be a valid URL")
+    .default("http://paypal.me/organizer-name"),
+  NEXT_PUBLIC_ORGANIZER_WHATSAPP: z.string().default("491234567890"),
 
   // Runtime environment
   NODE_ENV: z
@@ -52,7 +57,6 @@ const GoogleSheetsEnvSchema = z.object({
     .string()
     .min(1, "GOOGLE_SHEETS_ID is required when using Google Sheets storage"),
   GOOGLE_SERVICE_ACCOUNT_EMAIL: z
-    .string()
     .email("GOOGLE_SERVICE_ACCOUNT_EMAIL must be a valid email")
     .min(
       1,
@@ -81,7 +85,6 @@ const GoogleSheetsEnvSchema = z.object({
 // Turso database specific environment schema
 const TursoEnvSchema = z.object({
   TURSO_DATABASE_URL: z
-    .string()
     .url("TURSO_DATABASE_URL must be a valid URL")
     .refine(
       (url) =>
@@ -233,6 +236,10 @@ BETTER_AUTH_SECRET=your_32_character_or_longer_secret
 
 # App URL (optional)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
+
+# External Service URLs
+NEXT_PUBLIC_PAYPAL_URL=http://paypal.me/name-of-receiver
+NEXT_PUBLIC_ORGANIZER_WHATSAPP=49111111111
 
 # Sentry (optional)
 SENTRY_AUTH_TOKEN=your_sentry_token

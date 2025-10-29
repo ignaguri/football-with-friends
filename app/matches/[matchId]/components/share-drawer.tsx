@@ -1,5 +1,9 @@
 "use client";
 
+import { Share2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -12,9 +16,6 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { useToast } from "@/hooks/use-toast";
-import { Share2 } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 interface ShareDrawerProps {
   open: boolean;

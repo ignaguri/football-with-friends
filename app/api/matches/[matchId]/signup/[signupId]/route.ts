@@ -1,9 +1,10 @@
-import { auth } from "@/lib/auth";
-import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 import { z } from "zod";
 
 import type { User } from "@/lib/domain/types";
+
+import { auth } from "@/lib/auth";
+import { getServiceFactory } from "@/lib/services/factory";
 
 const updateSignupSchema = z.object({
   status: z.enum(["PAID", "PENDING", "CANCELLED"]),

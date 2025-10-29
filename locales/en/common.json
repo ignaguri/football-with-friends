@@ -67,7 +67,8 @@
     "cancelled": "You have cancelled your spot."
   },
   "players": {
-    "updating": "Updating players..."
+    "updating": "Updating players...",
+    "noPlayers": "No players signed up yet"
   },
   "guest": {
     "title": "Sign up a guest",
@@ -81,7 +82,8 @@
     "trigger": "I paid",
     "title": "If you already paid, you can notify the organizer via WhatsApp",
     "send": "Send WhatsApp message",
-    "sent": "I already sent the message"
+    "sent": "I already sent the message",
+    "whatsappMessage": "Hi! I already paid for the match on {date} - {name}"
   },
   "rules": {
     "title": "Rules & Info",
@@ -135,7 +137,16 @@
     "cancelMatch": "Cancel Match",
     "cancelMatchConfirm": "Are you sure you want to cancel the match on {date} at {time}? This action cannot be undone.",
     "matchCancelledSuccess": "Match cancelled successfully",
-    "noMatches": "No matches found"
+    "deleteMatchConfirm": "Are you sure you want to delete this match? This action cannot be undone.",
+    "noMatches": "No matches found",
+    "cannotEditCancelled": "Cannot edit cancelled matches",
+    "cannotEditCompleted": "Cannot edit completed matches",
+    "cannotEditWhileProcessing": "Cannot edit while another operation is in progress",
+    "cannotCancelCancelled": "Match is already cancelled",
+    "cancellingMatch": "Cancelling match...",
+    "noMatchesTitle": "No matches yet",
+    "noMatchesDescription": "Get started by creating your first football match.",
+    "createFirstMatch": "Create your first match"
   },
   "signin": {
     "signInWithGoogle": "Sign in with Google",

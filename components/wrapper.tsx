@@ -1,16 +1,5 @@
 "use client";
 
-import { MainNavigation } from "@/components/main-navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import UserCard from "@/components/user-card";
-import { useSession, signOut } from "@/lib/auth-client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +11,17 @@ import type { UserWithRole } from "@/lib/auth-types";
 import { LanguageSwitcher } from "./language-switcher";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
+import { MainNavigation } from "@/components/main-navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import UserCard from "@/components/user-card";
+import { useSession, signOut } from "@/lib/auth-client";
 
 export function Wrapper(props: { children: React.ReactNode }) {
   const t = useTranslations();
