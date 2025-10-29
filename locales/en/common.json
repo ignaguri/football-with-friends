@@ -235,6 +235,8 @@
     "updateError": "Failed to update item",
     "deleteError": "Failed to delete item",
     "deleteConfirm": "Are you sure you want to delete this item?",
+    "confirmDelete": "Confirm deletion",
+    "delete": "Delete",
     "error": "Error: {message}"
   },
   "status": {

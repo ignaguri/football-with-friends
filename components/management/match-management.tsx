@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Sheet,
   SheetContent,
@@ -124,6 +125,7 @@ export function MatchManagement({ className }: MatchManagementProps) {
       courtId: updated.courtId,
       date: updated.date,
       time: updated.time,
+      maxPlayers: updated.maxPlayers,
       costPerPlayer: updated.costCourt || undefined,
       shirtCost: updated.costShirts || undefined,
     };

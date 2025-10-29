@@ -21,6 +21,7 @@ import {
 import { useGetMatch, useUpdateSignup } from "@/hooks/use-matches";
 import { useSession } from "@/lib/auth-client";
 import { capitalize, formatMatchTitle } from "@/lib/utils";
+import * as Sentry from "@sentry/nextjs";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -59,9 +60,12 @@ export function PlayerDrawer({
 
   function handleCancelPlayer(player: PlayerDisplay) {
     if (!matchId || !player.id) {
-      console.error("Missing matchId or player ID:", {
-        matchId,
-        playerId: player.id,
+      Sentry.captureException(new Error("Missing matchId or player ID"), {
+        extra: {
+          matchId,
+          playerId: player.id,
+          playerEmail: player.email,
+        },
       });
       toast.error(t("playerDrawer.cancelError"));
       return;
@@ -78,7 +82,14 @@ export function PlayerDrawer({
           toast.success(t("playerDrawer.cancelSuccess", { name: player.name }));
         },
         onError: (e: unknown) => {
-          console.error("Error canceling player:", e);
+          Sentry.captureException(e, {
+            extra: {
+              matchId,
+              playerId: player.id,
+              playerEmail: player.email,
+              playerName: player.name,
+            },
+          });
           toast.error(
             e instanceof Error ? e.message : t("playerDrawer.cancelError"),
           );

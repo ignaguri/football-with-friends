@@ -10,6 +10,7 @@ import type { Location } from "@/lib/domain/types";
 
 import { ManagementTable } from "./management-table-simple";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -90,11 +91,15 @@ export function LocationManagement({
 
   const {
     editingItem,
+    itemToDelete,
     startEdit,
     cancelEdit,
     handleCreate,
     handleUpdate,
-    handleDelete,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    deleteConfirmMessage,
   } = useCrudOperations({
     createItem: (values: LocationFormValues) =>
       new Promise<Location>((resolve, reject) => {
@@ -203,7 +208,7 @@ export function LocationManagement({
     {
       label: t("organizer.delete"),
       variant: "destructive" as const,
-      onClick: handleDelete,
+      onClick: requestDelete,
       disabled: () => isDeleting,
     },
   ];
@@ -449,6 +454,17 @@ export function LocationManagement({
           </Form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => !open && cancelDelete()}
+        title={t("shared.confirmDelete")}
+        description={deleteConfirmMessage}
+        confirmText={t("shared.delete")}
+        cancelText={t("shared.cancel")}
+        onConfirm={confirmDelete}
+        variant="destructive"
+      />
     </div>
   );
 }

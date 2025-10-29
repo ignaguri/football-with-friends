@@ -238,6 +238,8 @@
     "updateError": "Error al actualizar elemento",
     "deleteError": "Error al eliminar elemento",
     "deleteConfirm": "¿Estás seguro de que querés eliminar este elemento?",
+    "confirmDelete": "Confirmar eliminación",
+    "delete": "Eliminar",
     "error": "Error: {message}"
   },
   "status": {
