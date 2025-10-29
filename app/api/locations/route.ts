@@ -1,6 +1,6 @@
-import { getRepositoryFactory } from "@/lib/repositories/factory";
-
 import type { NextRequest } from "next/server";
+
+import { getRepositoryFactory } from "@/lib/repositories/factory";
 
 // GET /api/locations: Returns all locations
 export async function GET() {

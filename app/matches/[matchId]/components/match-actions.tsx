@@ -1,5 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useMemo } from "react";
+
+import type { MatchStatus } from "@/lib/domain/types";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,10 +17,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useTranslations } from "next-intl";
-import { useMemo } from "react";
-
-import type { MatchStatus } from "@/lib/domain/types";
 
 interface User {
   name?: string | null;

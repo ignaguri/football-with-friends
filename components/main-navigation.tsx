@@ -1,3 +1,9 @@
+import { Menu } from "lucide-react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+import type { UserWithRole } from "@/lib/auth-types";
+
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -11,11 +17,6 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
-
-import type { UserWithRole } from "@/lib/auth-types";
 
 interface MainNavigationProps {
   user?: Pick<UserWithRole, "role">;

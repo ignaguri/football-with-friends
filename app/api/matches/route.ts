@@ -1,11 +1,12 @@
-import { auth } from "@/lib/auth";
-import { matchToDisplay } from "@/lib/mappers/display-mappers";
-import { getServiceFactory } from "@/lib/services/factory";
 import { headers } from "next/headers";
 import { z } from "zod";
 
 import type { MatchFilters, CreateMatchData, User } from "@/lib/domain/types";
 import type { MatchDisplay } from "@/lib/mappers/display-mappers";
+
+import { auth } from "@/lib/auth";
+import { matchToDisplay } from "@/lib/mappers/display-mappers";
+import { getServiceFactory } from "@/lib/services/factory";
 
 // GET /api/matches: Returns all matches
 export async function GET(req: Request) {

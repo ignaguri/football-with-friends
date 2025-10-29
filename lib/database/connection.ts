@@ -1,10 +1,11 @@
 // Database connection utility for Kysely with Turso/LibSQL
 
-import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { Kysely } from "kysely";
 
 import type { Database, ExtendedDatabase } from "./schema";
+
+import { env, getTursoEnv, getLocalDbEnv } from "@/lib/env";
 
 // Database connection configuration
 export function createDatabase(): Kysely<Database> {

@@ -1,6 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { addHours } from "date-fns";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,11 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_TIMEZONE } from "@/lib/utils/timezone";
-import { addHours } from "date-fns";
-import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
 
 interface CalendarDownloadProps {
   matchMeta: {
@@ -60,7 +61,8 @@ function getGoogleCalendarUrl({
   matchUrl: string;
   location?: string;
 }) {
-  const defaultLocation = 'Soccarena @https://maps.app.goo.gl/CsABKszfiMpJ7eaZA';
+  const defaultLocation =
+    "Soccarena @https://maps.app.goo.gl/CsABKszfiMpJ7eaZA";
   const locationParam = location || defaultLocation;
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Fulbito&dates=${startDate}T${startTime}00/${endDate}T${endTime}00&details=Football match - ${matchTitle}%5Cn${matchUrl}&location=${encodeURIComponent(locationParam)}`;
 }
@@ -74,7 +76,9 @@ export function CalendarDownload({
 }: CalendarDownloadProps) {
   const t = useTranslations();
   const [showIOSDialog, setShowIOSDialog] = useState(false);
-  const [pendingCalendarUrl, setPendingCalendarUrl] = useState<string | null>(null);
+  const [pendingCalendarUrl, setPendingCalendarUrl] = useState<string | null>(
+    null,
+  );
 
   function handleAddToCalendar() {
     if (!matchMeta?.date || !matchMeta?.time) return;
@@ -110,7 +114,7 @@ export function CalendarDownload({
       `DTEND:${endDate}T${endTime}00`,
       `SUMMARY:Fulbito`,
       `DESCRIPTION:Football match - ${matchTitle}`,
-      `LOCATION:${location || 'Soccarena @https://maps.app.goo.gl/CsABKszfiMpJ7eaZA'}`,
+      `LOCATION:${location || "Soccarena @https://maps.app.goo.gl/CsABKszfiMpJ7eaZA"}`,
       `URL:${matchUrl}`,
       "END:VEVENT",
       "END:VCALENDAR",
@@ -157,7 +161,7 @@ export function CalendarDownload({
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      }, 0);
+    }, 0);
   }
 
   function handleIOSDialogConfirm() {

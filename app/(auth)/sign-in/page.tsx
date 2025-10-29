@@ -1,11 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { client } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { client } from "@/lib/auth-client";
 
 export default function Page() {
   const tSignin = useTranslations("signin");

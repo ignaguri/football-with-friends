@@ -1,10 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { CourtManagement } from "@/components/management/court-management";
 import { LocationManagement } from "@/components/management/location-management";
 import { MatchManagement } from "@/components/management/match-management";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTranslations } from "next-intl";
 
 export default function OrganizerDashboard() {
   const t = useTranslations();

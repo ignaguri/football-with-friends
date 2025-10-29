@@ -1,8 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useState } from "react";
+
+import { cn } from "@/lib/utils";
 
 type Tab = {
   title: string;
@@ -40,7 +41,7 @@ export const Tabs = ({
     <>
       <div
         className={cn(
-          "flex flex-row items-center justify-start mt-0 [perspective:1000px] relative overflow-auto sm:overflow-visible no-visible-scrollbar border-x w-full border-t max-w-max bg-opacity-0",
+          "no-visible-scrollbar relative mt-0 flex w-full max-w-max flex-row items-center justify-start overflow-auto border-x border-t bg-opacity-0 [perspective:1000px] sm:overflow-visible",
           containerClassName,
         )}
       >
@@ -53,7 +54,7 @@ export const Tabs = ({
             onMouseEnter={() => setHovering(true)}
             onMouseLeave={() => setHovering(false)}
             className={cn(
-              "relative px-4 py-2 rounded-full opacity-80 hover:opacity-100",
+              "relative rounded-full px-4 py-2 opacity-80 hover:opacity-100",
               tabClassName,
             )}
             style={{
@@ -72,7 +73,7 @@ export const Tabs = ({
                   x: tabs.indexOf(tab) === 0 ? [0, 0, 0] : [0, 0, 0],
                 }}
                 className={cn(
-                  "absolute inset-0 bg-gray-200 dark:bg-zinc-900/90 opacity-100",
+                  "absolute inset-0 bg-gray-200 opacity-100 dark:bg-zinc-900/90",
                   activeTabClassName,
                 )}
               />
@@ -82,7 +83,7 @@ export const Tabs = ({
               className={cn(
                 "relative block text-black dark:text-white",
                 active.value === tab.value
-                  ? "text-opacity-100 font-medium"
+                  ? "font-medium text-opacity-100"
                   : "opacity-40 ",
               )}
             >

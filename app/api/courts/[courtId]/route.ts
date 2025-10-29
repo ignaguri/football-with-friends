@@ -1,9 +1,10 @@
 // Individual court API routes
 
-import { getServiceFactory } from "@/lib/services/factory";
 import { NextResponse } from "next/server";
 
 import type { NextRequest } from "next/server";
+
+import { getServiceFactory } from "@/lib/services/factory";
 
 // GET /api/courts/[courtId] - Get court by ID
 export async function GET(

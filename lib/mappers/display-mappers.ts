@@ -1,8 +1,6 @@
 // Display mappers for frontend-specific data transformation
 // These functions convert domain objects to display-friendly formats
 
-import { formatDisplayDateTime } from "@/lib/utils/timezone";
-
 import type {
   Match,
   MatchDetails,
@@ -11,6 +9,8 @@ import type {
   MatchStatus,
   PlayerStatus,
 } from "@/lib/domain/types";
+
+import { formatDisplayDateTime } from "@/lib/utils/timezone";
 
 // Display types for frontend components
 export interface MatchDisplay {

@@ -1,17 +1,6 @@
 // Google Sheets implementation of repository interfaces
 // This wraps existing Google Sheets functionality in the new repository pattern
 
-import {
-  getAllMatchesMetadata,
-  getMatchMetadataById,
-  addMatchMetadata,
-  updateMatchMetadata,
-  deleteMatchMetadata,
-  createMatchSheet,
-  getMatchSheetData,
-  addOrUpdatePlayerRow,
-  getSheetNameById,
-} from "@/lib/google-sheets";
 import { parse, isSameDay } from "date-fns";
 import { nanoid } from "nanoid";
 
@@ -45,6 +34,18 @@ import type {
   MatchMetadata,
   PlayerStatus,
 } from "@/lib/domain/types";
+
+import {
+  getAllMatchesMetadata,
+  getMatchMetadataById,
+  addMatchMetadata,
+  updateMatchMetadata,
+  deleteMatchMetadata,
+  createMatchSheet,
+  getMatchSheetData,
+  addOrUpdatePlayerRow,
+  getSheetNameById,
+} from "@/lib/google-sheets";
 
 // Google Sheets Location Repository (minimal implementation)
 export class GoogleSheetsLocationRepository implements LocationRepository {

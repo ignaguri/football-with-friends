@@ -69,7 +69,7 @@ let repositoryFactory: AppRepositoryFactory | null = null;
 export function getRepositoryFactory(): AppRepositoryFactory {
   if (!repositoryFactory) {
     // Import env here to avoid circular dependencies
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+
     const { env } = require("@/lib/env");
     repositoryFactory = new AppRepositoryFactory(env.STORAGE_PROVIDER);
   }
