@@ -5,6 +5,10 @@
     },
     "vercel": {
       "url": "https://mcp.vercel.com/team_B8pEsqGbLXmdY2a56mjB7kkt/prj_VYOxXbrVRqb7GdnThlvZtX2Zobsj"
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
     }
   }
 }
