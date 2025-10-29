@@ -1,4 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
+import withSerwist from "@serwist/next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 import type { NextConfig } from "next";
@@ -37,7 +38,13 @@ const withNextIntl = createNextIntlPlugin({
   },
 });
 
-export default withSentryConfig(withNextIntl(nextConfig), {
+const withSerwistConfig = withSerwist({
+  swSrc: "app/sw.ts",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development",
+});
+
+export default withSentryConfig(withSerwistConfig(withNextIntl(nextConfig)), {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
