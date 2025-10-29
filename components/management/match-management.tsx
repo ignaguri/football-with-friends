@@ -3,7 +3,7 @@
 import { ExternalLink, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import React, { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import type { MatchDisplay } from "@/lib/mappers/display-mappers";
@@ -22,7 +22,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Sheet,
   SheetContent,
@@ -107,16 +106,19 @@ export function MatchManagement({ className }: MatchManagementProps) {
     },
   });
 
-  const handleDeleteMatch = (match: MatchDisplay & { id: string }) => {
-    if (confirm(t("organizer.deleteMatchConfirm"))) {
-      setDeletingMatchId(match.matchId);
-      deleteMatchMutation(match.matchId, {
-        onSettled: () => {
-          setDeletingMatchId(null);
-        },
-      });
-    }
-  };
+  const handleDeleteMatch = useCallback(
+    (match: MatchDisplay & { id: string }) => {
+      if (confirm(t("organizer.deleteMatchConfirm"))) {
+        setDeletingMatchId(match.matchId);
+        deleteMatchMutation(match.matchId, {
+          onSettled: () => {
+            setDeletingMatchId(null);
+          },
+        });
+      }
+    },
+    [deleteMatchMutation, t],
+  );
 
   function handleEditSave(updated: MatchDisplay) {
     // Convert MatchDisplay to UpdateMatchData format
@@ -294,13 +296,13 @@ export function MatchManagement({ className }: MatchManagementProps) {
     ],
     [
       t,
+      router,
+      startEdit,
       isDeleting,
       isUpdating,
-      startEdit,
+      cancellingMatchId,
       handleDeleteMatch,
-      handleCancelMatch,
-      setPlayerDrawerMatchId,
-      router,
+      deletingMatchId,
     ],
   );
 
