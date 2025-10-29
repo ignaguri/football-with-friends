@@ -27,6 +27,7 @@ export function useCrudOperations<T extends { id: string }>({
 }: CrudOperationsConfig<T>) {
   const t = useTranslations();
   const [editingItem, setEditingItem] = useState<T | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<T | null>(null);
 
   const defaultSuccessMessages = {
     create: t("shared.createSuccess"),
@@ -69,18 +70,28 @@ export function useCrudOperations<T extends { id: string }>({
     }
   }
 
-  async function handleDelete(item: T) {
-    if (confirm(t("shared.deleteConfirm"))) {
-      try {
-        await deleteItem(item.id);
-        toast.success(defaultSuccessMessages.delete);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : defaultErrorMessages.delete,
-        );
-        throw error;
-      }
+  function requestDelete(item: T) {
+    setItemToDelete(item);
+  }
+
+  async function confirmDelete() {
+    if (!itemToDelete) return;
+
+    try {
+      await deleteItem(itemToDelete.id);
+      toast.success(defaultSuccessMessages.delete);
+      setItemToDelete(null);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : defaultErrorMessages.delete,
+      );
+      setItemToDelete(null);
+      throw error;
     }
+  }
+
+  function cancelDelete() {
+    setItemToDelete(null);
   }
 
   function startEdit(item: T) {
@@ -93,10 +104,14 @@ export function useCrudOperations<T extends { id: string }>({
 
   return {
     editingItem,
+    itemToDelete,
     startEdit,
     cancelEdit,
     handleCreate,
     handleUpdate,
-    handleDelete,
+    requestDelete,
+    confirmDelete,
+    cancelDelete,
+    deleteConfirmMessage: t("shared.deleteConfirm"),
   };
 }
