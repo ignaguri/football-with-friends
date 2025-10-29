@@ -52,3 +52,7 @@ certificates
 locales/**/*.d.json.ts
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Service worker source maps
+sw.js.map
+public/sw.js.map
