@@ -35,10 +35,8 @@ const BaseEnvSchema = z.object({
   // External service URLs
   NEXT_PUBLIC_PAYPAL_URL: z
     .url("NEXT_PUBLIC_PAYPAL_URL must be a valid URL")
-    .default("http://paypal.me/federicolucero510"),
-  NEXT_PUBLIC_ORGANIZER_WHATSAPP: z
-    .string()
-    .default("4917662232065"),
+    .default("http://paypal.me/organizer-name"),
+  NEXT_PUBLIC_ORGANIZER_WHATSAPP: z.string().default("491234567890"),
 
   // Runtime environment
   NODE_ENV: z
