@@ -534,8 +534,9 @@ export class TursoMatchRepository implements MatchRepository {
       guestOwnerEmail: row.guest_owner_email || undefined,
     }));
 
-    // Calculate available spots
-    const availableSpots = Math.max(0, match.maxPlayers - signups.length);
+    // Calculate available spots (based on paid players only)
+    const paidSignupsCount = signups.filter((s) => s.status === "PAID").length;
+    const availableSpots = Math.max(0, match.maxPlayers - paidSignupsCount);
 
     // Check if user is signed up
     const isUserSignedUp = userId
@@ -733,6 +734,22 @@ export class TursoSignupRepository implements SignupRepository {
       .executeTakeFirst();
 
     return Number(result?.count || 0);
+  }
+
+  async getPaidSignupCount(matchId: string): Promise<number> {
+    const result = await this.db
+      .selectFrom("signups")
+      .select(sql`COUNT(*)`.as("count"))
+      .where("match_id", "=", matchId)
+      .where("status", "=", "PAID")
+      .executeTakeFirst();
+
+    return Number(result?.count || 0);
+  }
+
+  async isMatchFull(matchId: string, maxPlayers: number): Promise<boolean> {
+    const paidCount = await this.getPaidSignupCount(matchId);
+    return paidCount >= maxPlayers;
   }
 
   async create(signupData: CreateSignupData): Promise<Signup> {

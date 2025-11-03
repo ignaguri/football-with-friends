@@ -26,7 +26,8 @@ export function NotifyOrganizerDialog({
       <DialogTrigger asChild>
         <Button
           variant="secondary"
-          className="bg-green-600 px-3 py-1 text-white hover:bg-green-700"
+          size="sm"
+          className="bg-green-600 text-white hover:bg-green-700"
         >
           {t("notify.trigger")}
         </Button>

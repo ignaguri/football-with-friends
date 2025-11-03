@@ -422,6 +422,16 @@ export class GoogleSheetsSignupRepository implements SignupRepository {
     return signups.length;
   }
 
+  async getPaidSignupCount(matchId: string): Promise<number> {
+    const signups = await this.findByMatchId(matchId);
+    return signups.filter((s) => s.status === "PAID").length;
+  }
+
+  async isMatchFull(matchId: string, maxPlayers: number): Promise<boolean> {
+    const paidCount = await this.getPaidSignupCount(matchId);
+    return paidCount >= maxPlayers;
+  }
+
   async create(signupData: CreateSignupData): Promise<Signup> {
     const sheetName = await getSheetNameById(signupData.matchId);
     if (!sheetName) {
