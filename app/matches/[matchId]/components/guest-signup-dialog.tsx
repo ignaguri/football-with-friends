@@ -26,7 +26,7 @@ interface GuestSignupDialogProps {
   onOpenChange: (open: boolean) => void;
   onAddGuest: (guestName?: string) => void;
   isSubmitting: boolean;
-  playerCount: number;
+  isMatchFull: boolean;
 }
 
 export function GuestSignupDialog({
@@ -34,7 +34,7 @@ export function GuestSignupDialog({
   onOpenChange,
   onAddGuest,
   isSubmitting,
-  playerCount,
+  isMatchFull,
 }: GuestSignupDialogProps) {
   const t = useTranslations();
   const guestForm = useForm<GuestFormValues>({
@@ -80,7 +80,7 @@ export function GuestSignupDialog({
             )}
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting || playerCount >= 10}>
+            <Button type="submit" disabled={isSubmitting || isMatchFull}>
               {isSubmitting ? t("guest.adding") : t("guest.add")}
             </Button>
             <DialogClose asChild>

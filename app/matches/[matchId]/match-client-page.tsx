@@ -305,7 +305,7 @@ export default function MatchClientPage() {
           }
 
           return (
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
               {/* Payment buttons for current user with PENDING status */}
               {showPaymentButtons && (
                 <>
@@ -432,7 +432,7 @@ export default function MatchClientPage() {
       />
       <MatchStats
         paidPlayersCount={paidPlayersCount}
-        totalPlayersCount={players.length}
+        maxPlayers={totalSpots}
         cost={matchMeta?.costCourt}
         courtNumber={matchMeta?.courtNumber}
       />
@@ -462,7 +462,7 @@ export default function MatchClientPage() {
         onOpenChange={setIsGuestDialogOpen}
         onAddGuest={handleAddGuest}
         isSubmitting={signupMutation.isPending}
-        playerCount={players.length}
+        isMatchFull={spotsLeft <= 0}
       />
     </div>
   );

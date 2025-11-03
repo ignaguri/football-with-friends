@@ -188,9 +188,12 @@ export class MatchService {
       throw new Error("User is already signed up for this match");
     }
 
-    // Check capacity
-    const currentSignups = await this.signupRepository.getSignupCount(matchId);
-    if (currentSignups >= match.maxPlayers) {
+    // Check capacity (based on paid players only)
+    const isFull = await this.signupRepository.isMatchFull(
+      matchId,
+      match.maxPlayers,
+    );
+    if (isFull) {
       throw new Error("Match is full");
     }
 
@@ -226,9 +229,12 @@ export class MatchService {
       throw new Error("Cannot add guests to this match");
     }
 
-    // Check capacity
-    const currentSignups = await this.signupRepository.getSignupCount(matchId);
-    if (currentSignups >= match.maxPlayers) {
+    // Check capacity (based on paid players only)
+    const isFull = await this.signupRepository.isMatchFull(
+      matchId,
+      match.maxPlayers,
+    );
+    if (isFull) {
       throw new Error("Match is full");
     }
 
@@ -375,10 +381,14 @@ export class MatchService {
       };
     }
 
-    const currentSignups = await this.signupRepository.getSignupCount(matchId);
-    const remainingSpots = Math.max(0, match.maxPlayers - currentSignups);
+    const isFull = await this.signupRepository.isMatchFull(
+      matchId,
+      match.maxPlayers,
+    );
+    const paidSignups = await this.signupRepository.getPaidSignupCount(matchId);
+    const remainingSpots = Math.max(0, match.maxPlayers - paidSignups);
 
-    if (remainingSpots === 0) {
+    if (isFull) {
       return { canAdd: false, reason: "Match is full", remainingSpots: 0 };
     }
 
@@ -400,14 +410,17 @@ export class MatchService {
       throw new Error("Match not found");
     }
 
-    const signups = await this.signupRepository.findByMatchId(matchId);
+    const [signups, paidSignupsCount] = await Promise.all([
+      this.signupRepository.findByMatchId(matchId),
+      this.signupRepository.getPaidSignupCount(matchId),
+    ]);
 
     return {
       totalSignups: signups.length,
-      paidSignups: signups.filter((s) => s.status === "PAID").length,
+      paidSignups: paidSignupsCount,
       pendingSignups: signups.filter((s) => s.status === "PENDING").length,
       guestSignups: signups.filter((s) => s.signupType === "guest").length,
-      availableSpots: Math.max(0, match.maxPlayers - signups.length),
+      availableSpots: Math.max(0, match.maxPlayers - paidSignupsCount),
     };
   }
 
