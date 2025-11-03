@@ -381,14 +381,10 @@ export class MatchService {
       };
     }
 
-    const isFull = await this.signupRepository.isMatchFull(
-      matchId,
-      match.maxPlayers,
-    );
     const paidSignups = await this.signupRepository.getPaidSignupCount(matchId);
     const remainingSpots = Math.max(0, match.maxPlayers - paidSignups);
 
-    if (isFull) {
+    if (remainingSpots === 0) {
       return { canAdd: false, reason: "Match is full", remainingSpots: 0 };
     }
 
