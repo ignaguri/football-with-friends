@@ -186,6 +186,16 @@ export interface SignupRepository {
   getSignupCount(matchId: string): Promise<number>;
 
   /**
+   * Get paid signup count for a match (players with status = "PAID")
+   */
+  getPaidSignupCount(matchId: string): Promise<number>;
+
+  /**
+   * Check if a match is at full capacity (based on paid players)
+   */
+  isMatchFull(matchId: string, maxPlayers: number): Promise<boolean>;
+
+  /**
    * Create a new signup
    */
   create(signup: CreateSignupData): Promise<Signup>;

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface MatchStatsProps {
   paidPlayersCount: number;
-  totalPlayersCount: number;
+  maxPlayers: number;
   cost?: string | number;
   courtNumber?: string | number;
 }
@@ -53,7 +53,7 @@ function StatCard({
 
 export function MatchStats({
   paidPlayersCount,
-  totalPlayersCount,
+  maxPlayers,
   cost,
   courtNumber,
 }: MatchStatsProps) {
@@ -62,7 +62,7 @@ export function MatchStats({
     <div className="mb-4 flex flex-row items-center justify-center gap-2">
       <StatCard
         label={t("stats.paid")}
-        value={`${paidPlayersCount}/${totalPlayersCount}`}
+        value={`${paidPlayersCount}/${maxPlayers}`}
         color="green"
       />
       <StatCard
