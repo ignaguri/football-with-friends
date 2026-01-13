@@ -1,0 +1,26 @@
+{
+  "name": "@repo/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./provider": "./src/provider.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "orpc": "^1.0.0",
+    "@orpc/client": "^1.0.0",
+    "@orpc/react": "^1.0.0",
+    "@tanstack/react-query": "^5.87.1",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "^19.2.2",
+    "typescript": "^5.8.3"
+  }
+}
