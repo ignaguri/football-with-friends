@@ -1,8 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactNode, useState } from 'react'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
+
+import type { ReactNode } from "react";
 
 interface APIProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**
@@ -24,21 +26,21 @@ export function APIProvider({ children }: APIProviderProps) {
             retry: 0,
           },
         },
-      })
-  )
+      }),
+  );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
 }
 
 /**
  * Create a custom query client with specific options
  * Useful for testing or custom configurations
  */
-export function createQueryClient(options?: ConstructorParameters<typeof QueryClient>[0]) {
+export function createQueryClient(
+  options?: ConstructorParameters<typeof QueryClient>[0],
+) {
   return new QueryClient({
     defaultOptions: {
       queries: {
@@ -52,5 +54,5 @@ export function createQueryClient(options?: ConstructorParameters<typeof QueryCl
       },
       ...options?.defaultOptions,
     },
-  })
+  });
 }

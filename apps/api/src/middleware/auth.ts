@@ -1,63 +1,72 @@
-import { ORPCError } from 'orpc'
-import { auth } from '../auth'
+import { ORPCError } from "orpc";
+
+import { auth } from "../auth";
 
 export interface AuthContext {
   user: {
-    id: string
-    email: string
-    name: string
-    role: string
-  }
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
 }
 
-export async function withAuth(input: any, context: any, meta: any): Promise<AuthContext> {
+export async function withAuth(
+  input: any,
+  context: any,
+  _meta: any,
+): Promise<AuthContext> {
   // Get session from request headers
-  const request = context.request || context.req
+  const request = context.request || context.req;
 
   if (!request) {
     throw new ORPCError({
-      code: 'UNAUTHORIZED',
-      message: 'No request context available',
-    })
+      code: "UNAUTHORIZED",
+      message: "No request context available",
+    });
   }
 
   try {
     const session = await auth.api.getSession({
       headers: request.headers,
-    })
+    });
 
     if (!session?.user) {
       throw new ORPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Authentication required',
-      })
+        code: "UNAUTHORIZED",
+        message: "Authentication required",
+      });
     }
 
     return {
       user: {
         id: session.user.id,
         email: session.user.email,
-        name: session.user.name || '',
-        role: (session.user as any).role || 'user',
+        name: session.user.name || "",
+        role: (session.user as any).role || "user",
       },
-    }
-  } catch (error) {
+    };
+  } catch {
     throw new ORPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Invalid or expired session',
-    })
+      code: "UNAUTHORIZED",
+      message: "Invalid or expired session",
+    });
   }
 }
 
-export async function withAdminAuth(input: any, context: any, meta: any): Promise<AuthContext> {
-  const authContext = await withAuth(input, context, meta)
+export async function withAdminAuth(
+  input: any,
+  context: any,
+  _meta: any,
+): Promise<AuthContext> {
+  const authContext = await withAuth(input, context, _meta);
 
-  if (authContext.user.role !== 'admin') {
+  if (authContext.user.role !== "admin") {
     throw new ORPCError({
-      code: 'FORBIDDEN',
-      message: 'Admin access required',
-    })
+      code: "FORBIDDEN",
+      message: "Admin access required",
+    });
   }
 
-  return authContext
+  return authContext;
 }

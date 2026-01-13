@@ -1,10 +1,6 @@
 // Court service for business logic and validation
 
-import type {
-  Court,
-  CreateCourtData,
-  UpdateCourtData,
-} from "../domain/types";
+import type { Court, CreateCourtData, UpdateCourtData } from "../domain/types";
 import type { CourtRepository } from "../repositories/interfaces";
 
 export class CourtService {

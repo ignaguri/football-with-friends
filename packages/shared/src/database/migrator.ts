@@ -171,7 +171,7 @@ export class MigrationRunner {
           SELECT name, timestamp FROM kysely_migration ORDER BY timestamp ASC
         `.execute(this.db);
         executedMigrations = result.rows;
-      } catch (error) {
+      } catch {
         // If no migration table exists, all migration files are pending
         try {
           const migrationFiles = await this.migrator.getMigrations();
@@ -179,7 +179,7 @@ export class MigrationRunner {
             executed: [],
             pending: migrationFiles.map((m) => m.name),
           };
-        } catch (migrationError) {
+        } catch {
           return { executed: [], pending: [] };
         }
       }

@@ -1,7 +1,7 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
+import { env, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
 import { admin } from "better-auth/plugins";
-import { env, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 
 // Get database configuration for authentication
 function getDatabaseConfig() {
@@ -27,7 +27,7 @@ const databaseDialect = getDatabaseConfig();
 
 export const auth = betterAuth({
   appName: "Fulbo con los pibes",
-  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(',') || [
+  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || [
     "http://localhost:8081",
     "http://localhost:19006",
   ],

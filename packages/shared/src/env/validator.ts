@@ -4,8 +4,7 @@ import { z } from "zod";
 
 // Storage provider types
 const StorageProviderSchema = z.enum(["turso", "local-db"], {
-  message:
-    "STORAGE_PROVIDER must be one of: 'turso', 'local-db'",
+  message: "STORAGE_PROVIDER must be one of: 'turso', 'local-db'",
 });
 
 // Base environment schema (always required)
@@ -85,14 +84,11 @@ const LocalDbEnvSchemaComplete = BaseEnvSchema.merge(LocalDbEnvSchema);
 // Type definitions for validated environment
 export type TursoEnvironment = z.infer<typeof TursoEnvSchemaComplete>;
 export type LocalDbEnvironment = z.infer<typeof LocalDbEnvSchemaComplete>;
-export type ValidatedEnvironment =
-  | TursoEnvironment
-  | LocalDbEnvironment;
+export type ValidatedEnvironment = TursoEnvironment | LocalDbEnvironment;
 
 // Combined environment schema based on storage provider
 export function createEnvironmentSchema(storageProvider?: string) {
-  const provider =
-    storageProvider || process.env.STORAGE_PROVIDER || "turso";
+  const provider = storageProvider || process.env.STORAGE_PROVIDER || "turso";
 
   switch (provider) {
     case "turso":
