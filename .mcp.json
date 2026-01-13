@@ -1,0 +1,45 @@
+{
+    "mcpServers": {
+        "context7": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+              "-y",
+              "@upstash/context7-mcp@latest"
+            ]
+          },
+        "sentry": {
+            "type": "http",
+            "url": "https://mcp.sentry.dev/mcp/prostcounter/football-with-friends"
+        },
+        "vercel": {
+            "type": "http",
+            "url": "https://mcp.vercel.com/team_B8pEsqGbLXmdY2a56mjB7kkt/prj_VYOxXbrVRqb7GdnThlvZtX2Zobsj"
+        },
+        "shadcn": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "shadcn@latest",
+                "mcp"
+            ]
+        },
+        "chrome-devtools": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp@latest"
+            ]
+        },
+        "ios-simulator": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "ios-simulator-mcp"
+            ],
+            "env": {
+                "IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR": "~/Temp/football-with-friends/tmp"
+            }
+        }
+    }
+}

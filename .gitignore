@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
-/.pnp
+# Dependencies
+node_modules/
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -10,45 +10,84 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# Testing
+coverage/
 
-# next.js
-/.next/
-/out/
+# Build outputs
+.next/
+out/
+dist/
+build/
+.expo/
+web-build/
 
-# production
-/build
+# Turborepo
+.turbo/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# env files (can opt-in for commiting if needed)
+# Environment files
 .env
 .env.*
 !.env.example
 
-# vercel
-.vercel
+# OS files
+.DS_Store
+*.pem
+Thumbs.db
 
-# typescript
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+expo-env.d.ts
 
-# local development databases
+# Vercel
+.vercel
+
+# Local development databases
 local.db*
 *.sqlite*
 dump.sql
 
-certificates
+# Certificates
+certificates/
+
+# Next.js
+.next/
+out/
 
 # next-intl
 locales/**/*.d.json.ts
-# Sentry Config File
+
+# Sentry
+.sentryclirc
 .env.sentry-build-plugin
+
+# Expo
+.expo/
+.expo-shared/
+web-build/
+dist/
+metro-health-check*
+
+# React Native / Expo
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.hprof
+
+# Misc
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.history/
