@@ -1,0 +1,32 @@
+{
+  "name": "@repo/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "exports": {
+    "./domain": "./src/domain/index.ts",
+    "./services": "./src/services/index.ts",
+    "./repositories": "./src/repositories/index.ts",
+    "./utils": "./src/utils/index.ts",
+    "./database": "./src/database/index.ts",
+    "./mappers": "./src/mappers/index.ts",
+    "./env": "./src/env/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "kysely": "^0.28.5",
+    "@libsql/kysely-libsql": "^0.4.1",
+    "@libsql/client": "^0.15.15",
+    "libsql": "^0.5.22",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "zod": "^4.1.5",
+    "nanoid": "^5.1.5"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}
