@@ -1,16 +1,13 @@
-import { Stack } from "expo-router";
 import { TamaguiProvider } from "tamagui";
-import { APIProvider } from "@repo/api-client/provider";
-import tamaguiConfig from "../tamagui.config";
+import { Slot } from "expo-router";
+import { APIProvider } from "@repo/api-client";
+import config from "../tamagui.config";
 
 export default function RootLayout() {
   return (
-    <TamaguiProvider config={tamaguiConfig}>
+    <TamaguiProvider config={config}>
       <APIProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-        </Stack>
+        <Slot />
       </APIProvider>
     </TamaguiProvider>
   );

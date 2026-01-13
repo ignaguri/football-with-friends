@@ -1,6 +1,5 @@
-import { createORPCClient } from "@orpc/client";
-
-import type { AppRouter } from "../../../apps/api/src/orpc";
+import { hc } from "hono/client";
+import type { ApiRoutes } from "../../../apps/api/src/index";
 
 // Get API URL from environment
 const getApiUrl = () => {
@@ -20,20 +19,15 @@ const getApiUrl = () => {
 
 const API_URL = getApiUrl();
 
-// Create the oRPC client with full type safety
-export const orpcClient = createORPCClient<AppRouter>({
-  baseURL: `${API_URL}/rpc`,
+// Create the Hono RPC client with full type safety
+export const client = hc<ApiRoutes>(API_URL, {
   fetch: (input, init) => {
     return fetch(input, {
       ...init,
       credentials: "include", // Important for sending cookies
-      headers: {
-        ...init?.headers,
-        "Content-Type": "application/json",
-      },
     });
   },
 });
 
 // Export the client as 'api' for convenience
-export const api = orpcClient;
+export const api = client;

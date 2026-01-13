@@ -1,4 +1,5 @@
-import { createORPCHandler } from "orpc/server";
+import { RPCHandler } from "@orpc/server/fetch";
+import { onError } from "@orpc/server";
 
 import { courtsProcedures } from "../procedures/courts";
 import { locationsProcedures } from "../procedures/locations";
@@ -14,7 +15,15 @@ export const router = {
 // Export router type for client
 export type AppRouter = typeof router;
 
-// Create Hono-compatible handler
-export const orpcHandler = createORPCHandler({
-  router,
+// Create RPC handler with error logging
+export const rpcHandler = new RPCHandler(router, {
+  interceptors: [
+    onError((error, meta) => {
+      console.error("=== oRPC Error ===");
+      console.error("Path:", meta.path);
+      console.error("Error:", error);
+      console.error("Stack:", error.stack);
+      console.error("==================");
+    }),
+  ],
 });

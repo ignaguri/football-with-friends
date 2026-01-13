@@ -7,14 +7,12 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: "Matches",
-          headerShown: true,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          headerShown: true,
         }}
       />
     </Tabs>

@@ -3,34 +3,32 @@
     "name": "Football with Friends",
     "slug": "football-with-friends",
     "version": "1.0.0",
+    "scheme": "football-with-friends",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router"
+    ],
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.footballwithfriends.app"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.footballwithfriends.app"
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png",
-      "bundler": "metro"
-    },
-    "plugins": ["expo-router"],
-    "scheme": "footballwithfriends",
-    "experiments": {
-      "typedRoutes": true
+      "favicon": "./assets/favicon.png"
     }
   }
 }

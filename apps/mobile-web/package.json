@@ -7,35 +7,32 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:ios": "eas build --platform ios",
-    "build:android": "eas build --platform android",
-    "lint": "eslint app src --ext .ts,.tsx",
+    "lint": "eslint app --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*",
-    "@tamagui/config": "^1.115.10",
-    "better-auth": "^1.3.9",
+    "@tamagui/config": "^1.144.1",
     "expo": "~54.0.31",
-    "expo-router": "~5.0.0",
-    "expo-status-bar": "~2.2.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-native": "0.81.0",
-    "react-native-reanimated": "~4.1.1",
-    "react-native-safe-area-context": "~5.1.0",
-    "react-native-screens": "~4.6.0",
-    "react-native-web": "~0.20.0",
-    "tamagui": "^1.115.10"
+    "expo-router": "~6.0.21",
+    "expo-status-bar": "~3.0.9",
+    "hono": "^4.11.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.2",
+    "tamagui": "^1.144.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
+    "@babel/core": "^7.28.6",
     "@repo/typescript-config": "workspace:*",
-    "@tamagui/babel-plugin": "^1.115.10",
-    "@types/react": "^19.0.0",
-    "typescript": "~5.3.3"
+    "@tamagui/babel-plugin": "^1.144.1",
+    "@types/react": "19.1.17",
+    "typescript": "~5.9.3"
   },
   "private": true
 }

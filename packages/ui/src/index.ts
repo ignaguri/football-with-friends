@@ -28,6 +28,9 @@ export type { CustomSpinnerProps } from "./components/Spinner";
 export { Badge } from "./components/Badge";
 export type { BadgeProps } from "./components/Badge";
 
+export { UserAvatar } from "./components/user-avatar";
+export type { UserAvatarProps } from "./components/user-avatar";
+
 // Re-export commonly used Tamagui components
 export {
   Text,

@@ -1,15 +1,15 @@
 import { getServiceFactory } from "@repo/shared/services";
-import { createProcedure } from "orpc/server";
 import { z } from "zod";
 
-import { withAuth, withAdminAuth } from "../middleware/auth";
+import {
+  adminProcedure,
+  authedProcedure,
+  baseProcedure,
+} from "./base";
 
 // Get service instances
 const serviceFactory = getServiceFactory();
-const matchService = serviceFactory.matches;
-
-// Base procedure
-const baseProcedure = createProcedure();
+const matchService = serviceFactory.matchService;
 
 // Match procedures
 export const matchesProcedures = {
@@ -18,7 +18,7 @@ export const matchesProcedures = {
     .input(
       z.object({
         type: z.enum(["upcoming", "past", "all"]).optional(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return matchService.getAllMatches({
@@ -37,163 +37,116 @@ export const matchesProcedures = {
       z.object({
         id: z.string(),
         userId: z.string().optional(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return matchService.getMatchDetails(input.id, input.userId);
     }),
 
   // Create match (admin only)
-  create: baseProcedure
-    .use(withAdminAuth)
+  create: adminProcedure
     .input(
       z.object({
-        locationId: z.string(),
-        courtId: z.string().optional(),
-        date: z.string(), // YYYY-MM-DD
-        time: z.string(), // HH:MM
-        maxPlayers: z.number().min(2).max(50),
-        costPerPlayer: z.number().min(0).optional(),
-        shirtCost: z.number().min(0).optional(),
-        status: z.enum(["upcoming", "cancelled", "completed"]).optional(),
-      }),
+        courtId: z.string(),
+        date: z.string(),
+        time: z.string(),
+        maxPlayers: z.number().int().positive(),
+        notes: z.string().optional(),
+      })
     )
     .handler(async ({ input, context }) => {
-      return matchService.createMatch(
-        {
-          locationId: input.locationId,
-          courtId: input.courtId,
-          date: input.date,
-          time: input.time,
-          maxPlayers: input.maxPlayers,
-          costPerPlayer: input.costPerPlayer,
-          shirtCost: input.shirtCost,
-          status: input.status,
-        },
-        context.user.id,
-      );
+      return matchService.createMatch({
+        ...input,
+        organizerId: context.user.id,
+      });
     }),
 
   // Update match (admin only)
-  update: baseProcedure
-    .use(withAdminAuth)
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
-        data: z.object({
-          locationId: z.string().optional(),
-          courtId: z.string().optional(),
-          date: z.string().optional(),
-          time: z.string().optional(),
-          maxPlayers: z.number().min(2).max(50).optional(),
-          costPerPlayer: z.number().min(0).optional(),
-          shirtCost: z.number().min(0).optional(),
-          status: z.enum(["upcoming", "cancelled", "completed"]).optional(),
-        }),
-      }),
+        courtId: z.string().optional(),
+        date: z.string().optional(),
+        time: z.string().optional(),
+        maxPlayers: z.number().int().positive().optional(),
+        notes: z.string().optional(),
+        status: z.enum(["draft", "published", "cancelled", "completed"]).optional(),
+      })
     )
     .handler(async ({ input }) => {
-      return matchService.updateMatch(input.id, input.data);
+      const { id, ...data } = input;
+      return matchService.updateMatch(id, data);
     }),
 
   // Delete match (admin only)
-  delete: baseProcedure
-    .use(withAdminAuth)
+  delete: adminProcedure
     .input(
       z.object({
         id: z.string(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       await matchService.deleteMatch(input.id);
       return { success: true };
     }),
 
-  // Signup procedures nested under matches
+  // Signup operations
   signup: {
-    // Sign up for match (authenticated user)
-    create: baseProcedure
-      .use(withAuth)
+    // Create signup (authenticated users)
+    create: authedProcedure
       .input(
         z.object({
           matchId: z.string(),
-          playerName: z.string().optional(),
-          playerEmail: z.string().email().optional(),
-          isGuest: z.boolean().optional(),
-        }),
+          guestName: z.string().optional(),
+        })
       )
       .handler(async ({ input, context }) => {
-        if (input.isGuest) {
-          // Guest signup
-          return matchService.signupGuest(input.matchId, {
-            playerName: input.playerName!,
-            playerEmail: input.playerEmail,
-            guestOwnerId: context.user.id,
-          });
-        } else {
-          // Self signup
-          return matchService.signupSelf(input.matchId, context.user.id);
-        }
+        return matchService.createSignup({
+          matchId: input.matchId,
+          userId: context.user.id,
+          guestName: input.guestName,
+        });
       }),
 
-    // Update signup status (admin or owner)
-    updateStatus: baseProcedure
-      .use(withAuth)
+    // Update signup status (admin only)
+    updateStatus: adminProcedure
       .input(
         z.object({
-          matchId: z.string(),
           signupId: z.string(),
-          status: z.enum(["PAID", "PENDING", "CANCELLED"]),
-        }),
+          status: z.enum(["pending", "confirmed", "cancelled"]),
+        })
       )
-      .handler(async ({ input, context }) => {
-        return matchService.updateSignupStatus(
-          input.matchId,
-          input.signupId,
-          input.status,
-          context.user.id,
-        );
+      .handler(async ({ input }) => {
+        return matchService.updateSignupStatus(input.signupId, input.status);
       }),
 
-    // Remove signup (admin or owner)
-    remove: baseProcedure
-      .use(withAuth)
+    // Remove signup
+    remove: authedProcedure
       .input(
         z.object({
-          matchId: z.string(),
           signupId: z.string(),
-        }),
+        })
       )
       .handler(async ({ input, context }) => {
-        await matchService.removeSignup(
-          input.matchId,
-          input.signupId,
-          context.user.id,
-        );
+        await matchService.removeSignup(input.signupId, context.user.id);
         return { success: true };
       }),
 
-    // Admin add player (admin only)
-    addPlayer: baseProcedure
-      .use(withAdminAuth)
+    // Add player to match (admin only)
+    addPlayer: adminProcedure
       .input(
         z.object({
           matchId: z.string(),
-          playerName: z.string(),
-          playerEmail: z.string().email().optional(),
-          status: z.enum(["PAID", "PENDING", "CANCELLED"]).optional(),
-        }),
+          userId: z.string().optional(),
+          guestName: z.string().optional(),
+        })
       )
-      .handler(async ({ input, context }) => {
-        return matchService.adminAddPlayer(
-          input.matchId,
-          {
-            playerName: input.playerName,
-            playerEmail: input.playerEmail,
-            status: input.status,
-          },
-          context.user.id,
-        );
+      .handler(async ({ input }) => {
+        return matchService.addPlayerToMatch(input.matchId, {
+          userId: input.userId,
+          guestName: input.guestName,
+        });
       }),
   },
 };

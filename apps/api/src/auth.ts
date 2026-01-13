@@ -1,7 +1,7 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { env, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
-import { admin } from "better-auth/plugins";
+import { admin, username } from "better-auth/plugins";
 
 // Get database configuration for authentication
 function getDatabaseConfig() {
@@ -35,6 +35,16 @@ export const auth = betterAuth({
     dialect: databaseDialect,
     type: "sqlite",
   },
+  // Enable email/password authentication
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false, // Can enable later
+    minPasswordLength: 8,
+  },
+  // Disable account linking - one auth method per account
+  accountLinking: {
+    enabled: false,
+  },
   user: {
     additionalFields: {
       role: {
@@ -42,6 +52,11 @@ export const auth = betterAuth({
         required: false,
         defaultValue: "user",
         input: false, // Only settable by admin, not by user signup
+      },
+      profilePicture: {
+        type: "string",
+        required: false,
+        input: true, // Allow users to set their profile picture
       },
     },
   },
@@ -51,7 +66,13 @@ export const auth = betterAuth({
       clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
-  plugins: [admin()],
+  plugins: [
+    admin(),
+    username({
+      minLength: 3,
+      maxLength: 20,
+    }),
+  ],
   logger: {
     level: "info",
     disabled: false,

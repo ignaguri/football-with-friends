@@ -1,13 +1,11 @@
 import { getRepositoryFactory } from "@repo/shared/repositories";
-import { createProcedure } from "orpc/server";
 import { z } from "zod";
+
+import { baseProcedure } from "./base";
 
 // Get repository instances
 const repositoryFactory = getRepositoryFactory();
 const locationRepository = repositoryFactory.locations;
-
-// Base procedure
-const baseProcedure = createProcedure();
 
 // Location procedures
 export const locationsProcedures = {
@@ -21,7 +19,7 @@ export const locationsProcedures = {
     .input(
       z.object({
         id: z.string(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return locationRepository.findById(input.id);
@@ -35,7 +33,7 @@ export const locationsProcedures = {
         address: z.string().optional(),
         coordinates: z.string().optional(),
         courtCount: z.number().min(1).optional(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return locationRepository.create({
@@ -57,7 +55,7 @@ export const locationsProcedures = {
           coordinates: z.string().optional(),
           courtCount: z.number().min(1).optional(),
         }),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return locationRepository.update(input.id, input.data);
@@ -68,7 +66,7 @@ export const locationsProcedures = {
     .input(
       z.object({
         id: z.string(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       await locationRepository.delete(input.id);

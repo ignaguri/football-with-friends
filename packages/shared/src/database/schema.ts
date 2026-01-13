@@ -81,6 +81,10 @@ export interface UserTable {
   banExpires: string | null;
   createdAt: number;
   updatedAt: number;
+  // Auth enhancement fields
+  username: string | null;
+  displayUsername: string | null;
+  profilePicture: string | null;
 }
 
 // Database interface

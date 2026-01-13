@@ -1,22 +1,30 @@
-// Export the oRPC client
-export { api, orpcClient } from "./client";
+// Export the Hono RPC client
+export { api, client } from "./client";
 
 // Export React Query hooks
 export {
-  orpc,
   useInfiniteQuery,
   useMutation,
   useQueries,
   useQuery,
   useSuspenseInfiniteQuery,
   useSuspenseQuery,
+  useQueryClient,
 } from "./hooks";
-
-// Export types
-export type { MutationKey, QueryKey } from "./hooks";
 
 // Export provider (also available via import from '@repo/api-client/provider')
 export { APIProvider, createQueryClient } from "./provider";
 
-// Re-export the AppRouter type for convenience
-export type { AppRouter } from "../../../apps/api/src/orpc";
+// Export auth client and methods
+export {
+  authClient,
+  signUp,
+  signIn,
+  signOut,
+  useSession,
+  getSession,
+} from "./auth";
+export type { Session, User } from "./auth";
+
+// Re-export the API routes type for convenience
+export type { ApiRoutes } from "../../../apps/api/src/index";

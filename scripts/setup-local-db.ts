@@ -21,6 +21,10 @@ interface Database {
     banExpires: string | null;
     createdAt: number;
     updatedAt: number;
+    // Auth enhancement fields
+    username: string | null;
+    displayUsername: string | null;
+    profilePicture: string | null;
   };
   account: {
     id: string;
@@ -65,9 +69,19 @@ interface Database {
     created_at: string;
     updated_at: string;
   };
+  courts: {
+    id: string;
+    location_id: string;
+    name: string;
+    description: string | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
   matches: {
     id: string;
     location_id: string;
+    court_id: string | null;
     date: string;
     time: string;
     status: string;
@@ -133,6 +147,19 @@ async function setupDatabase() {
       .addColumn("banExpires", "date")
       .addColumn("createdAt", "integer", (col) => col.notNull())
       .addColumn("updatedAt", "integer", (col) => col.notNull())
+      // Auth enhancement fields
+      .addColumn("username", "text")
+      .addColumn("displayUsername", "text")
+      .addColumn("profilePicture", "text")
+      .execute();
+
+    // Create unique index for username
+    await db.schema
+      .createIndex("user_username_unique")
+      .ifNotExists()
+      .unique()
+      .on("user")
+      .column("username")
       .execute();
 
     // Account table
@@ -205,6 +232,25 @@ async function setupDatabase() {
       )
       .execute();
 
+    // Courts table
+    await db.schema
+      .createTable("courts")
+      .ifNotExists()
+      .addColumn("id", "text", (col) => col.primaryKey())
+      .addColumn("location_id", "text", (col) =>
+        col.references("locations.id").onDelete("cascade").notNull(),
+      )
+      .addColumn("name", "text", (col) => col.notNull())
+      .addColumn("description", "text")
+      .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
+      .addColumn("created_at", "text", (col) =>
+        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
+      )
+      .addColumn("updated_at", "text", (col) =>
+        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
+      )
+      .execute();
+
     // Matches table
     await db.schema
       .createTable("matches")
@@ -212,6 +258,9 @@ async function setupDatabase() {
       .addColumn("id", "text", (col) => col.primaryKey())
       .addColumn("location_id", "text", (col) =>
         col.references("locations.id").onDelete("cascade").notNull(),
+      )
+      .addColumn("court_id", "text", (col) =>
+        col.references("courts.id").onDelete("set null"),
       )
       .addColumn("date", "text", (col) => col.notNull())
       .addColumn("time", "text", (col) => col.notNull())
@@ -287,7 +336,7 @@ async function setupDatabase() {
 
     console.log("✅ Database setup completed successfully!");
     console.log(
-      "📊 Created tables: user (with role, banned, banReason, banExpires), account, session (with impersonatedBy), verification, locations, matches, signups, match_invitations",
+      "📊 Created tables: user (with role, banned, banReason, banExpires), account, session (with impersonatedBy), verification, locations, courts, matches (with court_id), signups, match_invitations",
     );
   } catch (error) {
     console.error("❌ Database setup failed:", error);

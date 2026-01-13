@@ -1,15 +1,11 @@
 import { getServiceFactory } from "@repo/shared/services";
-import { createProcedure } from "orpc/server";
 import { z } from "zod";
 
-import { withAdminAuth } from "../middleware/auth";
+import { adminProcedure, baseProcedure } from "./base";
 
 // Get service instances
 const serviceFactory = getServiceFactory();
-const courtService = serviceFactory.courts;
-
-// Base procedure
-const baseProcedure = createProcedure();
+const courtService = serviceFactory.courtService;
 
 // Court procedures
 export const courtsProcedures = {
@@ -20,7 +16,7 @@ export const courtsProcedures = {
         .object({
           locationId: z.string().optional(),
         })
-        .optional(),
+        .optional()
     )
     .handler(async ({ input }) => {
       return courtService.getAllCourts(input?.locationId);
@@ -31,22 +27,21 @@ export const courtsProcedures = {
     .input(
       z.object({
         id: z.string(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return courtService.getCourtById(input.id);
     }),
 
   // Create court (admin only)
-  create: baseProcedure
-    .use(withAdminAuth)
+  create: adminProcedure
     .input(
       z.object({
         locationId: z.string(),
         name: z.string().min(1),
         description: z.string().optional(),
         isActive: z.boolean().optional(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return courtService.createCourt({
@@ -58,8 +53,7 @@ export const courtsProcedures = {
     }),
 
   // Update court (admin only)
-  update: baseProcedure
-    .use(withAdminAuth)
+  update: adminProcedure
     .input(
       z.object({
         id: z.string(),
@@ -68,19 +62,18 @@ export const courtsProcedures = {
           description: z.string().optional(),
           isActive: z.boolean().optional(),
         }),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       return courtService.updateCourt(input.id, input.data);
     }),
 
   // Delete court (admin only)
-  delete: baseProcedure
-    .use(withAdminAuth)
+  delete: adminProcedure
     .input(
       z.object({
         id: z.string(),
-      }),
+      })
     )
     .handler(async ({ input }) => {
       await courtService.deleteCourt(input.id);
