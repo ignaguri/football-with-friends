@@ -1,4 +1,4 @@
-import { View, Text, YStack, Button } from "tamagui";
+import { Text, YStack, Button, Container, Spinner, Card } from "@repo/ui";
 import { useSession, signOut } from "../../src/lib/auth-client";
 import { useRouter } from "expo-router";
 
@@ -13,41 +13,56 @@ export default function ProfileScreen() {
 
   if (isPending) {
     return (
-      <View flex={1} justifyContent="center" alignItems="center">
-        <Text>Loading...</Text>
-      </View>
+      <Container variant="centered">
+        <Spinner label="Loading profile..." />
+      </Container>
     );
   }
 
   if (!session) {
     return (
-      <View flex={1} justifyContent="center" alignItems="center" padding="$4">
-        <Text marginBottom="$4">Not signed in</Text>
-        <Button onPress={() => router.replace("/auth")}>Sign In</Button>
-      </View>
+      <Container variant="centered">
+        <YStack space="$4" alignItems="center">
+          <Text fontSize="$5" color="$gray11">
+            Not signed in
+          </Text>
+          <Button variant="primary" onPress={() => router.replace("/auth")}>
+            Sign In
+          </Button>
+        </YStack>
+      </Container>
     );
   }
 
   return (
-    <YStack flex={1} padding="$4" space="$4">
-      <Text fontSize="$8" fontWeight="bold">
-        Profile
-      </Text>
-      <YStack space="$2" marginTop="$4">
-        <Text fontSize="$5" color="$gray10">
-          Name
+    <Container variant="padded">
+      <YStack space="$4">
+        <Text fontSize="$8" fontWeight="bold">
+          Profile
         </Text>
-        <Text fontSize="$6">{session.user.name}</Text>
+
+        <Card variant="outlined">
+          <YStack space="$4">
+            <YStack space="$2">
+              <Text fontSize="$3" color="$gray10" fontWeight="600">
+                NAME
+              </Text>
+              <Text fontSize="$5">{session.user.name}</Text>
+            </YStack>
+
+            <YStack space="$2">
+              <Text fontSize="$3" color="$gray10" fontWeight="600">
+                EMAIL
+              </Text>
+              <Text fontSize="$5">{session.user.email}</Text>
+            </YStack>
+          </YStack>
+        </Card>
+
+        <Button variant="danger" onPress={handleSignOut} marginTop="$4">
+          Sign Out
+        </Button>
       </YStack>
-      <YStack space="$2">
-        <Text fontSize="$5" color="$gray10">
-          Email
-        </Text>
-        <Text fontSize="$6">{session.user.email}</Text>
-      </YStack>
-      <Button marginTop="$8" onPress={handleSignOut} theme="red">
-        Sign Out
-      </Button>
-    </YStack>
+    </Container>
   );
 }

@@ -1,4 +1,13 @@
-import { View, Text, YStack, XStack, Card, ScrollView, Spinner } from "tamagui";
+import {
+  Text,
+  YStack,
+  XStack,
+  ScrollView,
+  Card,
+  Container,
+  Spinner,
+  Badge,
+} from "@repo/ui";
 import { useQuery } from "@repo/api-client";
 
 export default function MatchesScreen() {
@@ -13,57 +22,63 @@ export default function MatchesScreen() {
 
   if (isLoading) {
     return (
-      <View flex={1} justifyContent="center" alignItems="center">
-        <Spinner size="large" />
-      </View>
+      <Container variant="centered">
+        <Spinner label="Loading matches..." />
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <View flex={1} justifyContent="center" alignItems="center" padding="$4">
-        <Text color="$red10">Error loading matches</Text>
-        <Text color="$gray10" marginTop="$2">
-          {error.message}
-        </Text>
-      </View>
+      <Container variant="centered">
+        <YStack space="$2" alignItems="center">
+          <Text color="$red10" fontSize="$5" fontWeight="600">
+            Error loading matches
+          </Text>
+          <Text color="$gray10">{error.message}</Text>
+        </YStack>
+      </Container>
     );
   }
 
   return (
-    <ScrollView flex={1} padding="$4">
-      <YStack space="$4">
-        <Text fontSize="$6" fontWeight="bold">
-          Upcoming Matches
-        </Text>
-        {matches && matches.length === 0 ? (
-          <Text color="$gray10">No upcoming matches</Text>
-        ) : (
-          matches?.map((match) => (
-            <Card key={match.id} padding="$4" elevate>
-              <YStack space="$2">
-                <Text fontSize="$5" fontWeight="600">
-                  {match.court.name}
-                </Text>
-                <XStack space="$2">
-                  <Text color="$gray10">{match.date}</Text>
-                  <Text color="$gray10">•</Text>
-                  <Text color="$gray10">{match.time}</Text>
-                </XStack>
-                <XStack space="$2" marginTop="$2">
-                  <Text color="$green10">
-                    {match.signups?.filter((s) => s.status === "confirmed")
-                      .length || 0}{" "}
-                    confirmed
-                  </Text>
-                  <Text color="$gray10">•</Text>
-                  <Text color="$gray10">{match.maxPlayers} max</Text>
-                </XStack>
-              </YStack>
-            </Card>
-          ))
-        )}
-      </YStack>
+    <ScrollView flex={1}>
+      <Container variant="padded">
+        <YStack space="$4">
+          <Text fontSize="$6" fontWeight="bold">
+            Upcoming Matches
+          </Text>
+          {matches && matches.length === 0 ? (
+            <Text color="$gray10">No upcoming matches</Text>
+          ) : (
+            matches?.map((match) => (
+              <Card key={match.id} variant="outlined">
+                <YStack space="$3">
+                  <XStack justifyContent="space-between" alignItems="center">
+                    <Text fontSize="$5" fontWeight="600">
+                      {match.court.name}
+                    </Text>
+                    <Badge variant="info">
+                      {match.signups?.filter((s) => s.status === "confirmed")
+                        .length || 0}
+                      /{match.maxPlayers}
+                    </Badge>
+                  </XStack>
+                  <XStack space="$2" alignItems="center">
+                    <Text color="$gray11" fontSize="$3">
+                      {match.date}
+                    </Text>
+                    <Text color="$gray9">•</Text>
+                    <Text color="$gray11" fontSize="$3">
+                      {match.time}
+                    </Text>
+                  </XStack>
+                </YStack>
+              </Card>
+            ))
+          )}
+        </YStack>
+      </Container>
     </ScrollView>
   );
 }

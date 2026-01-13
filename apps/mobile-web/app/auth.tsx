@@ -1,4 +1,4 @@
-import { Text, Button, YStack } from "tamagui";
+import { Text, Button, YStack, Container } from "@repo/ui";
 
 export default function AuthScreen() {
   const handleGoogleSignIn = async () => {
@@ -6,16 +6,25 @@ export default function AuthScreen() {
   };
 
   return (
-    <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
-      <Text fontSize="$8" fontWeight="bold" marginBottom="$4">
-        Football with Friends
-      </Text>
-      <Text fontSize="$4" marginBottom="$8" color="$gray10">
-        Sign in to organize and join matches
-      </Text>
-      <Button size="$4" onPress={handleGoogleSignIn}>
-        Sign in with Google
-      </Button>
-    </YStack>
+    <Container variant="centered">
+      <YStack space="$6" alignItems="center" maxWidth={400}>
+        <YStack space="$3" alignItems="center">
+          <Text fontSize="$9" fontWeight="bold" textAlign="center">
+            Football with Friends
+          </Text>
+          <Text fontSize="$4" color="$gray11" textAlign="center">
+            Sign in to organize and join matches with your friends
+          </Text>
+        </YStack>
+        <Button
+          variant="primary"
+          size="$4"
+          width="100%"
+          onPress={handleGoogleSignIn}
+        >
+          Sign in with Google
+        </Button>
+      </YStack>
+    </Container>
   );
 }
