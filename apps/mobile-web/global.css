@@ -1,0 +1,11 @@
+/* Override React Native Web default background */
+.css-view-g5y9jx {
+  background-color: inherit !important;
+}
+
+/* Ensure the root React Native view inherits the theme background */
+#root > div,
+#__next > div,
+body > div > div {
+  background-color: inherit;
+}

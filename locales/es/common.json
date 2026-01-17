@@ -6,7 +6,8 @@
     "matches": "Partidos",
     "organizer": "Organizador",
     "rules": "Reglas",
-    "addMatch": "Agregar Partido"
+    "addMatch": "Agregar Partido",
+    "admin": "Admin"
   },
   "home": {
     "title": "Fútbol con los pibes",
@@ -14,7 +15,11 @@
     "matches": "Partidos",
     "rules": "Reglas e Información",
     "newMatch": "Nuevo Partido",
-    "organizerDashboard": "Panel del Organizador"
+    "organizerDashboard": "Panel del Organizador",
+    "welcome": "¡Hola, {{name}}!",
+    "upcomingMatches_one": "{{count}} partido próximo",
+    "upcomingMatches_other": "{{count}} partidos próximos",
+    "signInPrompt": "Iniciá sesión para unirte a partidos y ver tu agenda."
   },
   "matches": {
     "upcoming": "Próximos partidos",
@@ -52,13 +57,16 @@
   "stats": {
     "paid": "Pagados",
     "cost": "Costo (p.p.)",
-    "court": "Cancha"
+    "court": "Cancha",
+    "location": "Ubicación",
+    "max": "Máx"
   },
   "actions": {
     "in": "¡Estás adentro!",
     "wantToPlay": "¿Querés jugar?",
     "cancelOrGuest": "Podés cancelar tu lugar o anotar un invitado abajo.",
-    "spotsLeft": "{count, plural, one {¡Queda # lugar!} other {¡Quedan # lugares!}}",
+    "spotsLeft_one": "¡Queda {{count}} lugar!",
+    "spotsLeft_other": "¡Quedan {{count}} lugares!",
     "matchFull": "¡Partido completo!",
     "joining": "Anotando...",
     "join": "Anotarme",
@@ -68,8 +76,11 @@
     "cancelled": "Cancelaste tu lugar."
   },
   "players": {
+    "title": "Jugadores",
     "updating": "Actualizando jugadores...",
-    "noPlayers": "Aún no hay jugadores anotados"
+    "noPlayers": "Aún no hay jugadores anotados",
+    "guest": "(Invitado)",
+    "cancelledSection": "Cancelados"
   },
   "guest": {
     "title": "Anotar invitado",
@@ -153,6 +164,50 @@
     "signInWithGoogle": "Iniciar sesión con Google",
     "signInSuccess": "Inicio de sesión exitoso"
   },
+  "profile": {
+    "title": "Perfil",
+    "editProfile": "Editar Perfil",
+    "displayName": "Nombre para mostrar",
+    "displayNamePlaceholder": "Cómo querés que te llamen"
+  },
+  "auth": {
+    "welcomeBack": "Bienvenido de vuelta",
+    "createAccount": "Crear cuenta",
+    "signInDescription": "Iniciá sesión para continuar a Fútbol con los pibes",
+    "signUpDescription": "Registrate en Fútbol con los pibes",
+    "email": "Email",
+    "emailPlaceholder": "vos@ejemplo.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresá tu contraseña",
+    "passwordMinLength": "Mín. 8 caracteres",
+    "passwordHelp": "Debe tener al menos 8 caracteres",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre completo",
+    "username": "Usuario (opcional)",
+    "usernamePlaceholder": "Elegí un nombre de usuario",
+    "usernameHelp": "3-20 caracteres, letras, números y guiones bajos",
+    "signIn": "Iniciar sesión",
+    "signUp": "Crear cuenta",
+    "signingIn": "Iniciando sesión...",
+    "signingUp": "Creando cuenta...",
+    "orContinueWith": "o continuar con",
+    "noAccount": "¿No tenés cuenta?",
+    "hasAccount": "¿Ya tenés cuenta?",
+    "signUpLink": "Registrarse",
+    "signInLink": "Iniciar sesión",
+    "emailRequired": "El email es requerido",
+    "passwordRequired": "La contraseña es requerida",
+    "nameRequired": "El nombre es requerido",
+    "fillAllFields": "Por favor completá todos los campos",
+    "fillRequiredFields": "Por favor completá todos los campos requeridos",
+    "passwordTooShort": "La contraseña debe tener al menos 8 caracteres",
+    "usernameTooShort": "El nombre de usuario debe tener entre 3 y 20 caracteres",
+    "usernameInvalid": "El nombre de usuario solo puede contener letras, números y guiones bajos",
+    "signInFailed": "Error al iniciar sesión",
+    "signUpFailed": "Error al crear la cuenta",
+    "googleSignInFailed": "Error al iniciar sesión con Google",
+    "unexpectedError": "Ocurrió un error inesperado"
+  },
   "addMatch": {
     "title": "Crear partido",
     "mustSignIn": "Debés iniciar sesión.",
@@ -215,6 +270,10 @@
     "loading": "Cargando...",
     "home": "Inicio",
     "signIn": "Iniciar sesión",
+    "settings": "Configuración",
+    "language": "Idioma",
+    "save": "Guardar",
+    "notSet": "No configurado",
     "addToCalendar": "Agregar al calendario",
     "iosSafari": "Para agregar este evento a tu calendario, abrí esta página en Safari y tocá 'Agregar al calendario'. O usá Google Calendar en su lugar.",
     "logOut": "Cerrar sesión",

@@ -31,6 +31,18 @@ export type { BadgeProps } from "./components/Badge";
 export { UserAvatar } from "./components/user-avatar";
 export type { UserAvatarProps } from "./components/user-avatar";
 
+export { ThemeToggle } from "./components/theme-toggle";
+export type { ThemeToggleProps } from "./components/theme-toggle";
+
+export { LanguageSwitcher } from "./components/language-switcher";
+export type { LanguageSwitcherProps, Language } from "./components/language-switcher";
+
+export { DatePicker } from "./components/DatePicker";
+export type { DatePickerProps } from "./components/DatePicker";
+
+export { TimePicker } from "./components/TimePicker";
+export type { TimePickerProps } from "./components/TimePicker";
+
 // Re-export commonly used Tamagui components
 export {
   Text,

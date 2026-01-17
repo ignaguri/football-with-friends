@@ -1,10 +1,10 @@
 import { Stack } from "expo-router";
-import { useTheme } from "tamagui";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "tamagui";
 
-export default function AuthLayout() {
-  const theme = useTheme();
+export default function MatchesLayout() {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   return (
     <Stack
@@ -18,17 +18,15 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen
-        name="sign-in"
+        name="index"
         options={{
-          title: t("auth.signIn"),
-          headerBackVisible: true,
+          title: t("nav.matches"),
         }}
       />
       <Stack.Screen
-        name="sign-up"
+        name="[matchId]"
         options={{
-          title: t("auth.signUp"),
-          headerBackVisible: true,
+          title: t("nav.matches"),
         }}
       />
     </Stack>

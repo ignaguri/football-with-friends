@@ -9,12 +9,20 @@ import {
   Input,
   UserAvatar,
   Spinner,
+  ThemeToggle,
+  LanguageSwitcher,
 } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { useSession, signOut, client } from "@repo/api-client";
+import { useTranslation } from "react-i18next";
+import { useThemeContext } from "../../../lib/theme-context";
+import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
 
 export default function ProfileScreen() {
   const { data: session, isPending } = useSession();
+  const { t } = useTranslation();
+  const { theme, toggleTheme } = useThemeContext();
+  const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState("");
   const [displayUsername, setDisplayUsername] = useState("");
@@ -31,6 +39,11 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     await signOut();
     router.replace("/(auth)/sign-in");
+  };
+
+  const handleLanguageChange = async (lang: "en" | "es") => {
+    await changeLanguage(lang);
+    setCurrentLanguage(lang);
   };
 
   const handleSaveProfile = async () => {
@@ -69,7 +82,7 @@ export default function ProfileScreen() {
       <Container variant="padded">
         <YStack flex={1} justifyContent="center" alignItems="center">
           <Spinner size="large" />
-          <Text marginTop="$2">Loading...</Text>
+          <Text marginTop="$2">{t("shared.loading")}</Text>
         </YStack>
       </Container>
     );
@@ -80,20 +93,39 @@ export default function ProfileScreen() {
       <Container variant="padded">
         <YStack space="$6" flex={1} justifyContent="center" alignItems="center">
           <Text fontSize="$8" fontWeight="bold" textAlign="center">
-            Welcome to Fulbo con los pibes
+            {t("home.title")}
           </Text>
           <Text color="$gray11" textAlign="center">
-            Sign in to manage your profile and join matches
+            {t("auth.signInDescription")}
           </Text>
 
           <YStack space="$3" width="100%" maxWidth={300}>
             <Link href="/(auth)/sign-in" asChild>
-              <Button variant="primary">Sign In</Button>
+              <Button variant="primary">{t("shared.signIn")}</Button>
             </Link>
             <Link href="/(auth)/sign-up" asChild>
-              <Button variant="outline">Create Account</Button>
+              <Button variant="outline">{t("auth.signUpLink")}</Button>
             </Link>
           </YStack>
+
+          <Card variant="outlined" width="100%" maxWidth={300}>
+            <YStack space="$3">
+              <Text fontSize="$4" fontWeight="600">
+                {t("shared.settings")}
+              </Text>
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text color="$gray11">{t("shared.language")}</Text>
+                <LanguageSwitcher
+                  currentLanguage={currentLanguage}
+                  onLanguageChange={handleLanguageChange}
+                />
+              </XStack>
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text color="$gray11">{t("shared.toggleTheme")}</Text>
+                <ThemeToggle theme={theme} onToggle={toggleTheme} />
+              </XStack>
+            </YStack>
+          </Card>
         </YStack>
       </Container>
     );
@@ -105,10 +137,6 @@ export default function ProfileScreen() {
   return (
     <Container variant="padded">
       <YStack space="$4">
-        <Text fontSize="$8" fontWeight="bold">
-          Profile
-        </Text>
-
         <Card variant="elevated" padding="$4">
           <YStack space="$4">
             <XStack space="$4" alignItems="center">
@@ -138,17 +166,17 @@ export default function ProfileScreen() {
             {isEditing ? (
               <YStack space="$3">
                 <Input
-                  label="Username"
-                  placeholder="Choose a username"
+                  label={t("auth.username")}
+                  placeholder={t("auth.usernamePlaceholder")}
                   value={username}
                   onChangeText={setUsername}
                   autoCapitalize="none"
-                  helperText="3-20 characters, letters, numbers, underscores"
+                  helperText={t("auth.usernameHelp")}
                 />
 
                 <Input
-                  label="Display Name"
-                  placeholder="How you want to be called"
+                  label={t("profile.displayName")}
+                  placeholder={t("profile.displayNamePlaceholder")}
                   value={displayUsername}
                   onChangeText={setDisplayUsername}
                 />
@@ -166,7 +194,7 @@ export default function ProfileScreen() {
                     onPress={() => setIsEditing(false)}
                     disabled={isSaving}
                   >
-                    Cancel
+                    {t("shared.cancel")}
                   </Button>
                   <Button
                     flex={1}
@@ -174,13 +202,13 @@ export default function ProfileScreen() {
                     onPress={handleSaveProfile}
                     disabled={isSaving}
                   >
-                    {isSaving ? <Spinner size="small" /> : "Save"}
+                    {isSaving ? <Spinner size="small" /> : t("shared.save")}
                   </Button>
                 </XStack>
               </YStack>
             ) : (
               <Button variant="outline" onPress={() => setIsEditing(true)}>
-                Edit Profile
+                {t("profile.editProfile")}
               </Button>
             )}
           </YStack>
@@ -189,29 +217,42 @@ export default function ProfileScreen() {
         <Card variant="outlined">
           <YStack space="$2">
             <Text fontSize="$5" fontWeight="600">
-              Account Info
+              {t("shared.user")}
             </Text>
             <YStack space="$1">
               <XStack justifyContent="space-between">
-                <Text color="$gray11">Name</Text>
-                <Text>{user.name || "Not set"}</Text>
+                <Text color="$gray11">{t("shared.name")}</Text>
+                <Text>{user.name || t("shared.notSet")}</Text>
               </XStack>
               <XStack justifyContent="space-between">
-                <Text color="$gray11">Email</Text>
+                <Text color="$gray11">{t("auth.email")}</Text>
                 <Text>{user.email}</Text>
-              </XStack>
-              <XStack justifyContent="space-between">
-                <Text color="$gray11">Auth Method</Text>
-                <Text>
-                  {user.image?.includes("google") ? "Google" : "Email/Password"}
-                </Text>
               </XStack>
             </YStack>
           </YStack>
         </Card>
 
+        <Card variant="outlined">
+          <YStack space="$3">
+            <Text fontSize="$5" fontWeight="600">
+              {t("shared.settings")}
+            </Text>
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text color="$gray11">{t("shared.language")}</Text>
+              <LanguageSwitcher
+                currentLanguage={currentLanguage}
+                onLanguageChange={handleLanguageChange}
+              />
+            </XStack>
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text color="$gray11">{t("shared.toggleTheme")}</Text>
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            </XStack>
+          </YStack>
+        </Card>
+
         <Button variant="danger" onPress={handleSignOut}>
-          Sign Out
+          {t("shared.signOut")}
         </Button>
       </YStack>
     </Container>

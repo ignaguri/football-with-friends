@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { signIn } from "@repo/api-client";
+import { useTranslation } from "react-i18next";
 
 export default function SignInScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -11,7 +13,7 @@ export default function SignInScreen() {
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      setError("Please fill in all fields");
+      setError(t("auth.fillAllFields"));
       return;
     }
 
@@ -25,14 +27,14 @@ export default function SignInScreen() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Sign in failed");
+        setError(result.error.message || t("auth.signInFailed"));
         return;
       }
 
       // Navigate to main app
       router.replace("/(tabs)");
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(t("auth.unexpectedError"));
       console.error("Sign in error:", err);
     } finally {
       setIsLoading(false);
@@ -51,7 +53,7 @@ export default function SignInScreen() {
         callbackURL: `${baseUrl}/(tabs)`,
       });
     } catch (err) {
-      setError("Google sign in failed");
+      setError(t("auth.googleSignInFailed"));
       console.error("Google sign in error:", err);
     } finally {
       setIsLoading(false);
@@ -63,32 +65,32 @@ export default function SignInScreen() {
       <YStack space="$6" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto">
         <YStack space="$2" alignItems="center">
           <Text fontSize="$9" fontWeight="bold">
-            Welcome Back
+            {t("auth.welcomeBack")}
           </Text>
           <Text color="$gray11" textAlign="center">
-            Sign in to continue to Fulbo con los pibes
+            {t("auth.signInDescription")}
           </Text>
         </YStack>
 
         <Card variant="elevated" padding="$4">
           <YStack space="$4">
             <Input
-              label="Email"
-              placeholder="you@example.com"
+              label={t("auth.email")}
+              placeholder={t("auth.emailPlaceholder")}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              error={error && !email ? "Email is required" : undefined}
+              error={error && !email ? t("auth.emailRequired") : undefined}
             />
 
             <Input
-              label="Password"
-              placeholder="Enter your password"
+              label={t("auth.password")}
+              placeholder={t("auth.passwordPlaceholder")}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              error={error && !password ? "Password is required" : undefined}
+              error={error && !password ? t("auth.passwordRequired") : undefined}
             />
 
             {error && (
@@ -102,12 +104,12 @@ export default function SignInScreen() {
               disabled={isLoading}
               variant="primary"
             >
-              {isLoading ? <Spinner size="small" /> : "Sign In"}
+              {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
             </Button>
 
             <YStack space="$3" alignItems="center">
               <Text color="$gray10" fontSize="$3">
-                or continue with
+                {t("auth.orContinueWith")}
               </Text>
 
               <Button
@@ -116,7 +118,7 @@ export default function SignInScreen() {
                 variant="outline"
                 width="100%"
               >
-                Sign in with Google
+                {t("signin.signInWithGoogle")}
               </Button>
             </YStack>
           </YStack>
@@ -124,10 +126,10 @@ export default function SignInScreen() {
 
         <YStack space="$2" alignItems="center">
           <Text color="$gray11">
-            Don't have an account?{" "}
+            {t("auth.noAccount")}{" "}
             <Link href="/(auth)/sign-up" asChild>
               <Text color="$blue10" fontWeight="600">
-                Sign Up
+                {t("auth.signUpLink")}
               </Text>
             </Link>
           </Text>

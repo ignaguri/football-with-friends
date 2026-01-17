@@ -5,38 +5,39 @@ export interface CustomButtonProps extends ButtonProps {
 }
 
 export function Button({ variant = "primary", ...props }: CustomButtonProps) {
+  // Use theme-aware colors that adapt to light/dark mode
   const variantStyles = {
     primary: {
       backgroundColor: "$blue10",
-      color: "$white1",
+      color: "#FFFFFF",
       hoverStyle: { backgroundColor: "$blue11" },
-      pressStyle: { backgroundColor: "$blue9" },
+      pressStyle: { backgroundColor: "$blue11" },
     },
     secondary: {
-      backgroundColor: "$gray5",
-      color: "$gray12",
-      hoverStyle: { backgroundColor: "$gray6" },
-      pressStyle: { backgroundColor: "$gray4" },
+      backgroundColor: "$backgroundStrong",
+      color: "$color",
+      hoverStyle: { backgroundColor: "$backgroundHover" },
+      pressStyle: { backgroundColor: "$backgroundPress" },
     },
     outline: {
       backgroundColor: "transparent",
       borderWidth: 1,
-      borderColor: "$gray7",
-      color: "$gray12",
-      hoverStyle: { backgroundColor: "$gray3" },
-      pressStyle: { backgroundColor: "$gray2" },
+      borderColor: "$borderColor",
+      color: "$color",
+      hoverStyle: { backgroundColor: "$backgroundHover" },
+      pressStyle: { backgroundColor: "$backgroundPress" },
     },
     ghost: {
       backgroundColor: "transparent",
-      color: "$gray12",
-      hoverStyle: { backgroundColor: "$gray3" },
-      pressStyle: { backgroundColor: "$gray2" },
+      color: "$color",
+      hoverStyle: { backgroundColor: "$backgroundHover" },
+      pressStyle: { backgroundColor: "$backgroundPress" },
     },
     danger: {
       backgroundColor: "$red10",
-      color: "$white1",
+      color: "#FFFFFF",
       hoverStyle: { backgroundColor: "$red11" },
-      pressStyle: { backgroundColor: "$red9" },
+      pressStyle: { backgroundColor: "$red11" },
     },
   };
 

@@ -5,7 +5,8 @@
     "matches": "Matches",
     "organizer": "Organizer",
     "rules": "Rules",
-    "addMatch": "Add Match"
+    "addMatch": "Add Match",
+    "admin": "Admin"
   },
   "home": {
     "title": "Football with Friends",
@@ -13,7 +14,11 @@
     "matches": "Matches",
     "rules": "Rules & Info",
     "newMatch": "New Match",
-    "organizerDashboard": "Organizer Dashboard"
+    "organizerDashboard": "Organizer Dashboard",
+    "welcome": "Welcome, {{name}}!",
+    "upcomingMatches_one": "{{count}} upcoming match",
+    "upcomingMatches_other": "{{count}} upcoming matches",
+    "signInPrompt": "Sign in to join matches and see your schedule."
   },
   "matches": {
     "upcoming": "Upcoming Matches",
@@ -51,13 +56,16 @@
   "stats": {
     "paid": "Paid",
     "cost": "Cost (p.p.)",
-    "court": "Court"
+    "court": "Court",
+    "location": "Location",
+    "max": "Max"
   },
   "actions": {
     "in": "You're in!",
     "wantToPlay": "Want to play?",
     "cancelOrGuest": "You can cancel your spot or sign up a guest below.",
-    "spotsLeft": "{count, plural, one {# spot left!} other {# spots left!}}",
+    "spotsLeft_one": "{{count}} spot left!",
+    "spotsLeft_other": "{{count}} spots left!",
     "matchFull": "Match is full!",
     "joining": "Joining...",
     "join": "Join Match",
@@ -67,8 +75,11 @@
     "cancelled": "You have cancelled your spot."
   },
   "players": {
+    "title": "Players",
     "updating": "Updating players...",
-    "noPlayers": "No players signed up yet"
+    "noPlayers": "No players signed up yet",
+    "guest": "(Guest)",
+    "cancelledSection": "Cancelled"
   },
   "guest": {
     "title": "Sign up a guest",
@@ -152,6 +163,50 @@
     "signInWithGoogle": "Sign in with Google",
     "signInSuccess": "Successfully signed in"
   },
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit Profile",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "How you want to be called"
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account",
+    "signInDescription": "Sign in to continue to Fulbo con los pibes",
+    "signUpDescription": "Sign up for Fulbo con los pibes",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordMinLength": "Min. 8 characters",
+    "passwordHelp": "Must be at least 8 characters",
+    "name": "Name",
+    "namePlaceholder": "Your full name",
+    "username": "Username (optional)",
+    "usernamePlaceholder": "Choose a username",
+    "usernameHelp": "3-20 characters, letters, numbers, underscores only",
+    "signIn": "Sign In",
+    "signUp": "Create Account",
+    "signingIn": "Signing in...",
+    "signingUp": "Creating account...",
+    "orContinueWith": "or continue with",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUpLink": "Sign Up",
+    "signInLink": "Sign In",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "nameRequired": "Name is required",
+    "fillAllFields": "Please fill in all fields",
+    "fillRequiredFields": "Please fill in all required fields",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "usernameTooShort": "Username must be between 3 and 20 characters",
+    "usernameInvalid": "Username can only contain letters, numbers, and underscores",
+    "signInFailed": "Sign in failed",
+    "signUpFailed": "Sign up failed",
+    "googleSignInFailed": "Google sign in failed",
+    "unexpectedError": "An unexpected error occurred"
+  },
   "addMatch": {
     "title": "Add Match",
     "mustSignIn": "You must be signed in.",
@@ -212,6 +267,10 @@
     "loading": "Loading...",
     "home": "Home",
     "signIn": "Sign In",
+    "settings": "Settings",
+    "language": "Language",
+    "save": "Save",
+    "notSet": "Not set",
     "addToCalendar": "Add to calendar",
     "iosSafari": "To add this event to your calendar, please open this page in Safari and tap 'Add to Calendar.' Or use Google Calendar instead.",
     "logOut": "Log out",

@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { signUp, signIn } from "@repo/api-client";
+import { useTranslation } from "react-i18next";
 
 export default function SignUpScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -13,22 +15,22 @@ export default function SignUpScreen() {
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {
-      setError("Please fill in all required fields");
+      setError(t("auth.fillRequiredFields"));
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
+      setError(t("auth.passwordTooShort"));
       return;
     }
 
     if (username && (username.length < 3 || username.length > 20)) {
-      setError("Username must be between 3 and 20 characters");
+      setError(t("auth.usernameTooShort"));
       return;
     }
 
     if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
-      setError("Username can only contain letters, numbers, and underscores");
+      setError(t("auth.usernameInvalid"));
       return;
     }
 
@@ -44,14 +46,14 @@ export default function SignUpScreen() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Sign up failed");
+        setError(result.error.message || t("auth.signUpFailed"));
         return;
       }
 
       // Navigate to main app
       router.replace("/(tabs)");
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(t("auth.unexpectedError"));
       console.error("Sign up error:", err);
     } finally {
       setIsLoading(false);
@@ -70,7 +72,7 @@ export default function SignUpScreen() {
         callbackURL: `${baseUrl}/(tabs)`,
       });
     } catch (err) {
-      setError("Google sign up failed");
+      setError(t("auth.googleSignInFailed"));
       console.error("Google sign up error:", err);
     } finally {
       setIsLoading(false);
@@ -82,50 +84,50 @@ export default function SignUpScreen() {
       <YStack space="$6" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto">
         <YStack space="$2" alignItems="center">
           <Text fontSize="$9" fontWeight="bold">
-            Create Account
+            {t("auth.createAccount")}
           </Text>
           <Text color="$gray11" textAlign="center">
-            Sign up for Fulbo con los pibes
+            {t("auth.signUpDescription")}
           </Text>
         </YStack>
 
         <Card variant="elevated" padding="$4">
           <YStack space="$4">
             <Input
-              label="Name *"
-              placeholder="Your full name"
+              label={`${t("auth.name")} *`}
+              placeholder={t("auth.namePlaceholder")}
               value={name}
               onChangeText={setName}
-              error={error && !name ? "Name is required" : undefined}
+              error={error && !name ? t("auth.nameRequired") : undefined}
             />
 
             <Input
-              label="Email *"
-              placeholder="you@example.com"
+              label={`${t("auth.email")} *`}
+              placeholder={t("auth.emailPlaceholder")}
               value={email}
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              error={error && !email ? "Email is required" : undefined}
+              error={error && !email ? t("auth.emailRequired") : undefined}
             />
 
             <Input
-              label="Password *"
-              placeholder="Min. 8 characters"
+              label={`${t("auth.password")} *`}
+              placeholder={t("auth.passwordMinLength")}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              error={error && !password ? "Password is required" : undefined}
-              helperText="Must be at least 8 characters"
+              error={error && !password ? t("auth.passwordRequired") : undefined}
+              helperText={t("auth.passwordHelp")}
             />
 
             <Input
-              label="Username (optional)"
-              placeholder="Choose a username"
+              label={t("auth.username")}
+              placeholder={t("auth.usernamePlaceholder")}
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
-              helperText="3-20 characters, letters, numbers, underscores only"
+              helperText={t("auth.usernameHelp")}
             />
 
             {error && (
@@ -139,12 +141,12 @@ export default function SignUpScreen() {
               disabled={isLoading}
               variant="primary"
             >
-              {isLoading ? <Spinner size="small" /> : "Create Account"}
+              {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
             </Button>
 
             <YStack space="$3" alignItems="center">
               <Text color="$gray10" fontSize="$3">
-                or continue with
+                {t("auth.orContinueWith")}
               </Text>
 
               <Button
@@ -153,7 +155,7 @@ export default function SignUpScreen() {
                 variant="outline"
                 width="100%"
               >
-                Sign up with Google
+                {t("signin.signInWithGoogle")}
               </Button>
             </YStack>
           </YStack>
@@ -161,10 +163,10 @@ export default function SignUpScreen() {
 
         <YStack space="$2" alignItems="center">
           <Text color="$gray11">
-            Already have an account?{" "}
+            {t("auth.hasAccount")}{" "}
             <Link href="/(auth)/sign-in" asChild>
               <Text color="$blue10" fontWeight="600">
-                Sign In
+                {t("auth.signInLink")}
               </Text>
             </Link>
           </Text>
