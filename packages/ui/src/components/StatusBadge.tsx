@@ -4,10 +4,11 @@ import {
   CalendarCheck,
   CalendarX,
   Calendar,
+  Clock,
   type LucideIcon,
 } from "@tamagui/lucide-icons";
 
-export type PlayerStatusType = "PENDING" | "PAID" | "CANCELLED";
+export type PlayerStatusType = "PENDING" | "PAID" | "CANCELLED" | "SUBSTITUTE";
 export type MatchStatusType = "upcoming" | "cancelled" | "played";
 
 interface StatusConfig {
@@ -31,6 +32,11 @@ const PLAYER_STATUS_CONFIG: Record<PlayerStatusType, StatusConfig> = {
     backgroundColor: "$red4",
     textColor: "$red11",
     Icon: CalendarX,
+  },
+  SUBSTITUTE: {
+    backgroundColor: "$blue4",
+    textColor: "$blue11",
+    Icon: Clock,
   },
 };
 

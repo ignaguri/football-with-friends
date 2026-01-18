@@ -28,8 +28,9 @@ export interface MatchesTable {
   time: string; // HH:MM format
   status: "upcoming" | "cancelled" | "completed";
   max_players: number;
+  max_substitutes: number;
   cost_per_player: string | null;
-  shirt_cost: string | null;
+  same_day_cost: string | null;
   created_by_user_id: string;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
@@ -41,7 +42,7 @@ export interface SignupsTable {
   user_id: string | null; // nullable for guests
   player_name: string;
   player_email: string;
-  status: "PAID" | "PENDING" | "CANCELLED";
+  status: "PAID" | "PENDING" | "CANCELLED" | "SUBSTITUTE";
   signup_type: "self" | "guest" | "admin_added" | "invitation";
   guest_owner_id: string | null; // for guest signups
   added_by_user_id: string;
@@ -87,6 +88,12 @@ export interface UserTable {
   profilePicture: string | null;
 }
 
+export interface SettingsTable {
+  key: string;
+  value: string;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -95,6 +102,7 @@ export interface Database {
   signups: SignupsTable;
   match_invitations: MatchInvitationsTable;
   user: UserTable;
+  settings: SettingsTable;
 }
 
 // SQLite system tables used by migrations and database introspection
@@ -138,3 +146,7 @@ export type CourtUpdate = Updateable<CourtsTable>;
 export type MatchInvitation = Selectable<MatchInvitationsTable>;
 export type NewMatchInvitation = Insertable<MatchInvitationsTable>;
 export type MatchInvitationUpdate = Updateable<MatchInvitationsTable>;
+
+export type Setting = Selectable<SettingsTable>;
+export type NewSetting = Insertable<SettingsTable>;
+export type SettingUpdate = Updateable<SettingsTable>;

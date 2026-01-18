@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Platform, Pressable, Modal, FlatList } from "react-native";
+import { Platform, Pressable } from "react-native";
 import { YStack, Text, XStack, Button } from "tamagui";
 import { Clock } from "@tamagui/lucide-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export interface TimePickerProps {
   value: string;
@@ -12,21 +13,6 @@ export interface TimePickerProps {
   disabled?: boolean;
 }
 
-// Generate time slots in 30-minute increments
-const generateTimeSlots = (): string[] => {
-  const slots: string[] = [];
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const h = hour.toString().padStart(2, "0");
-      const m = minute.toString().padStart(2, "0");
-      slots.push(`${h}:${m}`);
-    }
-  }
-  return slots;
-};
-
-const TIME_SLOTS = generateTimeSlots();
-
 export function TimePicker({
   value,
   onChange,
@@ -36,68 +22,60 @@ export function TimePicker({
   disabled = false,
 }: TimePickerProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const [tempTime, setTempTime] = useState<Date | null>(null);
 
-  // For web, we use a native select
-  if (Platform.OS === "web") {
-    return (
-      <YStack space="$2">
-        {label && (
-          <Text fontSize="$3" fontWeight="600" color="$gray12">
-            {label}
-          </Text>
-        )}
-        <XStack
-          alignItems="center"
-          backgroundColor="$background"
-          borderColor={error ? "$red8" : "$borderColor"}
-          borderWidth={1}
-          borderRadius="$4"
-          padding="$3"
-          opacity={disabled ? 0.5 : 1}
-        >
-          <Clock size={20} color="$gray10" />
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            style={{
-              flex: 1,
-              marginLeft: 12,
-              border: "none",
-              background: "transparent",
-              fontSize: 16,
-              color: "inherit",
-              outline: "none",
-            }}
-          >
-            <option value="" disabled>
-              {placeholder}
-            </option>
-            {TIME_SLOTS.map((slot) => (
-              <option key={slot} value={slot}>
-                {slot}
-              </option>
-            ))}
-          </select>
-        </XStack>
-        {error && (
-          <Text fontSize="$2" color="$red10">
-            {error}
-          </Text>
-        )}
-      </YStack>
-    );
-  }
+  const parseTimeToDate = (timeStr: string): Date => {
+    const date = new Date();
+    if (timeStr) {
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      date.setHours(hours, minutes, 0, 0);
+    } else {
+      // Default to 19:00 (7 PM) if no value
+      date.setHours(19, 0, 0, 0);
+    }
+    return date;
+  };
 
-  // For native, show a modal picker
+  const formatTimeFromDate = (date: Date): string => {
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  const handleTimeChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setShowPicker(false);
+      if (selectedDate) {
+        onChange(formatTimeFromDate(selectedDate));
+      }
+    } else if (selectedDate) {
+      // On iOS, store temporarily until Done is pressed
+      setTempTime(selectedDate);
+    }
+  };
+
+  const handleDone = () => {
+    const finalTime = tempTime || parseTimeToDate(value);
+    onChange(formatTimeFromDate(finalTime));
+    setTempTime(null);
+    setShowPicker(false);
+  };
+
+  const handleOpen = () => {
+    if (!disabled) {
+      setTempTime(null);
+      setShowPicker(true);
+    }
+  };
+
   return (
-    <YStack space="$2">
+    <YStack gap="$2">
       {label && (
         <Text fontSize="$3" fontWeight="600" color="$gray12">
           {label}
         </Text>
       )}
-      <Pressable onPress={() => !disabled && setShowPicker(true)}>
+      <Pressable onPress={handleOpen}>
         <XStack
           alignItems="center"
           backgroundColor="$background"
@@ -113,66 +91,20 @@ export function TimePicker({
           </Text>
         </XStack>
       </Pressable>
-
-      <Modal
-        visible={showPicker}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowPicker(false)}
-      >
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-          onPress={() => setShowPicker(false)}
-        >
-          <YStack
-            position="absolute"
-            bottom={0}
-            left={0}
-            right={0}
-            backgroundColor="$background"
-            borderTopLeftRadius="$4"
-            borderTopRightRadius="$4"
-            maxHeight={400}
-          >
-            <XStack padding="$4" justifyContent="space-between" alignItems="center">
-              <Text fontSize="$5" fontWeight="600">
-                {label || "Select Time"}
-              </Text>
-              <Button size="$3" onPress={() => setShowPicker(false)}>
-                Done
-              </Button>
-            </XStack>
-            <FlatList
-              data={TIME_SLOTS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    onChange(item);
-                    setShowPicker(false);
-                  }}
-                >
-                  <XStack
-                    padding="$3"
-                    backgroundColor={value === item ? "$blue4" : "transparent"}
-                    borderBottomWidth={1}
-                    borderBottomColor="$borderColor"
-                  >
-                    <Text
-                      fontSize="$5"
-                      fontWeight={value === item ? "600" : "400"}
-                      color={value === item ? "$blue10" : "$color"}
-                    >
-                      {item}
-                    </Text>
-                  </XStack>
-                </Pressable>
-              )}
-            />
-          </YStack>
-        </Pressable>
-      </Modal>
-
+      {showPicker && (
+        <DateTimePicker
+          value={parseTimeToDate(value)}
+          mode="time"
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={handleTimeChange}
+          minuteInterval={30}
+        />
+      )}
+      {Platform.OS === "ios" && showPicker && (
+        <Button size="$3" onPress={handleDone}>
+          Done
+        </Button>
+      )}
       {error && (
         <Text fontSize="$2" color="$red10">
           {error}

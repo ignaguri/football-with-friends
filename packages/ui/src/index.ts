@@ -78,5 +78,7 @@ export {
   Paragraph,
   Separator,
   Image,
-  useToastController,
 } from "tamagui";
+
+// Toast utilities
+export { useToastController } from "@tamagui/toast";

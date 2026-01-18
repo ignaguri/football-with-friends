@@ -191,6 +191,11 @@ export interface SignupRepository {
   getPaidSignupCount(matchId: string): Promise<number>;
 
   /**
+   * Get substitute count for a match (players with status = "SUBSTITUTE")
+   */
+  getSubstituteCount(matchId: string): Promise<number>;
+
+  /**
    * Check if a match is at full capacity (based on paid players)
    */
   isMatchFull(matchId: string, maxPlayers: number): Promise<boolean>;

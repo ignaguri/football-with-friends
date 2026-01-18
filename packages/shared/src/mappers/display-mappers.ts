@@ -85,7 +85,7 @@ export function matchToDisplay(match: Match): MatchDisplay {
     locationId: match.locationId,
     locationName: match.location?.name || "Unknown Location",
     costCourt: match.costPerPlayer || "",
-    costShirts: match.shirtCost || "",
+    costShirts: match.sameDayCost || "",
     maxPlayers: match.maxPlayers,
     availableSpots: match.maxPlayers - (match.signups?.length || 0),
   };
@@ -131,7 +131,7 @@ export function matchDetailsToDisplay(
     courtNumber: courtDisplay,
     status: matchDetails.status,
     costCourt: matchDetails.costPerPlayer || "",
-    costShirts: matchDetails.shirtCost || "",
+    costShirts: matchDetails.sameDayCost || "",
   };
 
   return {

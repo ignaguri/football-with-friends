@@ -75,8 +75,9 @@ function dbMatchToMatch(row: any): Match {
     time: row.time,
     status: row.status,
     maxPlayers: row.max_players,
+    maxSubstitutes: row.max_substitutes || 0,
     costPerPlayer: row.cost_per_player,
-    shirtCost: row.shirt_cost,
+    sameDayCost: row.same_day_cost,
     createdByUserId: row.created_by_user_id,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -404,7 +405,7 @@ export class TursoMatchRepository implements MatchRepository {
         "matches.status",
         "matches.max_players",
         "matches.cost_per_player",
-        "matches.shirt_cost",
+        "matches.same_day_cost",
         "matches.created_by_user_id",
         "matches.created_at",
         "matches.updated_at",
@@ -577,8 +578,9 @@ export class TursoMatchRepository implements MatchRepository {
       time: matchData.time,
       status: "upcoming" as const,
       max_players: matchData.maxPlayers || 10,
+      max_substitutes: matchData.maxSubstitutes || 2,
       cost_per_player: matchData.costPerPlayer || null,
-      shirt_cost: matchData.shirtCost || null,
+      same_day_cost: matchData.sameDayCost || null,
       created_by_user_id: matchData.createdByUserId,
       created_at: now,
       updated_at: now,
@@ -606,8 +608,11 @@ export class TursoMatchRepository implements MatchRepository {
         ...(updates.costPerPlayer !== undefined && {
           cost_per_player: updates.costPerPlayer,
         }),
-        ...(updates.shirtCost !== undefined && {
-          shirt_cost: updates.shirtCost,
+        ...(updates.maxSubstitutes !== undefined && {
+          max_substitutes: updates.maxSubstitutes,
+        }),
+        ...(updates.sameDayCost !== undefined && {
+          same_day_cost: updates.sameDayCost,
         }),
         updated_at: now,
       })
@@ -742,6 +747,17 @@ export class TursoSignupRepository implements SignupRepository {
       .select(sql`COUNT(*)`.as("count"))
       .where("match_id", "=", matchId)
       .where("status", "=", "PAID")
+      .executeTakeFirst();
+
+    return Number(result?.count || 0);
+  }
+
+  async getSubstituteCount(matchId: string): Promise<number> {
+    const result = await this.db
+      .selectFrom("signups")
+      .select(sql`COUNT(*)`.as("count"))
+      .where("match_id", "=", matchId)
+      .where("status", "=", "SUBSTITUTE")
       .executeTakeFirst();
 
     return Number(result?.count || 0);

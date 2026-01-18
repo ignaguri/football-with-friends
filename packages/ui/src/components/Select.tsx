@@ -4,8 +4,8 @@ import {
   SelectProps,
   YStack,
   Text,
-  styled,
-  getTokens,
+  Adapt,
+  Sheet,
 } from "tamagui";
 import { Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
 
@@ -81,7 +81,7 @@ function WebSelect({
   );
 }
 
-// Native Tamagui Select for mobile
+// Native Tamagui Select for mobile with Adapt Sheet
 function NativeSelect({
   label,
   error,
@@ -108,6 +108,25 @@ function NativeSelect({
         >
           <TamaguiSelect.Value placeholder={placeholder} />
         </TamaguiSelect.Trigger>
+
+        <Adapt platform="touch">
+          <Sheet
+            modal
+            dismissOnSnapToBottom
+            snapPointsMode="fit"
+          >
+            <Sheet.Frame>
+              <Sheet.ScrollView>
+                <Adapt.Contents />
+              </Sheet.ScrollView>
+            </Sheet.Frame>
+            <Sheet.Overlay
+              animation="lazy"
+              enterStyle={{ opacity: 0 }}
+              exitStyle={{ opacity: 0 }}
+            />
+          </Sheet>
+        </Adapt>
 
         <TamaguiSelect.Content zIndex={200000}>
           <TamaguiSelect.ScrollUpButton

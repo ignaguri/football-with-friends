@@ -50,7 +50,16 @@
     "noPaymentMethod": "Método de pago no configurado",
     "paymentOpenError": "No se pudo abrir el enlace de pago",
     "noOrganizerPhone": "Teléfono del organizador no configurado",
-    "whatsappError": "No se pudo abrir WhatsApp"
+    "whatsappError": "No se pudo abrir WhatsApp",
+    "substituteList": "Suplentes",
+    "youAreSubstitute": "Estás en la lista de suplentes",
+    "substitutePosition": "Posición #{{position}}",
+    "spotOpened": "¡Se liberó un lugar!",
+    "claimSpot": "¡Reclamalo ahora!",
+    "spotTaken": "Lo siento, alguien más reclamó el lugar",
+    "sameDayFee": "Recargo mismo día",
+    "totalCost": "Total",
+    "matchCompletelyFull": "El partido y la lista de suplentes están completos"
   },
   "share": {
     "title": "Compartir este partido",
@@ -244,6 +253,9 @@
     "maxPlayers": "Máx. Jugadores",
     "maxPlayersMin": "Máx. jugadores debe ser al menos 1",
     "maxPlayersMax": "Máx. jugadores no puede exceder 50",
+    "maxSubstitutes": "Máx. Suplentes",
+    "costPerPlayer": "Costo por persona",
+    "sameDayCost": "Recargo mismo día",
     "selectDate": "Seleccionar fecha",
     "selectTime": "Seleccionar hora"
   },
@@ -318,7 +330,19 @@
     "cancelled": "Cancelado",
     "inactive": "Inactivo",
     "played": "Jugado",
-    "upcoming": "Próximo"
+    "upcoming": "Próximo",
+    "substitute": "Suplente"
+  },
+  "settings": {
+    "title": "Configuración",
+    "costs": "Configuración de Costos",
+    "defaultCostPerPlayer": "Costo por jugador predeterminado",
+    "sameDayExtraCost": "Recargo mismo día predeterminado",
+    "defaultMaxSubstitutes": "Máx. suplentes predeterminado",
+    "paypalUrl": "URL de PayPal",
+    "organizerWhatsapp": "WhatsApp del organizador",
+    "saved": "Configuración guardada",
+    "saveError": "Error al guardar configuración"
   },
   "locations": {
     "title": "Predios",

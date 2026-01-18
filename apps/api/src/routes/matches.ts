@@ -62,9 +62,9 @@ app.post(
       locationId: z.string().min(1, "Location is required"),
       courtId: z.string().optional(),
       maxPlayers: z.number().min(2).default(10),
-      maxSubstitutes: z.number().min(0).default(0),
+      maxSubstitutes: z.number().min(0).default(2),
       costPerPlayer: z.string().optional(),
-      shirtCost: z.string().optional(),
+      sameDayCost: z.string().optional(),
     })
   ),
   async (c) => {
@@ -103,7 +103,7 @@ app.patch(
       maxPlayers: z.number().min(2).optional(),
       maxSubstitutes: z.number().min(0).optional(),
       costPerPlayer: z.string().nullable().optional(),
-      shirtCost: z.string().nullable().optional(),
+      sameDayCost: z.string().nullable().optional(),
       status: z.enum(["upcoming", "completed", "cancelled"]).optional(),
     })
   ),
@@ -182,7 +182,7 @@ app.post(
       matchId: z.string(),
       guestName: z.string().min(1, "Guest name is required"),
       guestEmail: z.string().email().optional(),
-      status: z.enum(["PENDING", "PAID"]).default("PENDING"),
+      status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
     })
   ),
   async (c) => {
@@ -215,7 +215,7 @@ app.patch(
   zValidator(
     "json",
     z.object({
-      status: z.enum(["PENDING", "PAID", "CANCELLED"]).optional(),
+      status: z.enum(["PENDING", "PAID", "CANCELLED", "SUBSTITUTE"]).optional(),
     })
   ),
   async (c) => {

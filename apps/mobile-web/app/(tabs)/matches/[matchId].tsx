@@ -55,7 +55,7 @@ interface MatchDetails {
   maxPlayers: number;
   maxSubstitutes?: number;
   costPerPlayer?: string;
-  shirtCost?: string;
+  sameDayCost?: string;
   paymentMethod?: string;
   location?: { id: string; name: string; address?: string };
   court?: { id: string; name: string };
@@ -327,6 +327,16 @@ END:VCALENDAR`;
           variant: "outline",
         });
         break;
+
+      case "SUBSTITUTE":
+        // Show actions similar to PENDING, but indicate they're on waitlist
+        actions.push({
+          icon: X,
+          label: t("actions.cancel"),
+          onPress: () => handleCancelSignup(player.id, player.status),
+          variant: "danger",
+        });
+        break;
     }
 
     return actions;
@@ -349,14 +359,34 @@ END:VCALENDAR`;
   const paidCount = match?.signups?.filter((s) => s.status === "PAID").length || 0;
   const pendingCount =
     match?.signups?.filter((s) => s.status === "PENDING").length || 0;
+  const substituteCount =
+    match?.signups?.filter((s) => s.status === "SUBSTITUTE").length || 0;
   const activeCount = paidCount + pendingCount;
   const isCancelled = match?.status === "cancelled";
   const isParticipating = match?.isUserSignedUp;
+  const isUserSubstitute = match?.userSignup?.status === "SUBSTITUTE";
+
+  // Check if match is today for same-day cost
+  const isMatchToday = match ? (() => {
+    const today = new Date();
+    const matchDate = new Date(match.date);
+    return (
+      today.getFullYear() === matchDate.getFullYear() &&
+      today.getMonth() === matchDate.getMonth() &&
+      today.getDate() === matchDate.getDate()
+    );
+  })() : false;
+
+  // Calculate total cost for same-day matches
+  const baseCost = parseFloat(match?.costPerPlayer || "0");
+  const sameDayCost = isMatchToday ? parseFloat(match?.sameDayCost || "0") : 0;
+  const totalCost = baseCost + sameDayCost;
 
   const statusLabels: Record<PlayerStatusType, string> = {
     PENDING: t("status.pending"),
     PAID: t("status.paid"),
     CANCELLED: t("status.cancelled"),
+    SUBSTITUTE: t("status.substitute"),
   };
 
   if (isLoading) {
@@ -495,11 +525,45 @@ END:VCALENDAR`;
                       {t("actions.wantToPlay")}
                     </Button>
                   </>
+                ) : match.maxSubstitutes && match.maxSubstitutes > 0 && substituteCount < match.maxSubstitutes ? (
+                  <>
+                    <Text fontSize="$5" fontWeight="600" color="$orange10">
+                      {t("actions.matchFull")}
+                    </Text>
+                    <Text fontSize="$3" color="$gray11" textAlign="center">
+                      {t("matchDetail.substituteList")} ({match.maxSubstitutes - substituteCount} {t("stats.availableSpots").toLowerCase()})
+                    </Text>
+                    <Button
+                      variant="outline"
+                      size="$4"
+                      onPress={() => setShowJoinModal(true)}
+                    >
+                      {t("actions.wantToPlay")}
+                    </Button>
+                  </>
                 ) : (
                   <Text fontSize="$5" fontWeight="600" color="$red10">
-                    {t("actions.matchFull")}
+                    {t("matchDetail.matchCompletelyFull")}
                   </Text>
                 )}
+              </YStack>
+            </Card>
+          )}
+
+          {/* View: User is on Substitute List */}
+          {isUserSubstitute && (
+            <Card variant="outlined" backgroundColor="$blue2">
+              <YStack padding="$3" gap="$2" alignItems="center">
+                <StatusBadge
+                  status="SUBSTITUTE"
+                  type="player"
+                  label={t("matchDetail.youAreSubstitute")}
+                />
+                <Text fontSize="$3" color="$gray11" textAlign="center">
+                  {t("matchDetail.substitutePosition", {
+                    position: match?.signups?.filter((s) => s.status === "SUBSTITUTE").findIndex((s) => s.id === match.userSignup?.id) + 1
+                  })}
+                </Text>
               </YStack>
             </Card>
           )}
@@ -580,6 +644,18 @@ END:VCALENDAR`;
               <XStack justifyContent="space-between">
                 <Text color="$gray11">{t("stats.cost")}</Text>
                 <Text fontWeight="500">{match.costPerPlayer}</Text>
+              </XStack>
+            )}
+            {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && (
+              <XStack justifyContent="space-between">
+                <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
+                <Text fontWeight="500" color="$orange10">+{match.sameDayCost}</Text>
+              </XStack>
+            )}
+            {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && match.costPerPlayer && (
+              <XStack justifyContent="space-between" paddingTop="$1" borderTopWidth={1} borderColor="$gray6">
+                <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
+                <Text fontWeight="700" fontSize="$5">{totalCost}</Text>
               </XStack>
             )}
             {process.env.EXPO_PUBLIC_PAYPAL_URL && (

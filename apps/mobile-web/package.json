@@ -15,7 +15,8 @@
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*",
-    "@tamagui/config": "^1.144.1",
+    "@tamagui/config": "^1.144.2",
+    "burnt": "^0.13.0",
     "expo": "~54.0.31",
     "expo-localization": "^17.0.8",
     "expo-router": "~6.0.21",
@@ -29,12 +30,12 @@
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",
     "react-native-web": "^0.21.2",
-    "tamagui": "^1.144.1"
+    "tamagui": "^1.144.2"
   },
   "devDependencies": {
     "@babel/core": "^7.28.6",
     "@repo/typescript-config": "workspace:*",
-    "@tamagui/babel-plugin": "^1.144.1",
+    "@tamagui/babel-plugin": "^1.144.2",
     "@types/react": "19.1.17",
     "typescript": "~5.9.3"
   },

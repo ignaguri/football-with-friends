@@ -1,7 +1,7 @@
 // Domain types for the football match application
 
 // Player status types for match participation
-export const PLAYER_STATUSES = ["PAID", "PENDING", "CANCELLED"] as const;
+export const PLAYER_STATUSES = ["PAID", "PENDING", "CANCELLED", "SUBSTITUTE"] as const;
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number];
 
 // Signup types to track how a player was added
@@ -16,6 +16,25 @@ export type SignupType = (typeof SIGNUP_TYPES)[number];
 // Match status types
 export const MATCH_STATUSES = ["upcoming", "cancelled", "completed"] as const;
 export type MatchStatus = (typeof MATCH_STATUSES)[number];
+
+// App settings types
+export interface AppSettings {
+  default_cost_per_player: string;
+  same_day_extra_cost: string;
+  default_max_substitutes: string;
+  paypal_url: string;
+  organizer_whatsapp: string;
+}
+
+export type SettingKey = keyof AppSettings;
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  default_cost_per_player: "10",
+  same_day_extra_cost: "2",
+  default_max_substitutes: "2",
+  paypal_url: "",
+  organizer_whatsapp: "",
+};
 
 // Core domain entities
 
@@ -50,8 +69,9 @@ export interface Match {
   time: string; // HH:MM format
   status: MatchStatus;
   maxPlayers: number;
+  maxSubstitutes: number;
   costPerPlayer?: string;
-  shirtCost?: string;
+  sameDayCost?: string;
   createdByUserId: string;
   createdAt: Date;
   updatedAt: Date;
@@ -134,8 +154,9 @@ export interface CreateMatchData {
   date: string;
   time: string;
   maxPlayers?: number;
+  maxSubstitutes?: number;
   costPerPlayer?: string;
-  shirtCost?: string;
+  sameDayCost?: string;
   createdByUserId: string;
 }
 

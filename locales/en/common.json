@@ -49,7 +49,16 @@
     "noPaymentMethod": "Payment method not configured",
     "paymentOpenError": "Could not open payment link",
     "noOrganizerPhone": "Organizer phone not configured",
-    "whatsappError": "Could not open WhatsApp"
+    "whatsappError": "Could not open WhatsApp",
+    "substituteList": "Substitutes",
+    "youAreSubstitute": "You're on the substitute list",
+    "substitutePosition": "Position #{{position}}",
+    "spotOpened": "A spot opened!",
+    "claimSpot": "Claim it now!",
+    "spotTaken": "Sorry, someone else claimed the spot",
+    "sameDayFee": "Same-day fee",
+    "totalCost": "Total",
+    "matchCompletelyFull": "Match and substitute list are full"
   },
   "share": {
     "title": "Share this match",
@@ -243,6 +252,9 @@
     "maxPlayers": "Max Players",
     "maxPlayersMin": "Max players must be at least 1",
     "maxPlayersMax": "Max players cannot exceed 50",
+    "maxSubstitutes": "Max Substitutes",
+    "costPerPlayer": "Cost per person",
+    "sameDayCost": "Same-day extra cost",
     "selectDate": "Select date",
     "selectTime": "Select time"
   },
@@ -315,7 +327,19 @@
     "cancelled": "Cancelled",
     "inactive": "Inactive",
     "played": "Played",
-    "upcoming": "Upcoming"
+    "upcoming": "Upcoming",
+    "substitute": "Substitute"
+  },
+  "settings": {
+    "title": "Settings",
+    "costs": "Cost Settings",
+    "defaultCostPerPlayer": "Default cost per player",
+    "sameDayExtraCost": "Default same-day extra cost",
+    "defaultMaxSubstitutes": "Default max substitutes",
+    "paypalUrl": "PayPal URL",
+    "organizerWhatsapp": "Organizer WhatsApp",
+    "saved": "Settings saved",
+    "saveError": "Failed to save settings"
   },
   "locations": {
     "title": "Locations",

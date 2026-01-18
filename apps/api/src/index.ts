@@ -7,6 +7,7 @@ import matchesRoute from "./routes/matches";
 import courtsRoute from "./routes/courts";
 import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
+import settingsRoute from "./routes/settings";
 
 const app = new Hono();
 
@@ -41,7 +42,8 @@ const apiRoutes = app
   .route("/matches", matchesRoute)
   .route("/courts", courtsRoute)
   .route("/locations", locationsRoute)
-  .route("/profile", profileRoute);
+  .route("/profile", profileRoute)
+  .route("/settings", settingsRoute);
 
 const port = process.env.PORT || 3001;
 

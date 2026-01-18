@@ -158,6 +158,7 @@ export class MatchService {
 
   /**
    * Sign up a user for a match
+   * If match is full but substitute spots are available, user joins as SUBSTITUTE
    */
   async signUpUser(
     matchId: string,
@@ -193,8 +194,20 @@ export class MatchService {
       matchId,
       match.maxPlayers,
     );
+
+    let signupStatus: PlayerStatus = (playerData?.status as PlayerStatus) || "PENDING";
+
     if (isFull) {
-      throw new Error("Match is full");
+      // Match is full - check if substitute spots are available
+      const substituteCount = await this.signupRepository.getSubstituteCount(matchId);
+      const maxSubstitutes = match.maxSubstitutes || 0;
+
+      if (substituteCount >= maxSubstitutes) {
+        throw new Error("Match and substitute list are full");
+      }
+
+      // Join as substitute
+      signupStatus = "SUBSTITUTE";
     }
 
     const signupData: CreateSignupData = {
@@ -202,7 +215,7 @@ export class MatchService {
       userId: user.id,
       playerName: playerData?.playerName || user.name,
       playerEmail: playerData?.playerEmail || user.email,
-      status: (playerData?.status as PlayerStatus) || "PENDING",
+      status: signupStatus,
       signupType: "self",
       addedByUserId: user.id,
     };
@@ -212,6 +225,7 @@ export class MatchService {
 
   /**
    * Add a guest player to a match
+   * If match is full but substitute spots are available, guest joins as SUBSTITUTE
    */
   async addGuestPlayer(
     matchId: string,
@@ -234,12 +248,25 @@ export class MatchService {
       matchId,
       match.maxPlayers,
     );
+
+    let guestStatus = guestData.status || "PENDING";
+
     if (isFull) {
-      throw new Error("Match is full");
+      // Match is full - check if substitute spots are available
+      const substituteCount = await this.signupRepository.getSubstituteCount(matchId);
+      const maxSubstitutes = match.maxSubstitutes || 0;
+
+      if (substituteCount >= maxSubstitutes) {
+        throw new Error("Match and substitute list are full");
+      }
+
+      // Guest joins as substitute
+      guestStatus = "SUBSTITUTE";
     }
 
     return this.signupRepository.addGuest({
       ...guestData,
+      status: guestStatus as PlayerStatus,
       ownerUserId: addedBy.id,
       ownerName: addedBy.name,
       ownerEmail: addedBy.email,

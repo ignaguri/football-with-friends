@@ -1,6 +1,7 @@
 import { TamaguiProvider, Theme, YStack, useTheme as useTamaguiTheme } from "tamagui";
 import { Stack } from "expo-router";
 import { APIProvider } from "@repo/api-client";
+import { Toast } from "@repo/ui";
 import config from "../tamagui.config";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
 
@@ -46,11 +47,13 @@ function AppContent() {
   return (
     <TamaguiProvider config={config} defaultTheme={theme}>
       <Theme name={theme}>
-        <YStack flex={1} backgroundColor="$background">
-          <APIProvider>
-            <AppNavigation />
-          </APIProvider>
-        </YStack>
+        <Toast>
+          <YStack flex={1} backgroundColor="$background">
+            <APIProvider>
+              <AppNavigation />
+            </APIProvider>
+          </YStack>
+        </Toast>
       </Theme>
     </TamaguiProvider>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Card,
@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { ScrollView, RefreshControl, Alert } from "react-native";
 
-type Tab = "matches" | "locations" | "courts";
+type Tab = "matches" | "locations" | "courts" | "settings";
 
 interface Match {
   id: string;
@@ -113,12 +113,21 @@ export default function OrganizerScreen() {
           >
             {t("organizer.tabs.courts")}
           </Button>
+          <Button
+            flex={1}
+            size="$3"
+            variant={activeTab === "settings" ? "primary" : "outline"}
+            onPress={() => setActiveTab("settings")}
+          >
+            {t("settings.title")}
+          </Button>
         </XStack>
 
         {/* Tab Content */}
         {activeTab === "matches" && <MatchesTab />}
         {activeTab === "locations" && <LocationsTab />}
         {activeTab === "courts" && <CourtsTab />}
+        {activeTab === "settings" && <SettingsTab />}
       </YStack>
     </Container>
   );
@@ -856,6 +865,164 @@ function CourtsTab() {
             </XStack>
           </YStack>
         </Dialog>
+      </YStack>
+    </ScrollView>
+  );
+}
+
+// ============ SETTINGS TAB ============
+interface AppSettings {
+  default_cost_per_player: string;
+  same_day_extra_cost: string;
+  default_max_substitutes: string;
+  paypal_url: string;
+  organizer_whatsapp: string;
+}
+
+function SettingsTab() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const [defaultCostPerPlayer, setDefaultCostPerPlayer] = useState("");
+  const [sameDayExtraCost, setSameDayExtraCost] = useState("");
+  const [defaultMaxSubstitutes, setDefaultMaxSubstitutes] = useState("");
+  const [paypalUrl, setPaypalUrl] = useState("");
+  const [organizerWhatsapp, setOrganizerWhatsapp] = useState("");
+
+  const {
+    data: settings,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => {
+      const res = await client.api.settings.$get();
+      return res.json() as Promise<AppSettings>;
+    },
+  });
+
+  // Populate form when settings load
+  useEffect(() => {
+    if (settings) {
+      setDefaultCostPerPlayer(settings.default_cost_per_player || "");
+      setSameDayExtraCost(settings.same_day_extra_cost || "");
+      setDefaultMaxSubstitutes(settings.default_max_substitutes || "");
+      setPaypalUrl(settings.paypal_url || "");
+      setOrganizerWhatsapp(settings.organizer_whatsapp || "");
+    }
+  }, [settings]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (updates: Partial<AppSettings>) => {
+      const res = await client.api.settings.$patch({
+        json: updates,
+      });
+      if (!res.ok) throw new Error("Failed to update settings");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      Alert.alert(t("settings.saved"));
+    },
+    onError: () => {
+      Alert.alert(t("settings.saveError"));
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({
+      default_cost_per_player: defaultCostPerPlayer,
+      same_day_extra_cost: sameDayExtraCost,
+      default_max_substitutes: defaultMaxSubstitutes,
+      paypal_url: paypalUrl,
+      organizer_whatsapp: organizerWhatsapp,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <YStack flex={1} alignItems="center" justifyContent="center">
+        <Spinner size="large" />
+      </YStack>
+    );
+  }
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+      }
+    >
+      <YStack gap="$3" paddingBottom="$6">
+        {/* Cost Settings */}
+        <Card variant="elevated">
+          <YStack padding="$4" gap="$4">
+            <Text fontSize="$5" fontWeight="600">
+              {t("settings.costs")}
+            </Text>
+
+            <Input
+              label={t("settings.defaultCostPerPlayer")}
+              placeholder="10"
+              value={defaultCostPerPlayer}
+              onChangeText={setDefaultCostPerPlayer}
+              keyboardType="numeric"
+            />
+
+            <Input
+              label={t("settings.sameDayExtraCost")}
+              placeholder="2"
+              value={sameDayExtraCost}
+              onChangeText={setSameDayExtraCost}
+              keyboardType="numeric"
+            />
+
+            <Input
+              label={t("settings.defaultMaxSubstitutes")}
+              placeholder="2"
+              value={defaultMaxSubstitutes}
+              onChangeText={setDefaultMaxSubstitutes}
+              keyboardType="numeric"
+            />
+          </YStack>
+        </Card>
+
+        {/* Payment Settings */}
+        <Card variant="elevated">
+          <YStack padding="$4" gap="$4">
+            <Text fontSize="$5" fontWeight="600">
+              {t("matchDetail.paymentInfo")}
+            </Text>
+
+            <Input
+              label={t("settings.paypalUrl")}
+              placeholder="https://paypal.me/..."
+              value={paypalUrl}
+              onChangeText={setPaypalUrl}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+
+            <Input
+              label={t("settings.organizerWhatsapp")}
+              placeholder="+1234567890"
+              value={organizerWhatsapp}
+              onChangeText={setOrganizerWhatsapp}
+              keyboardType="phone-pad"
+            />
+          </YStack>
+        </Card>
+
+        {/* Save Button */}
+        <Button
+          variant="primary"
+          onPress={handleSave}
+          disabled={updateMutation.isPending}
+        >
+          {updateMutation.isPending ? t("shared.loading") : t("shared.save")}
+        </Button>
       </YStack>
     </ScrollView>
   );

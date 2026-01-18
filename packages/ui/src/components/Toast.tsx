@@ -1,4 +1,9 @@
-import { Toast as TamaguiToast, ToastProvider, useToastState } from "tamagui";
+import {
+  Toast as TamaguiToast,
+  ToastProvider,
+  useToastState,
+  ToastViewport as TamaguiToastViewport,
+} from "@tamagui/toast";
 import { YStack } from "tamagui";
 
 export interface ToastProps {
@@ -7,7 +12,7 @@ export interface ToastProps {
 
 export function ToastViewport() {
   return (
-    <TamaguiToast.Viewport
+    <TamaguiToastViewport
       flexDirection="column-reverse"
       top="$4"
       right="$4"
