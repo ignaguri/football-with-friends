@@ -42,7 +42,11 @@
     "rejoinSuccess": "Rejoined the match!",
     "cancelSuccess": "You have cancelled your spot.",
     "guestAddSuccess": "Guest added successfully!",
-    "matchCancelled": "This match has been cancelled"
+    "matchCancelled": "This match has been cancelled",
+    "paymentInfo": "Payment Information",
+    "paymentMethod": "Payment Method",
+    "keyRules": "Important Rules",
+    "noPaymentMethod": "Payment method not configured"
   },
   "share": {
     "title": "Share this match",
@@ -58,7 +62,9 @@
     "cost": "Cost (p.p.)",
     "court": "Court",
     "location": "Location",
-    "max": "Max"
+    "max": "Max",
+    "substitutes": "Substitutes",
+    "availableSpots": "Available"
   },
   "actions": {
     "in": "You're in!",
@@ -94,7 +100,8 @@
     "title": "If you already paid, you can notify the organizer via WhatsApp",
     "send": "Send WhatsApp message",
     "sent": "I already sent the message",
-    "whatsappMessage": "Hi! I already paid for the match on {date} - {name}"
+    "whatsappMessage": "Hi! I already paid for the match on {date} - {name}",
+    "cantPlay": "I can't play"
   },
   "rules": {
     "title": "Rules & Info",
@@ -304,7 +311,8 @@
     "notConfirmed": "Not Confirmed",
     "cancelled": "Cancelled",
     "inactive": "Inactive",
-    "played": "Played"
+    "played": "Played",
+    "upcoming": "Upcoming"
   },
   "locations": {
     "title": "Locations",

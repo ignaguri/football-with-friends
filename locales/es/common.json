@@ -43,7 +43,11 @@
     "rejoinSuccess": "¡Volviste al partido!",
     "cancelSuccess": "Cancelaste tu lugar.",
     "guestAddSuccess": "¡Invitado agregado con éxito!",
-    "matchCancelled": "Este partido ha sido cancelado"
+    "matchCancelled": "Este partido ha sido cancelado",
+    "paymentInfo": "Información de Pago",
+    "paymentMethod": "Método de Pago",
+    "keyRules": "Reglas Importantes",
+    "noPaymentMethod": "Método de pago no configurado"
   },
   "share": {
     "title": "Compartir este partido",
@@ -59,7 +63,9 @@
     "cost": "Costo (p.p.)",
     "court": "Cancha",
     "location": "Ubicación",
-    "max": "Máx"
+    "max": "Máx",
+    "substitutes": "Suplentes",
+    "availableSpots": "Disponibles"
   },
   "actions": {
     "in": "¡Estás adentro!",
@@ -95,7 +101,8 @@
     "title": "Si ya pagaste, podés avisarle al organizador por WhatsApp",
     "send": "Mandar mensaje por WhatsApp",
     "sent": "Ya mandé el mensaje",
-    "whatsappMessage": "Hola! Ya pagué mi partido para el {date} - {name}"
+    "whatsappMessage": "Hola! Ya pagué mi partido para el {date} - {name}",
+    "cantPlay": "No puedo jugar"
   },
   "rules": {
     "title": "Reglas e Información",
@@ -307,7 +314,8 @@
     "notConfirmed": "Sin confirmar",
     "cancelled": "Cancelado",
     "inactive": "Inactivo",
-    "played": "Jugado"
+    "played": "Jugado",
+    "upcoming": "Próximo"
   },
   "locations": {
     "title": "Predios",

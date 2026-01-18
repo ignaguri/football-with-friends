@@ -6,8 +6,9 @@ import {
   YStack,
   XStack,
   Spinner,
-  Badge,
-  Button,
+  Tabs,
+  StatusBadge,
+  type MatchStatusType,
 } from "@repo/ui";
 import { useQuery, client } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
@@ -45,36 +46,46 @@ export default function MatchesListScreen() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getMatchStatus = (status: string): MatchStatusType | null => {
     switch (status) {
       case "cancelled":
-        return <Badge variant="destructive">{t("status.cancelled")}</Badge>;
+        return "cancelled";
+      case "completed":
       case "played":
-        return <Badge variant="secondary">{t("status.played")}</Badge>;
+        return "played";
+      case "upcoming":
+        return "upcoming";
       default:
         return null;
     }
   };
 
+  const getStatusLabel = (status: MatchStatusType): string => {
+    switch (status) {
+      case "cancelled":
+        return t("status.cancelled");
+      case "played":
+        return t("status.played");
+      case "upcoming":
+        return t("status.upcoming");
+    }
+  };
+
+  const tabs = [
+    { value: "upcoming", label: t("matches.upcoming") },
+    { value: "past", label: t("matches.past") },
+  ];
+
   return (
     <Container variant="padded">
       {/* Tab Selector */}
-      <XStack gap="$2" marginBottom="$4">
-        <Button
-          flex={1}
-          variant={activeTab === "upcoming" ? "primary" : "outline"}
-          onPress={() => setActiveTab("upcoming")}
-        >
-          {t("matches.upcoming")}
-        </Button>
-        <Button
-          flex={1}
-          variant={activeTab === "past" ? "primary" : "outline"}
-          onPress={() => setActiveTab("past")}
-        >
-          {t("matches.past")}
-        </Button>
-      </XStack>
+      <YStack marginBottom="$4">
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as MatchType)}
+          tabs={tabs}
+        />
+      </YStack>
 
       <ScrollView
         style={{ flex: 1 }}
@@ -125,7 +136,13 @@ export default function MatchesListScreen() {
                     <Text fontSize="$6" fontWeight="600">
                       {formatDate(match.date)}
                     </Text>
-                    {getStatusBadge(match.status)}
+                    {getMatchStatus(match.status) && (
+                      <StatusBadge
+                        status={getMatchStatus(match.status)!}
+                        type="match"
+                        label={getStatusLabel(getMatchStatus(match.status)!)}
+                      />
+                    )}
                   </XStack>
 
                   <XStack gap="$4">

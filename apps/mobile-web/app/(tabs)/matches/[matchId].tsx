@@ -6,17 +6,33 @@ import {
   YStack,
   XStack,
   Spinner,
-  Badge,
   Button,
   Dialog,
   Input,
+  StatusBadge,
+  PlayersTable,
+  type PlayerRow,
+  type PlayerAction,
+  type PlayerStatusType,
 } from "@repo/ui";
-import { useQuery, useMutation, useQueryClient, client, useSession } from "@repo/api-client";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+  useSession,
+} from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { useLocalSearchParams, router } from "expo-router";
 import { RefreshControl, ScrollView, Share, Linking, Alert } from "react-native";
-
-type PlayerStatus = "PAID" | "PENDING" | "CANCELLED";
+import {
+  CreditCard,
+  Bell,
+  X,
+  Calendar,
+  UserPlus,
+  RotateCcw,
+} from "@tamagui/lucide-icons";
 
 interface Signup {
   id: string;
@@ -24,10 +40,11 @@ interface Signup {
   userId?: string;
   playerName: string;
   playerEmail: string;
-  status: PlayerStatus;
+  status: PlayerStatusType;
   signupType: "self" | "guest";
   guestOwnerId?: string;
   addedByUserId: string;
+  addedByName?: string;
 }
 
 interface MatchDetails {
@@ -36,12 +53,15 @@ interface MatchDetails {
   time: string;
   status: string;
   maxPlayers: number;
+  maxSubstitutes?: number;
   costPerPlayer?: string;
   shirtCost?: string;
+  paymentMethod?: string;
   location?: { id: string; name: string; address?: string };
   court?: { id: string; name: string };
   signups: Signup[];
   availableSpots: number;
+  availableSubstituteSpots?: number;
   isUserSignedUp?: boolean;
   userSignup?: Signup;
 }
@@ -51,6 +71,7 @@ export default function MatchDetailScreen() {
   const { t } = useTranslation();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const [showJoinModal, setShowJoinModal] = useState(false);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [guestName, setGuestName] = useState("");
 
@@ -82,12 +103,13 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as any).error || "Failed to sign up");
+        throw new Error((data as { error?: string }).error || "Failed to sign up");
       }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+      setShowJoinModal(false);
       Alert.alert(t("matchDetail.signupSuccess"));
     },
     onError: (err: Error) => {
@@ -95,22 +117,53 @@ export default function MatchDetailScreen() {
     },
   });
 
-  const cancelMutation = useMutation({
-    mutationFn: async () => {
-      if (!match?.userSignup?.id) throw new Error("No signup found");
+  const updateSignupMutation = useMutation({
+    mutationFn: async ({
+      signupId,
+      status,
+    }: {
+      signupId: string;
+      status: PlayerStatusType;
+    }) => {
       const res = await client.api.matches[":id"].signup[":signupId"].$patch({
-        param: { id: matchId!, signupId: match.userSignup.id },
-        json: { status: "CANCELLED" },
+        param: { id: matchId!, signupId },
+        json: { status },
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as any).error || "Failed to cancel");
+        throw new Error((data as { error?: string }).error || "Failed to update");
       }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
-      Alert.alert(t("matchDetail.cancelSuccess"));
+    },
+    onError: (err: Error) => {
+      Alert.alert("Error", err.message);
+    },
+  });
+
+  const addGuestMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await client.api.matches[":id"].guest.$post({
+        param: { id: matchId! },
+        json: {
+          matchId: matchId!,
+          guestName: name,
+          status: "PENDING",
+        },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as { error?: string }).error || "Failed to add guest");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+      setShowGuestDialog(false);
+      setGuestName("");
+      Alert.alert(t("matchDetail.guestAddSuccess"));
     },
     onError: (err: Error) => {
       Alert.alert("Error", err.message);
@@ -127,46 +180,176 @@ export default function MatchDetailScreen() {
     });
   };
 
-  const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case "PAID":
-        return "default";
-      case "PENDING":
-        return "secondary";
-      case "CANCELLED":
-        return "destructive";
-      default:
-        return "outline";
+  const handleCancelSignup = (signupId: string, currentStatus: PlayerStatusType) => {
+    if (currentStatus === "PENDING") {
+      // For PENDING users, we would delete the signup entirely
+      // For now, we'll just mark as cancelled since delete endpoint may not exist
+      updateSignupMutation.mutate({ signupId, status: "CANCELLED" });
+    } else {
+      // For PAID users, mark as cancelled
+      updateSignupMutation.mutate({ signupId, status: "CANCELLED" });
     }
   };
 
-  const handleShare = async () => {
-    if (!match) return;
-    try {
-      await Share.share({
-        message: `Football Match on ${formatDate(match.date)} at ${match.time}`,
-        title: t("share.title"),
-      });
-    } catch (err) {
-      console.error("Share error:", err);
+  const handleRejoin = (signupId: string) => {
+    updateSignupMutation.mutate({ signupId, status: "PENDING" });
+  };
+
+  const handleOpenPayment = () => {
+    // Open payment link (PayPal or other)
+    if (match?.paymentMethod) {
+      Linking.openURL(match.paymentMethod);
+    } else {
+      Alert.alert(t("matchDetail.noPaymentMethod"));
     }
   };
 
-  const handleWhatsAppShare = async () => {
-    if (!match) return;
-    const message = `Football Match on ${formatDate(match.date)} at ${match.time}`;
+  const handleNotifyPaid = () => {
+    // Open WhatsApp to notify organizer
+    const message = t("notify.whatsappMessage", {
+      date: formatDate(match?.date || ""),
+      name: session?.user?.name || "",
+    });
     const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
-    try {
-      await Linking.openURL(url);
-    } catch (err) {
+    Linking.openURL(url).catch(() => {
       Alert.alert("Error", "WhatsApp is not installed");
-    }
+    });
   };
 
-  const paidPlayers = match?.signups.filter((s) => s.status === "PAID") || [];
-  const pendingPlayers = match?.signups.filter((s) => s.status === "PENDING") || [];
-  const cancelledPlayers = match?.signups.filter((s) => s.status === "CANCELLED") || [];
+  const handleAddToCalendar = () => {
+    if (!match) return;
+    // Generate ICS file content
+    const icsContent = generateICS(match);
+    // For now, share via native share
+    Share.share({
+      message: icsContent,
+      title: t("shared.addToCalendar"),
+    });
+  };
+
+  const generateICS = (matchData: MatchDetails): string => {
+    const date = new Date(matchData.date);
+    const [hours, minutes] = matchData.time.split(":");
+    date.setHours(parseInt(hours), parseInt(minutes));
+
+    const endDate = new Date(date);
+    endDate.setHours(endDate.getHours() + 2);
+
+    const formatICSDate = (d: Date) =>
+      d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+    return `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:${formatICSDate(date)}
+DTEND:${formatICSDate(endDate)}
+SUMMARY:Football Match
+LOCATION:${matchData.location?.name || ""}${matchData.court ? ` - ${matchData.court.name}` : ""}
+END:VEVENT
+END:VCALENDAR`;
+  };
+
+  const getPlayerActions = (player: Signup): PlayerAction[] => {
+    const isOwn = player.userId === userId;
+    const canAct = isAdmin || isOwn;
+
+    if (!canAct) return [];
+
+    const actions: PlayerAction[] = [];
+
+    switch (player.status) {
+      case "PENDING":
+        // Pay, Notify I paid, Cancel
+        actions.push({
+          icon: CreditCard,
+          label: t("matchDetail.pay"),
+          onPress: handleOpenPayment,
+          variant: "outline",
+        });
+        actions.push({
+          icon: Bell,
+          label: t("notify.trigger"),
+          onPress: handleNotifyPaid,
+          variant: "outline",
+        });
+        actions.push({
+          icon: X,
+          label: t("actions.cancel"),
+          onPress: () => handleCancelSignup(player.id, player.status),
+          variant: "danger",
+        });
+        break;
+
+      case "PAID":
+        // Cancel, Add to calendar, Invite friend
+        actions.push({
+          icon: X,
+          label: t("actions.cancel"),
+          onPress: () => handleCancelSignup(player.id, player.status),
+          variant: "danger",
+        });
+        actions.push({
+          icon: Calendar,
+          label: t("shared.addToCalendar"),
+          onPress: handleAddToCalendar,
+          variant: "outline",
+        });
+        if (isOwn) {
+          actions.push({
+            icon: UserPlus,
+            label: t("actions.signUpGuest"),
+            onPress: () => setShowGuestDialog(true),
+            variant: "outline",
+          });
+        }
+        break;
+
+      case "CANCELLED":
+        // Rejoin, Notify can't play
+        actions.push({
+          icon: RotateCcw,
+          label: t("matchDetail.rejoin"),
+          onPress: () => handleRejoin(player.id),
+          variant: "primary",
+        });
+        actions.push({
+          icon: Bell,
+          label: t("notify.cantPlay"),
+          onPress: handleNotifyPaid,
+          variant: "outline",
+        });
+        break;
+    }
+
+    return actions;
+  };
+
+  const buildPlayerRows = (): PlayerRow[] => {
+    if (!match) return [];
+
+    return match.signups.map((signup) => ({
+      id: signup.id,
+      name: signup.playerName,
+      status: signup.status,
+      isGuest: signup.signupType === "guest",
+      addedByName: signup.addedByName,
+      isCurrentUser: signup.userId === userId,
+      actions: getPlayerActions(signup),
+    }));
+  };
+
+  const paidCount = match?.signups.filter((s) => s.status === "PAID").length || 0;
+  const pendingCount =
+    match?.signups.filter((s) => s.status === "PENDING").length || 0;
+  const activeCount = paidCount + pendingCount;
   const isCancelled = match?.status === "cancelled";
+  const isParticipating = match?.isUserSignedUp;
+
+  const statusLabels: Record<PlayerStatusType, string> = {
+    PENDING: t("status.pending"),
+    PAID: t("status.paid"),
+    CANCELLED: t("status.cancelled"),
+  };
 
   if (isLoading) {
     return (
@@ -202,13 +385,15 @@ export default function MatchDetailScreen() {
         }
       >
         <YStack gap="$4" paddingBottom="$6">
-          {/* Match Header */}
+          {/* Match Header Card */}
           <Card variant="elevated">
             <YStack padding="$4" gap="$3">
               {isCancelled && (
-                <Badge variant="destructive" alignSelf="flex-start">
-                  {t("matchDetail.matchCancelled")}
-                </Badge>
+                <StatusBadge
+                  status="cancelled"
+                  type="match"
+                  label={t("matchDetail.matchCancelled")}
+                />
               )}
 
               <Text fontSize="$7" fontWeight="bold">
@@ -237,39 +422,40 @@ export default function MatchDetailScreen() {
                   </YStack>
                 )}
               </XStack>
-
-              {/* Share Buttons */}
-              <XStack gap="$2" marginTop="$2">
-                <Button variant="outline" size="$3" flex={1} onPress={handleShare}>
-                  {t("share.copyLink")}
-                </Button>
-                <Button variant="outline" size="$3" flex={1} onPress={handleWhatsAppShare}>
-                  {t("share.whatsapp")}
-                </Button>
-              </XStack>
             </YStack>
           </Card>
 
-          {/* Match Stats */}
+          {/* Stats Card */}
           <Card variant="outlined">
             <XStack padding="$4" justifyContent="space-around">
               <YStack alignItems="center">
                 <Text fontSize="$7" fontWeight="bold" color="$green10">
-                  {paidPlayers.length}
+                  {activeCount}
                 </Text>
                 <Text fontSize="$3" color="$gray10">
-                  {t("stats.paid")}
+                  {t("players.title")}
                 </Text>
               </YStack>
 
               <YStack alignItems="center">
                 <Text fontSize="$7" fontWeight="bold">
-                  {match.maxPlayers}
+                  {match.availableSpots}
                 </Text>
                 <Text fontSize="$3" color="$gray10">
-                  {t("stats.max")}
+                  {t("stats.availableSpots")}
                 </Text>
               </YStack>
+
+              {match.maxSubstitutes !== undefined && match.maxSubstitutes > 0 && (
+                <YStack alignItems="center">
+                  <Text fontSize="$7" fontWeight="bold" color="$blue10">
+                    {match.availableSubstituteSpots ?? match.maxSubstitutes}
+                  </Text>
+                  <Text fontSize="$3" color="$gray10">
+                    {t("stats.substitutes")}
+                  </Text>
+                </YStack>
+              )}
 
               {match.costPerPlayer && (
                 <YStack alignItems="center">
@@ -281,168 +467,87 @@ export default function MatchDetailScreen() {
                   </Text>
                 </YStack>
               )}
-
-              {match.court && (
-                <YStack alignItems="center">
-                  <Text fontSize="$7" fontWeight="bold">
-                    {match.court.name}
-                  </Text>
-                  <Text fontSize="$3" color="$gray10">
-                    {t("stats.court")}
-                  </Text>
-                </YStack>
-              )}
             </XStack>
           </Card>
 
-          {/* Action Buttons */}
-          {!isCancelled && userId && (
+          {/* View A: Not Participating - Show CTA */}
+          {!isParticipating && !isCancelled && userId && (
             <Card variant="outlined">
-              <YStack padding="$4" gap="$3">
-                {match.isUserSignedUp ? (
+              <YStack padding="$4" gap="$3" alignItems="center">
+                {match.availableSpots > 0 ? (
                   <>
-                    <YStack alignItems="center" gap="$1">
-                      <Text fontSize="$5" fontWeight="600" color="$green10">
-                        {t("actions.in")}
-                      </Text>
-                      <Text color="$gray11">{t("actions.cancelOrGuest")}</Text>
-                    </YStack>
-
-                    <XStack gap="$2">
-                      <Button
-                        variant="outline"
-                        flex={1}
-                        onPress={() => setShowGuestDialog(true)}
-                        disabled={match.availableSpots === 0}
-                      >
-                        {t("actions.signUpGuest")}
-                      </Button>
-                      <Button
-                        variant="danger"
-                        flex={1}
-                        onPress={() => cancelMutation.mutate()}
-                        disabled={cancelMutation.isPending}
-                      >
-                        {cancelMutation.isPending
-                          ? t("actions.cancelling")
-                          : t("actions.cancel")}
-                      </Button>
-                    </XStack>
+                    <Text fontSize="$5" fontWeight="600" color="$blue10">
+                      {t("actions.spotsLeft", { count: match.availableSpots })}
+                    </Text>
+                    <Button
+                      variant="primary"
+                      size="$5"
+                      onPress={() => setShowJoinModal(true)}
+                    >
+                      {t("actions.wantToPlay")}
+                    </Button>
                   </>
                 ) : (
-                  <YStack gap="$3">
-                    {match.availableSpots > 0 ? (
-                      <>
-                        <Text textAlign="center" color="$blue10" fontWeight="600">
-                          {t("actions.spotsLeft", { count: match.availableSpots })}
-                        </Text>
-                        <Button
-                          variant="primary"
-                          onPress={() => signupMutation.mutate()}
-                          disabled={signupMutation.isPending}
-                        >
-                          {signupMutation.isPending
-                            ? t("actions.joining")
-                            : t("actions.join")}
-                        </Button>
-                      </>
-                    ) : (
-                      <Text textAlign="center" color="$red10" fontWeight="600">
-                        {t("actions.matchFull")}
-                      </Text>
-                    )}
-                  </YStack>
+                  <Text fontSize="$5" fontWeight="600" color="$red10">
+                    {t("actions.matchFull")}
+                  </Text>
                 )}
               </YStack>
             </Card>
           )}
 
-          {/* Players List */}
-          <Card variant="elevated">
-            <YStack padding="$4" gap="$3">
-              <Text fontSize="$6" fontWeight="bold">
-                {t("players.title")} ({match.signups.length})
-              </Text>
-
-              {match.signups.length === 0 ? (
-                <Text color="$gray11">{t("players.noPlayers")}</Text>
-              ) : (
-                <YStack gap="$2">
-                  {/* Paid Players */}
-                  {paidPlayers.map((player) => (
-                    <XStack
-                      key={player.id}
-                      justifyContent="space-between"
-                      alignItems="center"
-                      paddingVertical="$2"
-                      borderBottomWidth={1}
-                      borderBottomColor="$borderColor"
+          {/* View B: Participating - Show Players Table */}
+          {isParticipating && (
+            <Card variant="elevated">
+              <YStack gap="$2">
+                <XStack
+                  paddingHorizontal="$4"
+                  paddingTop="$4"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Text fontSize="$6" fontWeight="bold">
+                    {t("players.title")} ({match.signups.length})
+                  </Text>
+                  {match.userSignup?.status === "PAID" && (
+                    <Button
+                      variant="outline"
+                      size="$3"
+                      onPress={() => setShowGuestDialog(true)}
+                      disabled={match.availableSpots === 0}
                     >
-                      <YStack>
-                        <Text fontWeight="500">
-                          {player.playerName}
-                          {player.signupType === "guest" && ` ${t("players.guest")}`}
-                        </Text>
-                      </YStack>
-                      <Badge variant={getStatusBadgeVariant(player.status)}>
-                        {t(`status.${player.status.toLowerCase()}`)}
-                      </Badge>
-                    </XStack>
-                  ))}
-
-                  {/* Pending Players */}
-                  {pendingPlayers.map((player) => (
-                    <XStack
-                      key={player.id}
-                      justifyContent="space-between"
-                      alignItems="center"
-                      paddingVertical="$2"
-                      borderBottomWidth={1}
-                      borderBottomColor="$borderColor"
-                    >
-                      <YStack>
-                        <Text fontWeight="500">
-                          {player.playerName}
-                          {player.signupType === "guest" && ` ${t("players.guest")}`}
-                        </Text>
-                      </YStack>
-                      <Badge variant={getStatusBadgeVariant(player.status)}>
-                        {t(`status.${player.status.toLowerCase()}`)}
-                      </Badge>
-                    </XStack>
-                  ))}
-
-                  {/* Cancelled Players */}
-                  {cancelledPlayers.length > 0 && (
-                    <>
-                      <Text
-                        fontSize="$4"
-                        fontWeight="600"
-                        color="$gray10"
-                        marginTop="$2"
-                      >
-                        {t("players.cancelledSection")}
-                      </Text>
-                      {cancelledPlayers.map((player) => (
-                        <XStack
-                          key={player.id}
-                          justifyContent="space-between"
-                          alignItems="center"
-                          paddingVertical="$2"
-                          opacity={0.6}
-                        >
-                          <Text>{player.playerName}</Text>
-                          <Badge variant="destructive">
-                            {t("status.cancelled")}
-                          </Badge>
-                        </XStack>
-                      ))}
-                    </>
+                      <UserPlus size={16} />
+                      <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
+                    </Button>
                   )}
-                </YStack>
-              )}
-            </YStack>
-          </Card>
+                </XStack>
+
+                <PlayersTable
+                  players={buildPlayerRows()}
+                  isAdmin={isAdmin}
+                  emptyMessage={t("players.noPlayers")}
+                  statusLabels={statusLabels}
+                />
+              </YStack>
+            </Card>
+          )}
+
+          {/* Not logged in prompt */}
+          {!userId && !isCancelled && (
+            <Card variant="outlined">
+              <YStack padding="$4" gap="$3" alignItems="center">
+                <Text color="$gray11" textAlign="center">
+                  {t("home.signInPrompt")}
+                </Text>
+                <Button
+                  variant="primary"
+                  onPress={() => router.push("/(auth)/sign-in")}
+                >
+                  {t("shared.signIn")}
+                </Button>
+              </YStack>
+            </Card>
+          )}
 
           {/* Rules Button */}
           <Button variant="outline" onPress={() => router.push("/(tabs)/rules")}>
@@ -450,6 +555,72 @@ export default function MatchDetailScreen() {
           </Button>
         </YStack>
       </ScrollView>
+
+      {/* Join Modal with Payment Info and Rules */}
+      <Dialog
+        open={showJoinModal}
+        onOpenChange={setShowJoinModal}
+        title={t("actions.wantToPlay")}
+      >
+        <YStack gap="$4" padding="$4">
+          {/* Payment Information */}
+          <YStack gap="$2">
+            <Text fontSize="$5" fontWeight="600">
+              {t("matchDetail.paymentInfo")}
+            </Text>
+            {match.costPerPlayer && (
+              <XStack justifyContent="space-between">
+                <Text color="$gray11">{t("stats.cost")}</Text>
+                <Text fontWeight="500">{match.costPerPlayer}</Text>
+              </XStack>
+            )}
+            {match.paymentMethod && (
+              <XStack justifyContent="space-between">
+                <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
+                <Text fontWeight="500">PayPal</Text>
+              </XStack>
+            )}
+          </YStack>
+
+          {/* Key Rules */}
+          <YStack gap="$2">
+            <Text fontSize="$5" fontWeight="600">
+              {t("matchDetail.keyRules")}
+            </Text>
+            <YStack gap="$1">
+              <Text color="$gray11" fontSize="$3">
+                • {t("rules.general.0")}
+              </Text>
+              <Text color="$gray11" fontSize="$3">
+                • {t("rules.general.1")}
+              </Text>
+              <Text color="$gray11" fontSize="$3">
+                • {t("rules.general.3")}
+              </Text>
+            </YStack>
+          </YStack>
+
+          <XStack gap="$2">
+            <Button
+              variant="outline"
+              flex={1}
+              onPress={() => setShowJoinModal(false)}
+            >
+              {t("shared.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              flex={1}
+              onPress={() => signupMutation.mutate()}
+              disabled={signupMutation.isPending}
+            >
+              {signupMutation.isPending
+                ? t("actions.joining")
+                : t("actions.join")}
+            </Button>
+          </XStack>
+        </YStack>
+      </Dialog>
 
       {/* Guest Signup Dialog */}
       <Dialog
@@ -476,13 +647,13 @@ export default function MatchDetailScreen() {
               variant="primary"
               flex={1}
               onPress={() => {
-                // TODO: Implement guest signup
-                Alert.alert(t("matchDetail.guestAddSuccess"));
-                setShowGuestDialog(false);
-                setGuestName("");
+                if (guestName.trim()) {
+                  addGuestMutation.mutate(guestName.trim());
+                }
               }}
+              disabled={!guestName.trim() || addGuestMutation.isPending}
             >
-              {t("guest.add")}
+              {addGuestMutation.isPending ? t("guest.adding") : t("guest.add")}
             </Button>
           </XStack>
         </YStack>

@@ -43,6 +43,25 @@ export type { DatePickerProps } from "./components/DatePicker";
 export { TimePicker } from "./components/TimePicker";
 export type { TimePickerProps } from "./components/TimePicker";
 
+// Navigation Components
+export { Tabs } from "./components/Tabs";
+export type { TabsProps, TabItem } from "./components/Tabs";
+
+// Status Components
+export { StatusBadge } from "./components/StatusBadge";
+export type {
+  StatusBadgeProps,
+  PlayerStatusType,
+  MatchStatusType,
+} from "./components/StatusBadge";
+
+export { PlayersTable } from "./components/PlayersTable";
+export type {
+  PlayersTableProps,
+  PlayerRow,
+  PlayerAction,
+} from "./components/PlayersTable";
+
 // Re-export commonly used Tamagui components
 export {
   Text,
