@@ -29,8 +29,21 @@ export const auth = betterAuth({
   appName: "Fulbo con los pibes",
   trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || [
     "http://localhost:8081",
+    "http://localhost:8085",
     "http://localhost:19006",
+    "http://localhost:3000",
+    // Allow Expo development URLs
+    "exp://192.168.0.63:8085",
+    "exp://localhost:8085",
   ],
+  // Allow requests without origin header (mobile apps)
+  advanced: {
+    crossSubDomainCookies: {
+      enabled: false,
+    },
+    // Disable CSRF check for mobile apps that don't send Origin header
+    disableCSRFCheck: true,
+  },
   database: {
     dialect: databaseDialect,
     type: "sqlite",

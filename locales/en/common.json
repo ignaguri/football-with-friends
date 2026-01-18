@@ -46,7 +46,10 @@
     "paymentInfo": "Payment Information",
     "paymentMethod": "Payment Method",
     "keyRules": "Important Rules",
-    "noPaymentMethod": "Payment method not configured"
+    "noPaymentMethod": "Payment method not configured",
+    "paymentOpenError": "Could not open payment link",
+    "noOrganizerPhone": "Organizer phone not configured",
+    "whatsappError": "Could not open WhatsApp"
   },
   "share": {
     "title": "Share this match",
@@ -100,7 +103,7 @@
     "title": "If you already paid, you can notify the organizer via WhatsApp",
     "send": "Send WhatsApp message",
     "sent": "I already sent the message",
-    "whatsappMessage": "Hi! I already paid for the match on {date} - {name}",
+    "whatsappMessage": "Hi! I already paid for the match on {{date}} - {{name}}",
     "cantPlay": "I can't play"
   },
   "rules": {

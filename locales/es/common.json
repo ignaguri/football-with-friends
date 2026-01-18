@@ -47,7 +47,10 @@
     "paymentInfo": "Información de Pago",
     "paymentMethod": "Método de Pago",
     "keyRules": "Reglas Importantes",
-    "noPaymentMethod": "Método de pago no configurado"
+    "noPaymentMethod": "Método de pago no configurado",
+    "paymentOpenError": "No se pudo abrir el enlace de pago",
+    "noOrganizerPhone": "Teléfono del organizador no configurado",
+    "whatsappError": "No se pudo abrir WhatsApp"
   },
   "share": {
     "title": "Compartir este partido",
@@ -101,7 +104,7 @@
     "title": "Si ya pagaste, podés avisarle al organizador por WhatsApp",
     "send": "Mandar mensaje por WhatsApp",
     "sent": "Ya mandé el mensaje",
-    "whatsappMessage": "Hola! Ya pagué mi partido para el {date} - {name}",
+    "whatsappMessage": "Hola! Ya pagué mi partido para el {{date}} - {{name}}",
     "cantPlay": "No puedo jugar"
   },
   "rules": {

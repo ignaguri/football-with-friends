@@ -27,7 +27,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { RefreshControl, ScrollView, Share, Linking, Alert } from "react-native";
 import {
   CreditCard,
-  Bell,
+  MessageCircle,
   X,
   Calendar,
   UserPlus,
@@ -196,23 +196,31 @@ export default function MatchDetailScreen() {
   };
 
   const handleOpenPayment = () => {
-    // Open payment link (PayPal or other)
-    if (match?.paymentMethod) {
-      Linking.openURL(match.paymentMethod);
+    // Open PayPal link from environment variable
+    const paypalUrl = process.env.EXPO_PUBLIC_PAYPAL_URL;
+    if (paypalUrl) {
+      Linking.openURL(paypalUrl).catch(() => {
+        Alert.alert("Error", t("matchDetail.paymentOpenError"));
+      });
     } else {
       Alert.alert(t("matchDetail.noPaymentMethod"));
     }
   };
 
   const handleNotifyPaid = () => {
-    // Open WhatsApp to notify organizer
+    // Open WhatsApp to notify organizer using wa.me link with phone number
+    const organizerPhone = process.env.EXPO_PUBLIC_ORGANIZER_WHATSAPP;
+    if (!organizerPhone) {
+      Alert.alert("Error", t("matchDetail.noOrganizerPhone"));
+      return;
+    }
     const message = t("notify.whatsappMessage", {
       date: formatDate(match?.date || ""),
       name: session?.user?.name || "",
     });
-    const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
+    const url = `https://wa.me/${organizerPhone}?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert("Error", "WhatsApp is not installed");
+      Alert.alert("Error", t("matchDetail.whatsappError"));
     });
   };
 
@@ -267,7 +275,7 @@ END:VCALENDAR`;
           variant: "outline",
         });
         actions.push({
-          icon: Bell,
+          icon: MessageCircle,
           label: t("notify.trigger"),
           onPress: handleNotifyPaid,
           variant: "outline",
@@ -313,7 +321,7 @@ END:VCALENDAR`;
           variant: "primary",
         });
         actions.push({
-          icon: Bell,
+          icon: MessageCircle,
           label: t("notify.cantPlay"),
           onPress: handleNotifyPaid,
           variant: "outline",
@@ -325,7 +333,7 @@ END:VCALENDAR`;
   };
 
   const buildPlayerRows = (): PlayerRow[] => {
-    if (!match) return [];
+    if (!match || !match.signups) return [];
 
     return match.signups.map((signup) => ({
       id: signup.id,
@@ -338,9 +346,9 @@ END:VCALENDAR`;
     }));
   };
 
-  const paidCount = match?.signups.filter((s) => s.status === "PAID").length || 0;
+  const paidCount = match?.signups?.filter((s) => s.status === "PAID").length || 0;
   const pendingCount =
-    match?.signups.filter((s) => s.status === "PENDING").length || 0;
+    match?.signups?.filter((s) => s.status === "PENDING").length || 0;
   const activeCount = paidCount + pendingCount;
   const isCancelled = match?.status === "cancelled";
   const isParticipating = match?.isUserSignedUp;
@@ -384,10 +392,10 @@ END:VCALENDAR`;
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
-        <YStack gap="$4" paddingBottom="$6">
+        <YStack gap="$3" paddingBottom="$6">
           {/* Match Header Card */}
           <Card variant="elevated">
-            <YStack padding="$4" gap="$3">
+            <YStack padding="$3" gap="$2">
               {isCancelled && (
                 <StatusBadge
                   status="cancelled"
@@ -427,7 +435,7 @@ END:VCALENDAR`;
 
           {/* Stats Card */}
           <Card variant="outlined">
-            <XStack padding="$4" justifyContent="space-around">
+            <XStack padding="$3" justifyContent="space-around">
               <YStack alignItems="center">
                 <Text fontSize="$7" fontWeight="bold" color="$green10">
                   {activeCount}
@@ -473,7 +481,7 @@ END:VCALENDAR`;
           {/* View A: Not Participating - Show CTA */}
           {!isParticipating && !isCancelled && userId && (
             <Card variant="outlined">
-              <YStack padding="$4" gap="$3" alignItems="center">
+              <YStack padding="$3" gap="$2" alignItems="center">
                 {match.availableSpots > 0 ? (
                   <>
                     <Text fontSize="$5" fontWeight="600" color="$blue10">
@@ -501,13 +509,13 @@ END:VCALENDAR`;
             <Card variant="elevated">
               <YStack gap="$2">
                 <XStack
-                  paddingHorizontal="$4"
-                  paddingTop="$4"
+                  paddingHorizontal="$3"
+                  paddingTop="$3"
                   justifyContent="space-between"
                   alignItems="center"
                 >
                   <Text fontSize="$6" fontWeight="bold">
-                    {t("players.title")} ({match.signups.length})
+                    {t("players.title")} ({match.signups?.length || 0})
                   </Text>
                   {match.userSignup?.status === "PAID" && (
                     <Button
@@ -535,7 +543,7 @@ END:VCALENDAR`;
           {/* Not logged in prompt */}
           {!userId && !isCancelled && (
             <Card variant="outlined">
-              <YStack padding="$4" gap="$3" alignItems="center">
+              <YStack padding="$3" gap="$2" alignItems="center">
                 <Text color="$gray11" textAlign="center">
                   {t("home.signInPrompt")}
                 </Text>
@@ -574,10 +582,10 @@ END:VCALENDAR`;
                 <Text fontWeight="500">{match.costPerPlayer}</Text>
               </XStack>
             )}
-            {match.paymentMethod && (
+            {process.env.EXPO_PUBLIC_PAYPAL_URL && (
               <XStack justifyContent="space-between">
                 <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
-                <Text fontWeight="500">PayPal</Text>
+                <Text fontWeight="500" color="$blue10">PayPal</Text>
               </XStack>
             )}
           </YStack>
