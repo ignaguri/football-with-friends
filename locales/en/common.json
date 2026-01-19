@@ -5,7 +5,8 @@
     "matches": "Matches",
     "organizer": "Organizer",
     "rules": "Rules",
-    "addMatch": "Add Match"
+    "addMatch": "Add Match",
+    "admin": "Admin"
   },
   "home": {
     "title": "Football with Friends",
@@ -13,7 +14,11 @@
     "matches": "Matches",
     "rules": "Rules & Info",
     "newMatch": "New Match",
-    "organizerDashboard": "Organizer Dashboard"
+    "organizerDashboard": "Organizer Dashboard",
+    "welcome": "Welcome, {{name}}!",
+    "upcomingMatches_one": "{{count}} upcoming match",
+    "upcomingMatches_other": "{{count}} upcoming matches",
+    "signInPrompt": "Sign in to join matches and see your schedule."
   },
   "matches": {
     "upcoming": "Upcoming Matches",
@@ -37,7 +42,26 @@
     "rejoinSuccess": "Rejoined the match!",
     "cancelSuccess": "You have cancelled your spot.",
     "guestAddSuccess": "Guest added successfully!",
-    "matchCancelled": "This match has been cancelled"
+    "matchCancelled": "This match has been cancelled",
+    "paymentInfo": "Payment Information",
+    "paymentMethod": "Payment Method",
+    "keyRules": "Important Rules",
+    "noPaymentMethod": "Payment method not configured",
+    "paymentOpenError": "Could not open payment link",
+    "noOrganizerPhone": "Organizer phone not configured",
+    "whatsappError": "Could not open WhatsApp",
+    "substituteList": "Substitutes",
+    "youAreSubstitute": "You're on the substitute list",
+    "substitutePosition": "Position #{{position}}",
+    "spotOpened": "A spot opened!",
+    "claimSpot": "Claim it now!",
+    "spotTaken": "Sorry, someone else claimed the spot",
+    "sameDayFee": "Same-day fee",
+    "totalCost": "Total",
+    "matchCompletelyFull": "Match and substitute list are full",
+    "cancelSpotTitle": "Cancel your spot?",
+    "cancelSpotMessage": "Are you sure you want to cancel your spot? You can rejoin later if you change your mind.",
+    "confirmCancel": "Yes, cancel spot"
   },
   "share": {
     "title": "Share this match",
@@ -51,13 +75,18 @@
   "stats": {
     "paid": "Paid",
     "cost": "Cost (p.p.)",
-    "court": "Court"
+    "court": "Court",
+    "location": "Location",
+    "max": "Max",
+    "substitutes": "Substitutes",
+    "availableSpots": "Available"
   },
   "actions": {
     "in": "You're in!",
     "wantToPlay": "Want to play?",
     "cancelOrGuest": "You can cancel your spot or sign up a guest below.",
-    "spotsLeft": "{count, plural, one {# spot left!} other {# spots left!}}",
+    "spotsLeft_one": "{{count}} spot left!",
+    "spotsLeft_other": "{{count}} spots left!",
     "matchFull": "Match is full!",
     "joining": "Joining...",
     "join": "Join Match",
@@ -67,8 +96,11 @@
     "cancelled": "You have cancelled your spot."
   },
   "players": {
+    "title": "Players",
     "updating": "Updating players...",
-    "noPlayers": "No players signed up yet"
+    "noPlayers": "No players signed up yet",
+    "guest": "(Guest)",
+    "cancelledSection": "Cancelled"
   },
   "guest": {
     "title": "Sign up a guest",
@@ -83,7 +115,8 @@
     "title": "If you already paid, you can notify the organizer via WhatsApp",
     "send": "Send WhatsApp message",
     "sent": "I already sent the message",
-    "whatsappMessage": "Hi! I already paid for the match on {date} - {name}"
+    "whatsappMessage": "Hi! I already paid for the match on {{date}} - {{name}}",
+    "cantPlay": "I can't play"
   },
   "rules": {
     "title": "Rules & Info",
@@ -152,6 +185,53 @@
     "signInWithGoogle": "Sign in with Google",
     "signInSuccess": "Successfully signed in"
   },
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit Profile",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "How you want to be called",
+    "nationality": "Nationality",
+    "nationalityPlaceholder": "Select nationality (optional)",
+    "nationalityUpdated": "Nationality updated successfully"
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account",
+    "signInDescription": "Sign in to continue to Fulbo con los pibes",
+    "signUpDescription": "Sign up for Fulbo con los pibes",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordMinLength": "Min. 8 characters",
+    "passwordHelp": "Must be at least 8 characters",
+    "name": "Name",
+    "namePlaceholder": "Your full name",
+    "username": "Username (optional)",
+    "usernamePlaceholder": "Choose a username",
+    "usernameHelp": "3-20 characters, letters, numbers, underscores only",
+    "signIn": "Sign In",
+    "signUp": "Create Account",
+    "signingIn": "Signing in...",
+    "signingUp": "Creating account...",
+    "orContinueWith": "or continue with",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "signUpLink": "Sign Up",
+    "signInLink": "Sign In",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "nameRequired": "Name is required",
+    "fillAllFields": "Please fill in all fields",
+    "fillRequiredFields": "Please fill in all required fields",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "usernameTooShort": "Username must be between 3 and 20 characters",
+    "usernameInvalid": "Username can only contain letters, numbers, and underscores",
+    "signInFailed": "Sign in failed",
+    "signUpFailed": "Sign up failed",
+    "googleSignInFailed": "Google sign in failed",
+    "unexpectedError": "An unexpected error occurred"
+  },
   "addMatch": {
     "title": "Add Match",
     "mustSignIn": "You must be signed in.",
@@ -178,6 +258,9 @@
     "maxPlayers": "Max Players",
     "maxPlayersMin": "Max players must be at least 1",
     "maxPlayersMax": "Max players cannot exceed 50",
+    "maxSubstitutes": "Max Substitutes",
+    "costPerPlayer": "Cost per person",
+    "sameDayCost": "Same-day extra cost",
     "selectDate": "Select date",
     "selectTime": "Select time"
   },
@@ -212,6 +295,12 @@
     "loading": "Loading...",
     "home": "Home",
     "signIn": "Sign In",
+    "settings": "Settings",
+    "language": "Language",
+    "save": "Save",
+    "notSet": "Not set",
+    "none": "None",
+    "search": "Search",
     "addToCalendar": "Add to calendar",
     "iosSafari": "To add this event to your calendar, please open this page in Safari and tap 'Add to Calendar.' Or use Google Calendar instead.",
     "logOut": "Log out",
@@ -245,7 +334,20 @@
     "notConfirmed": "Not Confirmed",
     "cancelled": "Cancelled",
     "inactive": "Inactive",
-    "played": "Played"
+    "played": "Played",
+    "upcoming": "Upcoming",
+    "substitute": "Substitute"
+  },
+  "settings": {
+    "title": "Settings",
+    "costs": "Cost Settings",
+    "defaultCostPerPlayer": "Default cost per player",
+    "sameDayExtraCost": "Default same-day extra cost",
+    "defaultMaxSubstitutes": "Default max substitutes",
+    "paypalUrl": "PayPal URL",
+    "organizerWhatsapp": "Organizer WhatsApp",
+    "saved": "Settings saved",
+    "saveError": "Failed to save settings"
   },
   "locations": {
     "title": "Locations",

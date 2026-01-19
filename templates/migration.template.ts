@@ -1,7 +1,7 @@
 // Migration template - Copy this file to migrations/ directory and rename
 // File should be named: YYYYMMDDHHMMSS-description.ts
 
-import type { ExtendedDatabase } from "@/lib/database/schema";
+import type { ExtendedDatabase } from "../lib/database/schema";
 import type { Kysely, Migration } from "kysely";
 
 export const up: Migration["up"] = async (db: Kysely<ExtendedDatabase>) => {
