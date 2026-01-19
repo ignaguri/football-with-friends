@@ -1,4 +1,4 @@
-import { Container, Card, Text, YStack, XStack, H2 } from "@repo/ui";
+import { Container, Card, Text, YStack, XStack, H2, List } from "@repo/ui";
 import { useTranslation } from "react-i18next";
 import { ScrollView } from "react-native";
 
@@ -20,24 +20,12 @@ export default function RulesScreen() {
                 {t("rules.generalTitle")}
               </H2>
 
-              <YStack gap="$3">
+              <List ordered bulletColor="$blue10">
                 {Array.isArray(generalRules) &&
                   generalRules.map((rule, index) => (
-                    <XStack key={index} gap="$3" alignItems="flex-start">
-                      <Text
-                        fontSize="$5"
-                        fontWeight="bold"
-                        color="$blue10"
-                        width={24}
-                      >
-                        {index + 1}.
-                      </Text>
-                      <Text flex={1} fontSize="$4" lineHeight="$5">
-                        {rule}
-                      </Text>
-                    </XStack>
+                    <List.Item key={index}>{rule}</List.Item>
                   ))}
-              </YStack>
+              </List>
             </YStack>
           </Card>
 
@@ -48,24 +36,12 @@ export default function RulesScreen() {
                 {t("rules.matchTitle")}
               </H2>
 
-              <YStack gap="$3">
+              <List ordered bulletColor="$green10">
                 {Array.isArray(matchRules) &&
                   matchRules.map((rule, index) => (
-                    <XStack key={index} gap="$3" alignItems="flex-start">
-                      <Text
-                        fontSize="$5"
-                        fontWeight="bold"
-                        color="$green10"
-                        width={24}
-                      >
-                        {index + 1}.
-                      </Text>
-                      <Text flex={1} fontSize="$4" lineHeight="$5">
-                        {rule}
-                      </Text>
-                    </XStack>
+                    <List.Item key={index}>{rule}</List.Item>
                   ))}
-              </YStack>
+              </List>
             </YStack>
           </Card>
         </YStack>

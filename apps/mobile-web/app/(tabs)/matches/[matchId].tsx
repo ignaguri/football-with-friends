@@ -11,6 +11,7 @@ import {
   Input,
   StatusBadge,
   PlayersTable,
+  List,
   type PlayerRow,
   type PlayerAction,
   type PlayerStatusType,
@@ -634,76 +635,56 @@ END:VCALENDAR`;
         open={showJoinModal}
         onOpenChange={setShowJoinModal}
         title={t("actions.wantToPlay")}
+        onConfirm={() => {
+          if (!signupMutation.isPending) {
+            signupMutation.mutate();
+          }
+        }}
+        onCancel={() => setShowJoinModal(false)}
+        confirmText={signupMutation.isPending ? t("actions.joining") : t("actions.join")}
+        cancelText={t("shared.cancel")}
       >
-        <YStack gap="$4" padding="$4">
-          {/* Payment Information */}
-          <YStack gap="$2">
-            <Text fontSize="$5" fontWeight="600">
-              {t("matchDetail.paymentInfo")}
-            </Text>
-            {match.costPerPlayer && (
-              <XStack justifyContent="space-between">
-                <Text color="$gray11">{t("stats.cost")}</Text>
-                <Text fontWeight="500">{match.costPerPlayer}</Text>
-              </XStack>
-            )}
-            {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && (
-              <XStack justifyContent="space-between">
-                <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
-                <Text fontWeight="500" color="$orange10">+{match.sameDayCost}</Text>
-              </XStack>
-            )}
-            {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && match.costPerPlayer && (
-              <XStack justifyContent="space-between" paddingTop="$1" borderTopWidth={1} borderColor="$gray6">
-                <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
-                <Text fontWeight="700" fontSize="$5">{totalCost}</Text>
-              </XStack>
-            )}
-            {process.env.EXPO_PUBLIC_PAYPAL_URL && (
-              <XStack justifyContent="space-between">
-                <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
-                <Text fontWeight="500" color="$blue10">PayPal</Text>
-              </XStack>
-            )}
-          </YStack>
+        {/* Payment Information */}
+        <YStack gap="$2">
+          <Text fontSize="$5" fontWeight="600">
+            {t("matchDetail.paymentInfo")}
+          </Text>
+          {match.costPerPlayer && (
+            <XStack justifyContent="space-between">
+              <Text color="$gray11">{t("stats.cost")}</Text>
+              <Text fontWeight="500">{match.costPerPlayer}</Text>
+            </XStack>
+          )}
+          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && (
+            <XStack justifyContent="space-between">
+              <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
+              <Text fontWeight="500" color="$orange10">+{match.sameDayCost}</Text>
+            </XStack>
+          )}
+          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && match.costPerPlayer && (
+            <XStack justifyContent="space-between" paddingTop="$1" borderTopWidth={1} borderColor="$gray6">
+              <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
+              <Text fontWeight="700" fontSize="$5">{totalCost}</Text>
+            </XStack>
+          )}
+          {process.env.EXPO_PUBLIC_PAYPAL_URL && (
+            <XStack justifyContent="space-between">
+              <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
+              <Text fontWeight="500" color="$blue10">PayPal</Text>
+            </XStack>
+          )}
+        </YStack>
 
-          {/* Key Rules */}
-          <YStack gap="$2">
-            <Text fontSize="$5" fontWeight="600">
-              {t("matchDetail.keyRules")}
-            </Text>
-            <YStack gap="$1">
-              <Text color="$gray11" fontSize="$3">
-                • {t("rules.general.0")}
-              </Text>
-              <Text color="$gray11" fontSize="$3">
-                • {t("rules.general.1")}
-              </Text>
-              <Text color="$gray11" fontSize="$3">
-                • {t("rules.general.3")}
-              </Text>
-            </YStack>
-          </YStack>
-
-          <XStack gap="$2">
-            <Button
-              variant="outline"
-              flex={1}
-              onPress={() => setShowJoinModal(false)}
-            >
-              {t("shared.cancel")}
-            </Button>
-            <Button
-              variant="primary"
-              flex={1}
-              onPress={() => signupMutation.mutate()}
-              disabled={signupMutation.isPending}
-            >
-              {signupMutation.isPending
-                ? t("actions.joining")
-                : t("actions.join")}
-            </Button>
-          </XStack>
+        {/* Key Rules */}
+        <YStack gap="$2">
+          <Text fontSize="$5" fontWeight="600">
+            {t("matchDetail.keyRules")}
+          </Text>
+          <List fontSize="$3" gap="$1">
+            <List.Item>{t("rules.general.0")}</List.Item>
+            <List.Item>{t("rules.general.1")}</List.Item>
+            <List.Item>{t("rules.general.3")}</List.Item>
+          </List>
         </YStack>
       </Dialog>
 

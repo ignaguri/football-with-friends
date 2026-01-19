@@ -62,6 +62,9 @@ export type {
   PlayerAction,
 } from "./components/PlayersTable";
 
+export { List, ListItem } from "./components/List";
+export type { ListProps, ListItemProps } from "./components/List";
+
 // Re-export commonly used Tamagui components
 export {
   Text,

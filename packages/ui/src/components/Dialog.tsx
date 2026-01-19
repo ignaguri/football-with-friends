@@ -56,51 +56,57 @@ export function Dialog({
           ]}
           enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
           exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-          gap="$4"
+          space="$4"
           padding="$5"
           backgroundColor="$background"
           borderRadius="$6"
+          width="90%"
           maxWidth={500}
         >
-          <YStack space="$3">
-            {title && (
-              <XStack justifyContent="space-between" alignItems="center">
-                <TamaguiDialog.Title fontSize="$6" fontWeight="bold">
-                  {title}
-                </TamaguiDialog.Title>
-                <TamaguiDialog.Close asChild>
-                  <Button
-                    variant="ghost"
-                    size="$3"
-                    circular
-                    icon={X}
-                    padding="$2"
-                  />
-                </TamaguiDialog.Close>
-              </XStack>
-            )}
+          {title && (
+            <XStack justifyContent="space-between" alignItems="center">
+              <TamaguiDialog.Title fontSize="$6" fontWeight="bold">
+                {title}
+              </TamaguiDialog.Title>
+              <TamaguiDialog.Close asChild>
+                <Button
+                  variant="ghost"
+                  size="$3"
+                  circular
+                  icon={X}
+                  padding="$2"
+                />
+              </TamaguiDialog.Close>
+            </XStack>
+          )}
 
-            {description && (
-              <TamaguiDialog.Description fontSize="$4" color="$gray11">
-                {description}
-              </TamaguiDialog.Description>
-            )}
+          {description && (
+            <TamaguiDialog.Description fontSize="$4" color="$gray11">
+              {description}
+            </TamaguiDialog.Description>
+          )}
 
-            <YStack space="$4">{children}</YStack>
+          {children}
 
-            {showActions && (
-              <XStack gap="$3" justifyContent="flex-end">
-                <TamaguiDialog.Close asChild>
-                  <Button variant="outline" onPress={onCancel}>
-                    {cancelText}
-                  </Button>
-                </TamaguiDialog.Close>
-                <Button variant="primary" onPress={onConfirm}>
-                  {confirmText}
+          {showActions && (
+            <XStack
+              gap="$3"
+              justifyContent="flex-end"
+              marginTop="$6"
+              paddingTop="$4"
+              borderTopWidth={1}
+              borderTopColor="$gray5"
+            >
+              <TamaguiDialog.Close asChild>
+                <Button variant="outline" onPress={onCancel}>
+                  {cancelText}
                 </Button>
-              </XStack>
-            )}
-          </YStack>
+              </TamaguiDialog.Close>
+              <Button variant="primary" onPress={onConfirm}>
+                {confirmText}
+              </Button>
+            </XStack>
+          )}
         </TamaguiDialog.Content>
       </TamaguiDialog.Portal>
     </TamaguiDialog>
