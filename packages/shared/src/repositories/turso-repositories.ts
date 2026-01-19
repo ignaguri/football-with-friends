@@ -1,5 +1,6 @@
 // Turso/LibSQL implementation of repository interfaces using Kysely
 
+import { format } from "date-fns";
 import { sql } from "kysely";
 import { nanoid } from "nanoid";
 
@@ -431,7 +432,7 @@ export class TursoMatchRepository implements MatchRepository {
     }
 
     if (filters?.type) {
-      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const today = format(new Date(), "yyyy-MM-dd"); // YYYY-MM-DD
       if (filters.type === "past") {
         query = query.where((eb) =>
           eb.or([

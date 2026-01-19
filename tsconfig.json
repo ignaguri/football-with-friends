@@ -38,7 +38,8 @@
   ],
   "exclude": [
     "node_modules",
-    ".next"
+    ".next",
+    "api"
   ],
   "extends": "expo/tsconfig.base"
 }

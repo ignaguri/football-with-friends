@@ -86,6 +86,7 @@ export interface UserTable {
   username: string | null;
   displayUsername: string | null;
   profilePicture: string | null;
+  nationality: string | null;
 }
 
 export interface SettingsTable {

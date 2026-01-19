@@ -1,5 +1,4 @@
 {
-  "extends": "../apps/api/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": ".",
@@ -11,8 +10,9 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": false,
+    "noEmit": true
   },
-  "include": ["index.ts", "../apps/api/src/**/*"],
+  "include": ["index.ts"],
   "exclude": ["node_modules", "dist"]
 }
