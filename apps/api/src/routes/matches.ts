@@ -209,6 +209,42 @@ app.post(
   }
 );
 
+// Admin: Add a player to a match
+app.post(
+  "/:id/admin-add-player",
+  zValidator(
+    "json",
+    z.object({
+      userId: z.string().optional(),
+      playerName: z.string().min(1, "Player name is required"),
+      playerEmail: z.string().email("Valid email is required"),
+      status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+    })
+  ),
+  async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session?.user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const matchId = c.req.param("id");
+    const playerData = c.req.valid("json");
+    const user = session.user as { id: string; name: string; email: string; role?: string };
+
+    try {
+      const signup = await matchService.addPlayerByAdmin(
+        matchId,
+        playerData,
+        user
+      );
+      return c.json({ signup }, 201);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to add player";
+      return c.json({ error: message }, 400);
+    }
+  }
+);
+
 // Update a signup (status change)
 app.patch(
   "/:id/signup/:signupId",
