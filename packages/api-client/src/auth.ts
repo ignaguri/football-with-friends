@@ -1,6 +1,8 @@
 // Auth client for Expo/React Native
 import { createAuthClient } from "better-auth/react";
 import { usernameClient } from "better-auth/client/plugins";
+import { expoClient } from "@better-auth/expo/client";
+import * as SecureStore from "expo-secure-store";
 
 // Get API URL from environment
 function getApiUrl(): string {
@@ -14,10 +16,17 @@ function getApiUrl(): string {
 
 const API_URL = getApiUrl();
 
-// Create the Better Auth client with username plugin
+// Create the Better Auth client with Expo plugin for React Native
 export const authClient = createAuthClient({
   baseURL: API_URL,
-  plugins: [usernameClient()],
+  plugins: [
+    usernameClient(),
+    expoClient({
+      scheme: "football-with-friends", // Deep link scheme from app.json
+      storagePrefix: "football_auth",
+      storage: SecureStore,
+    }),
+  ],
 });
 
 // Export individual auth methods for convenience

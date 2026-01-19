@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.4.15",
     "@hono/zod-validator": "^0.7.6",
     "@orpc/server": "^1.13.4",
     "@repo/shared": "workspace:*",

@@ -2,6 +2,7 @@ import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { env, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
 import { admin, username } from "better-auth/plugins";
+import { expo } from "@better-auth/expo";
 
 // Get database configuration for authentication
 function getDatabaseConfig() {
@@ -27,14 +28,14 @@ const databaseDialect = getDatabaseConfig();
 
 export const auth = betterAuth({
   appName: "Fulbo con los pibes",
+  baseURL: process.env.BETTER_AUTH_BASE_URL || "http://localhost:3001",
   trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || [
     "http://localhost:8081",
     "http://localhost:8085",
     "http://localhost:19006",
     "http://localhost:3000",
-    // Allow Expo development URLs
-    "exp://192.168.0.63:8085",
-    "exp://localhost:8085",
+    // Allow native app deep link callback
+    "football-with-friends:///",
   ],
   // Allow requests without origin header (mobile apps)
   advanced: {
@@ -90,6 +91,7 @@ export const auth = betterAuth({
       minUsernameLength: 3,
       maxUsernameLength: 20,
     }),
+    expo(),
   ],
   logger: {
     level: "info",

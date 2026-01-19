@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
+import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { signIn } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
@@ -8,17 +8,18 @@ export default function SignInScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      setError(t("auth.fillAllFields"));
+      setEmailError(t("auth.fillAllFields"));
       return;
     }
 
     setIsLoading(true);
-    setError(null);
+    setEmailError(null);
 
     try {
       const result = await signIn.email({
@@ -27,14 +28,14 @@ export default function SignInScreen() {
       });
 
       if (result.error) {
-        setError(result.error.message || t("auth.signInFailed"));
+        setEmailError(result.error.message || t("auth.signInFailed"));
         return;
       }
 
       // Navigate to main app
       router.replace("/(tabs)");
     } catch (err) {
-      setError(t("auth.unexpectedError"));
+      setEmailError(t("auth.unexpectedError"));
       console.error("Sign in error:", err);
     } finally {
       setIsLoading(false);
@@ -42,21 +43,20 @@ export default function SignInScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setError(null);
+    setIsGoogleLoading(true);
 
     try {
-      // Use full URL for callback - window.location.origin for web, or hardcoded for native
-      const baseUrl = typeof window !== "undefined" ? window.location.origin : "http://localhost:8081";
+      // Better Auth Expo plugin handles the OAuth flow automatically
       await signIn.social({
         provider: "google",
-        callbackURL: `${baseUrl}/(tabs)`,
+        callbackURL: "/", // Will be converted to deep link: fulbo://
       });
+
+      // If successful, navigate to main app
+      router.replace("/(tabs)");
     } catch (err) {
-      setError(t("auth.googleSignInFailed"));
       console.error("Google sign in error:", err);
-    } finally {
-      setIsLoading(false);
+      setIsGoogleLoading(false);
     }
   };
 
@@ -72,6 +72,26 @@ export default function SignInScreen() {
           </Text>
         </YStack>
 
+        {/* Google Sign In - Primary Action */}
+        <Button
+          onPress={handleGoogleSignIn}
+          disabled={isGoogleLoading || isLoading}
+          variant="outline"
+          size="large"
+        >
+          {isGoogleLoading ? <Spinner size="small" /> : t("signin.signInWithGoogle")}
+        </Button>
+
+        {/* Divider */}
+        <XStack space="$3" alignItems="center">
+          <YStack flex={1} height={1} backgroundColor="$gray6" />
+          <Text color="$gray10" fontSize="$3">
+            {t("auth.orContinueWith")}
+          </Text>
+          <YStack flex={1} height={1} backgroundColor="$gray6" />
+        </XStack>
+
+        {/* Email/Password Sign In */}
         <Card variant="elevated" padding="$4">
           <YStack space="$4">
             <Input
@@ -81,7 +101,7 @@ export default function SignInScreen() {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
-              error={error && !email ? t("auth.emailRequired") : undefined}
+              error={emailError && !email ? t("auth.emailRequired") : undefined}
             />
 
             <Input
@@ -90,37 +110,22 @@ export default function SignInScreen() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              error={error && !password ? t("auth.passwordRequired") : undefined}
+              error={emailError && !password ? t("auth.passwordRequired") : undefined}
             />
 
-            {error && (
+            {emailError && (
               <Text color="$red10" fontSize="$3" textAlign="center">
-                {error}
+                {emailError}
               </Text>
             )}
 
             <Button
               onPress={handleSignIn}
-              disabled={isLoading}
+              disabled={isLoading || isGoogleLoading}
               variant="primary"
             >
               {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
             </Button>
-
-            <YStack space="$3" alignItems="center">
-              <Text color="$gray10" fontSize="$3">
-                {t("auth.orContinueWith")}
-              </Text>
-
-              <Button
-                onPress={handleGoogleSignIn}
-                disabled={isLoading}
-                variant="outline"
-                width="100%"
-              >
-                {t("signin.signInWithGoogle")}
-              </Button>
-            </YStack>
           </YStack>
         </Card>
 
