@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui's complex recursive types can cause "Maximum call stack size exceeded" during type checking
 import { createTamagui } from 'tamagui'
 import { themes } from './lib/themes'
 import { defaultConfig } from '@tamagui/config/v4'

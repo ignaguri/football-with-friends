@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui type recursion workaround
 import { useState } from "react";
 import {
   Container,

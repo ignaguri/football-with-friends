@@ -1,11 +1,11 @@
+import { ComponentType } from "react";
 import { XStack, YStack, Text } from "tamagui";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
-import type { LucideIcon } from "@tamagui/lucide-icons";
 import { getCountryFlag } from "../utils/country-flags";
 
 export interface PlayerAction {
-  icon: LucideIcon;
+  icon: ComponentType<{ size?: number }>;
   label: string;
   onPress: () => void;
   variant?: "primary" | "outline" | "danger" | "ghost";
@@ -154,5 +154,3 @@ export function PlayersTable({
     </YStack>
   );
 }
-
-export type { PlayersTableProps, PlayerRow, PlayerAction };

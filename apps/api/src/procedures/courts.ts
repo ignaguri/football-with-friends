@@ -19,7 +19,9 @@ export const courtsProcedures = {
         .optional()
     )
     .handler(async ({ input }) => {
-      return courtService.getAllCourts(input?.locationId);
+      return input?.locationId
+        ? courtService.getCourtsByLocationId(input.locationId)
+        : courtService.getAllCourts();
     }),
 
   // Get single court by ID

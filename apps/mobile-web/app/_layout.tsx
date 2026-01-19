@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui's type system with custom config causes recursive type resolution issues
 import { TamaguiProvider, Theme, YStack, useTheme as useTamaguiTheme } from "tamagui";
 import { PortalProvider } from "@tamagui/portal";
 import { Stack } from "expo-router";

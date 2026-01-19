@@ -21,7 +21,7 @@ const API_URL = getApiUrl();
 
 // Create the Hono RPC client with full type safety
 export const client = hc<ApiRoutes>(API_URL, {
-  fetch: (input, init) => {
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => {
     return fetch(input, {
       ...init,
       credentials: "include", // Important for sending cookies

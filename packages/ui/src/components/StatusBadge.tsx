@@ -1,3 +1,4 @@
+import { ComponentType } from "react";
 import { Text, XStack, type XStackProps } from "tamagui";
 import {
   CalendarPlus,
@@ -5,7 +6,6 @@ import {
   CalendarX,
   Calendar,
   Clock,
-  type LucideIcon,
 } from "@tamagui/lucide-icons";
 
 export type PlayerStatusType = "PENDING" | "PAID" | "CANCELLED" | "SUBSTITUTE";
@@ -14,7 +14,7 @@ export type MatchStatusType = "upcoming" | "cancelled" | "played";
 interface StatusConfig {
   backgroundColor: string;
   textColor: string;
-  Icon: LucideIcon;
+  Icon: ComponentType<{ size?: number; color?: string }>;
 }
 
 const PLAYER_STATUS_CONFIG: Record<PlayerStatusType, StatusConfig> = {
@@ -100,5 +100,3 @@ export function StatusBadge({
     </XStack>
   );
 }
-
-export type { StatusBadgeProps, PlayerStatusType, MatchStatusType };

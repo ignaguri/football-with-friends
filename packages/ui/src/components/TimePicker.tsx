@@ -27,7 +27,9 @@ export function TimePicker({
   const parseTimeToDate = (timeStr: string): Date => {
     const date = new Date();
     if (timeStr) {
-      const [hours, minutes] = timeStr.split(":").map(Number);
+      const [hoursStr, minutesStr] = timeStr.split(":");
+      const hours = parseInt(hoursStr || "19", 10);
+      const minutes = parseInt(minutesStr || "0", 10);
       date.setHours(hours, minutes, 0, 0);
     } else {
       // Default to 19:00 (7 PM) if no value

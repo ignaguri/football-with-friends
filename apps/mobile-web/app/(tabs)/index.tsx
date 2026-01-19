@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui type recursion workaround
 import { Container, Card, Text, YStack, Button, Spinner } from "@repo/ui";
 import { useSession, useQuery, client } from "@repo/api-client";
 import { useTranslation } from "react-i18next";

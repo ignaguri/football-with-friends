@@ -49,4 +49,5 @@ const adminCheckMiddleware = os.middleware(async ({ context, next }) => {
 });
 
 // Combined admin auth middleware
-export const adminAuthMiddleware = authMiddleware.use(adminCheckMiddleware);
+// Note: This is created in procedures/base.ts using base.use() pattern
+export { adminCheckMiddleware };

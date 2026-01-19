@@ -52,7 +52,7 @@ export function TimePicker({
         <Clock size={20} color="$gray10" />
         <select
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange((e.target as HTMLSelectElement).value)}
           disabled={disabled}
           style={{
             flex: 1,

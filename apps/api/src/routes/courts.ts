@@ -19,7 +19,9 @@ app.get(
   ),
   async (c) => {
     const { locationId } = c.req.valid("query");
-    const courts = await courtService.getAllCourts(locationId);
+    const courts = locationId
+      ? await courtService.getCourtsByLocationId(locationId)
+      : await courtService.getAllCourts();
     return c.json(courts);
   }
 );

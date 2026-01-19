@@ -1,6 +1,6 @@
 import { Button as TamaguiButton, ButtonProps } from "tamagui";
 
-export interface CustomButtonProps extends ButtonProps {
+export interface CustomButtonProps extends Omit<ButtonProps, "variant"> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
 }
 

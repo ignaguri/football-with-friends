@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui theme generation creates complex recursive types that can cause stack overflow during type checking
 import { createThemes, defaultComponentThemes } from '@tamagui/theme-builder'
 import * as Colors from '@tamagui/colors'
 

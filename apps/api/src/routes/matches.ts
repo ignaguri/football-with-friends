@@ -2,11 +2,22 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
+import type { User } from "@repo/shared/domain";
 import { auth } from "../auth";
 
 const app = new Hono();
 const serviceFactory = getServiceFactory();
 const matchService = serviceFactory.matchService;
+
+// Helper to convert session user to full User type
+function sessionUserToUser(sessionUser: { id: string; name: string; email: string; role?: string }): User {
+  return {
+    ...sessionUser,
+    role: (sessionUser.role as "user" | "admin") || "user",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
 
 // Get all matches
 app.get(
@@ -73,7 +84,8 @@ app.post(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const user = session.user as { id: string; name: string; email: string; role?: string };
+    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can create matches" }, 403);
     }
@@ -81,7 +93,10 @@ app.post(
     const matchData = c.req.valid("json");
 
     try {
-      const match = await matchService.createMatch(matchData, user);
+      const match = await matchService.createMatch(
+        { ...matchData, createdByUserId: user.id },
+        user
+      );
       return c.json({ match }, 201);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create match";
@@ -113,7 +128,8 @@ app.patch(
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    const user = session.user as { id: string; name: string; email: string; role?: string };
+    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can update matches" }, 403);
     }
@@ -122,7 +138,16 @@ app.patch(
     const updates = c.req.valid("json");
 
     try {
-      const match = await matchService.updateMatch(matchId, updates, user);
+      const match = await matchService.updateMatch(
+        matchId,
+        {
+          ...updates,
+          courtId: updates.courtId === null ? undefined : updates.courtId,
+          costPerPlayer: updates.costPerPlayer === null ? undefined : updates.costPerPlayer,
+          sameDayCost: updates.sameDayCost === null ? undefined : updates.sameDayCost,
+        },
+        user
+      );
       return c.json({ match });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update match";
@@ -138,7 +163,8 @@ app.delete("/:id", async (c) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  const user = session.user as { id: string; name: string; email: string; role?: string };
+  const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
   if (user.role !== "admin") {
     return c.json({ error: "Only administrators can delete matches" }, 403);
   }
@@ -162,7 +188,8 @@ app.post("/:id/signup", async (c) => {
   }
 
   const matchId = c.req.param("id");
-  const user = session.user as { id: string; name: string; email: string; role?: string };
+  const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
 
   try {
     const signup = await matchService.signUpUser(matchId, user);
@@ -193,12 +220,19 @@ app.post(
 
     const matchId = c.req.param("id");
     const guestData = c.req.valid("json");
-    const user = session.user as { id: string; name: string; email: string; role?: string };
+    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
 
     try {
       const signup = await matchService.addGuestPlayer(
         matchId,
-        { ...guestData, matchId },
+        {
+          ...guestData,
+          matchId,
+          ownerUserId: user.id,
+          ownerName: user.name,
+          ownerEmail: user.email,
+        },
         user
       );
       return c.json({ signup }, 201);
@@ -229,7 +263,8 @@ app.post(
 
     const matchId = c.req.param("id");
     const playerData = c.req.valid("json");
-    const user = session.user as { id: string; name: string; email: string; role?: string };
+    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
 
     try {
       const signup = await matchService.addPlayerByAdmin(
@@ -262,7 +297,8 @@ app.patch(
 
     const signupId = c.req.param("signupId");
     const updates = c.req.valid("json");
-    const user = session.user as { id: string; name: string; email: string; role?: string };
+    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
 
     try {
       const signup = await matchService.updateSignup(signupId, updates, user);

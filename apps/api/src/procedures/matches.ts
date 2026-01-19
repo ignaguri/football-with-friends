@@ -47,18 +47,27 @@ export const matchesProcedures = {
   create: adminProcedure
     .input(
       z.object({
-        courtId: z.string(),
+        locationId: z.string(),
+        courtId: z.string().optional(),
         date: z.string(),
         time: z.string(),
-        maxPlayers: z.number().int().positive(),
-        notes: z.string().optional(),
+        maxPlayers: z.number().int().positive().optional(),
+        maxSubstitutes: z.number().int().min(0).optional(),
+        costPerPlayer: z.string().optional(),
+        sameDayCost: z.string().optional(),
       })
     )
     .handler(async ({ input, context }) => {
+      const user = {
+        ...context.user,
+        role: context.user.role as "user" | "admin",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
       return matchService.createMatch({
         ...input,
-        organizerId: context.user.id,
-      });
+        createdByUserId: context.user.id,
+      }, user);
     }),
 
   // Update match (admin only)
@@ -66,17 +75,26 @@ export const matchesProcedures = {
     .input(
       z.object({
         id: z.string(),
+        locationId: z.string().optional(),
         courtId: z.string().optional(),
         date: z.string().optional(),
         time: z.string().optional(),
         maxPlayers: z.number().int().positive().optional(),
-        notes: z.string().optional(),
-        status: z.enum(["draft", "published", "cancelled", "completed"]).optional(),
+        maxSubstitutes: z.number().int().min(0).optional(),
+        costPerPlayer: z.string().optional(),
+        sameDayCost: z.string().optional(),
+        status: z.enum(["upcoming", "cancelled", "completed"]).optional(),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context }) => {
       const { id, ...data } = input;
-      return matchService.updateMatch(id, data);
+      const user = {
+        ...context.user,
+        role: context.user.role as "user" | "admin",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      return matchService.updateMatch(id, data, user);
     }),
 
   // Delete match (admin only)
@@ -86,8 +104,14 @@ export const matchesProcedures = {
         id: z.string(),
       })
     )
-    .handler(async ({ input }) => {
-      await matchService.deleteMatch(input.id);
+    .handler(async ({ input, context }) => {
+      const user = {
+        ...context.user,
+        role: context.user.role as "user" | "admin",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await matchService.deleteMatch(input.id, user);
       return { success: true };
     }),
 
@@ -102,11 +126,17 @@ export const matchesProcedures = {
         })
       )
       .handler(async ({ input, context }) => {
-        return matchService.createSignup({
-          matchId: input.matchId,
-          userId: context.user.id,
-          guestName: input.guestName,
-        });
+        const user = {
+          ...context.user,
+          role: context.user.role as "user" | "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        return matchService.signUpUser(
+          input.matchId,
+          user,
+          input.guestName ? { playerName: input.guestName } : undefined
+        );
       }),
 
     // Update signup status (admin only)
@@ -117,8 +147,14 @@ export const matchesProcedures = {
           status: z.enum(["pending", "confirmed", "cancelled"]),
         })
       )
-      .handler(async ({ input }) => {
-        return matchService.updateSignupStatus(input.signupId, input.status);
+      .handler(async ({ input, context }) => {
+        const user = {
+          ...context.user,
+          role: context.user.role as "user" | "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        return matchService.updateSignup(input.signupId, { status: input.status }, user);
       }),
 
     // Remove signup
@@ -129,7 +165,13 @@ export const matchesProcedures = {
         })
       )
       .handler(async ({ input, context }) => {
-        await matchService.removeSignup(input.signupId, context.user.id);
+        const user = {
+          ...context.user,
+          role: context.user.role as "user" | "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        await matchService.removePlayerByAdmin(input.signupId, user);
         return { success: true };
       }),
 
@@ -139,14 +181,28 @@ export const matchesProcedures = {
         z.object({
           matchId: z.string(),
           userId: z.string().optional(),
-          guestName: z.string().optional(),
+          playerName: z.string().min(1),
+          playerEmail: z.string().email(),
+          status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).optional(),
         })
       )
-      .handler(async ({ input }) => {
-        return matchService.addPlayerToMatch(input.matchId, {
-          userId: input.userId,
-          guestName: input.guestName,
-        });
+      .handler(async ({ input, context }) => {
+        const user = {
+          ...context.user,
+          role: context.user.role as "user" | "admin",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        return matchService.addPlayerByAdmin(
+          input.matchId,
+          {
+            userId: input.userId,
+            playerName: input.playerName,
+            playerEmail: input.playerEmail,
+            status: input.status,
+          },
+          user
+        );
       }),
   },
 };

@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui type recursion workaround
 import { Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "tamagui";

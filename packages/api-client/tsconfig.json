@@ -3,9 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM"],
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "outDir": "./dist"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../apps/api/src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

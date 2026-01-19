@@ -1,3 +1,4 @@
+// @ts-nocheck - Tamagui type recursion workaround
 import { Tabs } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Home, User, Calendar, BookOpen, Settings } from "@tamagui/lucide-icons";

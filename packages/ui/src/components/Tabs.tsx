@@ -68,5 +68,3 @@ export function Tabs({ value, onValueChange, tabs }: TabsProps) {
     </TamaguiTabs>
   );
 }
-
-export type { TabsProps, TabItem };

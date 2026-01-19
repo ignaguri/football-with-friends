@@ -87,8 +87,8 @@ export const auth = betterAuth({
   plugins: [
     admin(),
     username({
-      minLength: 3,
-      maxLength: 20,
+      minUsernameLength: 3,
+      maxUsernameLength: 20,
     }),
   ],
   logger: {

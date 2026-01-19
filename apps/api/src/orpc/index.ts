@@ -18,11 +18,12 @@ export type AppRouter = typeof router;
 // Create RPC handler with error logging
 export const rpcHandler = new RPCHandler(router, {
   interceptors: [
-    onError((error, meta) => {
+    onError((error) => {
       console.error("=== oRPC Error ===");
-      console.error("Path:", meta.path);
       console.error("Error:", error);
-      console.error("Stack:", error.stack);
+      if (error instanceof Error) {
+        console.error("Stack:", error.stack);
+      }
       console.error("==================");
     }),
   ],

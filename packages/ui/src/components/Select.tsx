@@ -47,7 +47,7 @@ function WebSelect({
       <YStack>
         <select
           value={value || ""}
-          onChange={(e) => onValueChange?.(e.target.value)}
+          onChange={(e) => onValueChange?.((e.target as HTMLSelectElement).value)}
           disabled={disabled}
           style={{
             width: "100%",
@@ -114,7 +114,7 @@ function NativeSelect({
           {label}
         </Text>
       )}
-      <TamaguiSelect {...props} disabled={disabled}>
+      <TamaguiSelect {...props}>
         <TamaguiSelect.Trigger
           backgroundColor="$background"
           borderColor={error ? "$red8" : "$gray7"}
@@ -122,6 +122,7 @@ function NativeSelect({
           padding="$3"
           iconAfter={ChevronDown}
           opacity={disabled ? 0.5 : 1}
+          disabled={disabled}
         >
           <TamaguiSelect.Value placeholder={placeholder} />
         </TamaguiSelect.Trigger>
