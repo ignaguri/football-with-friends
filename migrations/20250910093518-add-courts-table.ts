@@ -2,7 +2,7 @@
 
 import { sql } from "kysely";
 
-import type { ExtendedDatabase } from "@/lib/database/schema";
+import type { ExtendedDatabase } from "../lib/database/schema";
 import type { Kysely, Migration } from "kysely";
 
 export const up: Migration["up"] = async (db: Kysely<ExtendedDatabase>) => {
