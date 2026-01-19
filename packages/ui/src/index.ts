@@ -19,6 +19,9 @@ export type { ContainerProps } from "./components/Container";
 export { Dialog } from "./components/Dialog";
 export type { CustomDialogProps } from "./components/Dialog";
 
+export { AlertDialog } from "./components/AlertDialog";
+export type { AlertDialogProps } from "./components/AlertDialog";
+
 export { Toast, ToastViewport } from "./components/Toast";
 export type { ToastProps } from "./components/Toast";
 

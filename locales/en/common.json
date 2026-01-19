@@ -58,7 +58,10 @@
     "spotTaken": "Sorry, someone else claimed the spot",
     "sameDayFee": "Same-day fee",
     "totalCost": "Total",
-    "matchCompletelyFull": "Match and substitute list are full"
+    "matchCompletelyFull": "Match and substitute list are full",
+    "cancelSpotTitle": "Cancel your spot?",
+    "cancelSpotMessage": "Are you sure you want to cancel your spot? You can rejoin later if you change your mind.",
+    "confirmCancel": "Yes, cancel spot"
   },
   "share": {
     "title": "Share this match",

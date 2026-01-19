@@ -59,7 +59,10 @@
     "spotTaken": "Lo siento, alguien más reclamó el lugar",
     "sameDayFee": "Recargo mismo día",
     "totalCost": "Total",
-    "matchCompletelyFull": "El partido y la lista de suplentes están completos"
+    "matchCompletelyFull": "El partido y la lista de suplentes están completos",
+    "cancelSpotTitle": "¿Cancelar tu lugar?",
+    "cancelSpotMessage": "¿Estás seguro que querés cancelar tu lugar? Podés volver a anotarte más tarde si cambiás de opinión.",
+    "confirmCancel": "Sí, cancelar lugar"
   },
   "share": {
     "title": "Compartir este partido",

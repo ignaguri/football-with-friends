@@ -8,6 +8,7 @@ import {
   Spinner,
   Button,
   Dialog,
+  AlertDialog,
   Input,
   StatusBadge,
   PlayersTable,
@@ -75,6 +76,11 @@ export default function MatchDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [guestName, setGuestName] = useState("");
+  const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [signupToCancel, setSignupToCancel] = useState<{
+    id: string;
+    status: PlayerStatusType;
+  } | null>(null);
 
   const userId = session?.user?.id;
   const isAdmin = session?.user?.role === "admin";
@@ -182,14 +188,30 @@ export default function MatchDetailScreen() {
   };
 
   const handleCancelSignup = (signupId: string, currentStatus: PlayerStatusType) => {
-    if (currentStatus === "PENDING") {
+    setSignupToCancel({ id: signupId, status: currentStatus });
+    setShowCancelAlert(true);
+  };
+
+  const confirmCancelSignup = () => {
+    if (!signupToCancel) return;
+
+    if (signupToCancel.status === "PENDING") {
       // For PENDING users, we would delete the signup entirely
       // For now, we'll just mark as cancelled since delete endpoint may not exist
-      updateSignupMutation.mutate({ signupId, status: "CANCELLED" });
+      updateSignupMutation.mutate({
+        signupId: signupToCancel.id,
+        status: "CANCELLED",
+      });
     } else {
       // For PAID users, mark as cancelled
-      updateSignupMutation.mutate({ signupId, status: "CANCELLED" });
+      updateSignupMutation.mutate({
+        signupId: signupToCancel.id,
+        status: "CANCELLED",
+      });
     }
+
+    setShowCancelAlert(false);
+    setSignupToCancel(null);
   };
 
   const handleRejoin = (signupId: string) => {
@@ -724,6 +746,22 @@ END:VCALENDAR`;
           </XStack>
         </YStack>
       </Dialog>
+
+      {/* Cancel Confirmation Alert */}
+      <AlertDialog
+        open={showCancelAlert}
+        onOpenChange={setShowCancelAlert}
+        title={t("matchDetail.cancelSpotTitle")}
+        description={t("matchDetail.cancelSpotMessage")}
+        cancelText={t("shared.cancel")}
+        confirmText={t("matchDetail.confirmCancel")}
+        onCancel={() => {
+          setShowCancelAlert(false);
+          setSignupToCancel(null);
+        }}
+        onConfirm={confirmCancelSignup}
+        variant="destructive"
+      />
     </Container>
   );
 }
