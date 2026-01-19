@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ScrollView } from "react-native";
 import {
   Container,
   Card,
@@ -91,42 +92,47 @@ export default function ProfileScreen() {
   if (!session?.user) {
     return (
       <Container variant="padded">
-        <YStack space="$6" flex={1} justifyContent="center" alignItems="center">
-          <Text fontSize="$8" fontWeight="bold" textAlign="center">
-            {t("home.title")}
-          </Text>
-          <Text color="$gray11" textAlign="center">
-            {t("auth.signInDescription")}
-          </Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+        >
+          <YStack space="$6" alignItems="center">
+            <Text fontSize="$8" fontWeight="bold" textAlign="center">
+              {t("home.title")}
+            </Text>
+            <Text color="$gray11" textAlign="center">
+              {t("auth.signInDescription")}
+            </Text>
 
-          <YStack space="$3" width="100%" maxWidth={300}>
-            <Link href="/(auth)/sign-in" asChild>
-              <Button variant="primary">{t("shared.signIn")}</Button>
-            </Link>
-            <Link href="/(auth)/sign-up" asChild>
-              <Button variant="outline">{t("auth.signUpLink")}</Button>
-            </Link>
-          </YStack>
-
-          <Card variant="outlined" width="100%" maxWidth={300}>
-            <YStack space="$3">
-              <Text fontSize="$4" fontWeight="600">
-                {t("shared.settings")}
-              </Text>
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color="$gray11">{t("shared.language")}</Text>
-                <LanguageSwitcher
-                  currentLanguage={currentLanguage}
-                  onLanguageChange={handleLanguageChange}
-                />
-              </XStack>
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color="$gray11">{t("shared.toggleTheme")}</Text>
-                <ThemeToggle theme={theme} onToggle={toggleTheme} />
-              </XStack>
+            <YStack space="$3" width="100%" maxWidth={300}>
+              <Link href="/(auth)/sign-in" asChild>
+                <Button variant="primary">{t("shared.signIn")}</Button>
+              </Link>
+              <Link href="/(auth)/sign-up" asChild>
+                <Button variant="outline">{t("auth.signUpLink")}</Button>
+              </Link>
             </YStack>
-          </Card>
-        </YStack>
+
+            <Card variant="outlined" width="100%" maxWidth={300}>
+              <YStack space="$3">
+                <Text fontSize="$4" fontWeight="600">
+                  {t("shared.settings")}
+                </Text>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text color="$gray11">{t("shared.language")}</Text>
+                  <LanguageSwitcher
+                    currentLanguage={currentLanguage}
+                    onLanguageChange={handleLanguageChange}
+                  />
+                </XStack>
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text color="$gray11">{t("shared.toggleTheme")}</Text>
+                  <ThemeToggle theme={theme} onToggle={toggleTheme} />
+                </XStack>
+              </YStack>
+            </Card>
+          </YStack>
+        </ScrollView>
       </Container>
     );
   }
@@ -136,8 +142,12 @@ export default function ProfileScreen() {
 
   return (
     <Container variant="padded">
-      <YStack space="$4">
-        <Card variant="elevated" padding="$4">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
+        <YStack space="$4">
+          <Card variant="elevated" padding="$4">
           <YStack space="$4">
             <XStack space="$4" alignItems="center">
               <UserAvatar
@@ -255,6 +265,7 @@ export default function ProfileScreen() {
           {t("shared.signOut")}
         </Button>
       </YStack>
+      </ScrollView>
     </Container>
   );
 }
