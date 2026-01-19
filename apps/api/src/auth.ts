@@ -71,6 +71,11 @@ export const auth = betterAuth({
         required: false,
         input: true, // Allow users to set their profile picture
       },
+      nationality: {
+        type: "string",
+        required: false,
+        input: true, // Allow users to set their nationality
+      },
     },
   },
   socialProviders: {

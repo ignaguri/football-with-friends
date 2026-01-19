@@ -53,7 +53,7 @@ app.post("/upload-picture", async (c) => {
 
 // Update username
 app.post("/update-username", async (c) => {
-  const { userId, username, displayUsername } = await c.req.json();
+  const { userId, username, displayUsername, nationality } = await c.req.json();
 
   if (!userId) {
     return c.json({ error: "Missing userId" }, 400);
@@ -70,6 +70,16 @@ app.post("/update-username", async (c) => {
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       return c.json(
         { error: "Username can only contain letters, numbers, and underscores" },
+        400
+      );
+    }
+  }
+
+  // Validate nationality format if provided (ISO 3166-1 alpha-2)
+  if (nationality && nationality !== null) {
+    if (!/^[A-Z]{2}$/.test(nationality)) {
+      return c.json(
+        { error: "Nationality must be a valid 2-letter ISO country code" },
         400
       );
     }
@@ -97,6 +107,7 @@ app.post("/update-username", async (c) => {
     if (username !== undefined) updateData.username = username || null;
     if (displayUsername !== undefined)
       updateData.displayUsername = displayUsername || null;
+    if (nationality !== undefined) updateData.nationality = nationality || null;
 
     if (Object.keys(updateData).length > 0) {
       await db
@@ -129,6 +140,7 @@ app.get("/:userId", async (c) => {
         "username",
         "displayUsername",
         "profilePicture",
+        "nationality",
       ])
       .where("id", "=", userId)
       .executeTakeFirst();

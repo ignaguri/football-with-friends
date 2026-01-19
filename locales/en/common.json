@@ -186,7 +186,10 @@
     "title": "Profile",
     "editProfile": "Edit Profile",
     "displayName": "Display Name",
-    "displayNamePlaceholder": "How you want to be called"
+    "displayNamePlaceholder": "How you want to be called",
+    "nationality": "Nationality",
+    "nationalityPlaceholder": "Select nationality (optional)",
+    "nationalityUpdated": "Nationality updated successfully"
   },
   "auth": {
     "welcomeBack": "Welcome Back",
@@ -293,6 +296,8 @@
     "language": "Language",
     "save": "Save",
     "notSet": "Not set",
+    "none": "None",
+    "search": "Search",
     "addToCalendar": "Add to calendar",
     "iosSafari": "To add this event to your calendar, please open this page in Safari and tap 'Add to Calendar.' Or use Google Calendar instead.",
     "logOut": "Log out",

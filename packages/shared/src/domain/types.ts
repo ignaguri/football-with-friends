@@ -101,6 +101,7 @@ export interface Signup {
   guestOwner?: User;
   addedByUser?: User;
   guestOwnerEmail?: string; // populated from join
+  playerNationality?: string; // populated from join with user table
 }
 
 export interface MatchInvitation {
@@ -124,6 +125,7 @@ export interface User {
   email: string;
   image?: string;
   role: "user" | "admin";
+  nationality?: string; // ISO 3166-1 alpha-2 country code (e.g., "US", "AR", "DE")
   createdAt: Date;
   updatedAt: Date;
 }

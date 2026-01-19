@@ -82,3 +82,13 @@ export {
 
 // Toast utilities
 export { useToastController } from "@tamagui/toast";
+
+// Utility functions
+export {
+  getCountryFlag,
+  getCountryName,
+  getCountry,
+  isValidCountryCode,
+  COUNTRIES,
+} from "./utils/country-flags";
+export type { Country } from "./utils/country-flags";

@@ -187,7 +187,10 @@
     "title": "Perfil",
     "editProfile": "Editar Perfil",
     "displayName": "Nombre para mostrar",
-    "displayNamePlaceholder": "Cómo querés que te llamen"
+    "displayNamePlaceholder": "Cómo querés que te llamen",
+    "nationality": "Nacionalidad",
+    "nationalityPlaceholder": "Seleccionar nacionalidad (opcional)",
+    "nationalityUpdated": "Nacionalidad actualizada correctamente"
   },
   "auth": {
     "welcomeBack": "Bienvenido de vuelta",
@@ -296,6 +299,8 @@
     "language": "Idioma",
     "save": "Guardar",
     "notSet": "No configurado",
+    "none": "Ninguna",
+    "search": "Buscar",
     "addToCalendar": "Agregar al calendario",
     "iosSafari": "Para agregar este evento a tu calendario, abrí esta página en Safari y tocá 'Agregar al calendario'. O usá Google Calendar en su lugar.",
     "logOut": "Cerrar sesión",

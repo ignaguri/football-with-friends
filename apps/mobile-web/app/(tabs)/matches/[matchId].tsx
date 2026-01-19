@@ -349,6 +349,7 @@ END:VCALENDAR`;
       id: signup.id,
       name: signup.playerName,
       status: signup.status,
+      nationality: signup.playerNationality,
       isGuest: signup.signupType === "guest",
       addedByName: signup.addedByName,
       isCurrentUser: signup.userId === userId,

@@ -504,13 +504,18 @@ export class TursoMatchRepository implements MatchRepository {
       }
     }
 
-    // Get signups with guest owner information
+    // Get signups with guest owner information and user nationality
     const signupRows = await this.db
       .selectFrom("signups")
       .leftJoin(
         "user as guest_owner",
         "signups.guest_owner_id",
         "guest_owner.id",
+      )
+      .leftJoin(
+        "user as player_user",
+        "signups.user_id",
+        "player_user.id",
       )
       .select([
         "signups.id",
@@ -525,6 +530,7 @@ export class TursoMatchRepository implements MatchRepository {
         "signups.signed_up_at",
         "signups.updated_at",
         "guest_owner.email as guest_owner_email",
+        "player_user.nationality as player_nationality",
       ])
       .where("match_id", "=", id)
       .orderBy("signed_up_at", "asc")
@@ -533,6 +539,7 @@ export class TursoMatchRepository implements MatchRepository {
     const signups = signupRows.map((row) => ({
       ...dbSignupToSignup(row),
       guestOwnerEmail: row.guest_owner_email || undefined,
+      playerNationality: row.player_nationality || undefined,
     }));
 
     // Calculate available spots (based on paid players only)

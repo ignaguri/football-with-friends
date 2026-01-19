@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Platform } from "react-native";
 import {
   Select as TamaguiSelect,
@@ -6,8 +7,10 @@ import {
   Text,
   Adapt,
   Sheet,
+  Input as TamaguiInput,
 } from "tamagui";
 import { Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface SelectOption {
   value: string;
@@ -20,6 +23,8 @@ export interface CustomSelectProps extends Omit<SelectProps, "children"> {
   options: SelectOption[];
   placeholder?: string;
   disabled?: boolean;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 // Web-specific native select for reliability
@@ -88,8 +93,20 @@ function NativeSelect({
   options,
   placeholder = "Select an option",
   disabled,
+  searchable = false,
+  searchPlaceholder = "Search...",
   ...props
 }: CustomSelectProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { top, left, right } = useSafeAreaInsets();
+
+  // Filter options based on search query
+  const filteredOptions = searchable && searchQuery
+    ? options.filter((option) =>
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : options;
+
   return (
     <YStack gap="$2">
       {label && (
@@ -115,7 +132,20 @@ function NativeSelect({
             dismissOnSnapToBottom
             snapPointsMode="fit"
           >
-            <Sheet.Frame>
+            <Sheet.Frame paddingTop={top} paddingLeft={left} paddingRight={right}>
+              {searchable && (
+                <YStack paddingHorizontal="$4" paddingTop="$3" paddingBottom="$2">
+                  <TamaguiInput
+                    placeholder={searchPlaceholder}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    borderColor="$gray7"
+                    backgroundColor="$background"
+                  />
+                </YStack>
+              )}
               <Sheet.ScrollView>
                 <Adapt.Contents />
               </Sheet.ScrollView>
@@ -141,7 +171,7 @@ function NativeSelect({
 
           <TamaguiSelect.Viewport minWidth={200}>
             <TamaguiSelect.Group>
-              {options.map((option, index) => (
+              {filteredOptions.map((option, index) => (
                 <TamaguiSelect.Item
                   key={option.value}
                   index={index}

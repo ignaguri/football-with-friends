@@ -12,6 +12,10 @@ import {
   Spinner,
   ThemeToggle,
   LanguageSwitcher,
+  Select,
+  COUNTRIES,
+  getCountryFlag,
+  getCountry,
 } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { useSession, signOut, client } from "@repo/api-client";
@@ -20,13 +24,14 @@ import { useThemeContext } from "../../../lib/theme-context";
 import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
 
 export default function ProfileScreen() {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending, refetch: refetchSession } = useSession();
   const { t } = useTranslation();
   const { theme, toggleTheme } = useThemeContext();
   const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState("");
   const [displayUsername, setDisplayUsername] = useState("");
+  const [nationality, setNationality] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +39,7 @@ export default function ProfileScreen() {
     if (session?.user) {
       setUsername((session.user as any).username || "");
       setDisplayUsername((session.user as any).displayUsername || "");
+      setNationality((session.user as any).nationality || "");
     }
   }, [session?.user]);
 
@@ -59,6 +65,7 @@ export default function ProfileScreen() {
           userId: session.user.id,
           username: username || null,
           displayUsername: displayUsername || null,
+          nationality: nationality || null,
         },
       });
 
@@ -69,6 +76,8 @@ export default function ProfileScreen() {
         return;
       }
 
+      // Refetch session to update the UI with new data
+      await refetchSession();
       setIsEditing(false);
     } catch (err) {
       setError("An unexpected error occurred");
@@ -159,9 +168,16 @@ export default function ProfileScreen() {
                 size={80}
               />
               <YStack flex={1}>
-                <Text fontSize="$6" fontWeight="600">
-                  {displayName}
-                </Text>
+                <XStack alignItems="center" space="$2">
+                  <Text fontSize="$6" fontWeight="600">
+                    {displayName}
+                  </Text>
+                  {user.nationality && (
+                    <Text fontSize="$6">
+                      {getCountryFlag(user.nationality)}
+                    </Text>
+                  )}
+                </XStack>
                 <Text color="$gray11" fontSize="$3">
                   {user.email}
                 </Text>
@@ -189,6 +205,22 @@ export default function ProfileScreen() {
                   placeholder={t("profile.displayNamePlaceholder")}
                   value={displayUsername}
                   onChangeText={setDisplayUsername}
+                />
+
+                <Select
+                  label={t("profile.nationality")}
+                  placeholder={t("profile.nationalityPlaceholder")}
+                  value={nationality}
+                  onValueChange={setNationality}
+                  searchable
+                  searchPlaceholder={t("shared.search")}
+                  options={[
+                    { label: t("shared.none"), value: "" },
+                    ...COUNTRIES.map((country) => ({
+                      label: `${country.flag} ${country.name}`,
+                      value: country.code,
+                    })),
+                  ]}
                 />
 
                 {error && (

@@ -2,6 +2,7 @@ import { XStack, YStack, Text } from "tamagui";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
 import type { LucideIcon } from "@tamagui/lucide-icons";
+import { getCountryFlag } from "../utils/country-flags";
 
 export interface PlayerAction {
   icon: LucideIcon;
@@ -14,6 +15,7 @@ export interface PlayerRow {
   id: string;
   name: string;
   status: PlayerStatusType;
+  nationality?: string; // ISO 3166-1 alpha-2 country code
   isGuest?: boolean;
   addedByName?: string;
   isCurrentUser?: boolean;
@@ -78,9 +80,14 @@ export function PlayersTable({
       borderRadius={player.isCurrentUser ? "$2" : 0}
     >
       <YStack flex={1} gap="$1">
-        <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
-          {getPlayerDisplayName(player)}
-        </Text>
+        <XStack gap="$2" alignItems="center">
+          {player.nationality && (
+            <Text fontSize="$5">{getCountryFlag(player.nationality)}</Text>
+          )}
+          <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
+            {getPlayerDisplayName(player)}
+          </Text>
+        </XStack>
         {player.isGuest && (
           <Text fontSize="$2" color="$gray10">
             Guest
