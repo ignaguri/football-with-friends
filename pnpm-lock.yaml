@@ -503,6 +503,9 @@ importers:
       '@tamagui/lucide-icons':
         specifier: ^1.144.2
         version: 1.144.2(react-dom@19.1.0(react@19.1.0))(react-native-svg@15.15.1(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@tamagui/portal':
+        specifier: ^1.144.2
+        version: 1.144.2(react-dom@19.1.0(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@tamagui/toast':
         specifier: ^1.144.2
         version: 1.144.2(react-dom@19.1.0(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
