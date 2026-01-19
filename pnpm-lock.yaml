@@ -462,7 +462,7 @@ importers:
         version: 0.17.0
       '@libsql/kysely-libsql':
         specifier: ^0.4.1
-        version: 0.4.1(kysely@0.28.9)
+        version: 0.4.1(kysely@0.28.10)
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -470,8 +470,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.1.0)
       kysely:
-        specifier: ^0.28.9
-        version: 0.28.9
+        specifier: ^0.28.10
+        version: 0.28.10
       libsql:
         specifier: ^0.5.22
         version: 0.5.22
@@ -6530,10 +6530,6 @@ packages:
     resolution: {integrity: sha512-ksNxfzIW77OcZ+QWSAPC7yDqUSaIVwkTWnTPNiIy//vifNbwsSgQ57OkkncHxxpcBHM3LRfLAZVEh7kjq5twVA==}
     engines: {node: '>=20.0.0'}
 
-  kysely@0.28.9:
-    resolution: {integrity: sha512-3BeXMoiOhpOwu62CiVpO6lxfq4eS6KMYfQdMsN/2kUCRNuF2YiEr7u0HLHaQU+O4Xu8YXE3bHVkwaQ85i72EuA==}
-    engines: {node: '>=20.0.0'}
-
   lan-network@0.1.7:
     resolution: {integrity: sha512-mnIlAEMu4OyEvUNdzco9xpuB9YVcPkQec+QsgycBCtPZvEqWPCDPfbAE4OJMdBBWpZWtpCn1xw9jJYlwjWI5zQ==}
     hasBin: true
@@ -10122,14 +10118,6 @@ snapshots:
     dependencies:
       '@libsql/client': 0.8.1
       kysely: 0.28.10
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@libsql/kysely-libsql@0.4.1(kysely@0.28.9)':
-    dependencies:
-      '@libsql/client': 0.8.1
-      kysely: 0.28.9
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -15775,8 +15763,6 @@ snapshots:
   kleur@3.0.3: {}
 
   kysely@0.28.10: {}
-
-  kysely@0.28.9: {}
 
   lan-network@0.1.7: {}
 
