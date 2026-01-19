@@ -4,84 +4,104 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-- **Start development server**: `pnpm dev` (uses Turbopack for faster builds)
+- **Start all apps**: `pnpm dev` (runs all apps via Turborepo)
+- **Start API only**: `pnpm dev:api` (Hono API with Bun)
+- **Start mobile app only**: `pnpm dev:app` (Expo app)
 - **Build for production**: `pnpm build`
 - **Type checking**: `pnpm typecheck`
 - **Linting**: `pnpm lint`
-- **Secure development**: `pnpm dev:secure` (HTTPS)
 - **Install dependencies**: `pnpm install`
+- **Database migrations**: `pnpm migrate`, `pnpm migrate:up`, `pnpm migrate:down`
+- **Remote migrations**: `pnpm migrate-remote`, `pnpm migrate-remote:up`
 - **Validate environment**: `pnpm validate-env` (see Environment Configuration section)
 
 ## Architecture Overview
 
-**Fútbol con los pibes** is a Next.js 15 football match organization app using the App Router architecture.
+**Fútbol con los pibes** is a modern monorepo football match organization app built with Expo (mobile/web) and a Hono API backend.
+
+### Monorepo Structure
+This is a **Turborepo** monorepo using **pnpm workspaces** with the following structure:
+
+#### Apps (`apps/`)
+- **`api/`** - Hono API server running on Bun
+  - Backend API with oRPC for type-safe endpoints
+  - BetterAuth integration for authentication
+  - Zod validation with Hono middleware
+  - Run with: `pnpm dev:api`
+
+- **`mobile-web/`** - Expo universal app (iOS, Android, Web)
+  - Expo Router for file-based navigation
+  - Tamagui for universal UI components
+  - i18next for internationalization (English/Spanish)
+  - React Native with web support
+  - Run with: `pnpm dev:app`
+  - **Note**: TypeScript checking disabled due to Tamagui type recursion issues
+
+#### Packages (`packages/`)
+- **`@repo/api-client`** - Type-safe API client
+  - oRPC client for consuming the Hono API
+  - React hooks via @orpc/react
+  - TanStack Query integration
+
+- **`@repo/shared`** - Shared business logic and utilities
+  - Domain models and types
+  - Services and repositories
+  - Database schemas and migrations
+  - Utility functions (date/time, validation)
+  - Environment configuration
+
+- **`@repo/ui`** - Shared UI components
+  - Tamagui-based universal components
+  - Works across mobile, web, and native platforms
+  - Date pickers, forms, and common UI elements
+
+#### Legacy (`app/`)
+- **LEGACY**: Original Next.js 15 web app (deprecated)
+- All new development happens in `apps/` and `packages/`
+- Kept for reference but not actively maintained
 
 ### Key Technologies
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
-- **UI Components**: Radix UI primitives with shadcn/ui patterns
-- **Authentication**: BetterAuth with Google OAuth
+- **Frontend**: Expo, React 19, React Native, TypeScript, Tamagui
+- **Backend**: Hono, Bun runtime, oRPC
+- **UI Components**: Tamagui (universal design system)
+- **Authentication**: BetterAuth with Google OAuth + Expo integration
 - **Database**: Turso (LibSQL) with Kysely query builder
-- **Monitoring**: Sentry for error tracking
-- **Internationalization**: next-intl (English/Spanish)
-- **Forms**: React Hook Form with Zod validation
+- **Internationalization**: i18next + expo-localization (English/Spanish)
+- **Validation**: Zod schemas across frontend and backend
 - **State Management**: TanStack Query for server state
 - **Date/Time**: date-fns and date-fns-tz for timezone-aware operations
 
-### Directory Structure
-- `app/` - Next.js App Router pages and layouts
-  - `(auth)/` - Authentication pages
-  - `matches/` - Match listing and details
-  - `organizer/` - Match management for organizers
-  - `add-match/` - Match creation
-  - `api/` - API routes
-- `components/ui/` - Reusable UI components (Radix-based)
-- `lib/` - Core utilities and configurations
-  - `auth.ts` - BetterAuth configuration
-  - `google-sheets.ts` - Google Sheets integration
-  - `types.ts` - TypeScript type definitions
-  - `utils/timezone.ts` - Timezone utilities and date handling
-- `hooks/` - Custom React hooks
-- `locales/` - Internationalization files
-- `types/` - Global TypeScript types
-
 ### Authentication System
-- Uses BetterAuth with Google OAuth provider
+- BetterAuth with @better-auth/expo adapter
+- Google OAuth provider
+- Expo SecureStore for token persistence (mobile)
+- AsyncStorage fallback for web
 - Database stores user sessions and profiles
 - Admin role system with role-based access
-- Trusted origins configured for Vercel deployments
 
 ### Database Configuration
 - **Primary**: Turso (LibSQL) database via `@libsql/kysely-libsql`
-- **Backup**: Google Sheets integration for match data
 - Connection configured via `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`
-
-### Build Configuration
-- Next.js config includes libsql package handling
-- Webpack configured for native module fallbacks
-- ESLint errors ignored during production builds (see next.config.ts:10)
-- Sentry integration with source map uploads
+- Migrations managed via scripts in root package.json
+- Local development uses SQLite
 
 ### Environment Configuration
-The app uses a comprehensive environment validation system:
-
-**Storage Provider Selection**: Set `STORAGE_PROVIDER` to:
-- `google-sheets` - Use Google Sheets (current production)
-- `turso` - Use Turso database (production recommended)  
-- `local-db` - Use local SQLite (development)
+The app uses a comprehensive environment validation system managed from the root:
 
 **Environment Validation**:
 - `pnpm validate-env` - Validate current environment (default command)
-- `pnpm validate-env requirements [provider]` - Show required variables
-- `pnpm validate-env template [provider]` - Generate .env template
-- `pnpm validate-env help` - Show all available commands
+- `pnpm env:check` - Check environment variables
+- `pnpm env:template` - Generate .env template
 - Automatic validation on app startup (exits in development, logs in production)
-- Validates conditionally based on STORAGE_PROVIDER setting
 
-**Required Variables** (vary by storage provider):
+**Required Variables**:
 - `BETTER_AUTH_SECRET` - Authentication encryption key
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - OAuth
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` - OAuth credentials
+- `TURSO_DATABASE_URL` - Turso database connection URL
+- `TURSO_AUTH_TOKEN` - Turso authentication token
 - `DEFAULT_TIMEZONE` - Application timezone (defaults to Europe/Berlin)
-- Storage-specific variables (validated automatically)
+- `API_URL` - Backend API URL for mobile/web app
+- `EXPO_PUBLIC_*` - Public environment variables for Expo app
 
 ### Timezone Handling
 The application implements comprehensive timezone support to ensure consistent date handling:
@@ -91,7 +111,7 @@ The application implements comprehensive timezone support to ensure consistent d
 - Prevents day-shifting issues when users create matches from different timezones
 - Configurable via `DEFAULT_TIMEZONE` environment variable
 
-**Key Utilities** (`lib/utils/timezone.ts`):
+**Key Utilities** (`packages/shared/src/utils/timezone.ts`):
 - `convertToAppTimezone(date)` - Convert user input to Berlin timezone
 - `formatDateInAppTimezone(date, format)` - Format dates in Berlin timezone
 - `formatDisplayDate(date, format)` - Display dates consistently
@@ -102,3 +122,19 @@ The application implements comprehensive timezone support to ensure consistent d
 - All date displays use timezone-aware formatting functions
 - Calendar downloads and exports maintain timezone consistency
 - Match listings show dates in Berlin timezone regardless of user location
+- Shared across mobile, web, and API via `@repo/shared` package
+
+### Development Workflow
+1. **Install dependencies**: `pnpm install` (installs for all workspaces)
+2. **Start development**: `pnpm dev` (starts API and mobile app concurrently)
+3. **Run individual apps**: Use `pnpm dev:api` or `pnpm dev:app`
+4. **Type checking**: `pnpm typecheck` (checks all packages and apps)
+5. **Database migrations**: Use migration scripts for schema changes
+6. **Environment setup**: Copy `.env.example` and configure variables
+
+### Monorepo Benefits
+- **Code Sharing**: Common types, utilities, and components across apps
+- **Type Safety**: End-to-end type safety from API to client via oRPC
+- **Consistent Tooling**: Shared TypeScript, ESLint configs
+- **Efficient Development**: Turborepo caching and parallel execution
+- **Universal Code**: Write once, run on mobile, web, and native platforms
