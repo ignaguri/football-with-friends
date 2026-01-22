@@ -3,6 +3,33 @@ import { createAuthClient } from "better-auth/react";
 import { usernameClient } from "better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+
+// Storage adapter that works on both web (AsyncStorage) and native (SecureStore)
+// SecureStore doesn't work on web, so we need to use AsyncStorage there
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === "web") {
+      return AsyncStorage.getItem(key);
+    }
+    return SecureStore.getItemAsync(key);
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === "web") {
+      await AsyncStorage.setItem(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, value);
+    }
+  },
+  async deleteItem(key: string): Promise<void> {
+    if (Platform.OS === "web") {
+      await AsyncStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  },
+};
 
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
@@ -81,7 +108,7 @@ export const authClient = createAuthClient({
     expoClient({
       scheme: "football-with-friends", // Deep link scheme from app.json
       storagePrefix: "football_auth",
-      storage: SecureStore,
+      storage: storage, // Use platform-aware storage adapter
     }),
   ],
 });
