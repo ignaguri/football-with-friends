@@ -1,48 +1,47 @@
 import { hc } from "hono/client";
 import type { ApiRoutes } from "../../../apps/api/src/index";
 
-// Base URL used for type generation - will be replaced at fetch time
-const BASE_URL = "http://localhost:3001";
+// Base URL for localhost development
+const LOCALHOST_API = "http://localhost:3001";
 
-// Get API URL dynamically at fetch time (not at module load time)
-function getApiUrl(): string {
-  // Check if running in browser (must be checked at actual runtime)
-  if (typeof window !== "undefined" && window.location) {
-    const hostname = window.location.hostname;
-    // If NOT on localhost, use same-origin /api (works for all Vercel deployments)
-    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-      return `${window.location.origin}/api`;
-    }
-  }
-
-  // For React Native/Expo mobile - use env var if available
-  if (typeof process !== "undefined" && process.env.EXPO_PUBLIC_API_URL) {
-    const url = process.env.EXPO_PUBLIC_API_URL;
-    // Skip if it's a template variable that wasn't substituted
-    if (!url.includes("${") && url !== "http://localhost:3001") {
-      return url;
-    }
-  }
-
-  // Default to localhost for development
-  return BASE_URL;
-}
-
-// Create the Hono RPC client with dynamic URL resolution in fetch wrapper
-export const client = hc<ApiRoutes>(BASE_URL, {
-  fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-    // Resolve the actual API URL at fetch time, not module load time
-    const apiUrl = getApiUrl();
-
-    // Replace base URL with actual URL in the request
-    let finalUrl: string;
+// Custom fetch that dynamically resolves API URL at request time
+// This ensures the URL is computed when the request is made, not at bundle time
+function createDynamicFetch() {
+  return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    // Get the original URL from the input
+    let originalUrl: string;
     if (typeof input === "string") {
-      finalUrl = input.replace(BASE_URL, apiUrl);
+      originalUrl = input;
     } else if (input instanceof URL) {
-      finalUrl = input.toString().replace(BASE_URL, apiUrl);
+      originalUrl = input.toString();
     } else {
-      // Request object - create new request with updated URL
-      finalUrl = input.url.replace(BASE_URL, apiUrl);
+      originalUrl = input.url;
+    }
+
+    // Determine the correct API base URL at runtime
+    let apiBase = LOCALHOST_API;
+
+    // Use try-catch to safely check for browser environment at runtime
+    // This prevents bundler optimization from removing the check
+    try {
+      // Access globalThis.window to check if we're in a browser
+      const win = globalThis.window;
+      if (win && win.location && win.location.hostname) {
+        const hostname = win.location.hostname;
+        // If not on localhost, use same-origin /api
+        if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+          apiBase = win.location.origin + "/api";
+        }
+      }
+    } catch {
+      // Not in browser, use default
+    }
+
+    // Replace localhost URL with the correct API base
+    const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
+
+    // Handle Request objects specially
+    if (typeof input !== "string" && !(input instanceof URL)) {
       return fetch(new Request(finalUrl, input), {
         ...init,
         credentials: "include",
@@ -51,9 +50,14 @@ export const client = hc<ApiRoutes>(BASE_URL, {
 
     return fetch(finalUrl, {
       ...init,
-      credentials: "include", // Important for sending cookies
+      credentials: "include",
     });
-  },
+  };
+}
+
+// Create the Hono RPC client with dynamic URL resolution
+export const client = hc<ApiRoutes>(LOCALHOST_API, {
+  fetch: createDynamicFetch(),
 });
 
 // Export the client as 'api' for convenience
