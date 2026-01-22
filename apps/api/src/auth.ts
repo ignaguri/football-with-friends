@@ -53,6 +53,12 @@ function createAuthInstance() {
       },
       // Disable CSRF check for mobile apps that don't send Origin header
       disableCSRFCheck: true,
+      // Enable cross-origin cookies for web app on different domain (Vercel -> CF Workers)
+      defaultCookieAttributes: {
+        sameSite: "none", // Allow cross-site cookies
+        secure: true, // Required for SameSite=None
+        partitioned: true, // New browser standards for third-party cookies
+      },
     },
     database: {
       dialect: databaseDialect,
