@@ -20,18 +20,22 @@ const THEME_KEY = "user-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemColorScheme = useColorScheme();
-  const [theme, setThemeState] = useState<ThemeType>(systemColorScheme ?? "light");
+  // Default to "light" for consistent initial render, then load saved preference
+  const [theme, setThemeState] = useState<ThemeType>("light");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load saved theme preference
+    // Load saved theme preference, fall back to system preference if none saved
     AsyncStorage.getItem(THEME_KEY).then((saved) => {
       if (saved === "light" || saved === "dark") {
         setThemeState(saved);
+      } else if (systemColorScheme) {
+        // Only use system preference if no saved preference exists
+        setThemeState(systemColorScheme);
       }
       setIsLoaded(true);
     });
-  }, []);
+  }, [systemColorScheme]);
 
   const setTheme = (newTheme: ThemeType) => {
     setThemeState(newTheme);

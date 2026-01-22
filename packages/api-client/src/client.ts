@@ -3,9 +3,22 @@ import type { ApiRoutes } from "../../../apps/api/src/index";
 
 // Get API URL from environment
 const getApiUrl = () => {
-  // For Expo (mobile)
+  // Check if running in browser on Vercel deployment
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    // If on Vercel deployment (not localhost), use same-origin /api
+    if (hostname.includes("vercel.app") || hostname.includes(".vercel.")) {
+      return `${window.location.origin}/api`;
+    }
+  }
+
+  // For Expo (mobile) - use env var if set and not localhost placeholder
   if (typeof process !== "undefined" && process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+    const url = process.env.EXPO_PUBLIC_API_URL;
+    // Skip if it's a template variable that wasn't substituted
+    if (!url.includes("${") && url !== "http://localhost:3001") {
+      return url;
+    }
   }
 
   // For Next.js (web)
@@ -13,7 +26,7 @@ const getApiUrl = () => {
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
-  // Default to localhost
+  // Default to localhost for development
   return "http://localhost:3001";
 };
 
