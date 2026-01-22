@@ -2,7 +2,7 @@
 import { TamaguiProvider, Theme, YStack, useTheme as useTamaguiTheme } from "tamagui";
 import { PortalProvider } from "@tamagui/portal";
 import { Stack } from "expo-router";
-import { APIProvider } from "@repo/api-client";
+import { APIProvider, configureApiClient } from "@repo/api-client";
 import { Toast } from "@repo/ui";
 import config from "../tamagui.config";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
@@ -12,6 +12,11 @@ import "../lib/i18n";
 
 // Global CSS to fix React Native Web background
 import "../global.css";
+
+// Configure API client with the API URL from environment
+// This must be done early, before any API calls are made
+// The env var is inlined by Expo's babel transform at build time
+configureApiClient(process.env.EXPO_PUBLIC_API_URL);
 
 function AppNavigation() {
   const theme = useTamaguiTheme();

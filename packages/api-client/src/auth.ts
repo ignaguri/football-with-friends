@@ -7,26 +7,33 @@ import * as SecureStore from "expo-secure-store";
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
 
-// Get the API URL from environment variable (embedded at build time for Expo)
-function getEnvApiUrl(): string | undefined {
-  // Check process.env (works for both Expo web and React Native)
-  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) {
-    const url = process.env.EXPO_PUBLIC_API_URL;
-    // Make sure it's not an unresolved template variable
-    if (!url.includes("${") && url.length > 0) {
-      return url;
-    }
+// Configured API URL (set via configureApiClient)
+let _configuredApiUrl: string | null = null;
+
+/**
+ * Configure the API client with the API URL.
+ * Call this early in your app initialization (e.g., in _layout.tsx).
+ * For Expo apps, pass process.env.EXPO_PUBLIC_API_URL.
+ */
+export function configureApiClient(apiUrl: string | undefined) {
+  if (apiUrl && apiUrl.length > 0 && !apiUrl.includes("${")) {
+    _configuredApiUrl = apiUrl;
   }
-  return undefined;
 }
 
 // Get API URL dynamically at runtime
 function getApiUrl(): string {
-  // First, check environment variable (set at build time)
-  // This is the primary method for deployed environments
-  const envUrl = getEnvApiUrl();
-  if (envUrl && envUrl !== LOCALHOST_API) {
-    return envUrl;
+  // First, check if configured via configureApiClient
+  if (_configuredApiUrl) {
+    return _configuredApiUrl;
+  }
+
+  // Fallback: check process.env (for React Native or if babel-inline-env works)
+  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) {
+    const url = process.env.EXPO_PUBLIC_API_URL;
+    if (!url.includes("${") && url.length > 0) {
+      return url;
+    }
   }
 
   // For local development, use localhost

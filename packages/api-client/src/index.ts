@@ -23,6 +23,7 @@ export {
   signOut,
   useSession,
   getSession,
+  configureApiClient,
 } from "./auth";
 export type { Session, User } from "./auth";
 
