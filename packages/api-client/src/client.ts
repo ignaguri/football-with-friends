@@ -4,6 +4,20 @@ import type { ApiRoutes } from "../../../apps/api/src/index";
 // Base URL for localhost development
 const LOCALHOST_API = "http://localhost:3001";
 
+// Configured API URL (set via configureGeneralApiClient)
+let _configuredApiUrl: string | null = null;
+
+/**
+ * Configure the general API client with the API URL.
+ * Call this early in your app initialization (e.g., in _layout.tsx).
+ * For Expo apps, pass process.env.EXPO_PUBLIC_API_URL.
+ */
+export function configureGeneralApiClient(apiUrl: string | undefined) {
+  if (apiUrl && apiUrl.length > 0 && !apiUrl.includes("${")) {
+    _configuredApiUrl = apiUrl;
+  }
+}
+
 // Custom fetch that dynamically resolves API URL at request time
 // This ensures the URL is computed when the request is made, not at bundle time
 function createDynamicFetch() {
@@ -21,20 +35,15 @@ function createDynamicFetch() {
     // Determine the correct API base URL at runtime
     let apiBase = LOCALHOST_API;
 
-    // Use try-catch to safely check for browser environment at runtime
-    // This prevents bundler optimization from removing the check
-    try {
-      // Access globalThis.window to check if we're in a browser
-      const win = globalThis.window;
-      if (win && win.location && win.location.hostname) {
-        const hostname = win.location.hostname;
-        // If not on localhost, use same-origin /api
-        if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-          apiBase = win.location.origin + "/api";
-        }
+    // First, check if configured via configureGeneralApiClient
+    if (_configuredApiUrl) {
+      apiBase = _configuredApiUrl;
+    } else if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) {
+      // Fallback: check process.env
+      const url = process.env.EXPO_PUBLIC_API_URL;
+      if (!url.includes("${") && url.length > 0) {
+        apiBase = url;
       }
-    } catch {
-      // Not in browser, use default
     }
 
     // Replace localhost URL with the correct API base
