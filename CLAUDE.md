@@ -23,11 +23,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a **Turborepo** monorepo using **pnpm workspaces** with the following structure:
 
 #### Apps (`apps/`)
-- **`api/`** - Hono API server running on Bun
+- **`api/`** - Hono API server
   - Backend API with oRPC for type-safe endpoints
   - BetterAuth integration for authentication
   - Zod validation with Hono middleware
-  - Run with: `pnpm dev:api`
+  - Local development: `pnpm dev:api` (runs with Bun)
+  - Production: Deployed to Cloudflare Workers
+  - Cloudflare dev: `pnpm cf:dev` (in apps/api folder)
 
 - **`mobile-web/`** - Expo universal app (iOS, Android, Web)
   - Expo Router for file-based navigation
@@ -131,6 +133,51 @@ The application implements comprehensive timezone support to ensure consistent d
 4. **Type checking**: `pnpm typecheck` (checks all packages and apps)
 5. **Database migrations**: Use migration scripts for schema changes
 6. **Environment setup**: Copy `.env.example` and configure variables
+
+### Deployment Architecture
+The application uses a split deployment architecture:
+
+**Expo Web App** - Vercel
+- Deployed as static SPA from `apps/mobile-web/dist`
+- Configured via `vercel.json` in root
+- Auto-deploys on push to main branch
+- Set `EXPO_PUBLIC_API_URL` in Vercel to point to Cloudflare Workers API
+
+**Hono API** - Cloudflare Workers
+- Deployed via `wrangler` from `apps/api`
+- Configuration in `apps/api/wrangler.toml`
+
+| Environment | URL | Database |
+|-------------|-----|----------|
+| Production | `https://football-api.pepe-grillo-parlante.workers.dev` | `football-with-friends-pepegrillo` |
+| Staging | `https://football-api-staging.pepe-grillo-parlante.workers.dev` | `football-with-friends-staging-pepegrillo` |
+
+**Deploy commands** (from `apps/api`):
+- `pnpm cf:deploy` - Deploy to production
+- `pnpm cf:deploy:preview` - Deploy to staging
+- `pnpm cf:tail` - View production logs
+- `pnpm cf:tail --env=preview` - View staging logs
+
+**Required Cloudflare Secrets** (set for both production and staging):
+```bash
+# Production
+wrangler secret put TURSO_DATABASE_URL --env=""
+wrangler secret put TURSO_AUTH_TOKEN --env=""
+wrangler secret put BETTER_AUTH_SECRET --env=""
+wrangler secret put NEXT_PUBLIC_GOOGLE_CLIENT_ID --env=""
+wrangler secret put GOOGLE_CLIENT_SECRET --env=""
+
+# Staging (use staging Turso DB credentials)
+wrangler secret put TURSO_DATABASE_URL --env=preview
+wrangler secret put TURSO_AUTH_TOKEN --env=preview
+wrangler secret put BETTER_AUTH_SECRET --env=preview
+wrangler secret put NEXT_PUBLIC_GOOGLE_CLIENT_ID --env=preview
+wrangler secret put GOOGLE_CLIENT_SECRET --env=preview
+```
+
+**Vercel Environment Variables**:
+- Production: `EXPO_PUBLIC_API_URL=https://football-api.pepe-grillo-parlante.workers.dev`
+- Preview: `EXPO_PUBLIC_API_URL=https://football-api-staging.pepe-grillo-parlante.workers.dev`
 
 ### Monorepo Benefits
 - **Code Sharing**: Common types, utilities, and components across apps

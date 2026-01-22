@@ -66,8 +66,14 @@ export function getEnvErrors(): string[] | null {
 
 /**
  * Convenience exports for common environment variables
+ * Uses a Proxy for lazy access - allows Cloudflare Workers to set
+ * process.env values before validation runs
  */
-export const env = getEnv();
+export const env = new Proxy({} as ValidatedEnvironment, {
+  get(_target, prop) {
+    return getEnv()[prop as keyof ValidatedEnvironment];
+  },
+});
 
 /**
  * Type-safe environment variable getters

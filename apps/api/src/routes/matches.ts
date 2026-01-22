@@ -6,8 +6,9 @@ import type { User } from "@repo/shared/domain";
 import { auth } from "../auth";
 
 const app = new Hono();
-const serviceFactory = getServiceFactory();
-const matchService = serviceFactory.matchService;
+
+// Lazy service loading for Cloudflare Workers compatibility
+const getMatchService = () => getServiceFactory().matchService;
 
 // Helper to convert session user to full User type
 function sessionUserToUser(sessionUser: { id: string; name: string; email: string; role?: string }): User {
@@ -30,7 +31,7 @@ app.get(
   ),
   async (c) => {
     const { type } = c.req.valid("query");
-    const matches = await matchService.getAllMatches({
+    const matches = await getMatchService().getAllMatches({
       status:
         type === "past"
           ? "completed"
@@ -54,7 +55,7 @@ app.get(
   async (c) => {
     const id = c.req.param("id");
     const { userId } = c.req.valid("query");
-    const match = await matchService.getMatchDetails(id, userId);
+    const match = await getMatchService().getMatchDetails(id, userId);
     if (!match) {
       return c.json({ error: "Match not found" }, 404);
     }
@@ -93,7 +94,7 @@ app.post(
     const matchData = c.req.valid("json");
 
     try {
-      const match = await matchService.createMatch(
+      const match = await getMatchService().createMatch(
         { ...matchData, createdByUserId: user.id },
         user
       );
@@ -138,7 +139,7 @@ app.patch(
     const updates = c.req.valid("json");
 
     try {
-      const match = await matchService.updateMatch(
+      const match = await getMatchService().updateMatch(
         matchId,
         {
           ...updates,
@@ -172,7 +173,7 @@ app.delete("/:id", async (c) => {
   const matchId = c.req.param("id");
 
   try {
-    await matchService.deleteMatch(matchId, user);
+    await getMatchService().deleteMatch(matchId, user);
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete match";
@@ -192,7 +193,7 @@ app.post("/:id/signup", async (c) => {
   const user = sessionUserToUser(sessionUser);
 
   try {
-    const signup = await matchService.signUpUser(matchId, user);
+    const signup = await getMatchService().signUpUser(matchId, user);
     return c.json({ signup }, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to sign up";
@@ -224,7 +225,7 @@ app.post(
   const user = sessionUserToUser(sessionUser);
 
     try {
-      const signup = await matchService.addGuestPlayer(
+      const signup = await getMatchService().addGuestPlayer(
         matchId,
         {
           ...guestData,
@@ -267,7 +268,7 @@ app.post(
   const user = sessionUserToUser(sessionUser);
 
     try {
-      const signup = await matchService.addPlayerByAdmin(
+      const signup = await getMatchService().addPlayerByAdmin(
         matchId,
         playerData,
         user
@@ -301,7 +302,7 @@ app.patch(
   const user = sessionUserToUser(sessionUser);
 
     try {
-      const signup = await matchService.updateSignup(signupId, updates, user);
+      const signup = await getMatchService().updateSignup(signupId, updates, user);
       return c.json({ signup });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update signup";

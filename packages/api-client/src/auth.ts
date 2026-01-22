@@ -7,31 +7,29 @@ import * as SecureStore from "expo-secure-store";
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
 
-// Get API URL dynamically at runtime
-function getApiUrl(): string {
-  // Use try-catch to safely check for browser environment at runtime
-  // This prevents bundler optimization from removing the check
-  try {
-    const win = globalThis.window;
-    if (win && win.location && win.location.hostname) {
-      const hostname = win.location.hostname;
-      // If not on localhost, use same-origin (works for all Vercel deployments)
-      if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-        return win.location.origin;
-      }
-    }
-  } catch {
-    // Not in browser, use default
-  }
-
-  // For React Native mobile - check env var
+// Get the API URL from environment variable (embedded at build time for Expo)
+function getEnvApiUrl(): string | undefined {
+  // Check process.env (works for both Expo web and React Native)
   if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) {
     const url = process.env.EXPO_PUBLIC_API_URL;
-    if (!url.includes("${") && url !== LOCALHOST_API) {
+    // Make sure it's not an unresolved template variable
+    if (!url.includes("${") && url.length > 0) {
       return url;
     }
   }
+  return undefined;
+}
 
+// Get API URL dynamically at runtime
+function getApiUrl(): string {
+  // First, check environment variable (set at build time)
+  // This is the primary method for deployed environments
+  const envUrl = getEnvApiUrl();
+  if (envUrl && envUrl !== LOCALHOST_API) {
+    return envUrl;
+  }
+
+  // For local development, use localhost
   return LOCALHOST_API;
 }
 
