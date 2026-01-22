@@ -1,14 +1,28 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Home, User, Calendar, BookOpen, Settings } from "@tamagui/lucide-icons";
-import { useTheme } from "tamagui";
+import { useTheme, YStack, Spinner } from "tamagui";
 import { useSession } from "@repo/api-client";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
+
+  // Show loading spinner while checking authentication
+  if (isPending) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+        <Spinner size="large" />
+      </YStack>
+    );
+  }
+
+  // Redirect to sign-in if not authenticated
+  if (!session?.user) {
+    return <Redirect href="/(auth)/sign-in" />;
+  }
 
   const isAdmin = session?.user?.role === "admin";
 
