@@ -48,30 +48,44 @@ export default function SignInScreen() {
     setEmailError(null);
 
     try {
-      // On web, use disableRedirect to get the OAuth URL and handle redirect manually
-      // The expo plugin uses expo-web-browser which doesn't work well on web
       const callbackURL = Platform.OS === "web"
         ? window.location.origin + "/"
         : "/";
 
       if (Platform.OS === "web") {
-        // On web, disable auto-redirect and handle it manually
-        const result = await signIn.social({
-          provider: "google",
-          callbackURL,
-          disableRedirect: true,
+        // On web, bypass the expo plugin entirely and make a direct API call
+        // The expo plugin uses expo-web-browser which doesn't work correctly on web
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+
+        const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            provider: "google",
+            callbackURL,
+            disableRedirect: true,
+          }),
         });
 
-        if (result.error) {
-          console.error("Google sign in error:", result.error);
-          setEmailError(result.error.message || t("auth.googleSignInFailed"));
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Google sign in error:", errorData);
+          setEmailError(errorData.message || t("auth.googleSignInFailed"));
           return;
         }
 
-        // Redirect to the OAuth URL manually
-        if (result.data?.url) {
-          window.location.href = result.data.url;
+        const data = await response.json();
+
+        // Redirect to the OAuth URL
+        if (data.url) {
+          window.location.href = data.url;
           return;
+        } else {
+          console.error("No OAuth URL returned:", data);
+          setEmailError(t("auth.googleSignInFailed"));
         }
       } else {
         // On native, let the expo plugin handle the OAuth flow
