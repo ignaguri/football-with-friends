@@ -60,7 +60,16 @@ export default function SignInScreen() {
       if (Platform.OS === "web") {
         // On web, bypass the expo plugin entirely and make a direct API call
         // The expo plugin uses expo-web-browser which doesn't work correctly on web
-        const apiUrl = getConfiguredApiUrl();
+        let apiUrl: string;
+        try {
+          apiUrl = getConfiguredApiUrl();
+          // eslint-disable-next-line no-alert
+          alert("[OAuth Debug] apiUrl: " + apiUrl);
+        } catch (e) {
+          // eslint-disable-next-line no-alert
+          alert("[OAuth Debug] getConfiguredApiUrl error: " + (e as Error).message);
+          throw e;
+        }
         console.log("[OAuth Debug] apiUrl:", apiUrl);
 
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
