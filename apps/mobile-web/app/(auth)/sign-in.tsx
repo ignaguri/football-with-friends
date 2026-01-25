@@ -44,6 +44,8 @@ export default function SignInScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    // eslint-disable-next-line no-alert
+    if (Platform.OS === "web") alert("[OAuth Debug] handleGoogleSignIn called, Platform: " + Platform.OS);
     console.log("[OAuth Debug] handleGoogleSignIn called");
     console.log("[OAuth Debug] Platform.OS:", Platform.OS);
     setIsGoogleLoading(true);
