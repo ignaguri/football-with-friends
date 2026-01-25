@@ -24,6 +24,7 @@ export {
   useSession,
   getSession,
   configureApiClient,
+  getConfiguredApiUrl,
 } from "./auth";
 export type { Session, User } from "./auth";
 

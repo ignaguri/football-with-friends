@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Platform } from "react-native";
 import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signIn } from "@repo/api-client";
+import { signIn, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 
 export default function SignInScreen() {
@@ -55,7 +55,7 @@ export default function SignInScreen() {
       if (Platform.OS === "web") {
         // On web, bypass the expo plugin entirely and make a direct API call
         // The expo plugin uses expo-web-browser which doesn't work correctly on web
-        const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+        const apiUrl = getConfiguredApiUrl();
 
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",

@@ -67,6 +67,14 @@ function getApiUrl(): string {
   return LOCALHOST_API;
 }
 
+/**
+ * Get the configured API URL for use in direct fetch calls.
+ * This is useful when you need to bypass the expo plugin (e.g., OAuth on web).
+ */
+export function getConfiguredApiUrl(): string {
+  return getApiUrl();
+}
+
 // Custom fetch that resolves URL at request time
 function createDynamicFetch(): typeof fetch {
   return (input: RequestInfo | URL, init?: RequestInit) => {
