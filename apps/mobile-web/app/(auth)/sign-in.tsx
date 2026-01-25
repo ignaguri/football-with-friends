@@ -44,6 +44,8 @@ export default function SignInScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log("[OAuth Debug] handleGoogleSignIn called");
+    console.log("[OAuth Debug] Platform.OS:", Platform.OS);
     setIsGoogleLoading(true);
     setEmailError(null);
 
@@ -51,11 +53,13 @@ export default function SignInScreen() {
       const callbackURL = Platform.OS === "web"
         ? window.location.origin + "/"
         : "/";
+      console.log("[OAuth Debug] callbackURL:", callbackURL);
 
       if (Platform.OS === "web") {
         // On web, bypass the expo plugin entirely and make a direct API call
         // The expo plugin uses expo-web-browser which doesn't work correctly on web
         const apiUrl = getConfiguredApiUrl();
+        console.log("[OAuth Debug] apiUrl:", apiUrl);
 
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",
@@ -70,21 +74,24 @@ export default function SignInScreen() {
           }),
         });
 
+        console.log("[OAuth Debug] response status:", response.status);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error("Google sign in error:", errorData);
+          console.error("[OAuth Debug] error response:", errorData);
           setEmailError(errorData.message || t("auth.googleSignInFailed"));
           return;
         }
 
         const data = await response.json();
+        console.log("[OAuth Debug] response data:", data);
 
         // Redirect to the OAuth URL
         if (data.url) {
+          console.log("[OAuth Debug] redirecting to:", data.url);
           window.location.href = data.url;
           return;
         } else {
-          console.error("No OAuth URL returned:", data);
+          console.error("[OAuth Debug] No OAuth URL returned:", data);
           setEmailError(t("auth.googleSignInFailed"));
         }
       } else {
@@ -104,9 +111,10 @@ export default function SignInScreen() {
         router.replace("/(tabs)");
       }
     } catch (err) {
-      console.error("Google sign in error:", err);
+      console.error("[OAuth Debug] catch error:", err);
       setEmailError(t("auth.googleSignInFailed"));
     } finally {
+      console.log("[OAuth Debug] finally block reached");
       setIsGoogleLoading(false);
     }
   };
