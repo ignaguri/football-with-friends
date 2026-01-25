@@ -14,17 +14,24 @@ import "../lib/i18n";
 import "../global.css";
 
 // Configure API clients with the API URL
-// On web: use same-origin (window.location.origin) since Vercel proxies /api/* to CF Workers
-// On native: use the full API URL from environment
+// Auth client: MUST use direct CF Workers URL for cross-origin OAuth to work
+// (The Expo plugin stores session in AsyncStorage, bypassing cookie domain issues)
+// General API client: Can use Vercel proxy on web for same-origin requests
 import { Platform } from "react-native";
-const getApiUrl = () => {
+
+// Auth always uses direct API URL for proper OAuth callback handling
+const getAuthApiUrl = () => process.env.EXPO_PUBLIC_API_URL;
+
+// General API can use proxy on web (optional optimization)
+const getGeneralApiUrl = () => {
   if (Platform.OS === "web" && typeof window !== "undefined") {
     return window.location.origin;
   }
   return process.env.EXPO_PUBLIC_API_URL;
 };
-configureApiClient(getApiUrl());
-configureGeneralApiClient(getApiUrl());
+
+configureApiClient(getAuthApiUrl());
+configureGeneralApiClient(getGeneralApiUrl());
 
 function AppNavigation() {
   const theme = useTamaguiTheme();

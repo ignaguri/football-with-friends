@@ -1,6 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
+import { useEffect } from "react";
 import { Redirect } from "expo-router";
-import { useSession } from "@repo/api-client";
+import { useSession, getSession } from "@repo/api-client";
 import { YStack, Spinner } from "tamagui";
 
 /**
@@ -9,6 +10,13 @@ import { YStack, Spinner } from "tamagui";
  */
 export default function Index() {
   const { data: session, isPending } = useSession();
+
+  // Force session refresh on mount to pick up OAuth callback result
+  // This is needed because after OAuth redirect, the session may not be
+  // automatically fetched by useSession
+  useEffect(() => {
+    getSession();
+  }, []);
 
   // Show loading spinner while checking authentication
   if (isPending) {

@@ -18,6 +18,7 @@ minify = true
 NODE_ENV = "production"
 STORAGE_PROVIDER = "turso"
 DEFAULT_TIMEZONE = "Europe/Berlin"
+BETTER_AUTH_BASE_URL = "https://football-api.pepe-grillo-parlante.workers.dev"
 
 # Development environment
 [env.development]
@@ -26,4 +27,4 @@ vars = { NODE_ENV = "development" }
 # Preview/Staging environment
 [env.preview]
 name = "football-api-staging"
-vars = { NODE_ENV = "production", STORAGE_PROVIDER = "turso", DEFAULT_TIMEZONE = "Europe/Berlin" }
+vars = { NODE_ENV = "production", STORAGE_PROVIDER = "turso", DEFAULT_TIMEZONE = "Europe/Berlin", BETTER_AUTH_BASE_URL = "https://football-api-staging.pepe-grillo-parlante.workers.dev" }

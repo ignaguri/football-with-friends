@@ -102,6 +102,9 @@ android/keystores/
 # Expo EAS
 eas-metadata.json
 
+# Google OAuth credentials (downloaded from Cloud Console)
+client_secret*.json
+
 # Misc
 .vscode/
 .idea/
