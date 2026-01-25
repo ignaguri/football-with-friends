@@ -48,37 +48,47 @@ export default function SignInScreen() {
     setEmailError(null);
 
     try {
-      // Use the BetterAuth client's signIn.social method directly
-      // On web, use full URL since "/" is relative to API domain, not web app
+      // On web, use disableRedirect to get the OAuth URL and handle redirect manually
+      // The expo plugin uses expo-web-browser which doesn't work well on web
       const callbackURL = Platform.OS === "web"
         ? window.location.origin + "/"
         : "/";
 
-      console.log("[GoogleSignIn] Starting OAuth flow", { callbackURL, platform: Platform.OS });
+      if (Platform.OS === "web") {
+        // On web, disable auto-redirect and handle it manually
+        const result = await signIn.social({
+          provider: "google",
+          callbackURL,
+          disableRedirect: true,
+        });
 
-      const result = await signIn.social({
-        provider: "google",
-        callbackURL,
-      });
+        if (result.error) {
+          console.error("Google sign in error:", result.error);
+          setEmailError(result.error.message || t("auth.googleSignInFailed"));
+          return;
+        }
 
-      console.log("[GoogleSignIn] OAuth result:", JSON.stringify(result, null, 2));
+        // Redirect to the OAuth URL manually
+        if (result.data?.url) {
+          window.location.href = result.data.url;
+          return;
+        }
+      } else {
+        // On native, let the expo plugin handle the OAuth flow
+        const result = await signIn.social({
+          provider: "google",
+          callbackURL,
+        });
 
-      // Check if there was an error
-      if (result.error) {
-        console.error("Google sign in error:", result.error);
-        setEmailError(result.error.message || t("auth.googleSignInFailed"));
-        return;
+        if (result.error) {
+          console.error("Google sign in error:", result.error);
+          setEmailError(result.error.message || t("auth.googleSignInFailed"));
+          return;
+        }
+
+        // If successful, navigate to main app
+        router.replace("/(tabs)");
       }
-
-      // If result contains a redirect URL, the expo plugin didn't handle the redirect
-      if (result.data?.url) {
-        console.log("[GoogleSignIn] Redirecting to:", result.data.url);
-        window.location.href = result.data.url;
-        return;
-      }
-
-      // If successful, navigate to main app
-      router.replace("/(tabs)");
     } catch (err) {
       console.error("Google sign in error:", err);
       setEmailError(t("auth.googleSignInFailed"));
