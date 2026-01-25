@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/mobile-web && pnpm build",
+  "buildCommand": "cd apps/mobile-web && echo \"EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL\" >> .env && pnpm build",
   "outputDirectory": "apps/mobile-web/dist",
   "framework": null,
   "installCommand": "pnpm install",
