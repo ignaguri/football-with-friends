@@ -54,15 +54,26 @@ export default function SignInScreen() {
         ? window.location.origin + "/"
         : "/";
 
+      console.log("[GoogleSignIn] Starting OAuth flow", { callbackURL, platform: Platform.OS });
+
       const result = await signIn.social({
         provider: "google",
         callbackURL,
       });
 
+      console.log("[GoogleSignIn] OAuth result:", JSON.stringify(result, null, 2));
+
       // Check if there was an error
       if (result.error) {
         console.error("Google sign in error:", result.error);
         setEmailError(result.error.message || t("auth.googleSignInFailed"));
+        return;
+      }
+
+      // If result contains a redirect URL, the expo plugin didn't handle the redirect
+      if (result.data?.url) {
+        console.log("[GoogleSignIn] Redirecting to:", result.data.url);
+        window.location.href = result.data.url;
         return;
       }
 
