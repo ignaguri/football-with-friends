@@ -44,10 +44,6 @@ export default function SignInScreen() {
   };
 
   const handleGoogleSignIn = async () => {
-    // eslint-disable-next-line no-alert
-    if (Platform.OS === "web") alert("[OAuth Debug] handleGoogleSignIn called, Platform: " + Platform.OS);
-    console.log("[OAuth Debug] handleGoogleSignIn called");
-    console.log("[OAuth Debug] Platform.OS:", Platform.OS);
     setIsGoogleLoading(true);
     setEmailError(null);
 
@@ -55,15 +51,12 @@ export default function SignInScreen() {
       const callbackURL = Platform.OS === "web"
         ? window.location.origin + "/"
         : "/";
-      console.log("[OAuth Debug] callbackURL:", callbackURL);
 
       if (Platform.OS === "web") {
         // On web, bypass the expo plugin entirely and make a direct API call
         // The expo plugin uses expo-web-browser which doesn't work correctly on web
-        // Hardcode the staging API URL for now to debug
+        // Use the staging API URL (will be made dynamic later)
         const apiUrl = "https://football-api-staging.pepe-grillo-parlante.workers.dev";
-        // eslint-disable-next-line no-alert
-        alert("[OAuth Debug] Making fetch to: " + apiUrl + "/api/auth/sign-in/social");
 
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",
@@ -78,30 +71,21 @@ export default function SignInScreen() {
           }),
         });
 
-        // eslint-disable-next-line no-alert
-        alert("[OAuth Debug] fetch completed, status: " + response.status);
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          // eslint-disable-next-line no-alert
-          alert("[OAuth Debug] error response: " + JSON.stringify(errorData));
+          console.error("Google sign in error:", errorData);
           setEmailError(errorData.message || t("auth.googleSignInFailed"));
           return;
         }
 
         const data = await response.json();
-        // eslint-disable-next-line no-alert
-        alert("[OAuth Debug] response data: " + JSON.stringify(data).substring(0, 100));
 
         // Redirect to the OAuth URL
         if (data.url) {
-          // eslint-disable-next-line no-alert
-          alert("[OAuth Debug] redirecting now!");
           window.location.href = data.url;
           return;
         } else {
-          // eslint-disable-next-line no-alert
-          alert("[OAuth Debug] No OAuth URL returned");
+          console.error("No OAuth URL returned:", data);
           setEmailError(t("auth.googleSignInFailed"));
         }
       } else {
@@ -121,10 +105,9 @@ export default function SignInScreen() {
         router.replace("/(tabs)");
       }
     } catch (err) {
-      console.error("[OAuth Debug] catch error:", err);
+      console.error("Google sign in error:", err);
       setEmailError(t("auth.googleSignInFailed"));
     } finally {
-      console.log("[OAuth Debug] finally block reached");
       setIsGoogleLoading(false);
     }
   };
