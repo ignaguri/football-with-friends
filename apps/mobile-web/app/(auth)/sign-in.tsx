@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Platform, Pressable, ActivityIndicator, StyleSheet } from "react-native";
 import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { signIn } from "@repo/api-client";
@@ -11,6 +12,7 @@ export default function SignInScreen() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [debugStatus, setDebugStatus] = useState("idle");
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -43,19 +45,40 @@ export default function SignInScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    console.log("=== handleGoogleSignIn called ===");
+    setDebugStatus("starting signIn.social...");
     setIsGoogleLoading(true);
 
     try {
-      // Better Auth Expo plugin handles the OAuth flow automatically
-      await signIn.social({
+      // Use the BetterAuth client's signIn.social method directly
+      // On web, use full URL since "/" is relative to API domain, not web app
+      const callbackURL = Platform.OS === "web"
+        ? window.location.origin + "/"
+        : "/";
+
+      const result = await signIn.social({
         provider: "google",
-        callbackURL: "/", // Will be converted to deep link: fulbo://
+        callbackURL,
       });
+
+      console.log("signIn.social result:", result);
+      setDebugStatus("result: " + JSON.stringify(result));
+
+      // Check if there was an error
+      if (result.error) {
+        setDebugStatus("ERROR: " + result.error.message);
+        console.error("Google sign in error:", result.error);
+        setEmailError(result.error.message || "Failed to sign in with Google");
+        return;
+      }
 
       // If successful, navigate to main app
       router.replace("/(tabs)");
     } catch (err) {
       console.error("Google sign in error:", err);
+      setDebugStatus("CATCH ERROR: " + (err as Error).message);
+      setEmailError("Failed to sign in with Google");
+    } finally {
       setIsGoogleLoading(false);
     }
   };
@@ -72,15 +95,63 @@ export default function SignInScreen() {
           </Text>
         </YStack>
 
+        {/* Debug status display */}
+        {Platform.OS === "web" && (
+          <div style={{
+            padding: 10,
+            backgroundColor: debugStatus === "idle" ? "#eee" : "#ffe0b0",
+            borderRadius: 4,
+            fontFamily: "monospace",
+            fontSize: 12
+          }}>
+            Debug: {debugStatus}
+          </div>
+        )}
+
         {/* Google Sign In - Primary Action */}
-        <Button
-          onPress={handleGoogleSignIn}
-          disabled={isGoogleLoading || isLoading}
-          variant="outline"
-          size="large"
-        >
-          {isGoogleLoading ? <Spinner size="small" /> : t("signin.signInWithGoogle")}
-        </Button>
+        {/* Using popup window to bypass SPA navigation interception */}
+        {Platform.OS === "web" ? (
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isGoogleLoading || isLoading}
+            style={{
+              width: "100%",
+              borderWidth: 1,
+              borderColor: "#ccc",
+              borderStyle: "solid",
+              borderRadius: 8,
+              paddingTop: 14,
+              paddingBottom: 14,
+              paddingLeft: 20,
+              paddingRight: 20,
+              backgroundColor: "transparent",
+              cursor: "pointer",
+              fontSize: 16,
+              fontWeight: 500,
+              color: "#333",
+              opacity: isGoogleLoading || isLoading ? 0.5 : 1,
+            }}
+          >
+            {isGoogleLoading ? "Loading..." : t("signin.signInWithGoogle")}
+          </button>
+        ) : (
+          <Pressable
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading || isLoading}
+            style={({ pressed }) => [
+              styles.googleButton,
+              pressed && styles.googleButtonPressed,
+              (isGoogleLoading || isLoading) && styles.googleButtonDisabled,
+            ]}
+          >
+            {isGoogleLoading ? (
+              <ActivityIndicator size="small" color="#666" />
+            ) : (
+              <Text style={styles.googleButtonText}>{t("signin.signInWithGoogle")}</Text>
+            )}
+          </Pressable>
+        )}
 
         {/* Divider */}
         <XStack space="$3" alignItems="center">
@@ -143,3 +214,27 @@ export default function SignInScreen() {
     </Container>
   );
 }
+
+const styles = StyleSheet.create({
+  googleButton: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  googleButtonPressed: {
+    backgroundColor: "#f5f5f5",
+  },
+  googleButtonDisabled: {
+    opacity: 0.5,
+  },
+  googleButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+  },
+});

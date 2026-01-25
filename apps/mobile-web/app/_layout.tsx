@@ -13,11 +13,18 @@ import "../lib/i18n";
 // Global CSS to fix React Native Web background
 import "../global.css";
 
-// Configure API clients with the API URL from environment
-// This must be done early, before any API calls are made
-// The env var is inlined by Expo's babel transform at build time
-configureApiClient(process.env.EXPO_PUBLIC_API_URL);
-configureGeneralApiClient(process.env.EXPO_PUBLIC_API_URL);
+// Configure API clients with the API URL
+// On web: use same-origin (window.location.origin) since Vercel proxies /api/* to CF Workers
+// On native: use the full API URL from environment
+import { Platform } from "react-native";
+const getApiUrl = () => {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return process.env.EXPO_PUBLIC_API_URL;
+};
+configureApiClient(getApiUrl());
+configureGeneralApiClient(getApiUrl());
 
 function AppNavigation() {
   const theme = useTamaguiTheme();

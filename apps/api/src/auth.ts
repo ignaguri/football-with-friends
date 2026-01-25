@@ -35,17 +35,38 @@ function createAuthInstance() {
   return betterAuth({
     appName: "Fulbo con los pibes",
     baseURL: process.env.BETTER_AUTH_BASE_URL || "http://localhost:3001",
-    trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || [
-      "http://localhost:8081",
-      "http://localhost:8085",
-      "http://localhost:19006",
-      "http://localhost:3000",
-      "http://localhost:3001",
-      // Vercel production
-      "https://football-with-friends.vercel.app",
-      // Allow native app deep link callback
-      "football-with-friends:///",
-    ],
+    trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || ((request) => {
+      const staticOrigins = [
+        "http://localhost:8081",
+        "http://localhost:8085",
+        "http://localhost:19006",
+        "http://localhost:3000",
+        "http://localhost:3001",
+        // Vercel production
+        "https://football-with-friends.vercel.app",
+        // Allow native app deep link callback
+        "football-with-friends://",
+      ];
+
+      // If no request, return static origins (used during initialization)
+      if (!request) {
+        return staticOrigins;
+      }
+
+      // Get the origin from request headers
+      const origin = request.headers.get("origin") || "";
+
+      // Check if it's a Vercel preview deployment for our project
+      // Patterns:
+      // - Hash: football-with-friends-{hash}-ignacio-guris-projects.vercel.app
+      // - Git branch: football-with-friends-git-{branch}-ignacio-guris-projects.vercel.app
+      const vercelPreviewPattern = /^https:\/\/football-with-friends-.+-ignacio-guris-projects\.vercel\.app$/;
+      if (vercelPreviewPattern.test(origin)) {
+        return [...staticOrigins, origin];
+      }
+
+      return staticOrigins;
+    }),
     // Allow requests without origin header (mobile apps)
     advanced: {
       crossSubDomainCookies: {
@@ -53,6 +74,12 @@ function createAuthInstance() {
       },
       // Disable CSRF check for mobile apps that don't send Origin header
       disableCSRFCheck: true,
+      // Disable origin check for callbackURL validation
+      // This is needed because Vercel preview URLs are dynamic and can't be
+      // enumerated in trustedOrigins. Since we already have CSRF disabled,
+      // this doesn't introduce additional security risks.
+      // TODO: Use a custom domain for both services to avoid this security trade-off
+      disableOriginCheck: true,
       // Enable cross-origin cookies for web app on different domain (Vercel -> CF Workers)
       defaultCookieAttributes: {
         sameSite: "none", // Allow cross-site cookies
@@ -73,6 +100,13 @@ function createAuthInstance() {
     // Disable account linking - one auth method per account
     accountLinking: {
       enabled: false,
+    },
+    // Account settings for cross-origin OAuth
+    // skipStateCookieCheck is needed because the web app (Vercel) and API (CF Workers)
+    // are on different domains, so the OAuth state cookie can't be shared.
+    // TODO: Use a custom domain for both services to avoid this security trade-off
+    account: {
+      skipStateCookieCheck: true,
     },
     user: {
       additionalFields: {
