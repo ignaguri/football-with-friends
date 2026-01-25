@@ -55,8 +55,8 @@ export default function SignInScreen() {
       if (Platform.OS === "web") {
         // On web, bypass the expo plugin entirely and make a direct API call
         // The expo plugin uses expo-web-browser which doesn't work correctly on web
-        // Use the staging API URL (will be made dynamic later)
-        const apiUrl = "https://football-api-staging.pepe-grillo-parlante.workers.dev";
+        // Use the API URL from env (inlined at build time by Expo)
+        const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",
@@ -82,7 +82,8 @@ export default function SignInScreen() {
 
         // Redirect to the OAuth URL
         if (data.url) {
-          window.location.href = data.url;
+          // Use assign() for more reliable cross-origin redirects
+          window.location.assign(data.url);
           return;
         } else {
           console.error("No OAuth URL returned:", data);
