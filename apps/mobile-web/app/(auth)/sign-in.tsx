@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signIn, getSession } from "@repo/api-client";
+import { signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 
@@ -64,9 +64,10 @@ export default function SignInScreen() {
 
     try {
       if (Platform.OS === "web") {
-        // On web, use same-origin fetch via Vercel proxy
-        // This ensures cookies are set on the same domain for proper auth
-        const response = await fetch("/api/auth/sign-in/social", {
+        // On web, use direct API URL so cookies are set on the same domain
+        // as the OAuth callback. Cross-origin cookies with SameSite=None should work.
+        const apiUrl = getConfiguredApiUrl();
+        const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
