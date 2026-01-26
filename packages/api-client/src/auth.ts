@@ -76,8 +76,9 @@ export function getConfiguredApiUrl(): string {
 }
 
 // Custom fetch that resolves URL at request time
-function createDynamicFetch(): typeof fetch {
-  return (input: RequestInfo | URL, init?: RequestInit) => {
+// Note: Type assertion needed because fetch type includes preconnect which we don't need
+function createDynamicFetch() {
+  return ((input: RequestInfo | URL, init?: RequestInit) => {
     let originalUrl: string;
     if (typeof input === "string") {
       originalUrl = input;
@@ -101,7 +102,7 @@ function createDynamicFetch(): typeof fetch {
       ...init,
       credentials: "include",
     });
-  };
+  }) as typeof fetch;
 }
 
 // Create the Better Auth client with Expo plugin for React Native
@@ -116,7 +117,8 @@ export const authClient = createAuthClient({
     expoClient({
       scheme: "football-with-friends", // Deep link scheme from app.json
       storagePrefix: "football_auth",
-      storage: storage, // Use platform-aware storage adapter
+      // Type assertion needed due to mismatch between async storage and expected sync type
+      storage: storage as any,
     }),
   ],
 });

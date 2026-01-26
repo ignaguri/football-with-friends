@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signUp } from "@repo/api-client";
+import { signUp, signIn, getSession } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 
 export default function SignUpScreen() {
@@ -13,6 +13,22 @@ export default function SignUpScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Check session on mount - this handles the OAuth callback redirect
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const session = await getSession();
+        if (session?.data?.user) {
+          // User is already logged in, redirect to home
+          router.replace("/(tabs)");
+        }
+      } catch (err) {
+        // Not logged in, stay on sign-up page
+      }
+    };
+    checkSession();
+  }, []);
 
   const handleSignUp = async () => {
     if (!email || !password || !name) {
@@ -65,40 +81,23 @@ export default function SignUpScreen() {
     setError(null);
 
     try {
-      // On web, bypass the expo plugin and make a direct API call
-      // The expo plugin uses expo-web-browser which doesn't work on web
-      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
-      const callbackURL = window.location.origin + "/";
-
-      const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          provider: "google",
-          callbackURL,
-          disableRedirect: true,
-        }),
+      // Use the oAuthProxy plugin which handles cross-domain OAuth
+      // by storing state in the URL instead of cookies
+      const result = await signIn.social({
+        provider: "google",
+        callbackURL: window.location.origin + "/",
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Google sign up error:", errorData);
-        setError(errorData.message || t("auth.googleSignInFailed"));
+      if (result.error) {
+        console.error("Google sign up error:", result.error);
+        setError(result.error.message || t("auth.googleSignInFailed"));
         return;
       }
 
-      const data = await response.json();
-
-      if (data.url) {
-        // Redirect to Google OAuth
-        window.location.assign(data.url);
-        return;
-      } else {
-        console.error("No OAuth URL returned:", data);
-        setError(t("auth.googleSignInFailed"));
+      // If we get here without redirect, something went wrong
+      // The OAuth flow should have redirected to Google
+      if (!result.data?.url) {
+        console.error("OAuth did not redirect:", result);
       }
     } catch (err) {
       setError(t("auth.googleSignInFailed"));

@@ -1,7 +1,7 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { getEnv, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
-import { admin, username } from "better-auth/plugins";
+import { admin, username, oAuthProxy } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 
 // Get database configuration for authentication
@@ -141,6 +141,12 @@ function createAuthInstance() {
         maxUsernameLength: 20,
       }),
       expo(),
+      // OAuth Proxy plugin - handles OAuth callbacks for cross-domain setups
+      // This allows preview deployments (Vercel) to work with OAuth without
+      // needing to register each preview URL with the OAuth provider
+      oAuthProxy({
+        productionURL: process.env.BETTER_AUTH_BASE_URL || "https://football-api.pepe-grillo-parlante.workers.dev",
+      }),
     ],
     logger: {
       level: "info",
