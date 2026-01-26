@@ -4,14 +4,27 @@ import { Link, router } from "expo-router";
 import { signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signInSchema, type SignInFormData } from "../../lib/validation";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
   // Check session on mount - this handles the OAuth callback redirect
   useEffect(() => {
@@ -29,29 +42,24 @@ export default function SignInScreen() {
     checkSession();
   }, []);
 
-  const handleSignIn = async () => {
-    if (!email || !password) {
-      setEmailError(t("auth.fillAllFields"));
-      return;
-    }
-
+  const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
-    setEmailError(null);
+    setServerError(null);
 
     try {
       const result = await signIn.email({
-        email,
-        password,
+        email: data.email,
+        password: data.password,
       });
 
       if (result.error) {
-        setEmailError(result.error.message || t("auth.signInFailed"));
+        setServerError(result.error.message || t("auth.signInFailed"));
         return;
       }
 
       router.replace("/(tabs)");
     } catch (err) {
-      setEmailError(t("auth.unexpectedError"));
+      setServerError(t("auth.unexpectedError"));
       console.error("Sign in error:", err);
     } finally {
       setIsLoading(false);
@@ -60,7 +68,7 @@ export default function SignInScreen() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    setEmailError(null);
+    setServerError(null);
 
     try {
       if (Platform.OS === "web") {
@@ -83,7 +91,7 @@ export default function SignInScreen() {
 
         if (!response.ok || result.error) {
           console.error("Google sign in error:", result.error || result);
-          setEmailError(result.error?.message || t("auth.googleSignInFailed"));
+          setServerError(result.error?.message || t("auth.googleSignInFailed"));
           return;
         }
 
@@ -92,7 +100,7 @@ export default function SignInScreen() {
           window.location.href = result.url;
         } else {
           console.error("OAuth did not return redirect URL:", result);
-          setEmailError(t("auth.googleSignInFailed"));
+          setServerError(t("auth.googleSignInFailed"));
         }
       } else {
         // On native, the expo plugin handles the OAuth flow via expo-web-browser
@@ -103,7 +111,7 @@ export default function SignInScreen() {
 
         if (result.error) {
           console.error("Google sign in error:", result.error);
-          setEmailError(result.error.message || t("auth.googleSignInFailed"));
+          setServerError(result.error.message || t("auth.googleSignInFailed"));
           return;
         }
 
@@ -111,7 +119,7 @@ export default function SignInScreen() {
       }
     } catch (err) {
       console.error("Google sign in error:", err);
-      setEmailError(t("auth.googleSignInFailed"));
+      setServerError(t("auth.googleSignInFailed"));
     } finally {
       setIsGoogleLoading(false);
     }
@@ -152,38 +160,52 @@ export default function SignInScreen() {
         {/* Email/Password Sign In */}
         <Card variant="elevated" padding="$4">
           <YStack space="$4">
-            <Input
-              label={t("auth.email")}
-              placeholder={t("auth.emailPlaceholder")}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              error={emailError && !email ? t("auth.emailRequired") : undefined}
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label={t("auth.email")}
+                  placeholder={t("auth.emailPlaceholder")}
+                  value={value}
+                  onChangeText={onChange}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  error={errors.email ? t(errors.email.message as string) : undefined}
+                />
+              )}
             />
 
-            <Input
-              label={t("auth.password")}
-              placeholder={t("auth.passwordPlaceholder")}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              error={emailError && !password ? t("auth.passwordRequired") : undefined}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label={t("auth.password")}
+                  placeholder={t("auth.passwordPlaceholder")}
+                  value={value}
+                  onChangeText={onChange}
+                  secureTextEntry
+                  error={errors.password ? t(errors.password.message as string) : undefined}
+                />
+              )}
             />
 
-            {emailError && (
+            {serverError && (
               <Text color="$red10" fontSize="$3" textAlign="center">
-                {emailError}
+                {serverError}
               </Text>
             )}
 
-            <Button
-              onPress={handleSignIn}
-              disabled={isLoading || isGoogleLoading}
-              variant="primary"
-            >
-              {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
-            </Button>
+            <YStack paddingTop="$4">
+              <Button
+                onPress={handleSubmit(onSubmit)}
+                disabled={isLoading || isGoogleLoading}
+                variant="primary"
+              >
+                {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
+              </Button>
+            </YStack>
           </YStack>
         </Card>
 

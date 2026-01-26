@@ -221,6 +221,7 @@
     "signUpLink": "Registrarse",
     "signInLink": "Iniciar sesión",
     "emailRequired": "El email es requerido",
+    "emailInvalid": "Por favor ingresá un email válido",
     "passwordRequired": "La contraseña es requerida",
     "nameRequired": "El nombre es requerido",
     "fillAllFields": "Por favor completá todos los campos",

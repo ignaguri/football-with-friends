@@ -4,16 +4,29 @@ import { Link, router } from "expo-router";
 import { signUp, signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUpSchema, type SignUpFormData } from "../../lib/validation";
 
 export default function SignUpScreen() {
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      username: "",
+    },
+  });
 
   // Check session on mount - this handles the OAuth callback redirect
   useEffect(() => {
@@ -31,46 +44,26 @@ export default function SignUpScreen() {
     checkSession();
   }, []);
 
-  const handleSignUp = async () => {
-    if (!email || !password || !name) {
-      setError(t("auth.fillRequiredFields"));
-      return;
-    }
-
-    if (password.length < 8) {
-      setError(t("auth.passwordTooShort"));
-      return;
-    }
-
-    if (username && (username.length < 3 || username.length > 20)) {
-      setError(t("auth.usernameTooShort"));
-      return;
-    }
-
-    if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
-      setError(t("auth.usernameInvalid"));
-      return;
-    }
-
+  const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
-    setError(null);
+    setServerError(null);
 
     try {
       const result = await signUp.email({
-        email,
-        password,
-        name,
-        username: username || undefined,
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        username: data.username || undefined,
       });
 
       if (result.error) {
-        setError(result.error.message || t("auth.signUpFailed"));
+        setServerError(result.error.message || t("auth.signUpFailed"));
         return;
       }
 
       router.replace("/(tabs)");
     } catch (err) {
-      setError(t("auth.unexpectedError"));
+      setServerError(t("auth.unexpectedError"));
       console.error("Sign up error:", err);
     } finally {
       setIsLoading(false);
@@ -79,7 +72,7 @@ export default function SignUpScreen() {
 
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true);
-    setError(null);
+    setServerError(null);
 
     try {
       if (Platform.OS === "web") {
@@ -102,7 +95,7 @@ export default function SignUpScreen() {
 
         if (!response.ok || result.error) {
           console.error("Google sign up error:", result.error || result);
-          setError(result.error?.message || t("auth.googleSignInFailed"));
+          setServerError(result.error?.message || t("auth.googleSignInFailed"));
           return;
         }
 
@@ -111,7 +104,7 @@ export default function SignUpScreen() {
           window.location.href = result.url;
         } else {
           console.error("OAuth did not return redirect URL:", result);
-          setError(t("auth.googleSignInFailed"));
+          setServerError(t("auth.googleSignInFailed"));
         }
       } else {
         // On native, the expo plugin handles the OAuth flow via expo-web-browser
@@ -122,14 +115,14 @@ export default function SignUpScreen() {
 
         if (result.error) {
           console.error("Google sign up error:", result.error);
-          setError(result.error.message || t("auth.googleSignInFailed"));
+          setServerError(result.error.message || t("auth.googleSignInFailed"));
           return;
         }
 
         router.replace("/(tabs)");
       }
     } catch (err) {
-      setError(t("auth.googleSignInFailed"));
+      setServerError(t("auth.googleSignInFailed"));
       console.error("Google sign up error:", err);
     } finally {
       setIsGoogleLoading(false);
@@ -150,56 +143,83 @@ export default function SignUpScreen() {
 
         <Card variant="elevated" padding="$4">
           <YStack space="$4">
-            <Input
-              label={`${t("auth.name")} *`}
-              placeholder={t("auth.namePlaceholder")}
-              value={name}
-              onChangeText={setName}
-              error={error && !name ? t("auth.nameRequired") : undefined}
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label={`${t("auth.name")} *`}
+                  placeholder={t("auth.namePlaceholder")}
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.name ? t(errors.name.message as string) : undefined}
+                />
+              )}
             />
 
-            <Input
-              label={`${t("auth.email")} *`}
-              placeholder={t("auth.emailPlaceholder")}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              error={error && !email ? t("auth.emailRequired") : undefined}
+            <Controller
+              control={control}
+              name="email"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label={`${t("auth.email")} *`}
+                  placeholder={t("auth.emailPlaceholder")}
+                  value={value}
+                  onChangeText={onChange}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  error={errors.email ? t(errors.email.message as string) : undefined}
+                />
+              )}
             />
 
-            <Input
-              label={`${t("auth.password")} *`}
-              placeholder={t("auth.passwordMinLength")}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              error={error && !password ? t("auth.passwordRequired") : undefined}
-              helperText={t("auth.passwordHelp")}
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label={`${t("auth.password")} *`}
+                  placeholder={t("auth.passwordMinLength")}
+                  value={value}
+                  onChangeText={onChange}
+                  secureTextEntry
+                  error={errors.password ? t(errors.password.message as string) : undefined}
+                  helperText={t("auth.passwordHelp")}
+                />
+              )}
             />
 
-            <Input
-              label={t("auth.username")}
-              placeholder={t("auth.usernamePlaceholder")}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              helperText={t("auth.usernameHelp")}
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  label={t("auth.username")}
+                  placeholder={t("auth.usernamePlaceholder")}
+                  value={value}
+                  onChangeText={onChange}
+                  autoCapitalize="none"
+                  helperText={t("auth.usernameHelp")}
+                  error={errors.username ? t(errors.username.message as string) : undefined}
+                />
+              )}
             />
 
-            {error && (
+            {serverError && (
               <Text color="$red10" fontSize="$3" textAlign="center">
-                {error}
+                {serverError}
               </Text>
             )}
 
-            <Button
-              onPress={handleSignUp}
-              disabled={isLoading || isGoogleLoading}
-              variant="primary"
-            >
-              {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
-            </Button>
+            <YStack paddingTop="$4">
+              <Button
+                onPress={handleSubmit(onSubmit)}
+                disabled={isLoading || isGoogleLoading}
+                variant="primary"
+              >
+                {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
+              </Button>
+            </YStack>
 
             <YStack space="$3" alignItems="center">
               <Text color="$gray10" fontSize="$3">

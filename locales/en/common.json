@@ -220,6 +220,7 @@
     "signUpLink": "Sign Up",
     "signInLink": "Sign In",
     "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
     "passwordRequired": "Password is required",
     "nameRequired": "Name is required",
     "fillAllFields": "Please fill in all fields",
