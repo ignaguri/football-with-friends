@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signIn, getSession } from "@repo/api-client";
+import { signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 
 export default function SignInScreen() {
@@ -62,23 +62,35 @@ export default function SignInScreen() {
     setEmailError(null);
 
     try {
-      // Use the oAuthProxy plugin which handles cross-domain OAuth
-      // by storing state in the URL instead of cookies
-      const result = await signIn.social({
-        provider: "google",
-        callbackURL: window.location.origin + "/",
+      // Use direct fetch to API for web platform
+      // The expo plugin's signIn.social() doesn't work on web (uses expo-web-browser)
+      const apiUrl = getConfiguredApiUrl();
+      const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          provider: "google",
+          callbackURL: window.location.origin + "/",
+        }),
+        credentials: "include",
       });
 
-      if (result.error) {
-        console.error("Google sign in error:", result.error);
-        setEmailError(result.error.message || t("auth.googleSignInFailed"));
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        console.error("Google sign in error:", result.error || result);
+        setEmailError(result.error?.message || t("auth.googleSignInFailed"));
         return;
       }
 
-      // If we get here without redirect, something went wrong
-      // The OAuth flow should have redirected to Google
-      if (!result.data?.url) {
-        console.error("OAuth did not redirect:", result);
+      // Redirect to Google OAuth consent screen
+      if (result.url) {
+        window.location.href = result.url;
+      } else {
+        console.error("OAuth did not return redirect URL:", result);
+        setEmailError(t("auth.googleSignInFailed"));
       }
     } catch (err) {
       console.error("Google sign in error:", err);
