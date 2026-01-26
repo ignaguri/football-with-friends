@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signUp, signIn } from "@repo/api-client";
+import { signUp } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 
 export default function SignUpScreen() {
@@ -65,19 +65,41 @@ export default function SignUpScreen() {
     setError(null);
 
     try {
-      // On native, the expo plugin handles the OAuth flow via expo-web-browser
-      const result = await signIn.social({
-        provider: "google",
-        callbackURL: "/",
+      // On web, bypass the expo plugin and make a direct API call
+      // The expo plugin uses expo-web-browser which doesn't work on web
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
+      const callbackURL = window.location.origin + "/";
+
+      const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          provider: "google",
+          callbackURL,
+          disableRedirect: true,
+        }),
       });
 
-      if (result.error) {
-        console.error("Google sign up error:", result.error);
-        setError(result.error.message || t("auth.googleSignInFailed"));
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Google sign up error:", errorData);
+        setError(errorData.message || t("auth.googleSignInFailed"));
         return;
       }
 
-      router.replace("/(tabs)");
+      const data = await response.json();
+
+      if (data.url) {
+        // Redirect to Google OAuth
+        window.location.assign(data.url);
+        return;
+      } else {
+        console.error("No OAuth URL returned:", data);
+        setError(t("auth.googleSignInFailed"));
+      }
     } catch (err) {
       setError(t("auth.googleSignInFailed"));
       console.error("Google sign up error:", err);
