@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signUp, signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
+import { signUp, signIn, getSession } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 
@@ -83,10 +83,9 @@ export default function SignUpScreen() {
 
     try {
       if (Platform.OS === "web") {
-        // On web, use direct fetch to API because the expo plugin uses expo-web-browser
-        // which doesn't work in browser context
-        const apiUrl = getConfiguredApiUrl();
-        const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
+        // On web, use same-origin fetch via Vercel proxy
+        // This ensures cookies are set on the same domain for proper auth
+        const response = await fetch("/api/auth/sign-in/social", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
