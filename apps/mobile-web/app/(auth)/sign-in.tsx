@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signIn } from "@repo/api-client";
+import { signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
@@ -11,6 +12,22 @@ export default function SignInScreen() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Check session on mount - this handles the OAuth callback redirect
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const session = await getSession();
+        if (session?.data?.user) {
+          // User is already logged in, redirect to home
+          router.replace("/(tabs)");
+        }
+      } catch (err) {
+        // Not logged in, stay on sign-in page
+      }
+    };
+    checkSession();
+  }, []);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -46,19 +63,52 @@ export default function SignInScreen() {
     setEmailError(null);
 
     try {
-      // On native, the expo plugin handles the OAuth flow via expo-web-browser
-      const result = await signIn.social({
-        provider: "google",
-        callbackURL: "/",
-      });
+      if (Platform.OS === "web") {
+        // On web, use direct fetch to API because the expo plugin uses expo-web-browser
+        // which doesn't work in browser context
+        const apiUrl = getConfiguredApiUrl();
+        const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            provider: "google",
+            callbackURL: window.location.origin + "/",
+          }),
+          credentials: "include",
+        });
 
-      if (result.error) {
-        console.error("Google sign in error:", result.error);
-        setEmailError(result.error.message || t("auth.googleSignInFailed"));
-        return;
+        const result = await response.json();
+
+        if (!response.ok || result.error) {
+          console.error("Google sign in error:", result.error || result);
+          setEmailError(result.error?.message || t("auth.googleSignInFailed"));
+          return;
+        }
+
+        // Redirect to Google OAuth consent screen
+        if (result.url) {
+          window.location.href = result.url;
+        } else {
+          console.error("OAuth did not return redirect URL:", result);
+          setEmailError(t("auth.googleSignInFailed"));
+        }
+      } else {
+        // On native, the expo plugin handles the OAuth flow via expo-web-browser
+        const result = await signIn.social({
+          provider: "google",
+          callbackURL: "/",
+        });
+
+        if (result.error) {
+          console.error("Google sign in error:", result.error);
+          setEmailError(result.error.message || t("auth.googleSignInFailed"));
+          return;
+        }
+
+        router.replace("/(tabs)");
       }
-
-      router.replace("/(tabs)");
     } catch (err) {
       console.error("Google sign in error:", err);
       setEmailError(t("auth.googleSignInFailed"));
