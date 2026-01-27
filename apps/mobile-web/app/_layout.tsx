@@ -22,10 +22,15 @@ import { Platform } from "react-native";
 // Auth always uses direct API URL for proper OAuth callback handling
 const getAuthApiUrl = () => process.env.EXPO_PUBLIC_API_URL;
 
-// General API can use proxy on web (optional optimization)
+// General API can use Vercel proxy on deployed web (same-origin requests)
+// but must use direct API URL locally (no proxy from Expo dev server)
 const getGeneralApiUrl = () => {
   if (Platform.OS === "web" && typeof window !== "undefined") {
-    return window.location.origin;
+    const origin = window.location.origin;
+    // Only use same-origin proxy on deployed Vercel (not localhost)
+    if (!origin.includes("localhost")) {
+      return origin;
+    }
   }
   return process.env.EXPO_PUBLIC_API_URL;
 };
