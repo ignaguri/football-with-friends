@@ -123,10 +123,12 @@ function createDynamicFetch() {
     const fetchInit: RequestInit = { ...init, credentials: "include" };
 
     // Web: inject Bearer token header for cross-domain auth
+    // Also omit cookies — stale better-auth cookies (e.g. state) interfere with the bearer plugin
     if (Platform.OS === "web" && _cachedBearerToken) {
       const headers = new Headers(init?.headers);
       headers.set("Authorization", `Bearer ${_cachedBearerToken}`);
       fetchInit.headers = headers;
+      fetchInit.credentials = "omit";
     }
 
     let responsePromise: Promise<Response>;
