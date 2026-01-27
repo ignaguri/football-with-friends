@@ -23,6 +23,8 @@ app.use(
       "http://localhost:3000",
     ],
     credentials: true,
+    allowHeaders: ["Content-Type", "Authorization"],
+    exposeHeaders: ["set-auth-token"],
   })
 );
 
@@ -30,6 +32,32 @@ app.use(
 app.get("/health", (c) =>
   c.json({ status: "ok", timestamp: new Date().toISOString() })
 );
+
+// Web OAuth callback - must be defined BEFORE the wildcard /api/auth/* route
+// Extracts session token and redirects to web app with token in URL
+app.get("/api/auth/web-callback", async (c) => {
+  const redirect = c.req.query("redirect");
+  if (!redirect) {
+    return c.json({ error: "Missing redirect parameter" }, 400);
+  }
+
+  try {
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers,
+    });
+
+    if (session?.session?.token) {
+      const url = new URL(redirect);
+      url.searchParams.set("session_token", session.session.token);
+      return c.redirect(url.toString());
+    }
+  } catch (error) {
+    console.error("web-callback error:", error);
+  }
+
+  // Fallback: redirect without token (user will see sign-in page)
+  return c.redirect(redirect);
+});
 
 // Better Auth routes
 app.on(["POST", "GET"], "/api/auth/*", (c) => {
