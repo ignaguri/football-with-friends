@@ -27,6 +27,7 @@ export {
   getConfiguredApiUrl,
   storeBearerToken,
   clearBearerToken,
+  getBearerToken,
 } from "./auth";
 export type { Session, User } from "./auth";
 

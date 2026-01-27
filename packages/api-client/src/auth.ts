@@ -59,6 +59,13 @@ export async function clearBearerToken() {
   await AsyncStorage.removeItem(BEARER_TOKEN_KEY);
 }
 
+/**
+ * Get the current bearer token (used by general API client for authenticated requests).
+ */
+export function getBearerToken(): string | undefined {
+  return _cachedBearerToken;
+}
+
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
 

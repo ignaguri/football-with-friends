@@ -1,5 +1,7 @@
 import { hc } from "hono/client";
+import { Platform } from "react-native";
 import type { ApiRoutes } from "../../../apps/api/src/index";
+import { getBearerToken } from "./auth";
 
 // Base URL for localhost development
 const LOCALHOST_API = "http://localhost:3001";
@@ -49,17 +51,36 @@ function createDynamicFetch() {
     // Replace localhost URL with the correct API base
     const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
-    // Handle Request objects specially
-    if (typeof input !== "string" && !(input instanceof URL)) {
-      return fetch(new Request(finalUrl, input), {
-        ...init,
-        credentials: "include",
-      });
+    const fetchInit: RequestInit = { ...init, credentials: "include" };
+
+    // Web: inject Bearer token for authenticated API requests
+    // The auth client stores tokens in AsyncStorage; cookies are not available
+    // cross-origin (Vercel proxy → Cloudflare Workers), so we use Bearer auth.
+    if (Platform.OS === "web") {
+      const token = getBearerToken();
+      if (token) {
+        const headers = new Headers(init?.headers);
+        headers.set("Authorization", `Bearer ${token}`);
+        fetchInit.headers = headers;
+        fetchInit.credentials = "omit";
+      }
     }
 
-    return fetch(finalUrl, {
-      ...init,
-      credentials: "include",
+    // Handle Request objects specially
+    let responsePromise: Promise<Response>;
+    if (typeof input !== "string" && !(input instanceof URL)) {
+      responsePromise = fetch(new Request(finalUrl, input), fetchInit);
+    } else {
+      responsePromise = fetch(finalUrl, fetchInit);
+    }
+
+    // Throw on non-OK responses so React Query treats them as errors
+    // instead of passing error payloads as successful data
+    return responsePromise.then((response) => {
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      return response;
     });
   };
 }
