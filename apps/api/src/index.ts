@@ -42,25 +42,16 @@ app.get("/api/auth/web-callback", async (c) => {
   }
 
   try {
-    // Extract the full signed session token from the cookie
-    // Cookie name is __Secure-better-auth.session_token (HTTPS) or better-auth.session_token (HTTP)
-    const cookieHeader = c.req.header("cookie") || "";
-    const cookieMatch = cookieHeader.match(
-      /(?:__Secure-)?better-auth\.session_token=([^;]+)/
-    );
+    // The session cookie is on the same domain, so getSession() can read it
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers,
+    });
 
-    if (cookieMatch?.[1]) {
-      // Verify the session is valid before passing the token
-      const session = await auth.api.getSession({
-        headers: c.req.raw.headers,
-      });
-
-      if (session?.session) {
-        const url = new URL(redirect);
-        // Pass the full signed cookie value (token.signature), URL-decoded
-        url.searchParams.set("session_token", decodeURIComponent(cookieMatch[1]));
-        return c.redirect(url.toString());
-      }
+    if (session?.session?.token) {
+      const url = new URL(redirect);
+      // Pass the raw session token — the bearer plugin looks up this token directly
+      url.searchParams.set("session_token", session.session.token);
+      return c.redirect(url.toString());
     }
   } catch (error) {
     console.error("web-callback error:", error);
