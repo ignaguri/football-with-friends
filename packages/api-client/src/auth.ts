@@ -72,7 +72,7 @@ let _configuredApiUrl: string | null = null;
  */
 export function configureApiClient(apiUrl: string | undefined) {
   if (apiUrl && apiUrl.length > 0 && !apiUrl.includes("${")) {
-    _configuredApiUrl = apiUrl;
+    _configuredApiUrl = apiUrl.trim();
   }
 }
 
