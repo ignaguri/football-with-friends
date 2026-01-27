@@ -78,6 +78,7 @@ export default function MatchDetailScreen() {
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
   const [signupToCancel, setSignupToCancel] = useState<{
     id: string;
     status: PlayerStatusType;
@@ -647,7 +648,7 @@ END:VCALENDAR`;
           )}
 
           {/* Rules Button */}
-          <Button variant="outline" onPress={() => router.push("/(tabs)/rules")}>
+          <Button variant="outline" onPress={() => setShowRulesModal(true)}>
             {t("matchDetail.viewRules")}
           </Button>
         </YStack>
@@ -763,6 +764,62 @@ END:VCALENDAR`;
         onConfirm={confirmCancelSignup}
         variant="destructive"
       />
+
+      {/* Rules Modal */}
+      <Dialog
+        open={showRulesModal}
+        onOpenChange={setShowRulesModal}
+        title={t("rules.title")}
+      >
+        <ScrollView style={{ maxHeight: 400 }}>
+          <YStack gap="$4" padding="$4">
+            <YStack gap="$2">
+              <Text fontSize="$5" fontWeight="600">
+                {t("rules.generalTitle")}
+              </Text>
+              <List ordered bulletColor="$blue10">
+                {(() => {
+                  const generalRules = t("rules.general", {
+                    returnObjects: true,
+                  }) as string[];
+                  return (
+                    Array.isArray(generalRules) &&
+                    generalRules.map((rule, index) => (
+                      <List.Item key={index}>{rule}</List.Item>
+                    ))
+                  );
+                })()}
+              </List>
+            </YStack>
+
+            <YStack gap="$2">
+              <Text fontSize="$5" fontWeight="600">
+                {t("rules.matchTitle")}
+              </Text>
+              <List ordered bulletColor="$green10">
+                {(() => {
+                  const matchRules = t("rules.match", {
+                    returnObjects: true,
+                  }) as string[];
+                  return (
+                    Array.isArray(matchRules) &&
+                    matchRules.map((rule, index) => (
+                      <List.Item key={index}>{rule}</List.Item>
+                    ))
+                  );
+                })()}
+              </List>
+            </YStack>
+
+            <Button
+              variant="outline"
+              onPress={() => setShowRulesModal(false)}
+            >
+              {t("shared.close")}
+            </Button>
+          </YStack>
+        </ScrollView>
+      </Dialog>
     </Container>
   );
 }

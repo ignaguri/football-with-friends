@@ -9,6 +9,7 @@ const app = new Hono();
 
 // Lazy service loading for Cloudflare Workers compatibility
 const getMatchService = () => getServiceFactory().matchService;
+const getPlayerStatsService = () => getServiceFactory().playerStatsService;
 
 // Helper to convert session user to full User type
 function sessionUserToUser(sessionUser: { id: string; name: string; email: string; role?: string }): User {
@@ -309,6 +310,114 @@ app.patch(
       return c.json({ error: message }, 400);
     }
   }
+);
+
+// Get all player stats for a match
+app.get("/:id/player-stats", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const matchId = c.req.param("id");
+
+  try {
+    const stats = await getPlayerStatsService().getMatchStats(matchId);
+    return c.json(stats);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to get match stats";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// Record player stats for a match (admin or self)
+app.post(
+  "/:id/player-stats",
+  zValidator(
+    "json",
+    z.object({
+      userId: z.string().min(1, "User ID is required"),
+      goals: z.number().min(0).optional(),
+      thirdTimeAttended: z.boolean().optional(),
+      thirdTimeBeers: z.number().min(0).optional(),
+    }),
+  ),
+  async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session?.user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const matchId = c.req.param("id");
+    const data = c.req.valid("json");
+    const sessionUser = session.user as {
+      id: string;
+      name: string;
+      email: string;
+      role?: string;
+    };
+    const user = sessionUserToUser(sessionUser);
+
+    try {
+      const stats = await getPlayerStatsService().recordStats(
+        matchId,
+        data.userId,
+        data,
+        user,
+      );
+      return c.json({ stats }, 201);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to record stats";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+// Update player stats for a match (admin or self)
+app.patch(
+  "/:id/player-stats/:userId",
+  zValidator(
+    "json",
+    z.object({
+      goals: z.number().min(0).optional(),
+      thirdTimeAttended: z.boolean().optional(),
+      thirdTimeBeers: z.number().min(0).optional(),
+      confirmed: z.boolean().optional(),
+    }),
+  ),
+  async (c) => {
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    if (!session?.user) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const matchId = c.req.param("id");
+    const targetUserId = c.req.param("userId");
+    const updates = c.req.valid("json");
+    const sessionUser = session.user as {
+      id: string;
+      name: string;
+      email: string;
+      role?: string;
+    };
+    const user = sessionUserToUser(sessionUser);
+
+    try {
+      const stats = await getPlayerStatsService().updateStats(
+        matchId,
+        targetUserId,
+        updates,
+        user,
+      );
+      return c.json({ stats });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update stats";
+      return c.json({ error: message }, 400);
+    }
+  },
 );
 
 export default app;

@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Tabs, Redirect } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Home, User, Calendar, BookOpen, Settings } from "@tamagui/lucide-icons";
+import { Home, User, Calendar, Users, Settings } from "@tamagui/lucide-icons";
 import { useTheme, YStack, Spinner } from "tamagui";
 import { useSession } from "@repo/api-client";
 
@@ -59,10 +59,10 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="rules"
+        name="players"
         options={{
-          title: t("rules.title"),
-          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
+          title: t("playerStats.tabTitle"),
+          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
           headerShown: false,
         }}
       />
@@ -72,6 +72,12 @@ export default function TabsLayout() {
           title: t("shared.userProfile"),
           tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
           headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="rules"
+        options={{
+          href: null, // Hidden - rules moved to match detail modal
         }}
       />
       <Tabs.Screen

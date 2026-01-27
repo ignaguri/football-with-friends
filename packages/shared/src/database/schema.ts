@@ -95,6 +95,18 @@ export interface SettingsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface MatchPlayerStatsTable {
+  id: Generated<string>;
+  match_id: string;
+  user_id: string;
+  goals: number;
+  third_time_attended: number; // 0 or 1 (SQLite boolean)
+  third_time_beers: number;
+  confirmed: number; // 0 or 1 (SQLite boolean)
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -104,6 +116,7 @@ export interface Database {
   match_invitations: MatchInvitationsTable;
   user: UserTable;
   settings: SettingsTable;
+  match_player_stats: MatchPlayerStatsTable;
 }
 
 // SQLite system tables used by migrations and database introspection
@@ -151,3 +164,7 @@ export type MatchInvitationUpdate = Updateable<MatchInvitationsTable>;
 export type Setting = Selectable<SettingsTable>;
 export type NewSetting = Insertable<SettingsTable>;
 export type SettingUpdate = Updateable<SettingsTable>;
+
+export type MatchPlayerStats = Selectable<MatchPlayerStatsTable>;
+export type NewMatchPlayerStats = Insertable<MatchPlayerStatsTable>;
+export type MatchPlayerStatsUpdate = Updateable<MatchPlayerStatsTable>;

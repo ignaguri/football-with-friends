@@ -68,6 +68,16 @@ export type {
 export { List, ListItem } from "./components/List";
 export type { ListProps, ListItemProps } from "./components/List";
 
+// Player Stats Components
+export { StatsSummary } from "./components/StatsSummary";
+export type { StatsSummaryProps, StatItem } from "./components/StatsSummary";
+
+export { PlayerStatsCard } from "./components/PlayerStatsCard";
+export type { PlayerStatsCardProps } from "./components/PlayerStatsCard";
+
+export { StatsInputRow } from "./components/StatsInputRow";
+export type { StatsInputRowProps } from "./components/StatsInputRow";
+
 // Re-export commonly used Tamagui components
 export {
   Text,

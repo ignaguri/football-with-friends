@@ -2,6 +2,7 @@
 
 import { CourtService } from "./court-service";
 import { MatchService } from "./match-service";
+import { PlayerStatsService } from "./player-stats-service";
 import {
   getRepositoryFactory,
   type AppRepositoryFactory,
@@ -10,6 +11,7 @@ import {
 export class ServiceFactory {
   public readonly matchService: MatchService;
   public readonly courtService: CourtService;
+  public readonly playerStatsService: PlayerStatsService;
 
   constructor(repositoryFactory?: AppRepositoryFactory) {
     const repos = repositoryFactory || getRepositoryFactory();
@@ -21,6 +23,10 @@ export class ServiceFactory {
       repos.courts,
     );
     this.courtService = new CourtService(repos.courts);
+    this.playerStatsService = new PlayerStatsService(
+      repos.playerStats,
+      repos.matches,
+    );
   }
 }
 

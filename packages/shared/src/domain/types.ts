@@ -130,6 +130,45 @@ export interface User {
   updatedAt: Date;
 }
 
+// Player stats for a specific match
+export interface MatchPlayerStats {
+  id: string;
+  matchId: string;
+  userId: string;
+  goals: number;
+  thirdTimeAttended: boolean;
+  thirdTimeBeers: number;
+  confirmed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields
+  user?: User;
+  match?: Match;
+}
+
+// Aggregated player statistics across all matches
+export interface PlayerProfile {
+  user: User;
+  totalMatchesPlayed: number;
+  totalGoals: number;
+  totalThirdTimeAttendances: number;
+  totalBeers: number;
+  matchStats: MatchPlayerStats[];
+}
+
+// Player summary for the players list
+export interface PlayerSummary {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  nationality?: string;
+  profilePicture?: string;
+  totalMatches: number;
+  totalGoals: number;
+  totalThirdTimes: number;
+}
+
 // Data transfer objects (DTOs) for creating/updating entities
 
 export interface CreateLocationData {
@@ -194,6 +233,21 @@ export interface CreateInvitationData {
   matchId: string;
   email: string;
   invitedByUserId: string;
+}
+
+export interface CreateMatchPlayerStatsData {
+  matchId: string;
+  userId: string;
+  goals?: number;
+  thirdTimeAttended?: boolean;
+  thirdTimeBeers?: number;
+}
+
+export interface UpdateMatchPlayerStatsData {
+  goals?: number;
+  thirdTimeAttended?: boolean;
+  thirdTimeBeers?: number;
+  confirmed?: boolean;
 }
 
 // Filter and query types

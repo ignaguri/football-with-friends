@@ -14,8 +14,6 @@ import {
   LanguageSwitcher,
   Select,
   COUNTRIES,
-  getCountryFlag,
-  getCountry,
 } from "@repo/ui";
 import { Link, router } from "expo-router";
 import { useSession, signOut, client } from "@repo/api-client";
@@ -165,6 +163,7 @@ export default function ProfileScreen() {
                 displayUsername={user.displayUsername}
                 image={user.image}
                 profilePicture={user.profilePicture}
+                countryCode={user.nationality}
                 size={80}
               />
               <YStack flex={1}>
@@ -172,11 +171,6 @@ export default function ProfileScreen() {
                   <Text fontSize="$6" fontWeight="600">
                     {displayName}
                   </Text>
-                  {user.nationality && (
-                    <Text fontSize="$6">
-                      {getCountryFlag(user.nationality)}
-                    </Text>
-                  )}
                 </XStack>
                 <Text color="$gray11" fontSize="$3">
                   {user.email}

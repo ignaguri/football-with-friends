@@ -67,6 +67,12 @@ export default function HomeScreen() {
                     {t("home.upcomingMatches", { count: upcomingCount })}
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  onPress={() => router.push("/(tabs)/players")}
+                >
+                  {t("playerStats.tabTitle")}
+                </Button>
               </YStack>
             </Card>
           ) : (

@@ -10,13 +10,17 @@ import type {
   MatchRepository,
   SignupRepository,
   MatchInvitationRepository,
+  PlayerStatsRepository,
 } from "./interfaces";
 import type {
   Location,
   Court,
   Match,
   Signup,
+  User,
   MatchInvitation,
+  MatchPlayerStats,
+  PlayerSummary,
   CreateLocationData,
   UpdateLocationData,
   CreateCourtData,
@@ -27,6 +31,8 @@ import type {
   UpdateSignupData,
   CreateGuestSignupData,
   CreateInvitationData,
+  CreateMatchPlayerStatsData,
+  UpdateMatchPlayerStatsData,
   MatchFilters,
   SignupFilters,
   MatchDetails,
@@ -1008,5 +1014,230 @@ export class TursoMatchInvitationRepository
       .executeTakeFirst();
 
     return Number(result.numDeletedRows || 0);
+  }
+}
+
+// Helper function to convert database row to MatchPlayerStats domain object
+function dbStatsToMatchPlayerStats(row: any): MatchPlayerStats {
+  return {
+    id: row.id,
+    matchId: row.match_id,
+    userId: row.user_id,
+    goals: row.goals,
+    thirdTimeAttended: Boolean(row.third_time_attended),
+    thirdTimeBeers: row.third_time_beers,
+    confirmed: Boolean(row.confirmed),
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+// Turso Player Stats Repository
+export class TursoPlayerStatsRepository implements PlayerStatsRepository {
+  private db = getDatabase();
+
+  async findByMatchAndUser(
+    matchId: string,
+    userId: string,
+  ): Promise<MatchPlayerStats | null> {
+    const row = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("match_id", "=", matchId)
+      .where("user_id", "=", userId)
+      .executeTakeFirst();
+
+    return row ? dbStatsToMatchPlayerStats(row) : null;
+  }
+
+  async findByMatchId(matchId: string): Promise<MatchPlayerStats[]> {
+    const rows = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("match_id", "=", matchId)
+      .execute();
+
+    return rows.map(dbStatsToMatchPlayerStats);
+  }
+
+  async findByUserId(userId: string): Promise<MatchPlayerStats[]> {
+    const rows = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("user_id", "=", userId)
+      .orderBy("created_at", "desc")
+      .execute();
+
+    return rows.map(dbStatsToMatchPlayerStats);
+  }
+
+  async upsert(data: CreateMatchPlayerStatsData): Promise<MatchPlayerStats> {
+    const existing = await this.findByMatchAndUser(data.matchId, data.userId);
+
+    if (existing) {
+      return this.update(existing.id, {
+        goals: data.goals,
+        thirdTimeAttended: data.thirdTimeAttended,
+        thirdTimeBeers: data.thirdTimeBeers,
+      });
+    }
+
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    const newStats = {
+      id,
+      match_id: data.matchId,
+      user_id: data.userId,
+      goals: data.goals ?? 0,
+      third_time_attended: data.thirdTimeAttended ? 1 : 0,
+      third_time_beers: data.thirdTimeBeers ?? 0,
+      confirmed: 0,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await this.db.insertInto("match_player_stats").values(newStats).execute();
+
+    return dbStatsToMatchPlayerStats(newStats);
+  }
+
+  async update(
+    id: string,
+    updates: UpdateMatchPlayerStatsData,
+  ): Promise<MatchPlayerStats> {
+    const now = new Date().toISOString();
+    const updateData: Record<string, any> = { updated_at: now };
+
+    if (updates.goals !== undefined) updateData.goals = updates.goals;
+    if (updates.thirdTimeAttended !== undefined)
+      updateData.third_time_attended = updates.thirdTimeAttended ? 1 : 0;
+    if (updates.thirdTimeBeers !== undefined)
+      updateData.third_time_beers = updates.thirdTimeBeers;
+    if (updates.confirmed !== undefined)
+      updateData.confirmed = updates.confirmed ? 1 : 0;
+
+    await this.db
+      .updateTable("match_player_stats")
+      .set(updateData)
+      .where("id", "=", id)
+      .execute();
+
+    const updated = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+
+    if (!updated) {
+      throw new Error("Player stats not found after update");
+    }
+
+    return dbStatsToMatchPlayerStats(updated);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db
+      .deleteFrom("match_player_stats")
+      .where("id", "=", id)
+      .execute();
+  }
+
+  async getPlayerAggregateStats(userId: string): Promise<{
+    totalMatches: number;
+    totalGoals: number;
+    totalThirdTimeAttendances: number;
+    totalBeers: number;
+  }> {
+    // Count distinct matches where user participated (non-cancelled signups)
+    const matchCountResult = await this.db
+      .selectFrom("signups")
+      .select(sql`COUNT(DISTINCT match_id)`.as("total_matches"))
+      .where("user_id", "=", userId)
+      .where("status", "!=", "CANCELLED")
+      .executeTakeFirst();
+
+    // Sum stats from match_player_stats
+    const statsResult = await this.db
+      .selectFrom("match_player_stats")
+      .select([
+        sql`COALESCE(SUM(goals), 0)`.as("total_goals"),
+        sql`COALESCE(SUM(third_time_attended), 0)`.as(
+          "total_third_time_attendances",
+        ),
+        sql`COALESCE(SUM(third_time_beers), 0)`.as("total_beers"),
+      ])
+      .where("user_id", "=", userId)
+      .executeTakeFirst();
+
+    return {
+      totalMatches: Number(matchCountResult?.total_matches || 0),
+      totalGoals: Number(statsResult?.total_goals || 0),
+      totalThirdTimeAttendances: Number(
+        statsResult?.total_third_time_attendances || 0,
+      ),
+      totalBeers: Number(statsResult?.total_beers || 0),
+    };
+  }
+
+  async getAllPlayerSummaries(): Promise<PlayerSummary[]> {
+    // Get all users who have at least one non-cancelled signup
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      total_matches: number;
+      total_goals: number;
+      total_third_times: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COUNT(DISTINCT s.match_id) as total_matches,
+        COALESCE(SUM(mps.goals), 0) as total_goals,
+        COALESCE(SUM(mps.third_time_attended), 0) as total_third_times
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      GROUP BY u.id
+      ORDER BY total_matches DESC, u.name ASC
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      totalMatches: Number(row.total_matches),
+      totalGoals: Number(row.total_goals),
+      totalThirdTimes: Number(row.total_third_times),
+    }));
+  }
+
+  async getUserById(userId: string): Promise<User | null> {
+    const row = await this.db
+      .selectFrom("user")
+      .selectAll()
+      .where("id", "=", userId)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      name: row.name || row.email,
+      email: row.email,
+      image: row.image || undefined,
+      role: (row.role as "user" | "admin") || "user",
+      nationality: row.nationality || undefined,
+      createdAt: new Date(row.createdAt),
+      updatedAt: new Date(row.updatedAt),
+    };
   }
 }

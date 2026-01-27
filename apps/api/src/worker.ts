@@ -9,6 +9,7 @@ import courtsRoute from "./routes/courts";
 import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
+import playersRoute from "./routes/players";
 
 // Import auth - uses lazy initialization via Proxy for CF Workers compatibility
 import { auth, resetAuth } from "./auth";
@@ -148,7 +149,8 @@ app
   .route("/courts", courtsRoute)
   .route("/locations", locationsRoute)
   .route("/profile", profileRoute)
-  .route("/settings", settingsRoute);
+  .route("/settings", settingsRoute)
+  .route("/players", playersRoute);
 
 // Export for Cloudflare Workers
 export default app;
