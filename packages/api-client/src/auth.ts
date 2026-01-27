@@ -31,6 +31,34 @@ const storage = {
   },
 };
 
+// Bearer token management (web only - native uses expo plugin with SecureStore)
+const BEARER_TOKEN_KEY = "football_auth_bearer_token";
+let _cachedBearerToken: string | undefined;
+
+// Load cached bearer token on module init (web only)
+if (Platform.OS === "web") {
+  AsyncStorage.getItem(BEARER_TOKEN_KEY).then((token) => {
+    if (token) _cachedBearerToken = token;
+  });
+}
+
+/**
+ * Store a bearer token for web authentication.
+ * Used after OAuth callback to persist the session token.
+ */
+export async function storeBearerToken(token: string) {
+  _cachedBearerToken = token;
+  await AsyncStorage.setItem(BEARER_TOKEN_KEY, token);
+}
+
+/**
+ * Clear the bearer token (used on sign-out).
+ */
+export async function clearBearerToken() {
+  _cachedBearerToken = undefined;
+  await AsyncStorage.removeItem(BEARER_TOKEN_KEY);
+}
+
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
 
@@ -76,6 +104,7 @@ export function getConfiguredApiUrl(): string {
 }
 
 // Custom fetch that resolves URL at request time
+// On web: injects Bearer token and captures set-auth-token response header
 // Note: Type assertion needed because fetch type includes preconnect which we don't need
 function createDynamicFetch() {
   return ((input: RequestInfo | URL, init?: RequestInit) => {
@@ -91,17 +120,41 @@ function createDynamicFetch() {
     const apiBase = getApiUrl();
     const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
+    const fetchInit: RequestInit = { ...init, credentials: "include" };
+
+    // Web: inject Bearer token header for cross-domain auth
+    if (Platform.OS === "web" && _cachedBearerToken) {
+      const headers = new Headers(init?.headers);
+      headers.set("Authorization", `Bearer ${_cachedBearerToken}`);
+      fetchInit.headers = headers;
+    }
+
+    let responsePromise: Promise<Response>;
+
     if (typeof input !== "string" && !(input instanceof URL)) {
-      return fetch(new Request(finalUrl, input), {
-        ...init,
-        credentials: "include",
+      responsePromise = fetch(new Request(finalUrl, input), fetchInit);
+    } else {
+      responsePromise = fetch(finalUrl, fetchInit);
+    }
+
+    // Web: capture set-auth-token from responses and clear token on sign-out
+    if (Platform.OS === "web") {
+      return responsePromise.then((response) => {
+        const newToken = response.headers.get("set-auth-token");
+        if (newToken) {
+          _cachedBearerToken = newToken;
+          AsyncStorage.setItem(BEARER_TOKEN_KEY, newToken).catch(console.error);
+        }
+        // Clear token when signing out
+        if (finalUrl.includes("/sign-out")) {
+          _cachedBearerToken = undefined;
+          AsyncStorage.removeItem(BEARER_TOKEN_KEY).catch(console.error);
+        }
+        return response;
       });
     }
 
-    return fetch(finalUrl, {
-      ...init,
-      credentials: "include",
-    });
+    return responsePromise;
   }) as typeof fetch;
 }
 

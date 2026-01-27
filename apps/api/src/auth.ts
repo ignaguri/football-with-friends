@@ -1,7 +1,7 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { getEnv, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
-import { admin, username, oAuthProxy } from "better-auth/plugins";
+import { admin, username, oAuthProxy, bearer } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 
 // Get database configuration for authentication
@@ -135,6 +135,7 @@ function createAuthInstance() {
       },
     },
     plugins: [
+      bearer(),
       admin(),
       username({
         minUsernameLength: 3,

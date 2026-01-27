@@ -1,10 +1,9 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useEffect, useState } from "react";
 import { Redirect } from "expo-router";
-import { useSession, getSession } from "@repo/api-client";
+import { useSession, getSession, storeBearerToken } from "@repo/api-client";
 import { YStack, Spinner } from "tamagui";
 import { Platform } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Root index route - handles "/" navigation on web
@@ -16,21 +15,25 @@ export default function Index() {
   const [isHandlingCallback, setIsHandlingCallback] = useState(false);
 
   // Handle OAuth callback with session token from URL
-  // The oAuthProxy plugin passes __session_token in the query params
+  // The web-callback endpoint passes session_token in the query params
+  // Also supports legacy __session_token from oAuthProxy
   useEffect(() => {
     const handleOAuthCallback = async () => {
       if (Platform.OS !== "web" || typeof window === "undefined") return;
 
       const url = new URL(window.location.href);
-      const sessionToken = url.searchParams.get("__session_token");
+      const sessionToken =
+        url.searchParams.get("session_token") ||
+        url.searchParams.get("__session_token");
 
       if (sessionToken) {
         setIsHandlingCallback(true);
         try {
-          // Store the session token in AsyncStorage for the auth client to use
-          await AsyncStorage.setItem("football_auth.session_token", sessionToken);
+          // Store the bearer token for subsequent API requests
+          await storeBearerToken(sessionToken);
 
-          // Clean up URL by removing the session token
+          // Clean up URL by removing the session token params
+          url.searchParams.delete("session_token");
           url.searchParams.delete("__session_token");
           window.history.replaceState({}, "", url.pathname + url.search);
 

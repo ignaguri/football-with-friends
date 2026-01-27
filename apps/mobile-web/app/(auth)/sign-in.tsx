@@ -75,6 +75,11 @@ export default function SignInScreen() {
         // On web, use direct API URL so cookies are set on the same domain
         // as the OAuth callback. Cross-origin cookies with SameSite=None should work.
         const apiUrl = getConfiguredApiUrl();
+        // Route OAuth callback through CF Workers web-callback endpoint
+        // This solves cross-domain cookies: after OAuth, CF Workers reads the session
+        // cookie (same domain) and redirects to Vercel with the token in the URL
+        const webCallbackUrl = `${apiUrl}/api/auth/web-callback?redirect=${encodeURIComponent(window.location.origin + "/")}`;
+
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",
           headers: {
@@ -82,7 +87,7 @@ export default function SignInScreen() {
           },
           body: JSON.stringify({
             provider: "google",
-            callbackURL: window.location.origin + "/",
+            callbackURL: webCallbackUrl,
           }),
           credentials: "include",
         });
