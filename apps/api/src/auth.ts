@@ -80,12 +80,18 @@ function createAuthInstance() {
       // this doesn't introduce additional security risks.
       // TODO: Use a custom domain for both services to avoid this security trade-off
       disableOriginCheck: true,
-      // Enable cross-origin cookies for web app on different domain (Vercel -> CF Workers)
-      defaultCookieAttributes: {
-        sameSite: "none", // Allow cross-site cookies
-        secure: true, // Required for SameSite=None
-        partitioned: true, // New browser standards for third-party cookies
-      },
+      // Cross-origin cookies for production (Vercel → CF Workers, different domains).
+      // In development: no SameSite/Secure restrictions so native iOS (React Native)
+      // can store and send cookies over plain HTTP localhost.
+      ...(env.NODE_ENV === "production"
+        ? {
+            defaultCookieAttributes: {
+              sameSite: "none" as const,
+              secure: true,
+              partitioned: true,
+            },
+          }
+        : {}),
     },
     database: {
       dialect: databaseDialect,

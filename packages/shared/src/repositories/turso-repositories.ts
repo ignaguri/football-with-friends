@@ -1063,12 +1063,34 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
   async findByUserId(userId: string): Promise<MatchPlayerStats[]> {
     const rows = await this.db
       .selectFrom("match_player_stats")
-      .selectAll()
-      .where("user_id", "=", userId)
-      .orderBy("created_at", "desc")
+      .innerJoin("matches", "matches.id", "match_player_stats.match_id")
+      .select([
+        "match_player_stats.id",
+        "match_player_stats.match_id",
+        "match_player_stats.user_id",
+        "match_player_stats.goals",
+        "match_player_stats.third_time_attended",
+        "match_player_stats.third_time_beers",
+        "match_player_stats.confirmed",
+        "match_player_stats.created_at",
+        "match_player_stats.updated_at",
+        "matches.date as match_date",
+        "matches.time as match_time",
+        "matches.location_id as match_location_id",
+      ])
+      .where("match_player_stats.user_id", "=", userId)
+      .orderBy("matches.date", "desc")
       .execute();
 
-    return rows.map(dbStatsToMatchPlayerStats);
+    return rows.map((row: any) => ({
+      ...dbStatsToMatchPlayerStats(row),
+      match: {
+        id: row.match_id,
+        date: row.match_date,
+        time: row.match_time,
+        locationId: row.match_location_id,
+      },
+    }));
   }
 
   async upsert(data: CreateMatchPlayerStatsData): Promise<MatchPlayerStats> {
