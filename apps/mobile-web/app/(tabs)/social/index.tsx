@@ -2,16 +2,16 @@
 import { Container, Card, Text, YStack, XStack } from "@repo/ui";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
-import { BarChart3, User } from "@tamagui/lucide-icons";
+import { BarChart3, Image } from "@tamagui/lucide-icons";
 import { Pressable } from "react-native";
 
-export default function PlayersHubScreen() {
+export default function SocialHubScreen() {
   const { t } = useTranslation();
 
   return (
     <Container variant="padded">
       <YStack gap="$4" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto" width="100%">
-        <Pressable onPress={() => router.push("/(tabs)/players/stats")}>
+        <Pressable onPress={() => router.push("/(tabs)/social/stats")}>
           <Card variant="elevated" padding="$5">
             <XStack gap="$4" alignItems="center">
               <YStack
@@ -26,40 +26,38 @@ export default function PlayersHubScreen() {
               </YStack>
               <YStack flex={1}>
                 <Text fontSize="$6" fontWeight="bold">
-                  {t("playerStats.statsHub")}
+                  {t("social.statsCard")}
                 </Text>
                 <Text fontSize="$3" color="$gray11" marginTop="$1">
-                  {t("playerStats.statsHubDesc")}
+                  {t("social.statsCardDesc")}
                 </Text>
               </YStack>
             </XStack>
           </Card>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/(tabs)/players/my-info")}>
-          <Card variant="elevated" padding="$5">
-            <XStack gap="$4" alignItems="center">
-              <YStack
-                width={48}
-                height={48}
-                borderRadius={12}
-                backgroundColor="$green4"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <User size={24} color="$green10" />
-              </YStack>
-              <YStack flex={1}>
-                <Text fontSize="$6" fontWeight="bold">
-                  {t("playerStats.myInfo")}
-                </Text>
-                <Text fontSize="$3" color="$gray11" marginTop="$1">
-                  {t("playerStats.myInfoDesc")}
-                </Text>
-              </YStack>
-            </XStack>
-          </Card>
-        </Pressable>
+        <Card variant="elevated" padding="$5" opacity={0.6}>
+          <XStack gap="$4" alignItems="center">
+            <YStack
+              width={48}
+              height={48}
+              borderRadius={12}
+              backgroundColor="$purple4"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Image size={24} color="$purple10" />
+            </YStack>
+            <YStack flex={1}>
+              <Text fontSize="$6" fontWeight="bold">
+                {t("social.multimediaCard")}
+              </Text>
+              <Text fontSize="$3" color="$gray11" marginTop="$1">
+                {t("social.multimediaCardDesc")}
+              </Text>
+            </YStack>
+          </XStack>
+        </Card>
       </YStack>
     </Container>
   );

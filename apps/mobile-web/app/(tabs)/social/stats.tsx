@@ -103,7 +103,7 @@ export default function PlayersStatsScreen() {
                 goalsLabel={t("playerStats.goals")}
                 thirdTimesLabel={t("playerStats.thirdTime")}
                 onPress={() =>
-                  router.push(`/(tabs)/players/${player.userId}`)
+                  router.push(`/(tabs)/social/${player.userId}`)
                 }
               />
             ))}

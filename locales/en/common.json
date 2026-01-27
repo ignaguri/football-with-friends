@@ -1,16 +1,18 @@
 {
   "appTitle": "Football with Friends",
-  "subtitle": "Organize, join, and manage your football matches same as with Google Sheets.",
+  "subtitle": "Organize, join, and manage your football matches.",
   "nav": {
     "matches": "Matches",
     "organizer": "Organizer",
     "rules": "Rules",
     "addMatch": "Add Match",
-    "admin": "Admin"
+    "admin": "Admin",
+    "player": "Player",
+    "social": "Social"
   },
   "home": {
     "title": "Football with Friends",
-    "description": "Organize, join, and manage your football matches just like with Google Sheets.",
+    "description": "Organize, join, and manage your football matches.",
     "matches": "Matches",
     "rules": "Rules & Info",
     "newMatch": "New Match",
@@ -18,7 +20,13 @@
     "welcome": "Welcome, {{name}}!",
     "upcomingMatches_one": "{{count}} upcoming match",
     "upcomingMatches_other": "{{count}} upcoming matches",
-    "signInPrompt": "Sign in to join matches and see your schedule."
+    "signInPrompt": "Sign in to join matches and see your schedule.",
+    "playerCard": "Player",
+    "playerCardDesc": "Your personal stats & match records",
+    "matchesCard": "Matches",
+    "matchesCardDesc": "View upcoming and past matches",
+    "socialCard": "Social",
+    "socialCardDesc": "Community stats & more"
   },
   "matches": {
     "upcoming": "Upcoming Matches",
@@ -407,8 +415,20 @@
     "deleteSuccess": "Court deleted successfully",
     "unknownLocation": "Unknown Location"
   },
+  "player": {
+    "title": "Player",
+    "myStats": "My Stats",
+    "myStatsDesc": "Your detailed personal statistics"
+  },
+  "social": {
+    "title": "Social",
+    "statsCard": "Player Stats",
+    "statsCardDesc": "Browse all player stats & leaderboard",
+    "multimediaCard": "Multimedia",
+    "multimediaCardDesc": "Coming soon"
+  },
   "playerStats": {
-    "tabTitle": "Players",
+    "tabTitle": "Social",
     "allPlayers": "All Players",
     "playerProfile": "Player Profile",
     "statistics": "Statistics",

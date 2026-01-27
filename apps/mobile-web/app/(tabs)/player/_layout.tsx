@@ -3,7 +3,7 @@ import { Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "tamagui";
 
-export default function PlayersLayout() {
+export default function PlayerLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -21,13 +21,7 @@ export default function PlayersLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: t("playerStats.tabTitle"),
-        }}
-      />
-      <Stack.Screen
-        name="stats"
-        options={{
-          title: t("playerStats.statsHub"),
+          title: t("player.title"),
         }}
       />
       <Stack.Screen
@@ -37,9 +31,9 @@ export default function PlayersLayout() {
         }}
       />
       <Stack.Screen
-        name="[userId]"
+        name="my-stats"
         options={{
-          title: t("playerStats.playerProfile"),
+          title: t("player.myStats"),
         }}
       />
     </Stack>

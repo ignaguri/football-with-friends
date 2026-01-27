@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Tabs, Redirect, router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Home, User, Calendar, Users, Settings } from "@tamagui/lucide-icons";
+import { Home, User, Calendar, Users, Settings, CircleUser } from "@tamagui/lucide-icons";
 import { useTheme, YStack, Spinner } from "tamagui";
 import { useSession } from "@repo/api-client";
 
@@ -51,6 +51,20 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="player"
+        options={{
+          title: t("nav.player"),
+          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          headerShown: false,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.navigate("/(tabs)/player");
+          },
+        }}
+      />
+      <Tabs.Screen
         name="matches"
         options={{
           title: t("nav.matches"),
@@ -59,16 +73,16 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="players"
+        name="social"
         options={{
-          title: t("playerStats.tabTitle"),
+          title: t("nav.social"),
           tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
           headerShown: false,
         }}
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            router.navigate("/(tabs)/players");
+            router.navigate("/(tabs)/social");
           },
         }}
       />
@@ -76,7 +90,7 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: t("shared.userProfile"),
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <CircleUser size={size} color={color} />,
           headerShown: false,
         }}
       />

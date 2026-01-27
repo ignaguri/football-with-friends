@@ -1,17 +1,19 @@
 {
   "appTitle": "Fútbol con los pibes",
-  "subtitle": "Organizá, sumate y gestioná tus partidos de fútbol igual que con Google Sheets.",
+  "subtitle": "Organizá, sumate y gestioná tus partidos de fútbol.",
   "nav": {
     "home": "Inicio",
     "matches": "Partidos",
     "organizer": "Organizador",
     "rules": "Reglas",
     "addMatch": "Agregar Partido",
-    "admin": "Admin"
+    "admin": "Admin",
+    "player": "Jugador",
+    "social": "Social"
   },
   "home": {
     "title": "Fútbol con los pibes",
-    "description": "Organizá, unite y gestioná tus partidos de fútbol como en Google Sheets.",
+    "description": "Organizá, unite y gestioná tus partidos de fútbol.",
     "matches": "Partidos",
     "rules": "Reglas e Información",
     "newMatch": "Nuevo Partido",
@@ -19,7 +21,13 @@
     "welcome": "¡Hola, {{name}}!",
     "upcomingMatches_one": "{{count}} partido próximo",
     "upcomingMatches_other": "{{count}} partidos próximos",
-    "signInPrompt": "Iniciá sesión para unirte a partidos y ver tu agenda."
+    "signInPrompt": "Iniciá sesión para unirte a partidos y ver tu agenda.",
+    "playerCard": "Jugador",
+    "playerCardDesc": "Tus estadísticas y registros personales",
+    "matchesCard": "Partidos",
+    "matchesCardDesc": "Ver próximos y anteriores partidos",
+    "socialCard": "Social",
+    "socialCardDesc": "Estadísticas de la comunidad y más"
   },
   "matches": {
     "upcoming": "Próximos partidos",
@@ -410,8 +418,20 @@
     "deleteSuccess": "Cancha eliminada con éxito",
     "unknownLocation": "Predio Desconocido"
   },
+  "player": {
+    "title": "Jugador",
+    "myStats": "Mis Estadísticas",
+    "myStatsDesc": "Tus estadísticas personales detalladas"
+  },
+  "social": {
+    "title": "Social",
+    "statsCard": "Estadísticas de Jugadores",
+    "statsCardDesc": "Ver estadísticas y tabla de posiciones",
+    "multimediaCard": "Multimedia",
+    "multimediaCardDesc": "Próximamente"
+  },
   "playerStats": {
-    "tabTitle": "Jugadores",
+    "tabTitle": "Social",
     "allPlayers": "Todos los Jugadores",
     "playerProfile": "Perfil del Jugador",
     "statistics": "Estadísticas",
