@@ -1,5 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Tabs, Redirect } from "expo-router";
+import { Tabs, Redirect, router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Home, User, Calendar, Users, Settings } from "@tamagui/lucide-icons";
 import { useTheme, YStack, Spinner } from "tamagui";
@@ -64,6 +64,12 @@ export default function TabsLayout() {
           title: t("playerStats.tabTitle"),
           tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
           headerShown: false,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.navigate("/(tabs)/players");
+          },
         }}
       />
       <Tabs.Screen
