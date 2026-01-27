@@ -25,6 +25,18 @@ export default function PlayersLayout() {
         }}
       />
       <Stack.Screen
+        name="stats"
+        options={{
+          title: t("playerStats.statsHub"),
+        }}
+      />
+      <Stack.Screen
+        name="my-info"
+        options={{
+          title: t("playerStats.myInfo"),
+        }}
+      />
+      <Stack.Screen
         name="[userId]"
         options={{
           title: t("playerStats.playerProfile"),

@@ -26,6 +26,7 @@ export class ServiceFactory {
     this.playerStatsService = new PlayerStatsService(
       repos.playerStats,
       repos.matches,
+      repos.signups,
     );
   }
 }

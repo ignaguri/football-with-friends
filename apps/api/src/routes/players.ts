@@ -23,6 +23,27 @@ app.get("/", async (c) => {
   }
 });
 
+// Get finished matches for current user (for "My Info" self-service stats entry)
+app.get("/me/finished-matches", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  try {
+    const matches = await getPlayerStatsService().getFinishedMatchesForUser(
+      session.user.id,
+    );
+    return c.json(matches);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to get finished matches";
+    return c.json({ error: message }, 500);
+  }
+});
+
 // Get player profile with full stats
 app.get("/:userId", async (c) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });

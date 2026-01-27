@@ -6,17 +6,20 @@ import type {
   PlayerSummary,
   CreateMatchPlayerStatsData,
   UpdateMatchPlayerStatsData,
+  FinishedMatchForUser,
   User,
 } from "../domain/types";
 import type {
   PlayerStatsRepository,
   MatchRepository,
+  SignupRepository,
 } from "../repositories/interfaces";
 
 export class PlayerStatsService {
   constructor(
     private playerStatsRepository: PlayerStatsRepository,
     private matchRepository: MatchRepository,
+    private signupRepository?: SignupRepository,
   ) {}
 
   /**
@@ -135,5 +138,55 @@ export class PlayerStatsService {
     userId: string,
   ): Promise<MatchPlayerStats | null> {
     return this.playerStatsRepository.findByMatchAndUser(matchId, userId);
+  }
+
+  /**
+   * Get all finished matches annotated with signup status and existing stats for a user.
+   * Used by the "My Info" screen for self-service stats entry.
+   */
+  async getFinishedMatchesForUser(
+    userId: string,
+  ): Promise<FinishedMatchForUser[]> {
+    if (!this.signupRepository) {
+      throw new Error("SignupRepository is required for this operation");
+    }
+
+    const [completedMatches, userSignups, userStats] = await Promise.all([
+      this.matchRepository.findAll({ status: "completed" }),
+      this.signupRepository.findByUserId(userId),
+      this.playerStatsRepository.findByUserId(userId),
+    ]);
+
+    const signupMatchIds = new Set(
+      userSignups
+        .filter((s) => s.status !== "CANCELLED")
+        .map((s) => s.matchId),
+    );
+
+    const statsMap = new Map(userStats.map((s) => [s.matchId, s]));
+
+    const result = completedMatches.map((match) => {
+      const stats = statsMap.get(match.id);
+      return {
+        matchId: match.id,
+        date: match.date,
+        time: match.time,
+        locationName: match.location?.name ?? "Unknown",
+        courtName: match.court?.name,
+        wasSignedUp: signupMatchIds.has(match.id),
+        existingStats: stats
+          ? {
+              goals: stats.goals,
+              thirdTimeAttended: stats.thirdTimeAttended,
+              thirdTimeBeers: stats.thirdTimeBeers,
+            }
+          : null,
+      };
+    });
+
+    // Sort newest first
+    result.sort((a, b) => b.date.localeCompare(a.date));
+
+    return result;
   }
 }

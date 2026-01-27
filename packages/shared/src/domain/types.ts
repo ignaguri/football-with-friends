@@ -268,6 +268,22 @@ export interface SignupFilters {
   signupType?: SignupType;
 }
 
+// Player self-service types
+
+export interface FinishedMatchForUser {
+  matchId: string;
+  date: string;
+  time: string;
+  locationName: string;
+  courtName?: string;
+  wasSignedUp: boolean;
+  existingStats: {
+    goals: number;
+    thirdTimeAttended: boolean;
+    thirdTimeBeers: number;
+  } | null;
+}
+
 // Rich domain objects for API responses
 
 export interface MatchDetails extends Match {

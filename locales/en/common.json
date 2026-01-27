@@ -436,6 +436,15 @@
     "matchVenue": "Venue",
     "goalsScored": "Goals scored",
     "beersConsumed": "Beers consumed",
-    "viewProfile": "View Profile"
+    "viewProfile": "View Profile",
+    "myInfo": "My Info",
+    "myInfoDesc": "Your stats & match records",
+    "statsHub": "Stats",
+    "statsHubDesc": "Browse all player stats",
+    "finishedMatches": "Finished Matches",
+    "goalsOnlyPlayed": "Goals can only be recorded for matches you played in",
+    "played": "Played",
+    "didNotPlay": "Didn't play",
+    "noFinishedMatches": "No finished matches yet"
   }
 }

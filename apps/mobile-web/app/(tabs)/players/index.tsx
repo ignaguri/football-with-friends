@@ -1,114 +1,66 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState } from "react";
-import {
-  Container,
-  Card,
-  Text,
-  YStack,
-  Spinner,
-  Input,
-  PlayerStatsCard,
-} from "@repo/ui";
-import { useQuery, client } from "@repo/api-client";
+import { Container, Card, Text, YStack, XStack } from "@repo/ui";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
-import { RefreshControl, ScrollView } from "react-native";
+import { BarChart3, User } from "@tamagui/lucide-icons";
+import { Pressable } from "react-native";
 
-export default function PlayersListScreen() {
+export default function PlayersHubScreen() {
   const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-
-  const {
-    data: players,
-    isLoading,
-    error,
-    refetch,
-    isRefetching,
-  } = useQuery({
-    queryKey: ["players"],
-    queryFn: async () => {
-      const res = await client.api.players.$get();
-      return res.json();
-    },
-  });
-
-  const filteredPlayers = players?.filter((player) =>
-    player.userName.toLowerCase().includes(search.toLowerCase()),
-  );
 
   return (
     <Container variant="padded">
-      {/* Search */}
-      <YStack marginBottom="$3">
-        <Input
-          placeholder={t("playerStats.searchPlayers")}
-          value={search}
-          onChangeText={setSearch}
-        />
-      </YStack>
-
-      <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-      >
-        <YStack gap="$3" paddingBottom="$4">
-          {isLoading && (
-            <YStack alignItems="center" padding="$6">
-              <Spinner size="large" />
-              <Text marginTop="$2" color="$gray11">
-                {t("shared.loading")}
-              </Text>
-            </YStack>
-          )}
-
-          {error && (
-            <Card variant="outlined" backgroundColor="$red2">
-              <YStack padding="$3">
-                <Text color="$red11">
-                  {t("shared.error")}
+      <YStack gap="$4" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto" width="100%">
+        <Pressable onPress={() => router.push("/(tabs)/players/stats")}>
+          <Card variant="elevated" padding="$5">
+            <XStack gap="$4" alignItems="center">
+              <YStack
+                width={48}
+                height={48}
+                borderRadius={12}
+                backgroundColor="$blue4"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <BarChart3 size={24} color="$blue10" />
+              </YStack>
+              <YStack flex={1}>
+                <Text fontSize="$6" fontWeight="bold">
+                  {t("playerStats.statsHub")}
+                </Text>
+                <Text fontSize="$3" color="$gray11" marginTop="$1">
+                  {t("playerStats.statsHubDesc")}
                 </Text>
               </YStack>
-            </Card>
-          )}
+            </XStack>
+          </Card>
+        </Pressable>
 
-          {!isLoading &&
-            !error &&
-            filteredPlayers &&
-            filteredPlayers.length === 0 && (
-              <Card variant="outlined">
-                <YStack padding="$4" alignItems="center">
-                  <Text fontSize="$5" color="$gray11">
-                    {t("playerStats.noPlayers")}
-                  </Text>
-                </YStack>
-              </Card>
-            )}
-
-          {!isLoading &&
-            !error &&
-            filteredPlayers &&
-            filteredPlayers.map((player) => (
-              <PlayerStatsCard
-                key={player.userId}
-                name={player.userName}
-                email={player.userEmail}
-                nationality={player.nationality}
-                profilePicture={player.profilePicture}
-                totalMatches={player.totalMatches}
-                totalGoals={player.totalGoals}
-                totalThirdTimes={player.totalThirdTimes}
-                matchesLabel={t("playerStats.totalMatches")}
-                goalsLabel={t("playerStats.goals")}
-                thirdTimesLabel={t("playerStats.thirdTime")}
-                onPress={() =>
-                  router.push(`/(tabs)/players/${player.userId}`)
-                }
-              />
-            ))}
-        </YStack>
-      </ScrollView>
+        <Pressable onPress={() => router.push("/(tabs)/players/my-info")}>
+          <Card variant="elevated" padding="$5">
+            <XStack gap="$4" alignItems="center">
+              <YStack
+                width={48}
+                height={48}
+                borderRadius={12}
+                backgroundColor="$green4"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <User size={24} color="$green10" />
+              </YStack>
+              <YStack flex={1}>
+                <Text fontSize="$6" fontWeight="bold">
+                  {t("playerStats.myInfo")}
+                </Text>
+                <Text fontSize="$3" color="$gray11" marginTop="$1">
+                  {t("playerStats.myInfoDesc")}
+                </Text>
+              </YStack>
+            </XStack>
+          </Card>
+        </Pressable>
+      </YStack>
     </Container>
   );
 }
