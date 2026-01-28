@@ -323,6 +323,8 @@
     "signOut": "Cerrar sesión",
     "toggleTheme": "Cambiar tema",
     "errorOccurred": "Ocurrió un error",
+    "errorBoundaryMessage": "Algo salió mal al cargar esta página.",
+    "tryAgain": "Intentar de nuevo",
     "cancel": "Cancelar",
     "name": "Nombre",
     "status": "Estado",

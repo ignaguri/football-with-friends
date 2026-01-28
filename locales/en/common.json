@@ -320,6 +320,8 @@
     "signOut": "Sign Out",
     "toggleTheme": "Toggle theme",
     "errorOccurred": "An error occurred",
+    "errorBoundaryMessage": "Something went wrong while loading this page.",
+    "tryAgain": "Try Again",
     "cancel": "Cancel",
     "name": "Name",
     "status": "Status",

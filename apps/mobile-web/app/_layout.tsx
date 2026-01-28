@@ -6,6 +6,7 @@ import { APIProvider, configureApiClient, configureGeneralApiClient } from "@rep
 import { Toast } from "@repo/ui";
 import config from "../tamagui.config";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
+import { ErrorBoundary } from "../lib/error-boundary";
 
 // Initialize i18n
 import "../lib/i18n";
@@ -83,9 +84,11 @@ function AppContent() {
         <Theme name={theme}>
           <Toast>
             <YStack flex={1} backgroundColor="$background">
-              <APIProvider>
-                <AppNavigation />
-              </APIProvider>
+              <ErrorBoundary>
+                <APIProvider>
+                  <AppNavigation />
+                </APIProvider>
+              </ErrorBoundary>
             </YStack>
           </Toast>
         </Theme>
