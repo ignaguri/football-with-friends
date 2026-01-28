@@ -4,9 +4,15 @@
 import { config } from "dotenv";
 
 // Load environment variables
-config({ path: ".env.local" });
-config({ path: ".env" });
-config({ path: ".env.production" });
+// For remote/staging: use .env.preview (staging Turso credentials)
+// For local: use .env.local
+const target = process.argv[2] || "local";
+if (target === "remote") {
+  config({ path: ".env.preview" });
+} else {
+  config({ path: ".env.local" });
+  config({ path: ".env" });
+}
 
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { Kysely, sql } from "kysely";
@@ -258,8 +264,8 @@ async function main() {
   let db: Kysely<Database>;
 
   if (target === "remote") {
-    const url = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
+    const url = process.env.TURSO_DATABASE_URL?.trim();
+    const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
 
     if (!url || !authToken) {
       console.error("❌ TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set for remote seeding.");
@@ -355,13 +361,38 @@ async function main() {
 
     console.log("\n⚽ Inserting matches...");
 
+    // Get existing non-seed match dates to avoid UNIQUE constraint conflicts
+    const existingDatesResult = await sql`SELECT date FROM matches WHERE id NOT LIKE 'seed_%'`.execute(db);
+    const existingDates = new Set((existingDatesResult.rows as any[]).map((r) => r.date));
+
+    const skippedMatches = new Set<string>();
     for (const m of MATCHES) {
-      const matchDate = daysFromNow(m.dayOffset);
+      let matchDate = daysFromNow(m.dayOffset);
+      let dateStr = formatDate(matchDate);
+
+      // Shift date forward until no conflict with real matches
+      let attempts = 0;
+      while (existingDates.has(dateStr) && attempts < 7) {
+        matchDate.setDate(matchDate.getDate() + 1);
+        dateStr = formatDate(matchDate);
+        attempts++;
+      }
+
+      if (existingDates.has(dateStr)) {
+        console.log(`   ⚠️  Skipping ${m.id} — could not find available date`);
+        skippedMatches.add(m.id);
+        continue;
+      }
+
+      if (attempts > 0) {
+        console.log(`   ℹ️  ${m.id} shifted to ${dateStr} (real match on original date)`);
+      }
+
       await db.insertInto("matches").values({
         id: m.id,
         location_id: LOCATION.id,
         court_id: COURT.id,
-        date: formatDate(matchDate),
+        date: dateStr,
         time: m.time,
         status: m.status,
         max_players: 10,
@@ -374,7 +405,8 @@ async function main() {
       }).execute();
     }
 
-    console.log(`   ✅ Inserted ${MATCHES.length} matches`);
+    const insertedMatches = MATCHES.length - skippedMatches.size;
+    console.log(`   ✅ Inserted ${insertedMatches} matches${skippedMatches.size > 0 ? ` (${skippedMatches.size} skipped)` : ""}`);
 
     // ── Step 6: Insert signups ─────────────────────────────────────────
 
@@ -382,6 +414,7 @@ async function main() {
 
     let signupCount = 0;
     for (const [matchId, signups] of Object.entries(MATCH_SIGNUPS)) {
+      if (skippedMatches.has(matchId)) continue;
       for (let i = 0; i < signups.length; i++) {
         const s = signups[i];
         const user = USERS[s.userIdx];
@@ -411,6 +444,7 @@ async function main() {
     console.log("\n📊 Inserting player stats...");
 
     for (const ps of PLAYER_STATS) {
+      if (skippedMatches.has(ps.matchId)) continue;
       const user = USERS[ps.userIdx];
       const statId = `seed_stat_${ps.matchId.replace("seed_match_", "m")}_u${String(ps.userIdx + 1).padStart(2, "0")}`;
 
