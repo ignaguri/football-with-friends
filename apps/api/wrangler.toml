@@ -19,6 +19,7 @@ NODE_ENV = "production"
 STORAGE_PROVIDER = "turso"
 DEFAULT_TIMEZONE = "Europe/Berlin"
 BETTER_AUTH_BASE_URL = "https://football-api.pepe-grillo-parlante.workers.dev"
+ALLOWED_ORIGINS = "http://localhost:8081,http://localhost:8084,http://localhost:8085,http://localhost:19006,http://localhost:3000,http://localhost:3001,https://football-with-friends-pepegrillo.vercel.app,https://football-with-friends-git-feature-383278-ignacio-guris-projects.vercel.app"
 
 # Cron trigger for match status updates (every 6 hours)
 [triggers]
@@ -31,7 +32,7 @@ vars = { NODE_ENV = "development" }
 # Preview/Staging environment
 [env.preview]
 name = "football-api-staging"
-vars = { NODE_ENV = "production", STORAGE_PROVIDER = "turso", DEFAULT_TIMEZONE = "Europe/Berlin", BETTER_AUTH_BASE_URL = "https://football-api-staging.pepe-grillo-parlante.workers.dev" }
+vars = { NODE_ENV = "production", STORAGE_PROVIDER = "turso", DEFAULT_TIMEZONE = "Europe/Berlin", BETTER_AUTH_BASE_URL = "https://football-api-staging.pepe-grillo-parlante.workers.dev", ALLOWED_ORIGINS = "http://localhost:8081,http://localhost:8084,http://localhost:8085,http://localhost:19006,http://localhost:3000,http://localhost:3001,https://football-with-friends-pepegrillo.vercel.app,https://football-with-friends-git-feature-383278-ignacio-guris-projects.vercel.app" }
 
 [env.preview.triggers]
 crons = ["0 */6 * * *"]
