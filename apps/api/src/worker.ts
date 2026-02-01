@@ -10,6 +10,7 @@ import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
 import playersRoute from "./routes/players";
+import cronRoute from "./routes/cron";
 
 // Import auth - uses lazy initialization via Proxy for CF Workers compatibility
 import { auth, resetAuth } from "./auth";
@@ -154,7 +155,8 @@ app
   .route("/locations", locationsRoute)
   .route("/profile", profileRoute)
   .route("/settings", settingsRoute)
-  .route("/players", playersRoute);
+  .route("/players", playersRoute)
+  .route("/cron", cronRoute);
 
 // Export for Cloudflare Workers with scheduled event handler
 export default {
