@@ -305,6 +305,7 @@
   },
   "shared": {
     "loading": "Cargando...",
+    "loadMore": "Cargar más",
     "home": "Inicio",
     "signIn": "Iniciar sesión",
     "settings": "Configuración",

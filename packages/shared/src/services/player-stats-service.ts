@@ -151,11 +151,13 @@ export class PlayerStatsService {
       throw new Error("SignupRepository is required for this operation");
     }
 
-    const [completedMatches, userSignups, userStats] = await Promise.all([
+    const [completedMatchesResult, userSignups, userStats] = await Promise.all([
       this.matchRepository.findAll({ status: "completed" }),
       this.signupRepository.findByUserId(userId),
       this.playerStatsRepository.findByUserId(userId),
     ]);
+
+    const completedMatches = completedMatchesResult.matches;
 
     const signupMatchIds = new Set(
       userSignups

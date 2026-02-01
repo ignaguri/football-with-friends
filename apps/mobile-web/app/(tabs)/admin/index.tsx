@@ -139,17 +139,19 @@ function MatchesTab() {
   const queryClient = useQueryClient();
 
   const {
-    data: matches,
+    data: matchesData,
     isLoading,
     refetch,
     isRefetching,
   } = useQuery({
     queryKey: ["matches", "all"],
     queryFn: async () => {
-      const res = await client.api.matches.$get({ query: {} });
-      return res.json() as Promise<Match[]>;
+      const res = await client.api.matches.$get({ query: { type: "all", limit: "999" } });
+      return res.json();
     },
   });
+
+  const matches = matchesData?.matches || [];
 
   const deleteMutation = useMutation({
     mutationFn: async (matchId: string) => {

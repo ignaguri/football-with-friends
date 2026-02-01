@@ -29,9 +29,9 @@ export class MatchService {
   ) {}
 
   /**
-   * Get all matches with optional filtering
+   * Get all matches with optional filtering and pagination
    */
-  async getAllMatches(filters?: MatchFilters): Promise<Match[]> {
+  async getAllMatches(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }> {
     return this.matchRepository.findAll(filters);
   }
 
@@ -360,9 +360,45 @@ export class MatchService {
       throw new Error("Not authorized to update this signup");
     }
 
-    return this.signupRepository.update(signupId, {
+    // Store the old status to check for PAID -> CANCELLED transition
+    const oldStatus = signup.status;
+
+    // Update the signup
+    const updatedSignup = await this.signupRepository.update(signupId, {
       status: updates.status as PlayerStatus,
     });
+
+    // Auto-promote substitute when PAID player cancels
+    if (oldStatus === "PAID" && updates.status === "CANCELLED") {
+      try {
+        // Find all signups for this match
+        const allSignups = await this.signupRepository.findByMatchId(signup.matchId);
+
+        // Find first substitute (ordered by signup date)
+        const substitutes = allSignups
+          .filter((s) => s.status === "SUBSTITUTE")
+          .sort((a, b) => new Date(a.signedUpAt).getTime() - new Date(b.signedUpAt).getTime());
+
+        if (substitutes.length > 0) {
+          const firstSubstitute = substitutes[0];
+          if (firstSubstitute) {
+            // Promote to PENDING
+            await this.signupRepository.update(firstSubstitute.id, {
+              status: "PENDING",
+            });
+
+            console.log(
+              `[AUTO-PROMOTE] Substitute ${firstSubstitute.id} (${firstSubstitute.playerName}) promoted to PENDING for match ${signup.matchId}`
+            );
+          }
+        }
+      } catch (error) {
+        // Log error but don't fail the main operation
+        console.error("[AUTO-PROMOTE] Error promoting substitute:", error);
+      }
+    }
+
+    return updatedSignup;
   }
 
   /**

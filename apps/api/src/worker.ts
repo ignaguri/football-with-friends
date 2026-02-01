@@ -14,6 +14,9 @@ import playersRoute from "./routes/players";
 // Import auth - uses lazy initialization via Proxy for CF Workers compatibility
 import { auth, resetAuth } from "./auth";
 
+// Import cron jobs
+import { updateMatchStatuses } from "./cron/update-match-statuses";
+
 // Cloudflare Workers environment bindings
 export type Bindings = {
   // Turso database
@@ -68,6 +71,7 @@ app.use("*", async (c, next) => {
   // Allow specific origins plus Vercel preview deployments
   const allowedOrigins = c.env.ALLOWED_ORIGINS?.split(",") || [
     "http://localhost:8081",
+    "http://localhost:8084",
     "http://localhost:8085",
     "http://localhost:19006",
     "http://localhost:3000",
@@ -152,5 +156,22 @@ app
   .route("/settings", settingsRoute)
   .route("/players", playersRoute);
 
-// Export for Cloudflare Workers
-export default app;
+// Export for Cloudflare Workers with scheduled event handler
+export default {
+  fetch: app.fetch,
+  async scheduled(event: any, env: Bindings, ctx: any) {
+    console.log("[CRON] Running scheduled match status update");
+
+    // Set up environment variables for the cron job
+    // @ts-ignore - process.env may not exist in CF Workers but we polyfill it
+    globalThis.process = globalThis.process || { env: {} };
+    Object.assign(process.env, {
+      TURSO_DATABASE_URL: env.TURSO_DATABASE_URL,
+      TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN,
+      DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
+      STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
+    });
+
+    ctx.waitUntil(updateMatchStatuses());
+  },
+};

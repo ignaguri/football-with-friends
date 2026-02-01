@@ -398,9 +398,50 @@ export class TursoCourtRepository implements CourtRepository {
 export class TursoMatchRepository implements MatchRepository {
   private db = getDatabase();
 
-  async findAll(filters?: MatchFilters): Promise<Match[]> {
-    let query = this.db
-      .selectFrom("matches")
+  async findAll(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }> {
+    // Build the base query for filtering and counting
+    let baseQuery = this.db.selectFrom("matches");
+
+    if (filters?.status) {
+      baseQuery = baseQuery.where("matches.status", "=", filters.status);
+    }
+
+    if (filters?.type) {
+      const today = format(new Date(), "yyyy-MM-dd"); // YYYY-MM-DD
+      if (filters.type === "past") {
+        baseQuery = baseQuery.where((eb) =>
+          eb.or([
+            eb("matches.date", "<", today),
+            eb("matches.status", "=", "cancelled"),
+          ]),
+        );
+      } else if (filters.type === "upcoming") {
+        baseQuery = baseQuery
+          .where("matches.date", ">=", today)
+          .where("matches.status", "!=", "cancelled");
+      }
+    }
+
+    if (filters?.locationId) {
+      baseQuery = baseQuery.where("matches.location_id", "=", filters.locationId);
+    }
+
+    if (filters?.dateFrom) {
+      baseQuery = baseQuery.where("matches.date", ">=", filters.dateFrom);
+    }
+
+    if (filters?.dateTo) {
+      baseQuery = baseQuery.where("matches.date", "<=", filters.dateTo);
+    }
+
+    // Get total count
+    const countResult = await baseQuery
+      .select((eb) => eb.fn.count("matches.id").as("total"))
+      .executeTakeFirst();
+    const total = Number(countResult?.total || 0);
+
+    // Build the data query with joins
+    let dataQuery = baseQuery
       .leftJoin("courts", "matches.court_id", "courts.id")
       .leftJoin("locations", "matches.location_id", "locations.id")
       .select([
@@ -411,6 +452,7 @@ export class TursoMatchRepository implements MatchRepository {
         "matches.time",
         "matches.status",
         "matches.max_players",
+        "matches.max_substitutes",
         "matches.cost_per_player",
         "matches.same_day_cost",
         "matches.created_by_user_id",
@@ -433,40 +475,19 @@ export class TursoMatchRepository implements MatchRepository {
       .orderBy("matches.date", "asc")
       .orderBy("matches.time", "asc");
 
-    if (filters?.status) {
-      query = query.where("matches.status", "=", filters.status);
+    // Apply pagination
+    if (filters?.limit) {
+      dataQuery = dataQuery.limit(filters.limit);
     }
 
-    if (filters?.type) {
-      const today = format(new Date(), "yyyy-MM-dd"); // YYYY-MM-DD
-      if (filters.type === "past") {
-        query = query.where((eb) =>
-          eb.or([
-            eb("matches.date", "<", today),
-            eb("matches.status", "=", "cancelled"),
-          ]),
-        );
-      } else if (filters.type === "upcoming") {
-        query = query
-          .where("matches.date", ">=", today)
-          .where("matches.status", "!=", "cancelled");
-      }
+    if (filters?.offset) {
+      dataQuery = dataQuery.offset(filters.offset);
     }
 
-    if (filters?.locationId) {
-      query = query.where("matches.location_id", "=", filters.locationId);
-    }
+    const rows = await dataQuery.execute();
+    const matches = rows.map(dbMatchWithCourtToMatch);
 
-    if (filters?.dateFrom) {
-      query = query.where("matches.date", ">=", filters.dateFrom);
-    }
-
-    if (filters?.dateTo) {
-      query = query.where("matches.date", "<=", filters.dateTo);
-    }
-
-    const rows = await query.execute();
-    return rows.map(dbMatchWithCourtToMatch);
+    return { matches, total };
   }
 
   async findById(id: string): Promise<Match | null> {
@@ -1074,9 +1095,19 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         "match_player_stats.confirmed",
         "match_player_stats.created_at",
         "match_player_stats.updated_at",
+        "matches.id as match_id",
         "matches.date as match_date",
         "matches.time as match_time",
         "matches.location_id as match_location_id",
+        "matches.court_id as match_court_id",
+        "matches.status as match_status",
+        "matches.max_players as match_max_players",
+        "matches.max_substitutes as match_max_substitutes",
+        "matches.cost_per_player as match_cost_per_player",
+        "matches.same_day_cost as match_same_day_cost",
+        "matches.created_by_user_id as match_created_by_user_id",
+        "matches.created_at as match_created_at",
+        "matches.updated_at as match_updated_at",
       ])
       .where("match_player_stats.user_id", "=", userId)
       .orderBy("matches.date", "desc")
@@ -1089,6 +1120,15 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         date: row.match_date,
         time: row.match_time,
         locationId: row.match_location_id,
+        courtId: row.match_court_id || undefined,
+        status: row.match_status,
+        maxPlayers: row.match_max_players,
+        maxSubstitutes: row.match_max_substitutes || 0,
+        costPerPlayer: row.match_cost_per_player,
+        sameDayCost: row.match_same_day_cost,
+        createdByUserId: row.match_created_by_user_id,
+        createdAt: new Date(row.match_created_at),
+        updatedAt: new Date(row.match_updated_at),
       },
     }));
   }

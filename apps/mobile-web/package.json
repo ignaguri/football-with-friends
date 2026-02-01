@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "expo start",
+    "dev": "expo start --port 8084",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
+    "web": "expo start --web --port 8084",
     "build": "expo export --platform web --output-dir dist",
     "lint": "eslint app --ext .ts,.tsx",
     "typecheck": "echo '⚠️  TypeScript check disabled for mobile-web due to Tamagui type recursion (see TAMAGUI_TYPECHECK.md)' && exit 0"
@@ -32,6 +32,7 @@
     "expo-linking": "^8.0.11",
     "expo-local-authentication": "^17.0.8",
     "expo-localization": "^17.0.8",
+    "expo-network": "^8.0.8",
     "expo-notifications": "^0.32.16",
     "expo-router": "~6.0.21",
     "expo-secure-store": "^15.0.8",

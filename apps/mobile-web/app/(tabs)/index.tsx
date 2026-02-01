@@ -1,5 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Container, Card, Text, YStack, XStack, Button, Spinner } from "@repo/ui";
+import { Container, Card, Text, YStack, XStack, Button, Spinner, Dialog, List } from "@repo/ui";
 import { useSession } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
@@ -7,13 +7,19 @@ import { Stack } from "expo-router";
 import { useTheme } from "tamagui";
 import { User, Calendar, Users } from "@tamagui/lucide-icons";
 import { Pressable } from "react-native";
+import { useRulesModal } from "../../lib/rules-modal-context";
 
 export default function HomeScreen() {
   const { data: session, isPending } = useSession();
   const { t } = useTranslation();
   const theme = useTheme();
+  const { showModal, dismissModal, dismissPermanently } = useRulesModal();
 
   const isAuthenticated = !!session?.user;
+
+  // Get the first 4 general rules for the modal
+  const generalRules = t("rules.general", { returnObjects: true }) as string[];
+  const rulesPreview = Array.isArray(generalRules) ? generalRules.slice(0, 4) : [];
 
   return (
     <>
@@ -139,6 +145,47 @@ export default function HomeScreen() {
           )}
         </YStack>
       </Container>
+
+      {/* Rules Modal Dialog */}
+      <Dialog
+        open={showModal && isAuthenticated}
+        onOpenChange={(open) => !open && dismissModal()}
+        title={t("rules.generalTitle")}
+        showActions={false}
+      >
+        <YStack gap="$3">
+          <Text color="$gray11" fontSize="$4">
+            {t("rules.description")}
+          </Text>
+
+          <List ordered bulletColor="$blue10">
+            {rulesPreview.map((rule, index) => (
+              <List.Item key={index} fontSize="$3">
+                {rule}
+              </List.Item>
+            ))}
+          </List>
+
+          <YStack gap="$3" marginTop="$4">
+            <Button
+              variant="primary"
+              onPress={() => {
+                dismissModal();
+                router.push("/(tabs)/rules");
+              }}
+            >
+              {t("matchDetail.viewRules")}
+            </Button>
+
+            <Button
+              variant="outline"
+              onPress={dismissPermanently}
+            >
+              I already read the rules
+            </Button>
+          </YStack>
+        </YStack>
+      </Dialog>
     </>
   );
 }

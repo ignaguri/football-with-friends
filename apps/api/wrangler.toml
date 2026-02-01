@@ -20,6 +20,10 @@ STORAGE_PROVIDER = "turso"
 DEFAULT_TIMEZONE = "Europe/Berlin"
 BETTER_AUTH_BASE_URL = "https://football-api.pepe-grillo-parlante.workers.dev"
 
+# Cron trigger for match status updates (every 6 hours)
+[triggers]
+crons = ["0 */6 * * *"]
+
 # Development environment
 [env.development]
 vars = { NODE_ENV = "development" }
@@ -28,3 +32,6 @@ vars = { NODE_ENV = "development" }
 [env.preview]
 name = "football-api-staging"
 vars = { NODE_ENV = "production", STORAGE_PROVIDER = "turso", DEFAULT_TIMEZONE = "Europe/Berlin", BETTER_AUTH_BASE_URL = "https://football-api-staging.pepe-grillo-parlante.workers.dev" }
+
+[env.preview.triggers]
+crons = ["0 */6 * * *"]

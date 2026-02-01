@@ -9,6 +9,7 @@ import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
 import playersRoute from "./routes/players";
+import cronRoute from "./routes/cron";
 
 const app = new Hono();
 
@@ -19,6 +20,7 @@ app.use(
   cors({
     origin: process.env.ALLOWED_ORIGINS?.split(",") || [
       "http://localhost:8081",
+      "http://localhost:8084",
       "http://localhost:8085",
       "http://localhost:19006",
       "http://localhost:3000",
@@ -75,7 +77,8 @@ const apiRoutes = app
   .route("/locations", locationsRoute)
   .route("/profile", profileRoute)
   .route("/settings", settingsRoute)
-  .route("/players", playersRoute);
+  .route("/players", playersRoute)
+  .route("/cron", cronRoute);
 
 const port = process.env.PORT || 3001;
 

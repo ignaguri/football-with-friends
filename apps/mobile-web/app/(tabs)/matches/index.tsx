@@ -8,34 +8,53 @@ import {
   Spinner,
   Tabs,
   StatusBadge,
+  Button,
   type MatchStatusType,
 } from "@repo/ui";
-import { useQuery, client } from "@repo/api-client";
+import { useInfiniteQuery, client, useSession } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { RefreshControl, ScrollView } from "react-native";
+import { Plus, BookOpen } from "@tamagui/lucide-icons";
+import { Pressable } from "react-native";
+import { useTheme } from "tamagui";
 
 type MatchType = "upcoming" | "past";
 
 export default function MatchesListScreen() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<MatchType>("upcoming");
 
   const {
-    data: matches,
+    data,
     isLoading,
     error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
     isRefetching,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ["matches", activeTab],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
       const res = await client.api.matches.$get({
-        query: { type: activeTab },
+        query: {
+          type: activeTab,
+          limit: "5",
+          offset: pageParam.toString(),
+        },
       });
       return res.json();
     },
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? (lastPage.page + 1) * 5 : undefined,
+    initialPageParam: 0,
   });
+
+  // Flatten paginated data
+  const matches = data?.pages.flatMap((page) => page.matches) ?? [];
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -77,7 +96,29 @@ export default function MatchesListScreen() {
   ];
 
   return (
-    <Container variant="padded">
+    <>
+      <Stack.Screen
+        options={{
+          title: "Matches",
+          headerStyle: {
+            backgroundColor: theme.background?.val,
+          },
+          headerTintColor: theme.color?.val,
+          headerShadowVisible: false,
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push("/(tabs)/rules")}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 }}
+            >
+              <BookOpen size={20} color={theme.color?.val} />
+              <Text fontSize="$3" color={theme.color?.val}>
+                {t("rules.title")}
+              </Text>
+            </Pressable>
+          ),
+        }}
+      />
+      <Container variant="padded">
       {/* Tab Selector */}
       <YStack marginBottom="$4">
         <Tabs
@@ -179,8 +220,42 @@ export default function MatchesListScreen() {
                 </YStack>
               </Card>
             ))}
+
+          {/* Load More Button */}
+          {!isLoading && !error && hasNextPage && (
+            <Button
+              variant="outline"
+              onPress={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              marginTop="$4"
+            >
+              {isFetchingNextPage ? <Spinner size="small" /> : t("shared.loadMore")}
+            </Button>
+          )}
         </YStack>
       </ScrollView>
+
+      {/* Admin FAB */}
+      {session?.user?.role === "admin" && (
+        <Button
+          position="absolute"
+          bottom="$6"
+          right="$4"
+          width={56}
+          height={56}
+          borderRadius="$12"
+          backgroundColor="$blue10"
+          onPress={() => router.push("/(tabs)/admin/add-match")}
+          pressStyle={{ scale: 0.95 }}
+          elevation={4}
+          padding="$0"
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Plus size={28} color="white" />
+        </Button>
+      )}
     </Container>
+    </>
   );
 }

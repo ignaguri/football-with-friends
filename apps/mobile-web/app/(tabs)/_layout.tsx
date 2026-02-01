@@ -98,6 +98,7 @@ export default function TabsLayout() {
         name="rules"
         options={{
           href: null, // Hidden - rules moved to match detail modal
+          headerShown: false,
         }}
       />
       <Tabs.Screen

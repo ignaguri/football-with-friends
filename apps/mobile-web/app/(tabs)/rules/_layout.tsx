@@ -20,7 +20,7 @@ export default function RulesLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: t("rules.title"),
+          title: "Rules & Info",
         }}
       />
     </Stack>

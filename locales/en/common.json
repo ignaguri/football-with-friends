@@ -302,6 +302,7 @@
   },
   "shared": {
     "loading": "Loading...",
+    "loadMore": "Load More",
     "home": "Home",
     "signIn": "Sign In",
     "settings": "Settings",

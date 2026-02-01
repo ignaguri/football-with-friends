@@ -115,9 +115,9 @@ export interface CourtRepository {
 // Match Repository Interface
 export interface MatchRepository {
   /**
-   * Find all matches with optional filters
+   * Find all matches with optional filters and pagination
    */
-  findAll(filters?: MatchFilters): Promise<Match[]>;
+  findAll(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }>;
 
   /**
    * Find a match by ID

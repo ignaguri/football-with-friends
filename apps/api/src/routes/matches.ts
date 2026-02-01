@@ -21,26 +21,39 @@ function sessionUserToUser(sessionUser: { id: string; name: string; email: strin
   };
 }
 
-// Get all matches
+// Get all matches (with pagination)
 app.get(
   "/",
   zValidator(
     "query",
     z.object({
       type: z.enum(["upcoming", "past", "all"]).optional(),
+      limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 5),
+      offset: z.string().optional().transform((val) => val ? parseInt(val, 10) : 0),
     })
   ),
   async (c) => {
-    const { type } = c.req.valid("query");
-    const matches = await getMatchService().getAllMatches({
-      status:
-        type === "past"
-          ? "completed"
-          : type === "all"
-            ? undefined
-            : "upcoming",
+    const { type, limit, offset } = c.req.valid("query");
+
+    const status = type === "past"
+      ? "completed"
+      : type === "all"
+        ? undefined
+        : "upcoming";
+
+    const result = await getMatchService().getAllMatches({
+      status,
+      limit,
+      offset,
     });
-    return c.json(matches);
+
+    // Return paginated response
+    return c.json({
+      matches: result.matches,
+      total: result.total,
+      hasMore: offset + result.matches.length < result.total,
+      page: Math.floor(offset / limit),
+    });
   }
 );
 
