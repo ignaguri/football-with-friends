@@ -8,6 +8,8 @@ export interface CustomInputProps extends InputProps {
   error?: string;
   helperText?: string;
   showPasswordToggle?: boolean;
+  /** Hide the password visibility toggle even for secure text fields */
+  hidePasswordToggle?: boolean;
 }
 
 export function Input({
@@ -15,6 +17,7 @@ export function Input({
   error,
   helperText,
   showPasswordToggle,
+  hidePasswordToggle,
   secureTextEntry,
   ...props
 }: CustomInputProps) {
@@ -25,6 +28,7 @@ export function Input({
   };
 
   const isPassword = secureTextEntry || showPasswordToggle;
+  const showToggle = isPassword && !hidePasswordToggle;
   const shouldHideText = isPassword && !isPasswordVisible;
 
   return (
@@ -40,7 +44,7 @@ export function Input({
           borderColor={error ? "$red8" : "$gray7"}
           borderWidth={1}
           padding="$3"
-          paddingRight={isPassword ? "$10" : "$3"}
+          paddingRight={showToggle ? "$10" : "$3"}
           fontSize="$4"
           color="$gray12"
           placeholderTextColor="$gray9"
@@ -52,7 +56,7 @@ export function Input({
           flex={1}
           {...props}
         />
-        {isPassword && (
+        {showToggle && (
           <Pressable
             onPress={togglePasswordVisibility}
             style={{

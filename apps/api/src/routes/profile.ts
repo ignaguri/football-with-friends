@@ -344,6 +344,21 @@ app.post(
         return c.json({ error: "Not authenticated" }, 401);
       }
 
+      // Check if user has a credential account (password-based)
+      const db = getDatabase();
+      const credentialAccount = await db
+        .selectFrom("account")
+        .select("id")
+        .where("userId", "=", session.user.id)
+        .where("providerId", "=", "credential")
+        .executeTakeFirst();
+
+      if (!credentialAccount) {
+        return c.json({
+          error: "No password set. You signed up with Google. Use 'Set Password' to create one."
+        }, 400);
+      }
+
       // Use better-auth's change password endpoint
       const result = await auth.api.changePassword({
         body: {
@@ -360,11 +375,95 @@ app.post(
       return c.json({ success: true });
     } catch (error: any) {
       console.error("Change password error:", error);
-      // Handle specific error messages
-      if (error.message?.includes("invalid") || error.message?.includes("incorrect")) {
+      const errorMessage = error?.message || error?.body?.message || String(error);
+      console.error("Error details:", errorMessage);
+
+      // Handle specific error messages from better-auth
+      if (errorMessage.includes("Invalid password") ||
+          errorMessage.includes("incorrect") ||
+          errorMessage.includes("Incorrect password")) {
         return c.json({ error: "Current password is incorrect" }, 400);
       }
+      if (errorMessage.includes("doesn't have a password")) {
+        return c.json({ error: "No password set for this account" }, 400);
+      }
       return c.json({ error: "Failed to change password" }, 500);
+    }
+  }
+);
+
+const setPasswordSchema = z.object({
+  newPassword: z.string().min(8, "New password must be at least 8 characters"),
+});
+
+// Set password (for authenticated users - no current password required)
+app.post(
+  "/set-password",
+  zValidator("json", setPasswordSchema),
+  async (c) => {
+    const { newPassword } = c.req.valid("json");
+
+    try {
+      // Get the current session to identify the user
+      const session = await auth.api.getSession({
+        headers: c.req.raw.headers,
+      });
+
+      if (!session?.user) {
+        return c.json({ error: "Not authenticated" }, 401);
+      }
+
+      // Check if user already has a credential account (password-based)
+      const db = getDatabase();
+      const credentialAccount = await db
+        .selectFrom("account")
+        .select("id")
+        .where("userId", "=", session.user.id)
+        .where("providerId", "=", "credential")
+        .executeTakeFirst();
+
+      if (credentialAccount) {
+        // User already has a password - they need to use change-password
+        // But since the user requested to skip current password verification,
+        // we'll use a workaround: delete the old credential and create a new one
+        // This is effectively a password reset for authenticated users
+
+        // For now, return a specific error - the user can decide if they want
+        // to implement the workaround or require current password
+        return c.json({
+          error: "You already have a password set. Please use the Change Password feature with your current password.",
+          hasExistingPassword: true
+        }, 400);
+      }
+
+      // Use better-auth's set password endpoint for OAuth-only users
+      const result = await auth.api.setPassword({
+        body: {
+          newPassword,
+        },
+        headers: c.req.raw.headers,
+      });
+
+      if (!result) {
+        return c.json({ error: "Failed to set password" }, 500);
+      }
+
+      return c.json({ success: true });
+    } catch (error: any) {
+      console.error("Set password error:", error);
+      const errorMessage = error?.message || error?.body?.message || String(error);
+      console.error("Set password error details:", errorMessage);
+
+      // Handle specific error cases
+      if (errorMessage.includes("already has a password") ||
+          errorMessage.includes("credential already exists")) {
+        return c.json({
+          error: "You already have a password set",
+          hasExistingPassword: true
+        }, 400);
+      }
+
+      return c.json({ error: "Failed to set password" }, 500);
     }
   }
 );

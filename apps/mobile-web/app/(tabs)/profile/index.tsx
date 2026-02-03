@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useState, useEffect } from "react";
-import { ScrollView, RefreshControl, Pressable, Platform } from "react-native";
+import { ScrollView, RefreshControl, Pressable, Platform, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import {
   Container,
@@ -18,6 +18,7 @@ import {
   COUNTRIES,
   StatsSummary,
   PhoneInput,
+  AlertDialog,
   getCountryFlag,
   getCountryName,
 } from "@repo/ui";
@@ -63,6 +64,8 @@ export default function ProfileScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [isChangingPasswordLoading, setIsChangingPasswordLoading] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const [requiresCurrentPassword, setRequiresCurrentPassword] = useState(false);
 
   const userId = session?.user?.id;
 
@@ -143,7 +146,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleChangePassword = async () => {
+  const handleChangePasswordWithConfirmation = () => {
     setPasswordError(null);
 
     if (newPassword !== confirmPassword) {
@@ -156,20 +159,51 @@ export default function ProfileScreen() {
       return;
     }
 
+    // If current password is required, validate it's provided
+    if (requiresCurrentPassword && !currentPassword) {
+      setPasswordError(t("profile.currentPasswordRequired"));
+      return;
+    }
+
+    // Show confirmation dialog
+    setShowPasswordConfirm(true);
+  };
+
+  const handleChangePassword = async () => {
+    setShowPasswordConfirm(false);
+    setPasswordError(null);
     setIsChangingPasswordLoading(true);
 
     try {
-      const res = await client.api.profile["change-password"].$post({
-        json: {
-          currentPassword,
-          newPassword,
-        },
-      });
+      let res;
 
-      const data = await res.json();
+      if (requiresCurrentPassword) {
+        // Use change-password endpoint (requires current password)
+        res = await client.api.profile["change-password"].$post({
+          json: {
+            currentPassword,
+            newPassword,
+          },
+        });
+      } else {
+        // Try set-password endpoint first (for OAuth-only users)
+        res = await client.api.profile["set-password"].$post({
+          json: {
+            newPassword,
+          },
+        });
+      }
+
+      const data = await res.json() as { success?: boolean; error?: string; hasExistingPassword?: boolean };
 
       if (!res.ok) {
-        setPasswordError((data as any).error || t("profile.changePasswordFailed"));
+        // Check if user needs to provide current password
+        if (data.hasExistingPassword) {
+          setRequiresCurrentPassword(true);
+          setPasswordError(t("profile.currentPasswordRequired"));
+          return;
+        }
+        setPasswordError(t("profile.changePasswordFailed"));
         return;
       }
 
@@ -177,9 +211,22 @@ export default function ProfileScreen() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err) {
-      setPasswordError(t("auth.unexpectedError"));
+      setRequiresCurrentPassword(false);
+      Alert.alert(t("shared.success"), t("profile.passwordChanged"));
+    } catch (err: any) {
       console.error("Change password error:", err);
+
+      // Try to extract error response from the exception
+      // The API client attaches response data to the error
+      const errorData = err?.data as { hasExistingPassword?: boolean } | undefined;
+      if (errorData?.hasExistingPassword) {
+        setRequiresCurrentPassword(true);
+        setPasswordError(t("profile.currentPasswordRequired"));
+        return;
+      }
+
+      // Show generic error message for security
+      setPasswordError(t("profile.changePasswordFailed"));
     } finally {
       setIsChangingPasswordLoading(false);
     }
@@ -553,13 +600,16 @@ export default function ProfileScreen() {
 
               {isChangingPassword ? (
                 <YStack space="$3">
-                  <Input
-                    label={t("profile.currentPassword")}
-                    placeholder="********"
-                    value={currentPassword}
-                    onChangeText={setCurrentPassword}
-                    secureTextEntry
-                  />
+                  {requiresCurrentPassword && (
+                    <Input
+                      label={t("profile.currentPassword")}
+                      placeholder={t("profile.currentPasswordPlaceholder")}
+                      value={currentPassword}
+                      onChangeText={setCurrentPassword}
+                      secureTextEntry
+                      hidePasswordToggle
+                    />
+                  )}
                   <Input
                     label={t("profile.newPassword")}
                     placeholder={t("auth.passwordMinLength")}
@@ -581,7 +631,7 @@ export default function ProfileScreen() {
                     </Text>
                   )}
 
-                  <XStack space="$2">
+                  <XStack space="$2" marginTop="$3">
                     <Button
                       flex={1}
                       variant="outline"
@@ -591,6 +641,7 @@ export default function ProfileScreen() {
                         setCurrentPassword("");
                         setNewPassword("");
                         setConfirmPassword("");
+                        setRequiresCurrentPassword(false);
                       }}
                       disabled={isChangingPasswordLoading}
                     >
@@ -599,7 +650,7 @@ export default function ProfileScreen() {
                     <Button
                       flex={1}
                       variant="primary"
-                      onPress={handleChangePassword}
+                      onPress={handleChangePasswordWithConfirmation}
                       disabled={isChangingPasswordLoading}
                     >
                       {isChangingPasswordLoading ? (
@@ -647,6 +698,18 @@ export default function ProfileScreen() {
           </Button>
         </YStack>
       </ScrollView>
+
+      {/* Password Change Confirmation Dialog */}
+      <AlertDialog
+        open={showPasswordConfirm}
+        onOpenChange={setShowPasswordConfirm}
+        title={t("profile.changePassword")}
+        description={t("profile.changePasswordConfirm")}
+        confirmText={t("profile.changePassword")}
+        cancelText={t("shared.cancel")}
+        onConfirm={handleChangePassword}
+        variant="default"
+      />
     </Container>
   );
 }

@@ -76,9 +76,25 @@ function createDynamicFetch() {
 
     // Throw on non-OK responses so React Query treats them as errors
     // instead of passing error payloads as successful data
-    return responsePromise.then((response) => {
+    return responsePromise.then(async (response) => {
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+        // Clone the response so we can read the body without consuming it
+        const clonedResponse = response.clone();
+        let errorData: unknown = null;
+        try {
+          errorData = await clonedResponse.json();
+        } catch {
+          // Response body is not JSON, ignore
+        }
+        const error = new Error(`API error: ${response.status} ${response.statusText}`) as Error & {
+          response: Response;
+          data: unknown;
+          status: number;
+        };
+        error.response = response;
+        error.data = errorData;
+        error.status = response.status;
+        throw error;
       }
       return response;
     });
