@@ -1,5 +1,7 @@
+// @ts-nocheck - Tamagui type recursion workaround
 import { useState, useEffect } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, RefreshControl, Pressable, Platform } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import {
   Container,
   Card,
@@ -14,12 +16,30 @@ import {
   LanguageSwitcher,
   Select,
   COUNTRIES,
+  StatsSummary,
+  PhoneInput,
+  getCountryFlag,
+  getCountryName,
 } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { useSession, signOut, client } from "@repo/api-client";
+import { useSession, signOut, client, useQuery, getConfiguredApiUrl } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
 import { useThemeContext } from "../../../lib/theme-context";
 import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
+import { Camera } from "@tamagui/lucide-icons";
+
+interface PlayerProfile {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    nationality?: string;
+  };
+  totalMatchesPlayed: number;
+  totalGoals: number;
+  totalThirdTimeAttendances: number;
+  totalBeers: number;
+}
 
 export default function ProfileScreen() {
   const { data: session, isPending, refetch: refetchSession } = useSession();
@@ -27,17 +47,50 @@ export default function ProfileScreen() {
   const { theme, toggleTheme } = useThemeContext();
   const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
   const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [username, setUsername] = useState("");
-  const [displayUsername, setDisplayUsername] = useState("");
   const [nationality, setNationality] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isChangingPasswordLoading, setIsChangingPasswordLoading] = useState(false);
+
+  const userId = session?.user?.id;
+
+  // Fetch player stats
+  const {
+    data: profile,
+    isLoading: isLoadingStats,
+    refetch: refetchStats,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["player-profile", userId],
+    queryFn: async () => {
+      const res = await client.api.players[":userId"].$get({
+        param: { userId: userId! },
+      });
+      return res.json() as Promise<PlayerProfile>;
+    },
+    enabled: !!userId,
+  });
 
   useEffect(() => {
     if (session?.user) {
-      setUsername((session.user as any).username || "");
-      setDisplayUsername((session.user as any).displayUsername || "");
-      setNationality((session.user as any).nationality || "");
+      const user = session.user as any;
+      setUsername(user.username || "");
+      setNationality(user.nationality || "");
+      setPhoneNumber(user.phoneNumber || "");
+      setEmail(user.email || "");
+      setName(user.name || "");
     }
   }, [session?.user]);
 
@@ -51,6 +104,10 @@ export default function ProfileScreen() {
     setCurrentLanguage(lang);
   };
 
+  const handleRefresh = async () => {
+    await Promise.all([refetchSession(), refetchStats()]);
+  };
+
   const handleSaveProfile = async () => {
     if (!session?.user) return;
 
@@ -58,30 +115,141 @@ export default function ProfileScreen() {
     setError(null);
 
     try {
-      const res = await client.api.profile["update-username"].$post({
+      const res = await client.api.profile["update-profile"].$post({
         json: {
           userId: session.user.id,
           username: username || null,
-          displayUsername: displayUsername || null,
           nationality: nationality || null,
+          phoneNumber: phoneNumber || null,
+          email: email || null,
+          name: name || null,
         },
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError((data as any).error || "Failed to update profile");
+        setError((data as any).error || t("profile.updateFailed"));
         return;
       }
 
-      // Refetch session to update the UI with new data
       await refetchSession();
       setIsEditing(false);
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError(t("auth.unexpectedError"));
       console.error("Save profile error:", err);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError(t("profile.passwordMismatch"));
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError(t("auth.passwordTooShort"));
+      return;
+    }
+
+    setIsChangingPasswordLoading(true);
+
+    try {
+      const res = await client.api.profile["change-password"].$post({
+        json: {
+          currentPassword,
+          newPassword,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPasswordError((data as any).error || t("profile.changePasswordFailed"));
+        return;
+      }
+
+      setIsChangingPassword(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setPasswordError(t("auth.unexpectedError"));
+      console.error("Change password error:", err);
+    } finally {
+      setIsChangingPasswordLoading(false);
+    }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!session?.user) return;
+
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        setError(t("profile.photoPermissionDenied"));
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      setIsUploadingPhoto(true);
+      setError(null);
+
+      const asset = result.assets[0];
+      const formData = new FormData();
+
+      // Handle file upload for both web and native
+      if (Platform.OS === "web") {
+        const response = await fetch(asset.uri);
+        const blob = await response.blob();
+        formData.append("file", blob, "profile.jpg");
+      } else {
+        formData.append("file", {
+          uri: asset.uri,
+          type: asset.mimeType || "image/jpeg",
+          name: "profile.jpg",
+        } as any);
+      }
+      formData.append("userId", session.user.id);
+
+      const apiUrl = getConfiguredApiUrl();
+      const uploadRes = await fetch(`${apiUrl}/api/profile/upload-picture`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      const data = await uploadRes.json();
+
+      if (!uploadRes.ok) {
+        setError(data.error || t("profile.uploadFailed"));
+        return;
+      }
+
+      // Show warning if R2 storage is not configured (placeholder was used)
+      if (data.warning) {
+        console.warn("Photo upload warning:", data.warning);
+        // Still refresh the session - the placeholder was set
+      }
+
+      await refetchSession();
+    } catch (err) {
+      setError(t("profile.uploadFailed"));
+      console.error("Upload photo error:", err);
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -152,82 +320,163 @@ export default function ProfileScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} />
+        }
       >
         <YStack space="$4">
+          {/* Profile Card with Inline Editing */}
           <Card variant="elevated" padding="$4">
-          <YStack space="$4">
-            <XStack space="$4" alignItems="center">
-              <UserAvatar
-                name={user.name}
-                username={user.username}
-                displayUsername={user.displayUsername}
-                image={user.image}
-                profilePicture={user.profilePicture}
-                countryCode={user.nationality}
-                size={80}
-              />
-              <YStack flex={1}>
-                <XStack alignItems="center" space="$2">
-                  <Text fontSize="$6" fontWeight="600">
-                    {displayName}
-                  </Text>
-                </XStack>
-                <Text color="$gray11" fontSize="$3">
-                  {user.email}
+            <YStack space="$4">
+              {/* Avatar with upload button */}
+              <XStack justifyContent="center">
+                <YStack alignItems="center">
+                  <Pressable onPress={handleUploadPhoto} disabled={isUploadingPhoto}>
+                    <YStack position="relative">
+                      <UserAvatar
+                        name={user.name}
+                        username={user.username}
+                        displayUsername={user.displayUsername}
+                        image={user.image}
+                        profilePicture={user.profilePicture}
+                        size={100}
+                      />
+                      <YStack
+                        position="absolute"
+                        bottom={0}
+                        right={0}
+                        backgroundColor="$blue10"
+                        borderRadius="$10"
+                        padding="$2"
+                        zIndex={10}
+                      >
+                        {isUploadingPhoto ? (
+                          <Spinner size="small" color="white" />
+                        ) : (
+                          <Camera size={16} color="white" />
+                        )}
+                      </YStack>
+                    </YStack>
+                  </Pressable>
+                </YStack>
+              </XStack>
+
+              {/* Profile Fields - Display or Edit Mode */}
+              {isEditing ? (
+                <YStack space="$3">
+                  <Input
+                    label={t("profile.fullName")}
+                    placeholder={t("auth.namePlaceholder")}
+                    value={name}
+                    onChangeText={setName}
+                  />
+
+                  <Input
+                    label={t("auth.username")}
+                    placeholder={t("auth.usernamePlaceholder")}
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    helperText={t("auth.usernameHelp")}
+                  />
+
+                  <Select
+                    label={t("profile.nationality")}
+                    placeholder={t("profile.nationalityPlaceholder")}
+                    value={nationality}
+                    onValueChange={setNationality}
+                    searchable
+                    searchPlaceholder={t("shared.search")}
+                    options={[
+                      { label: t("shared.none"), value: "" },
+                      ...COUNTRIES.map((country) => ({
+                        label: `${country.flag} ${country.name}`,
+                        value: country.code,
+                      })),
+                    ]}
+                  />
+
+                  <Input
+                    label={t("auth.email")}
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+
+                  <PhoneInput
+                    label={t("auth.phone")}
+                    placeholder={t("auth.phonePlaceholder")}
+                    value={phoneNumber}
+                    onChangeValue={(phone) => setPhoneNumber(phone)}
+                    helperText={t("profile.phoneHelp")}
+                  />
+                </YStack>
+              ) : (
+                <YStack space="$2">
+                  {/* Display name prominently */}
+                  <YStack alignItems="center" space="$1">
+                    <Text fontSize="$7" fontWeight="bold">
+                      {displayName}
+                    </Text>
+                    {user.username && (
+                      <Text color="$gray10" fontSize="$4">
+                        @{user.username}
+                      </Text>
+                    )}
+                  </YStack>
+
+                  {/* Profile details */}
+                  <YStack space="$2" marginTop="$2">
+                    {user.nationality && (
+                      <XStack justifyContent="space-between" alignItems="center">
+                        <Text color="$gray11">{t("profile.nationality")}</Text>
+                        <XStack alignItems="center" space="$2">
+                          <Text fontSize="$4">{getCountryFlag(user.nationality)}</Text>
+                          <Text>{getCountryName(user.nationality)}</Text>
+                        </XStack>
+                      </XStack>
+                    )}
+                    {user.email && (
+                      <XStack justifyContent="space-between" alignItems="center">
+                        <Text color="$gray11">{t("auth.email")}</Text>
+                        <Text>{user.email}</Text>
+                      </XStack>
+                    )}
+                    {user.phoneNumber && (
+                      <XStack justifyContent="space-between" alignItems="center">
+                        <Text color="$gray11">{t("auth.phone")}</Text>
+                        <Text>{user.phoneNumber}</Text>
+                      </XStack>
+                    )}
+                  </YStack>
+                </YStack>
+              )}
+
+              {error && (
+                <Text color="$red10" fontSize="$3" textAlign="center">
+                  {error}
                 </Text>
-                {user.username && (
-                  <Text color="$gray10" fontSize="$2">
-                    @{user.username}
-                  </Text>
-                )}
-              </YStack>
-            </XStack>
+              )}
 
-            {isEditing ? (
-              <YStack space="$3">
-                <Input
-                  label={t("auth.username")}
-                  placeholder={t("auth.usernamePlaceholder")}
-                  value={username}
-                  onChangeText={setUsername}
-                  autoCapitalize="none"
-                  helperText={t("auth.usernameHelp")}
-                />
-
-                <Input
-                  label={t("profile.displayName")}
-                  placeholder={t("profile.displayNamePlaceholder")}
-                  value={displayUsername}
-                  onChangeText={setDisplayUsername}
-                />
-
-                <Select
-                  label={t("profile.nationality")}
-                  placeholder={t("profile.nationalityPlaceholder")}
-                  value={nationality}
-                  onValueChange={setNationality}
-                  searchable
-                  searchPlaceholder={t("shared.search")}
-                  options={[
-                    { label: t("shared.none"), value: "" },
-                    ...COUNTRIES.map((country) => ({
-                      label: `${country.flag} ${country.name}`,
-                      value: country.code,
-                    })),
-                  ]}
-                />
-
-                {error && (
-                  <Text color="$red10" fontSize="$3">
-                    {error}
-                  </Text>
-                )}
-
-                <XStack space="$2">
+              {/* Action buttons */}
+              {isEditing ? (
+                <XStack space="$2" marginTop="$2">
                   <Button
                     flex={1}
                     variant="outline"
-                    onPress={() => setIsEditing(false)}
+                    onPress={() => {
+                      setIsEditing(false);
+                      setError(null);
+                      // Reset to original values
+                      const u = session.user as any;
+                      setUsername(u.username || "");
+                      setNationality(u.nationality || "");
+                      setPhoneNumber(u.phoneNumber || "");
+                      setEmail(u.email || "");
+                      setName(u.name || "");
+                    }}
                     disabled={isSaving}
                   >
                     {t("shared.cancel")}
@@ -241,56 +490,162 @@ export default function ProfileScreen() {
                     {isSaving ? <Spinner size="small" /> : t("shared.save")}
                   </Button>
                 </XStack>
-              </YStack>
-            ) : (
-              <Button variant="outline" onPress={() => setIsEditing(true)}>
-                {t("profile.editProfile")}
-              </Button>
-            )}
-          </YStack>
-        </Card>
+              ) : (
+                <Button variant="outline" onPress={() => setIsEditing(true)} marginTop="$2">
+                  {t("profile.editProfile")}
+                </Button>
+              )}
+            </YStack>
+          </Card>
 
-        <Card variant="outlined">
-          <YStack space="$2">
-            <Text fontSize="$5" fontWeight="600">
-              {t("shared.user")}
-            </Text>
-            <YStack space="$1">
-              <XStack justifyContent="space-between">
-                <Text color="$gray11">{t("shared.name")}</Text>
-                <Text>{user.name || t("shared.notSet")}</Text>
+          {/* My Stats Card */}
+          <Card variant="elevated">
+            <YStack space="$3">
+              <Text fontSize="$5" fontWeight="600">
+                {t("profile.myStats")}
+              </Text>
+
+              {isLoadingStats ? (
+                <YStack alignItems="center" padding="$4">
+                  <Spinner size="small" />
+                </YStack>
+              ) : profile ? (
+                <StatsSummary
+                  stats={[
+                    {
+                      label: t("playerStats.totalMatches"),
+                      value: profile.totalMatchesPlayed,
+                      color: "$blue10",
+                    },
+                    {
+                      label: t("playerStats.totalThirdTimes"),
+                      value: profile.totalThirdTimeAttendances,
+                      color: "$orange10",
+                    },
+                    {
+                      label: t("playerStats.totalBeers"),
+                      value: profile.totalBeers,
+                      color: "$yellow10",
+                    },
+                  ]}
+                />
+              ) : (
+                <Text color="$gray11" textAlign="center">
+                  {t("playerStats.noStats")}
+                </Text>
+              )}
+
+              <Button
+                variant="outline"
+                onPress={() => router.push("/(tabs)/profile/stats-voting")}
+              >
+                {t("profile.openStatsVoting")}
+              </Button>
+            </YStack>
+          </Card>
+
+          {/* Change Password Card */}
+          <Card variant="outlined">
+            <YStack space="$3">
+              <Text fontSize="$5" fontWeight="600">
+                {t("profile.security")}
+              </Text>
+
+              {isChangingPassword ? (
+                <YStack space="$3">
+                  <Input
+                    label={t("profile.currentPassword")}
+                    placeholder="********"
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    secureTextEntry
+                  />
+                  <Input
+                    label={t("profile.newPassword")}
+                    placeholder={t("auth.passwordMinLength")}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry
+                  />
+                  <Input
+                    label={t("profile.confirmPassword")}
+                    placeholder={t("auth.passwordMinLength")}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                  />
+
+                  {passwordError && (
+                    <Text color="$red10" fontSize="$3">
+                      {passwordError}
+                    </Text>
+                  )}
+
+                  <XStack space="$2">
+                    <Button
+                      flex={1}
+                      variant="outline"
+                      onPress={() => {
+                        setIsChangingPassword(false);
+                        setPasswordError(null);
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmPassword("");
+                      }}
+                      disabled={isChangingPasswordLoading}
+                    >
+                      {t("shared.cancel")}
+                    </Button>
+                    <Button
+                      flex={1}
+                      variant="primary"
+                      onPress={handleChangePassword}
+                      disabled={isChangingPasswordLoading}
+                    >
+                      {isChangingPasswordLoading ? (
+                        <Spinner size="small" />
+                      ) : (
+                        t("profile.changePassword")
+                      )}
+                    </Button>
+                  </XStack>
+                </YStack>
+              ) : (
+                <Button
+                  variant="outline"
+                  onPress={() => setIsChangingPassword(true)}
+                >
+                  {t("profile.changePassword")}
+                </Button>
+              )}
+            </YStack>
+          </Card>
+
+          {/* Settings Card */}
+          <Card variant="outlined">
+            <YStack space="$3">
+              <Text fontSize="$5" fontWeight="600">
+                {t("shared.settings")}
+              </Text>
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text color="$gray11">{t("shared.language")}</Text>
+                <LanguageSwitcher
+                  currentLanguage={currentLanguage}
+                  onLanguageChange={handleLanguageChange}
+                />
               </XStack>
-              <XStack justifyContent="space-between">
-                <Text color="$gray11">{t("auth.email")}</Text>
-                <Text>{user.email}</Text>
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text color="$gray11">{t("shared.toggleTheme")}</Text>
+                <ThemeToggle theme={theme} onToggle={toggleTheme} />
               </XStack>
             </YStack>
-          </YStack>
-        </Card>
+          </Card>
 
-        <Card variant="outlined">
-          <YStack space="$3">
-            <Text fontSize="$5" fontWeight="600">
-              {t("shared.settings")}
-            </Text>
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text color="$gray11">{t("shared.language")}</Text>
-              <LanguageSwitcher
-                currentLanguage={currentLanguage}
-                onLanguageChange={handleLanguageChange}
-              />
-            </XStack>
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text color="$gray11">{t("shared.toggleTheme")}</Text>
-              <ThemeToggle theme={theme} onToggle={toggleTheme} />
-            </XStack>
-          </YStack>
-        </Card>
-
-        <Button variant="danger" onPress={handleSignOut}>
-          {t("shared.signOut")}
-        </Button>
-      </YStack>
+          {/* Sign Out Button */}
+          <Button variant="danger" onPress={handleSignOut}>
+            {t("shared.signOut")}
+          </Button>
+        </YStack>
       </ScrollView>
     </Container>
   );

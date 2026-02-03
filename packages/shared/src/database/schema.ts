@@ -87,6 +87,32 @@ export interface UserTable {
   displayUsername: string | null;
   profilePicture: string | null;
   nationality: string | null;
+  // Phone authentication fields
+  phoneNumber: string | null;
+  phoneNumberVerified: number;
+}
+
+export interface VotingCriteriaTable {
+  id: Generated<string>;
+  code: string;
+  name_en: string;
+  name_es: string;
+  description_en: string | null;
+  description_es: string | null;
+  is_active: number; // 0 or 1 (SQLite boolean)
+  sort_order: number;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
+export interface MatchVotesTable {
+  id: Generated<string>;
+  match_id: string;
+  voter_user_id: string;
+  criteria_id: string;
+  voted_for_user_id: string;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
 }
 
 export interface SettingsTable {
@@ -117,6 +143,8 @@ export interface Database {
   user: UserTable;
   settings: SettingsTable;
   match_player_stats: MatchPlayerStatsTable;
+  voting_criteria: VotingCriteriaTable;
+  match_votes: MatchVotesTable;
 }
 
 // SQLite system tables used by migrations and database introspection
@@ -168,3 +196,11 @@ export type SettingUpdate = Updateable<SettingsTable>;
 export type MatchPlayerStats = Selectable<MatchPlayerStatsTable>;
 export type NewMatchPlayerStats = Insertable<MatchPlayerStatsTable>;
 export type MatchPlayerStatsUpdate = Updateable<MatchPlayerStatsTable>;
+
+export type VotingCriteria = Selectable<VotingCriteriaTable>;
+export type NewVotingCriteria = Insertable<VotingCriteriaTable>;
+export type VotingCriteriaUpdate = Updateable<VotingCriteriaTable>;
+
+export type MatchVote = Selectable<MatchVotesTable>;
+export type NewMatchVote = Insertable<MatchVotesTable>;
+export type MatchVoteUpdate = Updateable<MatchVotesTable>;

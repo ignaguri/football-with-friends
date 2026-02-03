@@ -1,27 +1,41 @@
 import { useState, useEffect } from "react";
-import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
+import { Container, Card, Text, YStack, XStack, Input, Button, Spinner, PhoneInput } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signIn, getSession, getConfiguredApiUrl } from "@repo/api-client";
+import { signIn, getSession, getConfiguredApiUrl, signInWithPhone } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
+import { Platform, Pressable } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signInSchema, type SignInFormData } from "../../lib/validation";
+import {
+  signInSchema,
+  phoneSignInSchema,
+  type SignInFormData,
+  type PhoneSignInFormData,
+} from "../../lib/validation";
+
+type AuthMethod = "email" | "phone";
 
 export default function SignInScreen() {
   const { t } = useTranslation();
+  const [authMethod, setAuthMethod] = useState<AuthMethod>("email");
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<SignInFormData>({
+  // Email form
+  const emailForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       email: "",
+      password: "",
+    },
+  });
+
+  // Phone form
+  const phoneForm = useForm<PhoneSignInFormData>({
+    resolver: zodResolver(phoneSignInSchema),
+    defaultValues: {
+      phoneNumber: "",
       password: "",
     },
   });
@@ -42,7 +56,7 @@ export default function SignInScreen() {
     checkSession();
   }, []);
 
-  const onSubmit = async (data: SignInFormData) => {
+  const onEmailSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
     setServerError(null);
 
@@ -61,6 +75,25 @@ export default function SignInScreen() {
     } catch (err) {
       setServerError(t("auth.unexpectedError"));
       console.error("Sign in error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onPhoneSubmit = async (data: PhoneSignInFormData) => {
+    setIsLoading(true);
+    setServerError(null);
+
+    try {
+      await signInWithPhone({
+        phoneNumber: data.phoneNumber,
+        password: data.password,
+      });
+
+      router.replace("/(tabs)");
+    } catch (err: any) {
+      setServerError(err.message || t("auth.signInFailed"));
+      console.error("Phone sign in error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -130,6 +163,16 @@ export default function SignInScreen() {
     }
   };
 
+  const switchToEmail = () => {
+    setAuthMethod("email");
+    setServerError(null);
+  };
+
+  const switchToPhone = () => {
+    setAuthMethod("phone");
+    setServerError(null);
+  };
+
   return (
     <Container variant="padded">
       <YStack space="$6" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto">
@@ -162,57 +205,136 @@ export default function SignInScreen() {
           <YStack flex={1} height={1} backgroundColor="$gray6" />
         </XStack>
 
+        {/* Auth Method Toggle */}
+        <XStack justifyContent="center" space="$2">
+          <Pressable onPress={switchToEmail}>
+            <Text
+              color={authMethod === "email" ? "$blue10" : "$gray10"}
+              fontWeight={authMethod === "email" ? "600" : "400"}
+              paddingHorizontal="$3"
+              paddingVertical="$2"
+            >
+              {t("auth.useEmail")}
+            </Text>
+          </Pressable>
+          <Text color="$gray6">|</Text>
+          <Pressable onPress={switchToPhone}>
+            <Text
+              color={authMethod === "phone" ? "$blue10" : "$gray10"}
+              fontWeight={authMethod === "phone" ? "600" : "400"}
+              paddingHorizontal="$3"
+              paddingVertical="$2"
+            >
+              {t("auth.usePhone")}
+            </Text>
+          </Pressable>
+        </XStack>
+
         {/* Email/Password Sign In */}
-        <Card variant="elevated" padding="$4">
-          <YStack space="$4">
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label={t("auth.email")}
-                  placeholder={t("auth.emailPlaceholder")}
-                  value={value}
-                  onChangeText={onChange}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  error={errors.email ? t(errors.email.message as string) : undefined}
-                />
+        {authMethod === "email" && (
+          <Card variant="elevated" padding="$4">
+            <YStack space="$4">
+              <Controller
+                control={emailForm.control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={t("auth.email")}
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={value}
+                    onChangeText={onChange}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    error={emailForm.formState.errors.email ? t(emailForm.formState.errors.email.message as string) : undefined}
+                  />
+                )}
+              />
+
+              <Controller
+                control={emailForm.control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={t("auth.password")}
+                    placeholder={t("auth.passwordPlaceholder")}
+                    value={value}
+                    onChangeText={onChange}
+                    secureTextEntry
+                    error={emailForm.formState.errors.password ? t(emailForm.formState.errors.password.message as string) : undefined}
+                  />
+                )}
+              />
+
+              {serverError && (
+                <Text color="$red10" fontSize="$3" textAlign="center">
+                  {serverError}
+                </Text>
               )}
-            />
 
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label={t("auth.password")}
-                  placeholder={t("auth.passwordPlaceholder")}
-                  value={value}
-                  onChangeText={onChange}
-                  secureTextEntry
-                  error={errors.password ? t(errors.password.message as string) : undefined}
-                />
-              )}
-            />
-
-            {serverError && (
-              <Text color="$red10" fontSize="$3" textAlign="center">
-                {serverError}
-              </Text>
-            )}
-
-            <YStack paddingTop="$4">
-              <Button
-                onPress={handleSubmit(onSubmit)}
-                disabled={isLoading || isGoogleLoading}
-                variant="primary"
-              >
-                {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
-              </Button>
+              <YStack paddingTop="$4">
+                <Button
+                  onPress={emailForm.handleSubmit(onEmailSubmit)}
+                  disabled={isLoading || isGoogleLoading}
+                  variant="primary"
+                >
+                  {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
+                </Button>
+              </YStack>
             </YStack>
-          </YStack>
-        </Card>
+          </Card>
+        )}
+
+        {/* Phone/Password Sign In */}
+        {authMethod === "phone" && (
+          <Card variant="elevated" padding="$4">
+            <YStack space="$4">
+              <Controller
+                control={phoneForm.control}
+                name="phoneNumber"
+                render={({ field: { onChange, value } }) => (
+                  <PhoneInput
+                    label={t("auth.phone")}
+                    placeholder={t("auth.phonePlaceholder")}
+                    value={value}
+                    onChangeValue={(phone) => onChange(phone)}
+                    error={phoneForm.formState.errors.phoneNumber ? t(phoneForm.formState.errors.phoneNumber.message as string) : undefined}
+                  />
+                )}
+              />
+
+              <Controller
+                control={phoneForm.control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={t("auth.password")}
+                    placeholder={t("auth.passwordPlaceholder")}
+                    value={value}
+                    onChangeText={onChange}
+                    secureTextEntry
+                    error={phoneForm.formState.errors.password ? t(phoneForm.formState.errors.password.message as string) : undefined}
+                  />
+                )}
+              />
+
+              {serverError && (
+                <Text color="$red10" fontSize="$3" textAlign="center">
+                  {serverError}
+                </Text>
+              )}
+
+              <YStack paddingTop="$4">
+                <Button
+                  onPress={phoneForm.handleSubmit(onPhoneSubmit)}
+                  disabled={isLoading || isGoogleLoading}
+                  variant="primary"
+                >
+                  {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
+                </Button>
+              </YStack>
+            </YStack>
+          </Card>
+        )}
 
         <YStack space="$2" alignItems="center">
           <Text color="$gray11">

@@ -1,10 +1,54 @@
 import { Hono } from "hono";
-import { put } from "@vercel/blob";
 import { getDatabase } from "@repo/shared/database";
+import { auth } from "../auth";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
+import {
+  generateProfilePictureKey,
+  uploadToR2,
+  deleteOldProfilePictures,
+  getFromR2,
+  type R2Bucket,
+} from "../lib/r2";
 
-const app = new Hono();
+// Phone number validation (international format)
+const phoneRegex = /^\+[1-9]\d{6,14}$/;
 
-// Upload profile picture
+const updateProfileSchema = z.object({
+  userId: z.string().min(1),
+  username: z.string().optional(),
+  displayUsername: z.string().optional(),
+  nationality: z
+    .string()
+    .regex(/^[A-Z]{2}$/, "Invalid country code")
+    .optional()
+    .nullable(),
+  phoneNumber: z
+    .string()
+    .regex(phoneRegex, "Invalid phone number format")
+    .optional()
+    .nullable(),
+  email: z
+    .string()
+    .email("Invalid email format")
+    .optional()
+    .nullable(),
+  name: z.string().optional(),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "New password must be at least 8 characters"),
+});
+
+// Type for Cloudflare Workers environment bindings
+type Bindings = {
+  PROFILE_PICTURES?: R2Bucket;
+};
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+// Upload profile picture to R2
 app.post("/upload-picture", async (c) => {
   const body = await c.req.parseBody();
   const file = body.file as File;
@@ -30,28 +74,187 @@ app.post("/upload-picture", async (c) => {
   }
 
   try {
-    // Upload to Vercel Blob
-    const blob = await put(`profile-pictures/${userId}-${Date.now()}`, file, {
-      access: "public",
-      contentType: file.type,
-    });
+    const bucket = c.env?.PROFILE_PICTURES;
+
+    if (!bucket) {
+      // Fallback: store the image URL directly if R2 is not configured
+      // This could be a base64 data URL or external URL for development
+      console.warn("R2 bucket not configured, using fallback storage");
+
+      const db = getDatabase();
+      // For development, we can use a placeholder or allow external URLs
+      await db
+        .updateTable("user")
+        .set({ profilePicture: `https://ui-avatars.com/api/?name=${encodeURIComponent(userId)}&size=200` })
+        .where("id", "=", userId)
+        .execute();
+
+      return c.json({
+        url: `https://ui-avatars.com/api/?name=${encodeURIComponent(userId)}&size=200`,
+        warning: "R2 not configured, using placeholder",
+      });
+    }
+
+    // Generate unique key for the file
+    const key = generateProfilePictureKey(userId, file.type);
+
+    // Upload to R2
+    const arrayBuffer = await file.arrayBuffer();
+    await uploadToR2(bucket, key, arrayBuffer, file.type);
+
+    // Clean up old profile pictures (keep only the latest)
+    await deleteOldProfilePictures(bucket, userId, 1);
+
+    // Build the URL - using our API endpoint to serve the file
+    const baseUrl = c.req.url.split("/api/")[0];
+    const pictureUrl = `${baseUrl}/api/profile/picture/${encodeURIComponent(key)}`;
 
     // Update user profile picture in database
     const db = getDatabase();
     await db
       .updateTable("user")
-      .set({ profilePicture: blob.url })
+      .set({ profilePicture: pictureUrl })
       .where("id", "=", userId)
       .execute();
 
-    return c.json({ url: blob.url });
+    return c.json({ url: pictureUrl });
   } catch (error) {
     console.error("Profile picture upload error:", error);
     return c.json({ error: "Failed to upload profile picture" }, 500);
   }
 });
 
-// Update username
+// Serve profile picture from R2
+app.get("/picture/:key{.+}", async (c) => {
+  const key = decodeURIComponent(c.req.param("key"));
+  const bucket = c.env?.PROFILE_PICTURES;
+
+  if (!bucket) {
+    return c.json({ error: "Storage not configured" }, 500);
+  }
+
+  try {
+    const object = await getFromR2(bucket, key);
+
+    if (!object) {
+      return c.json({ error: "Image not found" }, 404);
+    }
+
+    return new Response(object.body, {
+      headers: {
+        "Content-Type": object.httpMetadata?.contentType || "image/jpeg",
+        "Cache-Control": "public, max-age=31536000",
+        ETag: object.etag,
+      },
+    });
+  } catch (error) {
+    console.error("Error serving profile picture:", error);
+    return c.json({ error: "Failed to retrieve image" }, 500);
+  }
+});
+
+// Update profile (username, nationality, phone, email, name)
+app.post(
+  "/update-profile",
+  zValidator("json", updateProfileSchema),
+  async (c) => {
+    const data = c.req.valid("json");
+    const { userId, username, displayUsername, nationality, phoneNumber, email, name } =
+      data;
+
+    // Validate username format if provided
+    if (username) {
+      if (username.length < 3 || username.length > 20) {
+        return c.json(
+          { error: "Username must be between 3 and 20 characters" },
+          400
+        );
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return c.json(
+          {
+            error:
+              "Username can only contain letters, numbers, and underscores",
+          },
+          400
+        );
+      }
+    }
+
+    try {
+      const db = getDatabase();
+
+      // Check if username is already taken (if provided)
+      if (username) {
+        const existing = await db
+          .selectFrom("user")
+          .select("id")
+          .where("username", "=", username)
+          .where("id", "!=", userId)
+          .executeTakeFirst();
+
+        if (existing) {
+          return c.json({ error: "Username is already taken" }, 400);
+        }
+      }
+
+      // Check if phone number is already taken (if provided)
+      if (phoneNumber) {
+        const existingPhone = await db
+          .selectFrom("user")
+          .select("id")
+          .where("phoneNumber", "=", phoneNumber)
+          .where("id", "!=", userId)
+          .executeTakeFirst();
+
+        if (existingPhone) {
+          return c.json({ error: "Phone number is already registered" }, 400);
+        }
+      }
+
+      // Check if email is already taken (if provided)
+      if (email) {
+        const existingEmail = await db
+          .selectFrom("user")
+          .select("id")
+          .where("email", "=", email)
+          .where("id", "!=", userId)
+          .executeTakeFirst();
+
+        if (existingEmail) {
+          return c.json({ error: "Email is already registered" }, 400);
+        }
+      }
+
+      // Update user
+      const updateData: Record<string, string | null> = {};
+      if (username !== undefined) updateData.username = username || null;
+      if (displayUsername !== undefined)
+        updateData.displayUsername = displayUsername || null;
+      if (nationality !== undefined)
+        updateData.nationality = nationality || null;
+      if (phoneNumber !== undefined)
+        updateData.phoneNumber = phoneNumber || null;
+      if (email !== undefined) updateData.email = email || null;
+      if (name !== undefined) updateData.name = name || null;
+
+      if (Object.keys(updateData).length > 0) {
+        await db
+          .updateTable("user")
+          .set(updateData)
+          .where("id", "=", userId)
+          .execute();
+      }
+
+      return c.json({ success: true });
+    } catch (error) {
+      console.error("Update profile error:", error);
+      return c.json({ error: "Failed to update profile" }, 500);
+    }
+  }
+);
+
+// Legacy endpoint - keep for backwards compatibility
 app.post("/update-username", async (c) => {
   const { userId, username, displayUsername, nationality } = await c.req.json();
 
@@ -124,6 +327,48 @@ app.post("/update-username", async (c) => {
   }
 });
 
+// Change password
+app.post(
+  "/change-password",
+  zValidator("json", changePasswordSchema),
+  async (c) => {
+    const { currentPassword, newPassword } = c.req.valid("json");
+
+    try {
+      // Get the current session to identify the user
+      const session = await auth.api.getSession({
+        headers: c.req.raw.headers,
+      });
+
+      if (!session?.user) {
+        return c.json({ error: "Not authenticated" }, 401);
+      }
+
+      // Use better-auth's change password endpoint
+      const result = await auth.api.changePassword({
+        body: {
+          currentPassword,
+          newPassword,
+        },
+        headers: c.req.raw.headers,
+      });
+
+      if (!result) {
+        return c.json({ error: "Failed to change password" }, 500);
+      }
+
+      return c.json({ success: true });
+    } catch (error: any) {
+      console.error("Change password error:", error);
+      // Handle specific error messages
+      if (error.message?.includes("invalid") || error.message?.includes("incorrect")) {
+        return c.json({ error: "Current password is incorrect" }, 400);
+      }
+      return c.json({ error: "Failed to change password" }, 500);
+    }
+  }
+);
+
 // Get user profile
 app.get("/:userId", async (c) => {
   const userId = c.req.param("userId");
@@ -141,6 +386,8 @@ app.get("/:userId", async (c) => {
         "displayUsername",
         "profilePicture",
         "nationality",
+        "phoneNumber",
+        "phoneNumberVerified",
       ])
       .where("id", "=", userId)
       .executeTakeFirst();

@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
 import { ScrollView, RefreshControl, Alert } from "react-native";
 
-type Tab = "matches" | "locations" | "courts" | "settings";
+type Tab = "matches" | "locations" | "courts" | "settings" | "voting";
 
 interface Match {
   id: string;
@@ -121,6 +121,14 @@ export default function OrganizerScreen() {
           >
             {t("settings.title")}
           </Button>
+          <Button
+            flex={1}
+            size="$3"
+            variant={activeTab === "voting" ? "primary" : "outline"}
+            onPress={() => setActiveTab("voting")}
+          >
+            {t("voting.title")}
+          </Button>
         </XStack>
 
         {/* Tab Content */}
@@ -128,6 +136,7 @@ export default function OrganizerScreen() {
         {activeTab === "locations" && <LocationsTab />}
         {activeTab === "courts" && <CourtsTab />}
         {activeTab === "settings" && <SettingsTab />}
+        {activeTab === "voting" && <VotingCriteriaTab />}
       </YStack>
     </Container>
   );
@@ -1025,6 +1034,406 @@ function SettingsTab() {
         >
           {updateMutation.isPending ? t("shared.loading") : t("shared.save")}
         </Button>
+      </YStack>
+    </ScrollView>
+  );
+}
+
+// ============ VOTING CRITERIA TAB ============
+interface VotingCriteria {
+  id: string;
+  code: string;
+  name: string; // Localized name from API
+  description?: string; // Localized description from API
+  nameEn: string;
+  nameEs: string;
+  descriptionEn?: string;
+  descriptionEs?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+function VotingCriteriaTab() {
+  const { t, i18n } = useTranslation();
+  const queryClient = useQueryClient();
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [editingCriteria, setEditingCriteria] = useState<VotingCriteria | null>(null);
+  const [code, setCode] = useState("");
+  const [nameEn, setNameEn] = useState("");
+  const [nameEs, setNameEs] = useState("");
+  const [descriptionEn, setDescriptionEn] = useState("");
+  const [descriptionEs, setDescriptionEs] = useState("");
+  const [sortOrder, setSortOrder] = useState("0");
+
+  const language = i18n.language === "es" ? "es" : "en";
+
+  const {
+    data: criteriaData,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["voting-criteria-all"],
+    queryFn: async () => {
+      const res = await client.api.voting.criteria.all.$get();
+      return res.json() as Promise<{ criteria: VotingCriteria[] }>;
+    },
+  });
+
+  const criteria = criteriaData?.criteria || [];
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const res = await client.api.voting.criteria.$post({
+        json: {
+          code,
+          nameEn,
+          nameEs,
+          descriptionEn: descriptionEn || undefined,
+          descriptionEs: descriptionEs || undefined,
+          sortOrder: parseInt(sortOrder, 10) || 0,
+        },
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error((error as any).error || "Failed to create criteria");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
+      Alert.alert(t("shared.createSuccess"));
+      setShowAddDialog(false);
+      resetForm();
+    },
+    onError: (error: Error) => {
+      Alert.alert(t("shared.createError"), error.message);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingCriteria) return;
+      const res = await client.api.voting.criteria[":id"].$patch({
+        param: { id: editingCriteria.id },
+        json: {
+          code,
+          nameEn,
+          nameEs,
+          descriptionEn: descriptionEn || undefined,
+          descriptionEs: descriptionEs || undefined,
+          sortOrder: parseInt(sortOrder, 10) || 0,
+        },
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error((error as any).error || "Failed to update criteria");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
+      Alert.alert(t("shared.updateSuccess"));
+      setEditingCriteria(null);
+      resetForm();
+    },
+    onError: (error: Error) => {
+      Alert.alert(t("shared.updateError"), error.message);
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const res = await client.api.voting.criteria[":id"].$patch({
+        param: { id },
+        json: { isActive },
+      });
+      if (!res.ok) throw new Error("Failed to toggle active status");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (criteriaId: string) => {
+      const res = await client.api.voting.criteria[":id"].$delete({
+        param: { id: criteriaId },
+      });
+      if (!res.ok) throw new Error("Failed to delete criteria");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
+      Alert.alert(t("shared.deleteSuccess"));
+    },
+    onError: () => {
+      Alert.alert(t("shared.deleteError"));
+    },
+  });
+
+  const resetForm = () => {
+    setCode("");
+    setNameEn("");
+    setNameEs("");
+    setDescriptionEn("");
+    setDescriptionEs("");
+    setSortOrder("0");
+  };
+
+  const openEdit = (c: VotingCriteria) => {
+    setCode(c.code);
+    setNameEn(c.nameEn);
+    setNameEs(c.nameEs);
+    setDescriptionEn(c.descriptionEn || "");
+    setDescriptionEs(c.descriptionEs || "");
+    setSortOrder(String(c.sortOrder));
+    setEditingCriteria(c);
+  };
+
+  const handleDelete = (c: VotingCriteria) => {
+    Alert.alert(
+      t("shared.confirmDelete"),
+      t("shared.deleteConfirm"),
+      [
+        { text: t("shared.cancel"), style: "cancel" },
+        {
+          text: t("shared.delete"),
+          style: "destructive",
+          onPress: () => deleteMutation.mutate(c.id),
+        },
+      ]
+    );
+  };
+
+  const getName = (c: VotingCriteria) => language === "es" ? c.nameEs : c.nameEn;
+  const getDescription = (c: VotingCriteria) => language === "es" ? c.descriptionEs : c.descriptionEn;
+
+  if (isLoading) {
+    return (
+      <YStack flex={1} alignItems="center" justifyContent="center">
+        <Spinner size="large" />
+      </YStack>
+    );
+  }
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+      }
+    >
+      <YStack gap="$3" paddingBottom="$6">
+        {/* Add Criteria Button */}
+        <Button variant="primary" onPress={() => setShowAddDialog(true)}>
+          {t("admin.addCriteria")}
+        </Button>
+
+        {/* Criteria List */}
+        {criteria.length === 0 ? (
+          <Card variant="outlined">
+            <YStack padding="$4" alignItems="center">
+              <Text color="$gray11">{t("admin.noCriteria")}</Text>
+            </YStack>
+          </Card>
+        ) : (
+          criteria.map((c) => (
+            <Card key={c.id} variant="elevated">
+              <YStack padding="$3" gap="$2">
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text fontSize="$5" fontWeight="600">
+                    {getName(c)}
+                  </Text>
+                  <XStack alignItems="center" gap="$2">
+                    <Badge variant={c.isActive ? "default" : "secondary"}>
+                      {c.isActive ? t("status.active") : t("status.inactive")}
+                    </Badge>
+                    <Text color="$gray10" fontSize="$2">#{c.sortOrder}</Text>
+                  </XStack>
+                </XStack>
+
+                {getDescription(c) && (
+                  <Text color="$gray11" fontStyle="italic">
+                    {getDescription(c)}
+                  </Text>
+                )}
+
+                <Text color="$gray10" fontSize="$2">
+                  Code: {c.code}
+                </Text>
+
+                <XStack gap="$2" marginTop="$2" flexWrap="wrap">
+                  <Button
+                    size="$3"
+                    variant="outline"
+                    onPress={() => toggleActiveMutation.mutate({ id: c.id, isActive: !c.isActive })}
+                    disabled={toggleActiveMutation.isPending}
+                  >
+                    {c.isActive ? t("admin.deactivate") : t("admin.activate")}
+                  </Button>
+                  <Button
+                    size="$3"
+                    variant="outline"
+                    onPress={() => openEdit(c)}
+                  >
+                    {t("organizer.edit")}
+                  </Button>
+                  <Button
+                    size="$3"
+                    variant="danger"
+                    onPress={() => handleDelete(c)}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {t("shared.delete")}
+                  </Button>
+                </XStack>
+              </YStack>
+            </Card>
+          ))
+        )}
+
+        {/* Add Criteria Dialog */}
+        <Dialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          title={t("admin.addCriteria")}
+          showActions={false}
+        >
+          <YStack gap="$4" padding="$4">
+            <Input
+              label={t("admin.criteriaCode")}
+              placeholder="e.g., el_abeja"
+              value={code}
+              onChangeText={setCode}
+              autoCapitalize="none"
+            />
+            <Input
+              label={t("admin.nameEnglish")}
+              placeholder="The Bee"
+              value={nameEn}
+              onChangeText={setNameEn}
+            />
+            <Input
+              label={t("admin.nameSpanish")}
+              placeholder="El Abeja"
+              value={nameEs}
+              onChangeText={setNameEs}
+            />
+            <Input
+              label={t("admin.descriptionEnglish")}
+              placeholder="One sprint and dies"
+              value={descriptionEn}
+              onChangeText={setDescriptionEn}
+            />
+            <Input
+              label={t("admin.descriptionSpanish")}
+              placeholder="Un pique y se muere"
+              value={descriptionEs}
+              onChangeText={setDescriptionEs}
+            />
+            <Input
+              label={t("admin.sortOrder")}
+              placeholder="0"
+              value={sortOrder}
+              onChangeText={setSortOrder}
+              keyboardType="numeric"
+            />
+            <XStack gap="$2">
+              <Button
+                flex={1}
+                variant="outline"
+                onPress={() => {
+                  setShowAddDialog(false);
+                  resetForm();
+                }}
+              >
+                {t("shared.cancel")}
+              </Button>
+              <Button
+                flex={1}
+                variant="primary"
+                onPress={() => createMutation.mutate()}
+                disabled={!code || !nameEn || !nameEs || createMutation.isPending}
+              >
+                {createMutation.isPending ? t("shared.loading") : t("shared.save")}
+              </Button>
+            </XStack>
+          </YStack>
+        </Dialog>
+
+        {/* Edit Criteria Dialog */}
+        <Dialog
+          open={!!editingCriteria}
+          onOpenChange={() => {
+            setEditingCriteria(null);
+            resetForm();
+          }}
+          title={t("admin.editCriteria")}
+          showActions={false}
+        >
+          <YStack gap="$4" padding="$4">
+            <Input
+              label={t("admin.criteriaCode")}
+              placeholder="e.g., el_abeja"
+              value={code}
+              onChangeText={setCode}
+              autoCapitalize="none"
+            />
+            <Input
+              label={t("admin.nameEnglish")}
+              placeholder="The Bee"
+              value={nameEn}
+              onChangeText={setNameEn}
+            />
+            <Input
+              label={t("admin.nameSpanish")}
+              placeholder="El Abeja"
+              value={nameEs}
+              onChangeText={setNameEs}
+            />
+            <Input
+              label={t("admin.descriptionEnglish")}
+              placeholder="One sprint and dies"
+              value={descriptionEn}
+              onChangeText={setDescriptionEn}
+            />
+            <Input
+              label={t("admin.descriptionSpanish")}
+              placeholder="Un pique y se muere"
+              value={descriptionEs}
+              onChangeText={setDescriptionEs}
+            />
+            <Input
+              label={t("admin.sortOrder")}
+              placeholder="0"
+              value={sortOrder}
+              onChangeText={setSortOrder}
+              keyboardType="numeric"
+            />
+            <XStack gap="$2">
+              <Button
+                flex={1}
+                variant="outline"
+                onPress={() => {
+                  setEditingCriteria(null);
+                  resetForm();
+                }}
+              >
+                {t("shared.cancel")}
+              </Button>
+              <Button
+                flex={1}
+                variant="primary"
+                onPress={() => updateMutation.mutate()}
+                disabled={!code || !nameEn || !nameEs || updateMutation.isPending}
+              >
+                {updateMutation.isPending ? t("shared.loading") : t("shared.save")}
+              </Button>
+            </XStack>
+          </YStack>
+        </Dialog>
       </YStack>
     </ScrollView>
   );

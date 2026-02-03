@@ -5,6 +5,9 @@ export type { CustomButtonProps } from "./components/Button";
 export { Input } from "./components/Input";
 export type { CustomInputProps } from "./components/Input";
 
+export { PhoneInput, parsePhoneNumber, isValidPhoneNumber } from "./components/phone-input";
+export type { PhoneInputProps } from "./components/phone-input";
+
 export { Select } from "./components/Select";
 export type { CustomSelectProps, SelectOption } from "./components/Select";
 
@@ -78,6 +81,14 @@ export type { PlayerStatsCardProps } from "./components/PlayerStatsCard";
 export { StatsInputRow } from "./components/StatsInputRow";
 export type { StatsInputRowProps } from "./components/StatsInputRow";
 
+export { ExclusiveMultiSelect } from "./components/exclusive-multi-select";
+export type {
+  ExclusiveMultiSelectProps,
+  SelectionItem,
+  ExclusiveSelection,
+  VotingCriteriaItem,
+} from "./components/exclusive-multi-select";
+
 // Re-export commonly used Tamagui components
 export {
   Text,
@@ -105,6 +116,10 @@ export {
   getCountryName,
   getCountry,
   isValidCountryCode,
+  getCountryDialCode,
+  getCountryFromDialCode,
   COUNTRIES,
+  COUNTRIES_WITH_DIAL_CODES,
+  DIAL_CODE_OPTIONS,
 } from "./utils/country-flags";
-export type { Country } from "./utils/country-flags";
+export type { Country, CountryWithDialCode } from "./utils/country-flags";

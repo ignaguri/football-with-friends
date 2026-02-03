@@ -20,7 +20,14 @@ export default function ProfileLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: t("profile.title"),
+          title: t("profile.myProfile"),
+        }}
+      />
+      <Stack.Screen
+        name="stats-voting"
+        options={{
+          title: t("voting.title"),
+          presentation: "modal",
         }}
       />
     </Stack>

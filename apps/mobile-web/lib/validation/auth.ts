@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Phone number validation (international format)
+const phoneRegex = /^\+[1-9]\d{6,14}$/;
+
 export const signInSchema = z.object({
   email: z
     .string()
@@ -11,6 +14,18 @@ export const signInSchema = z.object({
 });
 
 export type SignInFormData = z.infer<typeof signInSchema>;
+
+export const phoneSignInSchema = z.object({
+  phoneNumber: z
+    .string()
+    .min(1, "auth.phoneRequired")
+    .regex(phoneRegex, "auth.phoneInvalid"),
+  password: z
+    .string()
+    .min(1, "auth.passwordRequired"),
+});
+
+export type PhoneSignInFormData = z.infer<typeof phoneSignInSchema>;
 
 export const signUpSchema = z.object({
   name: z
@@ -38,3 +53,19 @@ export const signUpSchema = z.object({
 });
 
 export type SignUpFormData = z.infer<typeof signUpSchema>;
+
+export const phoneSignUpSchema = z.object({
+  name: z
+    .string()
+    .min(1, "auth.nameRequired"),
+  phoneNumber: z
+    .string()
+    .min(1, "auth.phoneRequired")
+    .regex(phoneRegex, "auth.phoneInvalid"),
+  password: z
+    .string()
+    .min(1, "auth.passwordRequired")
+    .min(8, "auth.passwordTooShort"),
+});
+
+export type PhoneSignUpFormData = z.infer<typeof phoneSignUpSchema>;

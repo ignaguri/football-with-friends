@@ -10,6 +10,8 @@ import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
 import playersRoute from "./routes/players";
 import cronRoute from "./routes/cron";
+import phoneAuthRoute from "./routes/phone-auth";
+import votingRoute from "./routes/voting";
 
 const app = new Hono();
 
@@ -78,7 +80,9 @@ const apiRoutes = app
   .route("/profile", profileRoute)
   .route("/settings", settingsRoute)
   .route("/players", playersRoute)
-  .route("/cron", cronRoute);
+  .route("/cron", cronRoute)
+  .route("/phone-auth", phoneAuthRoute)
+  .route("/voting", votingRoute);
 
 const port = process.env.PORT || 3001;
 

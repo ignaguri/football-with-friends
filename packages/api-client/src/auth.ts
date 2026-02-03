@@ -195,6 +195,86 @@ export const {
   $Infer,
 } = authClient;
 
+// Phone authentication helpers
+export interface PhoneSignUpData {
+  phoneNumber: string;
+  password: string;
+  name: string;
+}
+
+export interface PhoneSignInData {
+  phoneNumber: string;
+  password: string;
+}
+
+/**
+ * Sign up with phone number and password.
+ * Phone is stored for admin contact purposes (e.g., WhatsApp).
+ */
+export async function signUpWithPhone(data: PhoneSignUpData) {
+  const response = await fetch(`${getApiUrl()}/api/phone-auth/sign-up`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Failed to sign up");
+  }
+
+  // On web, store the bearer token if returned
+  if (Platform.OS === "web" && result.session?.token) {
+    await storeBearerToken(result.session.token);
+  }
+
+  return result;
+}
+
+/**
+ * Sign in with phone number and password.
+ */
+export async function signInWithPhone(data: PhoneSignInData) {
+  const response = await fetch(`${getApiUrl()}/api/phone-auth/sign-in`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+    credentials: "include",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error || "Invalid phone number or password");
+  }
+
+  // On web, store the bearer token if returned
+  if (Platform.OS === "web" && result.session?.token) {
+    await storeBearerToken(result.session.token);
+  }
+
+  return result;
+}
+
+/**
+ * Check if a phone number is available for registration.
+ */
+export async function checkPhoneAvailability(phoneNumber: string): Promise<boolean> {
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/check-phone?phoneNumber=${encodeURIComponent(phoneNumber)}`,
+    { credentials: "include" }
+  );
+
+  if (!response.ok) {
+    return false;
+  }
+
+  const result = await response.json();
+  return result.available ?? false;
+}
+
 // Export types
 export type Session = typeof authClient.$Infer.Session;
 export type User = Session["user"];

@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Tabs, Redirect, router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Home, User, Calendar, Users, Settings, CircleUser } from "@tamagui/lucide-icons";
+import { Home, Calendar, Users, Settings, CircleUser } from "@tamagui/lucide-icons";
 import { useTheme, YStack, Spinner } from "tamagui";
 import { useSession } from "@repo/api-client";
 
@@ -51,20 +51,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="player"
-        options={{
-          title: t("nav.player"),
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
-          headerShown: false,
-        }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            router.navigate("/(tabs)/player");
-          },
-        }}
-      />
-      <Tabs.Screen
         name="matches"
         options={{
           title: t("nav.matches"),
@@ -89,7 +75,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: t("shared.userProfile"),
+          title: t("profile.myProfile"),
           tabBarIcon: ({ color, size }) => <CircleUser size={size} color={color} />,
           headerShown: false,
         }}

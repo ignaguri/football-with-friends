@@ -132,6 +132,17 @@ function createAuthInstance() {
           required: false,
           input: true,
         },
+        phoneNumber: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+        phoneNumberVerified: {
+          type: "number",
+          required: false,
+          defaultValue: 0,
+          input: false,
+        },
       },
     },
     socialProviders: {
