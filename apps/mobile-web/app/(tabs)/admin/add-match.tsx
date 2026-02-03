@@ -261,7 +261,7 @@ export default function AddMatchScreen() {
         />
 
         {/* Court Select */}
-        {locationId && (
+        {!!locationId && (
           <Select
             value={courtId}
             onValueChange={setCourtId}

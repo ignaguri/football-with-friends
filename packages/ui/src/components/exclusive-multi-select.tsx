@@ -106,7 +106,6 @@ export function ExclusiveMultiSelect({
                   />
                 )}
               </XStack>
-
               {Platform.OS === "web" ? (
                 <WebExclusiveSelect
                   options={availableOptions}

@@ -330,13 +330,12 @@ export default function StatsVotingScreen() {
             </Card>
 
             {/* 3rd Time Stats - Hidden for now, can be expanded */}
-            {selectedMatchId && (
+            {!!selectedMatchId && (
               <Card variant="outlined" padding="$4">
                 <YStack gap="$3">
                   <Text fontSize="$5" fontWeight="600">
                     {t("voting.thirdTimeSection")}
                   </Text>
-
                   <XStack justifyContent="space-between" alignItems="center">
                     <Text>{t("voting.didYouGo")}</Text>
                     <XStack gap="$2">
@@ -360,7 +359,6 @@ export default function StatsVotingScreen() {
                       </Button>
                     </XStack>
                   </XStack>
-
                   {attendedThirdTime && (
                     <XStack justifyContent="space-between" alignItems="center">
                       <Text>{t("voting.beersCount")}</Text>
@@ -398,7 +396,7 @@ export default function StatsVotingScreen() {
             )}
 
             {/* Match Awards / Voting */}
-            {selectedMatchId && (
+            {!!selectedMatchId && (
               <Card variant="elevated" padding="$4">
                 <YStack gap="$4">
                   <XStack justifyContent="space-between" alignItems="center">
@@ -420,7 +418,6 @@ export default function StatsVotingScreen() {
                       </Button>
                     )}
                   </XStack>
-
                   {isLoadingCriteria || isLoadingPlayers ? (
                     <YStack alignItems="center" padding="$4">
                       <Spinner size="large" />
