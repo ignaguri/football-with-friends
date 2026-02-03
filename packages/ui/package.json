@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "^8.6.0",
-    "@tamagui/lucide-icons": "^1.144.2",
-    "@tamagui/portal": "^1.144.2",
-    "@tamagui/toast": "^1.144.2",
+    "@tamagui/lucide-icons": "2.0.0-rc.0",
+    "@tamagui/portal": "2.0.0-rc.0",
+    "@tamagui/toast": "2.0.0-rc.0",
     "date-fns": "^4.1.0",
     "react-dom": "19.1.0",
-    "tamagui": "^1.144.2"
+    "tamagui": "2.0.0-rc.0"
   },
   "peerDependencies": {
     "react": "^18.3.1 || ^19.0.0",
@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "19.2.8",
+    "@types/react": "19.1.17",
     "typescript": "^5.9.3"
   }
 }

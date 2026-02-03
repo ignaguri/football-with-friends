@@ -287,7 +287,7 @@ function NativeSelect({
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     autoCapitalize="none"
-                    autoCorrect={false}
+                    autoCorrect="off"
                     borderColor="$gray7"
                     backgroundColor="$background"
                   />
@@ -298,6 +298,7 @@ function NativeSelect({
               </Sheet.ScrollView>
             </Sheet.Frame>
             <Sheet.Overlay
+              // @ts-expect-error Tamagui accepts animation at runtime
               animation="lazy"
               enterStyle={{ opacity: 0 }}
               exitStyle={{ opacity: 0 }}

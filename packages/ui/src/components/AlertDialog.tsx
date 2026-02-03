@@ -39,6 +39,7 @@ export function AlertDialog({
       <TamaguiAlertDialog.Portal>
         <TamaguiAlertDialog.Overlay
           key="overlay"
+          // @ts-expect-error Tamagui accepts animation at runtime
           animation="quick"
           opacity={0.5}
           enterStyle={{ opacity: 0 }}
@@ -50,6 +51,7 @@ export function AlertDialog({
           elevate
           key="content"
           animateOnly={["transform", "opacity"]}
+          // @ts-expect-error Tamagui accepts animation at runtime
           animation={[
             "quick",
             {
@@ -60,14 +62,14 @@ export function AlertDialog({
           ]}
           enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
           exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-          space="$4"
+          gap="$4"
           padding="$5"
           backgroundColor="$background"
           borderRadius="$6"
           width="90%"
           maxWidth={400}
         >
-          <YStack space="$3">
+          <YStack gap="$3">
             <TamaguiAlertDialog.Title fontSize="$6" fontWeight="bold">
               {title}
             </TamaguiAlertDialog.Title>

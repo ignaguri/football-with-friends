@@ -14,12 +14,12 @@
     "cf:tail": "wrangler tail"
   },
   "dependencies": {
-    "@better-auth/expo": "^1.4.15",
+    "@better-auth/expo": "^1.4.18",
     "@hono/zod-validator": "^0.7.6",
     "@orpc/server": "^1.13.4",
     "@repo/shared": "workspace:*",
     "@vercel/blob": "^2.0.0",
-    "better-auth": "^1.4.12",
+    "better-auth": "^1.4.18",
     "hono": "^4.11.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",

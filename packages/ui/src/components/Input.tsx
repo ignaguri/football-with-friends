@@ -10,6 +10,7 @@ export interface CustomInputProps extends InputProps {
   showPasswordToggle?: boolean;
   /** Hide the password visibility toggle even for secure text fields */
   hidePasswordToggle?: boolean;
+  size?: string | number;
 }
 
 export function Input({
@@ -32,7 +33,7 @@ export function Input({
   const shouldHideText = isPassword && !isPasswordVisible;
 
   return (
-    <YStack space="$2">
+    <YStack gap="$2">
       {label && (
         <Text fontSize="$3" fontWeight="600" color="$gray12">
           {label}

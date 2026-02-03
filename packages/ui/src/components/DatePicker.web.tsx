@@ -158,6 +158,7 @@ export function DatePicker({
         <TamaguiDialog.Portal>
           <TamaguiDialog.Overlay
             key="overlay"
+            // @ts-expect-error Tamagui accepts animation at runtime
             animation="quick"
             opacity={0.5}
             enterStyle={{ opacity: 0 }}
@@ -169,6 +170,7 @@ export function DatePicker({
             elevate
             key="content"
             animateOnly={["transform", "opacity"]}
+            // @ts-expect-error Tamagui accepts animation at runtime
             animation={[
               "quick",
               {

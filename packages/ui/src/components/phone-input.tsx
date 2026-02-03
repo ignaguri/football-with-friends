@@ -177,7 +177,7 @@ export function PhoneInput({
           onChangeText={handleLocalNumberChange}
           keyboardType="phone-pad"
           autoCapitalize="none"
-          autoCorrect={false}
+          autoCorrect="off"
           disabled={disabled}
           height={48}
           focusStyle={{

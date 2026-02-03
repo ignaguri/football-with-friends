@@ -115,6 +115,23 @@ export interface MatchVotesTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+// Better Auth account table (OAuth providers and credentials)
+export interface AccountTable {
+  id: string;
+  userId: string;
+  accountId: string;
+  providerId: string;
+  accessToken: string | null;
+  refreshToken: string | null;
+  idToken: string | null;
+  accessTokenExpiresAt: number | null;
+  refreshTokenExpiresAt: number | null;
+  scope: string | null;
+  password: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface SettingsTable {
   key: string;
   value: string;
@@ -141,6 +158,7 @@ export interface Database {
   signups: SignupsTable;
   match_invitations: MatchInvitationsTable;
   user: UserTable;
+  account: AccountTable;
   settings: SettingsTable;
   match_player_stats: MatchPlayerStatsTable;
   voting_criteria: VotingCriteriaTable;

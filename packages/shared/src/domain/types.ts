@@ -126,6 +126,8 @@ export interface User {
   image?: string;
   role: "user" | "admin";
   nationality?: string; // ISO 3166-1 alpha-2 country code (e.g., "US", "AR", "DE")
+  username?: string | null;
+  displayUsername?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

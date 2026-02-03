@@ -35,6 +35,7 @@ function ToastContent() {
       y={0}
       opacity={1}
       scale={1}
+      // @ts-expect-error Tamagui accepts animation at runtime
       animation="quick"
       viewportName={currentToast.viewportName}
       backgroundColor="$background"
