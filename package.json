@@ -88,7 +88,7 @@
     "react-day-picker": "9.13.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.71.1",
-    "react-native": "0.83.1",
+    "react-native": "0.81.5",
     "react-resizable-panels": "^4.4.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",

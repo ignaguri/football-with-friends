@@ -13,7 +13,6 @@ import {
   TamaguiProvider,
   Theme,
   YStack,
-  useTheme as useTamaguiTheme,
 } from "tamagui";
 
 import { ErrorBoundary } from "../lib/error-boundary";
@@ -43,15 +42,9 @@ configureApiClient(getAuthApiUrl());
 configureGeneralApiClient(getGeneralApiUrl());
 
 function AppNavigation() {
-  const theme = useTamaguiTheme();
-
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.background?.val,
-        },
-        headerTintColor: theme.color?.val,
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
       }}

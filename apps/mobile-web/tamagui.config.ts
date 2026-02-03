@@ -3,6 +3,13 @@ import { createTamagui } from 'tamagui'
 import { themes } from './lib/themes'
 import { defaultConfig } from '@tamagui/config/v4'
 import { shorthands } from '@tamagui/shorthands'
+import { Platform } from 'react-native'
+
+// Web-only settings for CSS variable-based theme switching
+const webSettings = Platform.OS === 'web' ? {
+  fastSchemeChange: true,
+  shouldAddPrefersColorThemes: true,
+} : {}
 
 const config = createTamagui({
   ...defaultConfig,
@@ -10,9 +17,7 @@ const config = createTamagui({
   shorthands,
   settings: {
     ...defaultConfig.settings,
-    // Ensure CSS variable-based theme switching works
-    fastSchemeChange: true,
-    shouldAddPrefersColorThemes: true,
+    ...webSettings,
   },
 })
 
