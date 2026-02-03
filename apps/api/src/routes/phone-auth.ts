@@ -71,14 +71,24 @@ app.post("/sign-up", zValidator("json", signUpSchema), async (c) => {
       .where("id", "=", signUpResponse.user.id)
       .execute();
 
-    // Return session info
+    // Sign in the user to create a session (signUpEmail may not create one)
+    const signInResponse = await auth.api.signInEmail({
+      body: {
+        email: generatedEmail,
+        password,
+      },
+      headers: c.req.raw.headers,
+    });
+
+    // Return session info with token for web clients
+    const session = (signInResponse as any)?.session;
     return c.json({
       user: {
         ...signUpResponse.user,
         phoneNumber,
         phoneNumberVerified: 0,
       },
-      session: (signUpResponse as any).session,
+      session,
     });
   } catch (error) {
     console.error("Phone sign-up error:", error);

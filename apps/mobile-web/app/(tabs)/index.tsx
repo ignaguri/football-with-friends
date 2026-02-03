@@ -69,31 +69,7 @@ export default function HomeScreen() {
                 })}
               </Text>
 
-              <Pressable onPress={() => router.push("/(tabs)/player")}>
-                <Card variant="elevated" padding="$5">
-                  <XStack gap="$4" alignItems="center">
-                    <YStack
-                      width={48}
-                      height={48}
-                      borderRadius={12}
-                      backgroundColor="$green4"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <User size={24} color="$green10" />
-                    </YStack>
-                    <YStack flex={1}>
-                      <Text fontSize="$6" fontWeight="bold">
-                        {t("home.playerCard")}
-                      </Text>
-                      <Text fontSize="$3" color="$gray11" marginTop="$1">
-                        {t("home.playerCardDesc")}
-                      </Text>
-                    </YStack>
-                  </XStack>
-                </Card>
-              </Pressable>
-
+              {/* Matches Card - First */}
               <Pressable onPress={() => router.push("/(tabs)/matches")}>
                 <Card variant="elevated" padding="$5">
                   <XStack gap="$4" alignItems="center">
@@ -119,6 +95,7 @@ export default function HomeScreen() {
                 </Card>
               </Pressable>
 
+              {/* Social Card - Second */}
               <Pressable onPress={() => router.push("/(tabs)/social")}>
                 <Card variant="elevated" padding="$5">
                   <XStack gap="$4" alignItems="center">
@@ -138,6 +115,32 @@ export default function HomeScreen() {
                       </Text>
                       <Text fontSize="$3" color="$gray11" marginTop="$1">
                         {t("home.socialCardDesc")}
+                      </Text>
+                    </YStack>
+                  </XStack>
+                </Card>
+              </Pressable>
+
+              {/* Profile Card - Third */}
+              <Pressable onPress={() => router.push("/(tabs)/profile")}>
+                <Card variant="elevated" padding="$5">
+                  <XStack gap="$4" alignItems="center">
+                    <YStack
+                      width={48}
+                      height={48}
+                      borderRadius={12}
+                      backgroundColor="$green4"
+                      alignItems="center"
+                      justifyContent="center"
+                    >
+                      <User size={24} color="$green10" />
+                    </YStack>
+                    <YStack flex={1}>
+                      <Text fontSize="$6" fontWeight="bold">
+                        {t("home.playerCard")}
+                      </Text>
+                      <Text fontSize="$3" color="$gray11" marginTop="$1">
+                        {t("home.playerCardDesc")}
                       </Text>
                     </YStack>
                   </XStack>
