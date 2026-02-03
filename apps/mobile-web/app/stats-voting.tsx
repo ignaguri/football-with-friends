@@ -265,9 +265,10 @@ export default function StatsVotingScreen() {
           headerRight: () => (
             <Button
               size="$2"
-              chromeless
+              variant="ghost"
               icon={X}
               onPress={() => router.back()}
+              padding={0}
             />
           ),
         }}

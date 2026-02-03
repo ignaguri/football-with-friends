@@ -584,7 +584,7 @@ export default function ProfileScreen() {
 
               <Button
                 variant="outline"
-                onPress={() => router.push("/(tabs)/profile/stats-voting")}
+                onPress={() => router.push("/stats-voting")}
               >
                 {t("profile.openStatsVoting")}
               </Button>

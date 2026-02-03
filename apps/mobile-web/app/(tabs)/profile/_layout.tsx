@@ -23,13 +23,6 @@ export default function ProfileLayout() {
           title: t("profile.myProfile"),
         }}
       />
-      <Stack.Screen
-        name="stats-voting"
-        options={{
-          title: t("voting.title"),
-          presentation: "modal",
-        }}
-      />
     </Stack>
   );
 }
