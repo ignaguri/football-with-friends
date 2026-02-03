@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useState, useMemo } from "react";
-import { ScrollView, RefreshControl } from "react-native";
+import { ScrollView, RefreshControl, Pressable } from "react-native";
 import {
   Container,
   Card,
@@ -17,7 +17,7 @@ import {
 import { Stack, router } from "expo-router";
 import { useSession, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
-import { X, Minus, Plus, Check } from "@tamagui/lucide-icons";
+import { ChevronLeft, Minus, Plus, Check } from "@tamagui/lucide-icons";
 
 interface Match {
   id: string;
@@ -262,15 +262,11 @@ export default function StatsVotingScreen() {
       <Stack.Screen
         options={{
           title: t("voting.title"),
-          headerRight: () => (
-            <Button
-              size="$3"
-              variant="ghost"
-              icon={X}
-              onPress={() => router.back()}
-              marginRight="$3"
-              scaleIcon={1.5}
-            />
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ marginLeft: 8 }}>
+              <ChevronLeft size={28} color="black" />
+            </Pressable>
           ),
         }}
       />
