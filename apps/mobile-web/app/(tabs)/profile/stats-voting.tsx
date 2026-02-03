@@ -24,8 +24,12 @@ interface Match {
   date: string;
   time: string;
   status: string;
-  locationName: string;
-  courtName?: string;
+  location?: {
+    name: string;
+  };
+  court?: {
+    name: string;
+  };
 }
 
 interface VotingCriteria {
@@ -186,7 +190,7 @@ export default function StatsVotingScreen() {
       .filter((m: Match) => m.status === "completed" || m.status === "played")
       .map((match: Match) => ({
         value: match.id,
-        label: `${formatDate(match.date)} / ${match.time} / ${match.locationName}${match.courtName ? ` - ${match.courtName}` : ""}`,
+        label: `${formatDate(match.date)} / ${match.time} / ${match.location?.name || "Unknown"}${match.court?.name ? ` - ${match.court.name}` : ""}`,
       }));
   }, [matchesData]);
 

@@ -77,6 +77,33 @@ app.get(
   }
 );
 
+// Get players for a match (for voting)
+app.get("/:matchId/players", async (c) => {
+  const matchId = c.req.param("matchId");
+  const match = await getMatchService().getMatchDetails(matchId);
+
+  if (!match) {
+    return c.json({ error: "Match not found" }, 404);
+  }
+
+  // Format players from signups
+  const players = match.signups
+    .filter((signup) => signup.status !== "CANCELLED")
+    .map((signup) => ({
+      id: signup.id,
+      signupId: signup.id,
+      userId: signup.userId || signup.id, // Use signup ID for guests
+      name: signup.playerName,
+      username: signup.user?.username || null,
+      displayUsername: signup.user?.displayUsername || null,
+      guestName: signup.signupType === "guest" ? signup.playerName : null,
+      isGuest: signup.signupType === "guest",
+      isCancelled: signup.status === "CANCELLED",
+    }));
+
+  return c.json({ players });
+});
+
 // Create a new match (admin only)
 app.post(
   "/",
