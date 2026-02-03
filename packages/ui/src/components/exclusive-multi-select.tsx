@@ -151,6 +151,14 @@ function WebExclusiveSelect({
   onChange: (value: string) => void;
   selectedLabel?: string;
 }) {
+  // Theme-aware CSS variables (Tamagui provides these as CSS custom properties)
+  const cssVars = {
+    background: "var(--background)",
+    color: "var(--color)",
+    borderColor: "var(--gray7)",
+    placeholderColor: "var(--gray10)",
+  };
+
   return (
     <select
       value={value || ""}
@@ -161,13 +169,13 @@ function WebExclusiveSelect({
         padding: "12px",
         fontSize: "16px",
         borderRadius: "8px",
-        border: "1px solid #888888",
-        backgroundColor: "var(--background, #fff)",
-        color: value ? "var(--color, #000)" : "#888",
+        border: `1px solid ${cssVars.borderColor}`,
+        backgroundColor: cssVars.background,
+        color: value ? cssVars.color : cssVars.placeholderColor,
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
         appearance: "none",
-        backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+        backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
         backgroundRepeat: "no-repeat",
         backgroundPosition: "right 12px center",
         backgroundSize: "16px",

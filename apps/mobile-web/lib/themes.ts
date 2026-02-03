@@ -1,9 +1,59 @@
 // @ts-nocheck - Tamagui theme generation creates complex recursive types that can cause stack overflow during type checking
-import { createThemes, defaultComponentThemes } from '@tamagui/theme-builder'
+import { createThemes } from '@tamagui/theme-builder'
 import * as Colors from '@tamagui/colors'
 
-const darkPalette = ['hsla(45, 16%, 1%, 1)','hsla(45, 16%, 6%, 1)','hsla(45, 16%, 12%, 1)','hsla(45, 16%, 17%, 1)','hsla(45, 16%, 23%, 1)','hsla(45, 16%, 28%, 1)','hsla(45, 16%, 34%, 1)','hsla(45, 16%, 39%, 1)','hsla(45, 16%, 45%, 1)','hsla(45, 16%, 50%, 1)','hsla(0, 15%, 93%, 1)','hsla(0, 15%, 99%, 1)']
-const lightPalette = ['hsla(45, 16%, 94%, 1)','hsla(45, 16%, 89%, 1)','hsla(45, 16%, 84%, 1)','hsla(45, 16%, 79%, 1)','hsla(45, 16%, 74%, 1)','hsla(45, 16%, 70%, 1)','hsla(45, 16%, 65%, 1)','hsla(45, 16%, 60%, 1)','hsla(45, 16%, 55%, 1)','hsla(45, 16%, 50%, 1)','hsla(0, 15%, 15%, 1)','hsla(0, 15%, 1%, 1)']
+/**
+ * Football with Friends Theme Configuration
+ *
+ * Base palette: Warm gray tones (45° hue, 16% saturation)
+ * - Gives a softer, more welcoming feel than pure gray
+ * - 12 steps from near-black to near-white
+ *
+ * Accent: Football green (133° hue)
+ * - Represents the pitch/field
+ * - Used for primary actions and success states
+ *
+ * Extra colors used throughout the app:
+ * - blue: Links, info icons, calendar
+ * - green: Success, player card, attendance confirmed
+ * - red: Errors, danger, cancellation
+ * - yellow: Awards (golden boot, etc.)
+ * - orange: Warnings, same-day fees
+ * - purple: Social features, community
+ * - gray: Muted text, borders, disabled states
+ */
+
+// Dark mode: starts very dark, ends mid-gray (text will be light on these)
+const darkPalette = [
+  'hsla(45, 16%, 1%, 1)',   // 1 - near black (background)
+  'hsla(45, 16%, 6%, 1)',   // 2
+  'hsla(45, 16%, 11%, 1)',  // 3 - subtle surfaces
+  'hsla(45, 16%, 16%, 1)',  // 4
+  'hsla(45, 16%, 21%, 1)',  // 5 - borders
+  'hsla(45, 16%, 27%, 1)',  // 6
+  'hsla(45, 16%, 33%, 1)',  // 7 - muted elements
+  'hsla(45, 16%, 40%, 1)',  // 8
+  'hsla(45, 16%, 48%, 1)',  // 9 - secondary text
+  'hsla(45, 16%, 56%, 1)',  // 10
+  'hsla(45, 16%, 88%, 1)',  // 11 - primary text
+  'hsla(45, 16%, 97%, 1)',  // 12 - high contrast text
+]
+
+// Light mode: starts near-white, ends mid-gray (text will be dark on these)
+const lightPalette = [
+  'hsla(45, 16%, 99%, 1)',  // 1 - near white (background)
+  'hsla(45, 16%, 96%, 1)',  // 2
+  'hsla(45, 16%, 92%, 1)',  // 3 - subtle surfaces
+  'hsla(45, 16%, 88%, 1)',  // 4
+  'hsla(45, 16%, 82%, 1)',  // 5 - borders
+  'hsla(45, 16%, 75%, 1)',  // 6
+  'hsla(45, 16%, 66%, 1)',  // 7 - muted elements
+  'hsla(45, 16%, 56%, 1)',  // 8
+  'hsla(45, 16%, 45%, 1)',  // 9 - secondary text
+  'hsla(45, 16%, 34%, 1)',  // 10
+  'hsla(45, 16%, 18%, 1)',  // 11 - primary text
+  'hsla(45, 16%, 6%, 1)',   // 12 - high contrast text
+]
 
 const lightShadows = {
   shadow1: 'rgba(0,0,0,0.04)',
@@ -23,24 +73,52 @@ const darkShadows = {
   shadow6: 'rgba(0,0,0,0.7)',
 }
 
-// we're adding some example sub-themes for you to show how they are done, "success" "warning", "error":
+// Football green accent palette (pitch/field color)
+const accentDarkPalette = [
+  'hsla(133, 45%, 18%, 1)',  // 1 - darkest
+  'hsla(133, 45%, 22%, 1)',  // 2
+  'hsla(133, 45%, 26%, 1)',  // 3
+  'hsla(133, 45%, 30%, 1)',  // 4
+  'hsla(133, 45%, 34%, 1)',  // 5
+  'hsla(133, 50%, 38%, 1)',  // 6
+  'hsla(133, 50%, 42%, 1)',  // 7
+  'hsla(133, 50%, 46%, 1)',  // 8
+  'hsla(133, 50%, 50%, 1)',  // 9 - main accent
+  'hsla(133, 50%, 55%, 1)',  // 10
+  'hsla(133, 30%, 90%, 1)',  // 11 - light text on dark
+  'hsla(133, 20%, 96%, 1)',  // 12 - lightest
+]
+
+const accentLightPalette = [
+  'hsla(133, 50%, 97%, 1)',  // 1 - lightest (tinted background)
+  'hsla(133, 50%, 93%, 1)',  // 2
+  'hsla(133, 50%, 88%, 1)',  // 3
+  'hsla(133, 50%, 82%, 1)',  // 4
+  'hsla(133, 50%, 74%, 1)',  // 5
+  'hsla(133, 50%, 64%, 1)',  // 6
+  'hsla(133, 50%, 52%, 1)',  // 7
+  'hsla(133, 55%, 44%, 1)',  // 8
+  'hsla(133, 60%, 36%, 1)',  // 9 - main accent
+  'hsla(133, 65%, 30%, 1)',  // 10
+  'hsla(133, 70%, 20%, 1)',  // 11 - dark text
+  'hsla(133, 75%, 12%, 1)',  // 12 - darkest
+]
 
 const builtThemes = createThemes({
-  componentThemes: defaultComponentThemes,
-
   base: {
     palette: {
       dark: darkPalette,
       light: lightPalette,
     },
-
     extra: {
       light: {
         ...Colors.blue,
         ...Colors.green,
         ...Colors.red,
         ...Colors.yellow,
+        ...Colors.orange,
         ...Colors.gray,
+        ...Colors.purple,
         ...lightShadows,
         shadowColor: lightShadows.shadow1,
       },
@@ -49,7 +127,9 @@ const builtThemes = createThemes({
         ...Colors.greenDark,
         ...Colors.redDark,
         ...Colors.yellowDark,
+        ...Colors.orangeDark,
         ...Colors.grayDark,
+        ...Colors.purpleDark,
         ...darkShadows,
         shadowColor: darkShadows.shadow1,
       },
@@ -58,8 +138,8 @@ const builtThemes = createThemes({
 
   accent: {
     palette: {
-      dark: ['hsla(133, 50%, 38%, 1)','hsla(133, 50%, 40%, 1)','hsla(133, 50%, 43%, 1)','hsla(133, 50%, 45%, 1)','hsla(133, 50%, 48%, 1)','hsla(133, 50%, 50%, 1)','hsla(133, 50%, 53%, 1)','hsla(133, 50%, 55%, 1)','hsla(133, 50%, 58%, 1)','hsla(133, 50%, 60%, 1)','hsla(250, 50%, 90%, 1)','hsla(250, 50%, 95%, 1)'],
-      light: ['hsla(133, 50%, 40%, 1)','hsla(133, 50%, 43%, 1)','hsla(133, 50%, 46%, 1)','hsla(133, 50%, 48%, 1)','hsla(133, 50%, 51%, 1)','hsla(133, 50%, 54%, 1)','hsla(133, 50%, 57%, 1)','hsla(133, 50%, 59%, 1)','hsla(133, 50%, 62%, 1)','hsla(133, 50%, 65%, 1)','hsla(250, 50%, 95%, 1)','hsla(250, 50%, 95%, 1)'],
+      dark: accentDarkPalette,
+      light: accentLightPalette,
     },
   },
 
@@ -70,14 +150,12 @@ const builtThemes = createThemes({
         light: Object.values(Colors.yellow),
       },
     },
-
     error: {
       palette: {
         dark: Object.values(Colors.redDark),
         light: Object.values(Colors.red),
       },
     },
-
     success: {
       palette: {
         dark: Object.values(Colors.greenDark),
@@ -85,26 +163,6 @@ const builtThemes = createThemes({
       },
     },
   },
-
-  // optionally add more, can pass palette or template
-
-  // grandChildrenThemes: {
-  //   alt1: {
-  //     template: 'alt1',
-  //   },
-  //   alt2: {
-  //     template: 'alt2',
-  //   },
-  //   surface1: {
-  //     template: 'surface1',
-  //   },
-  //   surface2: {
-  //     template: 'surface2',
-  //   },
-  //   surface3: {
-  //     template: 'surface3',
-  //   },
-  // },
 })
 
 export type Themes = typeof builtThemes

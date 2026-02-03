@@ -303,10 +303,10 @@ export default function StatsVotingScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
-          <YStack space="$4">
+          <YStack gap="$4">
             {/* Match Selection */}
             <Card variant="elevated" padding="$4">
-              <YStack space="$3">
+              <YStack gap="$3">
                 <Text fontSize="$5" fontWeight="600">
                   {t("voting.selectMatch")}
                 </Text>
@@ -332,14 +332,14 @@ export default function StatsVotingScreen() {
             {/* 3rd Time Stats - Hidden for now, can be expanded */}
             {selectedMatchId && (
               <Card variant="outlined" padding="$4">
-                <YStack space="$3">
+                <YStack gap="$3">
                   <Text fontSize="$5" fontWeight="600">
                     {t("voting.thirdTimeSection")}
                   </Text>
 
                   <XStack justifyContent="space-between" alignItems="center">
                     <Text>{t("voting.didYouGo")}</Text>
-                    <XStack space="$2">
+                    <XStack gap="$2">
                       <Button
                         size="$3"
                         variant={
@@ -364,7 +364,7 @@ export default function StatsVotingScreen() {
                   {attendedThirdTime && (
                     <XStack justifyContent="space-between" alignItems="center">
                       <Text>{t("voting.beersCount")}</Text>
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Button
                           size="$3"
                           circular
@@ -400,7 +400,7 @@ export default function StatsVotingScreen() {
             {/* Match Awards / Voting */}
             {selectedMatchId && (
               <Card variant="elevated" padding="$4">
-                <YStack space="$4">
+                <YStack gap="$4">
                   <XStack justifyContent="space-between" alignItems="center">
                     <Text fontSize="$5" fontWeight="600">
                       {t("voting.matchAwards")}
@@ -452,7 +452,7 @@ export default function StatsVotingScreen() {
                       borderRadius="$3"
                       alignItems="center"
                       justifyContent="center"
-                      space="$2"
+                      gap="$2"
                     >
                       <Check size={16} color="$green10" />
                       <Text color="$green10" fontWeight="600">
@@ -472,7 +472,7 @@ export default function StatsVotingScreen() {
                     }
                   >
                     {isSubmitting ? (
-                      <XStack alignItems="center" space="$2">
+                      <XStack alignItems="center" gap="$2">
                         <Spinner size="small" color="white" />
                         <Text color="white">{t("voting.submitting")}</Text>
                       </XStack>
@@ -486,7 +486,7 @@ export default function StatsVotingScreen() {
 
             {!selectedMatchId && (
               <Card variant="outlined" padding="$6">
-                <YStack alignItems="center" space="$2">
+                <YStack alignItems="center" gap="$2">
                   <Text color="$gray11" textAlign="center">
                     {t("voting.selectMatch")}
                   </Text>

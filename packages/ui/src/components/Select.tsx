@@ -93,6 +93,17 @@ function WebSelect({
     setSearchQuery("");
   };
 
+  // Theme-aware CSS variables (Tamagui provides these as CSS custom properties)
+  const cssVars = {
+    background: "var(--background)",
+    color: "var(--color)",
+    borderColor: "var(--gray7)",
+    placeholderColor: "var(--gray10)",
+    hoverBg: "var(--gray4)",
+    selectedBg: "var(--gray5)",
+    accentColor: "var(--blue10)",
+  };
+
   return (
     <YStack gap="$2">
       {label && (
@@ -112,9 +123,9 @@ function WebSelect({
             fontSize: "16px",
             fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
             borderRadius: "8px",
-            border: error ? "1px solid #e54d2e" : "1px solid #888888",
-            backgroundColor: "var(--background, #fff)",
-            color: value ? "var(--color, #000)" : "#888888",
+            border: error ? "1px solid var(--red8)" : `1px solid ${cssVars.borderColor}`,
+            backgroundColor: cssVars.background,
+            color: value ? cssVars.color : cssVars.placeholderColor,
             cursor: disabled ? "not-allowed" : "pointer",
             opacity: disabled ? 0.5 : 1,
             textAlign: "left",
@@ -126,7 +137,7 @@ function WebSelect({
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {displayLabel}
           </span>
-          <ChevronDown size={16} style={{ flexShrink: 0, marginLeft: 8 }} />
+          <ChevronDown size={16} color={cssVars.color} style={{ flexShrink: 0, marginLeft: 8 }} />
         </button>
 
         {/* Dropdown */}
@@ -138,10 +149,10 @@ function WebSelect({
               left: 0,
               right: 0,
               marginTop: "4px",
-              backgroundColor: "var(--background, #fff)",
-              border: "1px solid #888888",
+              backgroundColor: cssVars.background,
+              border: `1px solid ${cssVars.borderColor}`,
               borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              boxShadow: "var(--shadow6)",
               zIndex: 1000,
               maxHeight: "300px",
               display: "flex",
@@ -152,7 +163,7 @@ function WebSelect({
           >
             {/* Search input */}
             {searchable && (
-              <div style={{ padding: "8px", borderBottom: "1px solid #eee", boxSizing: "border-box" }}>
+              <div style={{ padding: "8px", borderBottom: `1px solid ${cssVars.borderColor}`, boxSizing: "border-box" }}>
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -163,11 +174,13 @@ function WebSelect({
                     width: "100%",
                     padding: "8px",
                     fontSize: "14px",
-                    border: "1px solid #ccc",
+                    border: `1px solid ${cssVars.borderColor}`,
                     borderRadius: "4px",
                     outline: "none",
                     boxSizing: "border-box",
                     fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    backgroundColor: cssVars.background,
+                    color: cssVars.color,
                   }}
                 />
               </div>
@@ -178,7 +191,7 @@ function WebSelect({
               {filteredOptions.length === 0 ? (
                 <div style={{
                   padding: "12px",
-                  color: "#888",
+                  color: cssVars.placeholderColor,
                   textAlign: "center",
                   fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                 }}>
@@ -192,7 +205,8 @@ function WebSelect({
                     style={{
                       padding: "10px 12px",
                       cursor: "pointer",
-                      backgroundColor: option.value === value ? "#f0f0f0" : "transparent",
+                      backgroundColor: option.value === value ? cssVars.selectedBg : "transparent",
+                      color: cssVars.color,
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -200,15 +214,15 @@ function WebSelect({
                       fontSize: "14px",
                     }}
                     onMouseEnter={(e) => {
-                      (e.target as HTMLDivElement).style.backgroundColor = "#f5f5f5";
+                      (e.target as HTMLDivElement).style.backgroundColor = cssVars.hoverBg;
                     }}
                     onMouseLeave={(e) => {
                       (e.target as HTMLDivElement).style.backgroundColor =
-                        option.value === value ? "#f0f0f0" : "transparent";
+                        option.value === value ? cssVars.selectedBg : "transparent";
                     }}
                   >
                     <span>{option.label}</span>
-                    {option.value === value && <Check size={16} color="#007AFF" />}
+                    {option.value === value && <Check size={16} color={cssVars.accentColor} />}
                   </div>
                 ))
               )}

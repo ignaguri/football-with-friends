@@ -8,6 +8,12 @@ const config = createTamagui({
   ...defaultConfig,
   themes,
   shorthands,
+  settings: {
+    ...defaultConfig.settings,
+    // Ensure CSS variable-based theme switching works
+    fastSchemeChange: true,
+    shouldAddPrefersColorThemes: true,
+  },
 })
 
 export default config

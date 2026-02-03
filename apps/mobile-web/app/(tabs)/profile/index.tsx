@@ -339,7 +339,7 @@ export default function ProfileScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
         >
-          <YStack space="$6" alignItems="center">
+          <YStack gap="$6" alignItems="center">
             <Text fontSize="$8" fontWeight="bold" textAlign="center">
               {t("home.title")}
             </Text>
@@ -347,7 +347,7 @@ export default function ProfileScreen() {
               {t("auth.signInDescription")}
             </Text>
 
-            <YStack space="$3" width="100%" maxWidth={300}>
+            <YStack gap="$3" width="100%" maxWidth={300}>
               <Link href="/(auth)/sign-in" asChild>
                 <Button variant="primary">{t("shared.signIn")}</Button>
               </Link>
@@ -357,7 +357,7 @@ export default function ProfileScreen() {
             </YStack>
 
             <Card variant="outlined" width="100%" maxWidth={300}>
-              <YStack space="$3">
+              <YStack gap="$3">
                 <Text fontSize="$4" fontWeight="600">
                   {t("shared.settings")}
                 </Text>
@@ -392,10 +392,10 @@ export default function ProfileScreen() {
           <RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} />
         }
       >
-        <YStack space="$4">
+        <YStack gap="$4">
           {/* Profile Card with Inline Editing */}
           <Card variant="elevated" padding="$4">
-            <YStack space="$4">
+            <YStack gap="$4">
               {/* Avatar with upload button */}
               <XStack justifyContent="center">
                 <YStack alignItems="center">
@@ -434,7 +434,7 @@ export default function ProfileScreen() {
 
               {/* Profile Fields - Display or Edit Mode */}
               {isEditing ? (
-                <YStack space="$3">
+                <YStack gap="$3">
                   <Input
                     label={t("profile.fullName")}
                     placeholder={t("auth.namePlaceholder")}
@@ -485,9 +485,9 @@ export default function ProfileScreen() {
                   />
                 </YStack>
               ) : (
-                <YStack space="$2">
+                <YStack gap="$2">
                   {/* Display name prominently */}
-                  <YStack alignItems="center" space="$1">
+                  <YStack alignItems="center" gap="$1">
                     <Text fontSize="$7" fontWeight="bold">
                       {displayName}
                     </Text>
@@ -499,14 +499,14 @@ export default function ProfileScreen() {
                   </YStack>
 
                   {/* Profile details */}
-                  <YStack space="$2" marginTop="$2">
+                  <YStack gap="$2" marginTop="$2">
                     {user.nationality && (
                       <XStack
                         justifyContent="space-between"
                         alignItems="center"
                       >
                         <Text color="$gray11">{t("profile.nationality")}</Text>
-                        <XStack alignItems="center" space="$2">
+                        <XStack alignItems="center" gap="$2">
                           <Text fontSize="$4">
                             {getCountryFlag(user.nationality)}
                           </Text>
@@ -544,7 +544,7 @@ export default function ProfileScreen() {
 
               {/* Action buttons */}
               {isEditing ? (
-                <XStack space="$2" marginTop="$2">
+                <XStack gap="$2" marginTop="$2">
                   <Button
                     flex={1}
                     variant="outline"
@@ -586,7 +586,7 @@ export default function ProfileScreen() {
 
           {/* My Stats Card */}
           <Card variant="elevated">
-            <YStack space="$3">
+            <YStack gap="$3">
               <Text fontSize="$5" fontWeight="600">
                 {t("profile.myStats")}
               </Text>
@@ -632,13 +632,13 @@ export default function ProfileScreen() {
 
           {/* Change Password Card */}
           <Card variant="outlined">
-            <YStack space="$3">
+            <YStack gap="$3">
               <Text fontSize="$5" fontWeight="600">
                 {t("profile.security")}
               </Text>
 
               {isChangingPassword ? (
-                <YStack space="$3">
+                <YStack gap="$3">
                   {requiresCurrentPassword && (
                     <Input
                       label={t("profile.currentPassword")}
@@ -670,7 +670,7 @@ export default function ProfileScreen() {
                     </Text>
                   )}
 
-                  <XStack space="$2" marginTop="$3">
+                  <XStack gap="$2" marginTop="$3">
                     <Button
                       flex={1}
                       variant="outline"
@@ -713,7 +713,7 @@ export default function ProfileScreen() {
 
           {/* Settings Card */}
           <Card variant="outlined">
-            <YStack space="$3">
+            <YStack gap="$3">
               <Text fontSize="$5" fontWeight="600">
                 {t("shared.settings")}
               </Text>

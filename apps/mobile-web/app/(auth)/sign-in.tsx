@@ -192,13 +192,13 @@ export default function SignInScreen() {
   return (
     <Container variant="padded">
       <YStack
-        space="$6"
+        gap="$6"
         flex={1}
         justifyContent="center"
         maxWidth={400}
         marginHorizontal="auto"
       >
-        <YStack space="$2" alignItems="center">
+        <YStack gap="$2" alignItems="center">
           <Text fontSize="$9" fontWeight="bold">
             {t("auth.welcomeBack")}
           </Text>
@@ -223,7 +223,7 @@ export default function SignInScreen() {
         </Button>
 
         {/* Divider */}
-        <XStack space="$3" alignItems="center">
+        <XStack gap="$3" alignItems="center">
           <YStack flex={1} height={1} backgroundColor="$gray6" />
           <Text color="$gray10" fontSize="$3">
             {t("auth.orContinueWith")}
@@ -232,7 +232,7 @@ export default function SignInScreen() {
         </XStack>
 
         {/* Auth Method Toggle */}
-        <XStack justifyContent="center" space="$2">
+        <XStack justifyContent="center" gap="$2">
           <Pressable onPress={switchToEmail}>
             <Text
               color={authMethod === "email" ? "$blue10" : "$gray10"}
@@ -259,7 +259,7 @@ export default function SignInScreen() {
         {/* Email/Password Sign In */}
         {authMethod === "email" && (
           <Card variant="elevated" padding="$4">
-            <YStack space="$4">
+            <YStack gap="$4">
               <Controller
                 control={emailForm.control}
                 name="email"
@@ -324,7 +324,7 @@ export default function SignInScreen() {
         {/* Phone/Password Sign In */}
         {authMethod === "phone" && (
           <Card variant="elevated" padding="$4">
-            <YStack space="$4">
+            <YStack gap="$4">
               <Controller
                 control={phoneForm.control}
                 name="phoneNumber"
@@ -387,7 +387,7 @@ export default function SignInScreen() {
           </Card>
         )}
 
-        <YStack space="$2" alignItems="center">
+        <YStack gap="$2" alignItems="center">
           <Text color="$gray11">
             {t("auth.noAccount")}{" "}
             <Link href="/(auth)/sign-up" asChild>

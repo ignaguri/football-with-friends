@@ -14,10 +14,10 @@ export function Button({ variant = "primary", ...props }: CustomButtonProps) {
       pressStyle: { backgroundColor: "$blue11" },
     },
     secondary: {
-      backgroundColor: "$backgroundStrong",
+      backgroundColor: "$gray4",
       color: "$color",
-      hoverStyle: { backgroundColor: "$backgroundHover" },
-      pressStyle: { backgroundColor: "$backgroundPress" },
+      hoverStyle: { backgroundColor: "$gray5" },
+      pressStyle: { backgroundColor: "$gray6" },
     },
     outline: {
       backgroundColor: "transparent",
