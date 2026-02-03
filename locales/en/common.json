@@ -49,7 +49,7 @@
     "unmarkPaidSuccess": "Marked as pending",
     "rejoinSuccess": "Rejoined the match!",
     "cancelSuccess": "You have cancelled your spot.",
-    "guestAddSuccess": "Guest added successfully!",
+    "guestAddSuccess": "Friend added successfully!",
     "matchCancelled": "This match has been cancelled",
     "paymentInfo": "Payment Information",
     "paymentMethod": "Payment Method",
@@ -87,12 +87,13 @@
     "location": "Location",
     "max": "Max",
     "substitutes": "Substitutes",
-    "availableSpots": "Available"
+    "availableSpots": "Available",
+    "free": "Free"
   },
   "actions": {
     "in": "You're in!",
     "wantToPlay": "Want to play?",
-    "cancelOrGuest": "You can cancel your spot or sign up a guest below.",
+    "cancelOrGuest": "You can cancel your spot or invite a friend below.",
     "spotsLeft_one": "{{count}} spot left!",
     "spotsLeft_other": "{{count}} spots left!",
     "matchFull": "Match is full!",
@@ -100,21 +101,21 @@
     "join": "Join Match",
     "cancelling": "Cancelling...",
     "cancel": "Cancel my spot",
-    "signUpGuest": "Sign up a guest",
+    "signUpGuest": "Invite a friend",
     "cancelled": "You have cancelled your spot."
   },
   "players": {
     "title": "Players",
     "updating": "Updating players...",
     "noPlayers": "No players signed up yet",
-    "guest": "(Guest)",
+    "guest": "(Friend)",
     "cancelledSection": "Cancelled"
   },
   "guest": {
-    "title": "Sign up a guest",
-    "label": "Guest's name (optional)",
-    "placeholder": "Guest's name (optional)",
-    "add": "Add guest",
+    "title": "Invite a friend",
+    "label": "Friend's name",
+    "placeholder": "Friend's name",
+    "add": "Add friend",
     "adding": "Adding...",
     "nameTooLong": "Name too long"
   },
@@ -135,7 +136,7 @@
       "Pay before playing. No pay, no play.",
       "Respect all players and referees.",
       "2x1 rule: If you cancel late, you pay double next time.",
-      "Guest players allowed if spots are open."
+      "Friends allowed if spots are open."
     ],
     "matchTitle": "Match Rules",
     "match": [
@@ -326,7 +327,7 @@
     "email": "Email",
     "cancelling": "Cancelling...",
     "cancelSpot": "Cancel Spot",
-    "cancelGuest": "Cancel Guest",
+    "cancelGuest": "Cancel Friend",
     "cancelSuccess": "Cancelled {name}'s spot.",
     "cancelError": "Could not cancel player's spot."
   },
@@ -505,6 +506,7 @@
   "voting": {
     "title": "Match Voting",
     "selectMatch": "Select Match",
+    "voteForMatch": "Vote for this Match",
     "thirdTimeSection": "3rd Half Stats",
     "didYouGo": "Did you go to the 3rd half?",
     "yes": "Yes",

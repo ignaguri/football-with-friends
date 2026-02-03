@@ -487,6 +487,27 @@ export class TursoMatchRepository implements MatchRepository {
     const rows = await dataQuery.execute();
     const matches = rows.map(dbMatchWithCourtToMatch);
 
+    // If userId is provided, fetch user's signup status for each match
+    if (filters?.userId && matches.length > 0) {
+      const matchIds = matches.map((m) => m.id);
+      const userSignups = await this.db
+        .selectFrom("signups")
+        .select(["match_id", "status"])
+        .where("match_id", "in", matchIds)
+        .where("user_id", "=", filters.userId)
+        .execute();
+
+      // Create a map of matchId -> status
+      const signupMap = new Map(
+        userSignups.map((s) => [s.match_id, s.status as PlayerStatus])
+      );
+
+      // Attach user signup status to each match
+      for (const match of matches) {
+        (match as any).userSignupStatus = signupMap.get(match.id) || null;
+      }
+    }
+
     return { matches, total };
   }
 

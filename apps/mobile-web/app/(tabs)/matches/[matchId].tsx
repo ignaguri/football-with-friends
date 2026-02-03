@@ -29,7 +29,8 @@ import { useTranslation } from "react-i18next";
 import { useLocalSearchParams, router } from "expo-router";
 import { RefreshControl, ScrollView, Share, Linking, Alert } from "react-native";
 import {
-  CreditCard,
+  BanknoteArrowUp,
+  BanknoteArrowDown,
   MessageCircle,
   X,
   Calendar,
@@ -220,6 +221,10 @@ export default function MatchDetailScreen() {
     updateSignupMutation.mutate({ signupId, status: "PENDING" });
   };
 
+  const handleMarkAsPaid = (signupId: string) => {
+    updateSignupMutation.mutate({ signupId, status: "PAID" });
+  };
+
   const handleOpenPayment = () => {
     // Open PayPal link from environment variable
     const paypalUrl = process.env.EXPO_PUBLIC_PAYPAL_URL;
@@ -283,6 +288,9 @@ END:VCALENDAR`;
   };
 
   const getPlayerActions = (player: Signup): PlayerAction[] => {
+    // No actions for played matches
+    if (isPlayed) return [];
+
     const isOwn = player.userId === userId;
     const canAct = isAdmin || isOwn;
 
@@ -292,34 +300,44 @@ END:VCALENDAR`;
 
     switch (player.status) {
       case "PENDING":
-        // Pay, Notify I paid, Cancel
-        actions.push({
-          icon: CreditCard,
-          label: t("matchDetail.pay"),
-          onPress: handleOpenPayment,
-          variant: "outline",
-        });
-        actions.push({
-          icon: MessageCircle,
-          label: t("notify.trigger"),
-          onPress: handleNotifyPaid,
-          variant: "outline",
-        });
+        if (isOwn) {
+          // Own user: Pay, Notify I paid, Cancel
+          actions.push({
+            icon: BanknoteArrowUp,
+            label: t("matchDetail.pay"),
+            onPress: handleOpenPayment,
+            variant: "outline",
+          });
+          actions.push({
+            icon: MessageCircle,
+            label: t("notify.trigger"),
+            onPress: handleNotifyPaid,
+            variant: "outline",
+          });
+        } else if (isAdmin) {
+          // Admin viewing another user: Mark as Paid
+          actions.push({
+            icon: BanknoteArrowDown,
+            label: t("matchDetail.markPaid"),
+            onPress: () => handleMarkAsPaid(player.id),
+            variant: "outline",
+          });
+        }
         actions.push({
           icon: X,
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
-          variant: "danger",
+          variant: "danger-outline",
         });
         break;
 
       case "PAID":
-        // Cancel, Add to calendar, Invite friend
+        // Cancel, Add to calendar
         actions.push({
           icon: X,
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
-          variant: "danger",
+          variant: "danger-outline",
         });
         actions.push({
           icon: Calendar,
@@ -327,14 +345,6 @@ END:VCALENDAR`;
           onPress: handleAddToCalendar,
           variant: "outline",
         });
-        if (isOwn) {
-          actions.push({
-            icon: UserPlus,
-            label: t("actions.signUpGuest"),
-            onPress: () => setShowGuestDialog(true),
-            variant: "outline",
-          });
-        }
         break;
 
       case "CANCELLED":
@@ -353,15 +363,6 @@ END:VCALENDAR`;
         });
         break;
 
-      case "SUBSTITUTE":
-        // Show actions similar to PENDING, but indicate they're on waitlist
-        actions.push({
-          icon: X,
-          label: t("actions.cancel"),
-          onPress: () => handleCancelSignup(player.id, player.status),
-          variant: "danger",
-        });
-        break;
     }
 
     return actions;
@@ -382,15 +383,12 @@ END:VCALENDAR`;
     }));
   };
 
-  const paidCount = match?.signups?.filter((s) => s.status === "PAID").length || 0;
-  const pendingCount =
-    match?.signups?.filter((s) => s.status === "PENDING").length || 0;
-  const substituteCount =
-    match?.signups?.filter((s) => s.status === "SUBSTITUTE").length || 0;
-  const activeCount = paidCount + pendingCount;
   const isCancelled = match?.status === "cancelled";
+  const isPlayed = match?.status === "completed" || match?.status === "played";
   const isParticipating = match?.isUserSignedUp;
-  const isUserSubstitute = match?.userSignup?.status === "SUBSTITUTE";
+
+  // Check if user was a participant (PAID or PENDING, not CANCELLED)
+  const userWasParticipant = match?.userSignup?.status === "PAID" || match?.userSignup?.status === "PENDING";
 
   // Check if match is today for same-day cost
   const isMatchToday = match ? (() => {
@@ -493,16 +491,11 @@ END:VCALENDAR`;
           <Card variant="outlined">
             <XStack padding="$3" justifyContent="space-around">
               <YStack alignItems="center">
-                <Text fontSize="$7" fontWeight="bold" color="$green10">
-                  {activeCount}
-                </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {t("players.title")}
-                </Text>
-              </YStack>
-
-              <YStack alignItems="center">
-                <Text fontSize="$7" fontWeight="bold">
+                <Text
+                  fontSize="$7"
+                  fontWeight="bold"
+                  color={match.availableSpots > 0 ? "$green10" : "$color"}
+                >
                   {match.availableSpots}
                 </Text>
                 <Text fontSize="$3" color="$gray10">
@@ -510,32 +503,28 @@ END:VCALENDAR`;
                 </Text>
               </YStack>
 
-              {match.maxSubstitutes !== undefined && match.maxSubstitutes > 0 && (
-                <YStack alignItems="center">
-                  <Text fontSize="$7" fontWeight="bold" color="$blue10">
-                    {match.availableSubstituteSpots ?? match.maxSubstitutes}
-                  </Text>
-                  <Text fontSize="$3" color="$gray10">
-                    {t("stats.substitutes")}
-                  </Text>
-                </YStack>
-              )}
+              <YStack alignItems="center">
+                <Text fontSize="$7" fontWeight="bold">
+                  {match.costPerPlayer ? `€${match.costPerPlayer}` : t("stats.free")}
+                </Text>
+                <Text fontSize="$3" color="$gray10">
+                  {t("stats.cost")}
+                </Text>
+              </YStack>
 
-              {match.costPerPlayer && (
-                <YStack alignItems="center">
-                  <Text fontSize="$7" fontWeight="bold">
-                    {match.costPerPlayer}
-                  </Text>
-                  <Text fontSize="$3" color="$gray10">
-                    {t("stats.cost")}
-                  </Text>
-                </YStack>
-              )}
+              <YStack alignItems="center">
+                <Text fontSize="$7" fontWeight="bold">
+                  {match.court?.name || "-"}
+                </Text>
+                <Text fontSize="$3" color="$gray10">
+                  {t("stats.court")}
+                </Text>
+              </YStack>
             </XStack>
           </Card>
 
-          {/* View A: Not Participating - Show CTA */}
-          {!isParticipating && !isCancelled && userId && (
+          {/* View A: Not Participating - Show CTA (only for upcoming matches) */}
+          {!isParticipating && !isCancelled && !isPlayed && userId && (
             <Card variant="outlined">
               <YStack padding="$3" gap="$2" alignItems="center">
                 {match.availableSpots > 0 ? (
@@ -551,22 +540,6 @@ END:VCALENDAR`;
                       {t("actions.wantToPlay")}
                     </Button>
                   </>
-                ) : match.maxSubstitutes && match.maxSubstitutes > 0 && substituteCount < match.maxSubstitutes ? (
-                  <>
-                    <Text fontSize="$5" fontWeight="600" color="$orange10">
-                      {t("actions.matchFull")}
-                    </Text>
-                    <Text fontSize="$3" color="$gray11" textAlign="center">
-                      {t("matchDetail.substituteList")} ({match.maxSubstitutes - substituteCount} {t("stats.availableSpots").toLowerCase()})
-                    </Text>
-                    <Button
-                      variant="outline"
-                      size="$4"
-                      onPress={() => setShowJoinModal(true)}
-                    >
-                      {t("actions.wantToPlay")}
-                    </Button>
-                  </>
                 ) : (
                   <Text fontSize="$5" fontWeight="600" color="$red10">
                     {t("matchDetail.matchCompletelyFull")}
@@ -576,26 +549,21 @@ END:VCALENDAR`;
             </Card>
           )}
 
-          {/* View: User is on Substitute List */}
-          {isUserSubstitute && (
-            <Card variant="outlined" backgroundColor="$blue2">
-              <YStack padding="$3" gap="$2" alignItems="center">
-                <StatusBadge
-                  status="SUBSTITUTE"
-                  type="player"
-                  label={t("matchDetail.youAreSubstitute")}
-                />
-                <Text fontSize="$3" color="$gray11" textAlign="center">
-                  {t("matchDetail.substitutePosition", {
-                    position: match?.signups?.filter((s) => s.status === "SUBSTITUTE").findIndex((s) => s.id === match.userSignup?.id) + 1
-                  })}
-                </Text>
-              </YStack>
-            </Card>
+          {/* Vote CTA for played matches where user participated */}
+          {isPlayed && userWasParticipant && (
+            <Button
+              variant="primary"
+              onPress={() => router.push({
+                pathname: "/stats-voting",
+                params: { matchId: match.id }
+              })}
+            >
+              {t("voting.voteForMatch")}
+            </Button>
           )}
 
-          {/* View B: Participating - Show Players Table */}
-          {isParticipating && (
+          {/* View B: Participating or Played Match - Show Players Table */}
+          {(isParticipating || isPlayed) && (
             <Card variant="elevated">
               <YStack gap="$2">
                 <XStack
@@ -607,7 +575,7 @@ END:VCALENDAR`;
                   <Text fontSize="$6" fontWeight="bold">
                     {t("players.title")} ({match.signups?.length || 0})
                   </Text>
-                  {match.userSignup?.status === "PAID" && (
+                  {!isPlayed && (match.userSignup?.status === "PAID" || match.userSignup?.status === "PENDING") && (
                     <Button
                       variant="outline"
                       size="$3"
@@ -717,6 +685,7 @@ END:VCALENDAR`;
         open={showGuestDialog}
         onOpenChange={setShowGuestDialog}
         title={t("guest.title")}
+        showActions={false}
       >
         <YStack gap="$4" padding="$4">
           <Input

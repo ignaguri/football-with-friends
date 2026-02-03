@@ -35,6 +35,10 @@ app.get(
   async (c) => {
     const { type, limit, offset } = c.req.valid("query");
 
+    // Get session to include user signup status
+    const session = await auth.api.getSession({ headers: c.req.raw.headers });
+    const userId = session?.user?.id;
+
     const status = type === "past"
       ? "completed"
       : type === "all"
@@ -45,6 +49,7 @@ app.get(
       status,
       limit,
       offset,
+      userId, // Pass userId to get user's signup status
     });
 
     // Return paginated response

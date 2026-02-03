@@ -10,6 +10,7 @@ import {
   StatusBadge,
   Button,
   type MatchStatusType,
+  type PlayerStatusType,
 } from "@repo/ui";
 import { useInfiniteQuery, client, useSession } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
@@ -87,6 +88,19 @@ export default function MatchesListScreen() {
         return t("status.played");
       case "upcoming":
         return t("status.upcoming");
+    }
+  };
+
+  const getPlayerStatusLabel = (status: PlayerStatusType): string => {
+    switch (status) {
+      case "PAID":
+        return t("status.paid");
+      case "PENDING":
+        return t("status.pending");
+      case "CANCELLED":
+        return t("status.cancelled");
+      case "SUBSTITUTE":
+        return t("status.substitute");
     }
   };
 
@@ -177,12 +191,20 @@ export default function MatchesListScreen() {
                     <Text fontSize="$6" fontWeight="600">
                       {formatDate(match.date)}
                     </Text>
-                    {getMatchStatus(match.status) && (
+                    {match.userSignupStatus ? (
                       <StatusBadge
-                        status={getMatchStatus(match.status)!}
-                        type="match"
-                        label={getStatusLabel(getMatchStatus(match.status)!)}
+                        status={match.userSignupStatus}
+                        type="player"
+                        label={getPlayerStatusLabel(match.userSignupStatus)}
                       />
+                    ) : (
+                      match.status === "upcoming" && getMatchStatus(match.status) && (
+                        <StatusBadge
+                          status={getMatchStatus(match.status)!}
+                          type="match"
+                          label={getStatusLabel(getMatchStatus(match.status)!)}
+                        />
+                      )
                     )}
                   </XStack>
 
@@ -198,23 +220,14 @@ export default function MatchesListScreen() {
                       <Text fontSize="$3" color="$gray10">
                         {t("addMatch.maxPlayers")}
                       </Text>
-                      <Text fontSize="$4">{match.max_players}</Text>
+                      <Text fontSize="$4">{match.maxPlayers}</Text>
                     </YStack>
-
-                    {match.cost_per_player && (
-                      <YStack>
-                        <Text fontSize="$3" color="$gray10">
-                          {t("stats.cost")}
-                        </Text>
-                        <Text fontSize="$4">{match.cost_per_player}</Text>
-                      </YStack>
-                    )}
                   </XStack>
 
-                  {match.location_name && (
+                  {match.location?.name && (
                     <Text fontSize="$3" color="$gray11">
-                      {match.location_name}
-                      {match.court_name && ` - ${match.court_name}`}
+                      {match.location.name}
+                      {match.court?.name && ` - ${match.court.name}`}
                     </Text>
                   )}
                 </YStack>

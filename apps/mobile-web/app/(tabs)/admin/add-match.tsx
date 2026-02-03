@@ -49,7 +49,6 @@ export default function AddMatchScreen() {
   const [locationId, setLocationId] = useState("");
   const [courtId, setCourtId] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("10");
-  const [maxSubstitutes, setMaxSubstitutes] = useState("2");
   const [costPerPlayer, setCostPerPlayer] = useState("");
   const [sameDayCost, setSameDayCost] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -74,9 +73,6 @@ export default function AddMatchScreen() {
       }
       if (settings.same_day_extra_cost) {
         setSameDayCost(settings.same_day_extra_cost);
-      }
-      if (settings.default_max_substitutes) {
-        setMaxSubstitutes(settings.default_max_substitutes);
       }
       setSettingsLoaded(true);
     }
@@ -124,7 +120,6 @@ export default function AddMatchScreen() {
           locationId,
           courtId: courtId || undefined,
           maxPlayers: parseInt(maxPlayers) || 10,
-          maxSubstitutes: parseInt(maxSubstitutes) || 2,
           costPerPlayer: costPerPlayer || undefined,
           sameDayCost: sameDayCost || undefined,
         },
@@ -263,15 +258,6 @@ export default function AddMatchScreen() {
           value={maxPlayers}
           onChangeText={setMaxPlayers}
           label={t("addMatch.maxPlayers")}
-          keyboardType="number-pad"
-          disabled={createMutation.isPending}
-        />
-
-        {/* Max Substitutes */}
-        <Input
-          value={maxSubstitutes}
-          onChangeText={setMaxSubstitutes}
-          label={t("addMatch.maxSubstitutes")}
           keyboardType="number-pad"
           disabled={createMutation.isPending}
         />

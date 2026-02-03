@@ -97,10 +97,8 @@ export default function PlayersStatsScreen() {
                 nationality={player.nationality}
                 profilePicture={player.profilePicture}
                 totalMatches={player.totalMatches}
-                totalGoals={player.totalGoals}
                 totalThirdTimes={player.totalThirdTimes}
                 matchesLabel={t("playerStats.totalMatches")}
-                goalsLabel={t("playerStats.goals")}
                 thirdTimesLabel={t("playerStats.thirdTime")}
                 onPress={() =>
                   router.push(`/(tabs)/social/${player.userId}`)

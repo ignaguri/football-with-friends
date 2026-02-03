@@ -8,7 +8,7 @@ export interface PlayerAction {
   icon: ComponentType<{ size?: number }>;
   label: string;
   onPress: () => void;
-  variant?: "primary" | "outline" | "danger" | "ghost";
+  variant?: "primary" | "outline" | "danger" | "danger-outline" | "ghost";
 }
 
 export interface PlayerRow {

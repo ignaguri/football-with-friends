@@ -50,7 +50,7 @@
     "unmarkPaidSuccess": "Marcado como pendiente",
     "rejoinSuccess": "¡Volviste al partido!",
     "cancelSuccess": "Cancelaste tu lugar.",
-    "guestAddSuccess": "¡Invitado agregado con éxito!",
+    "guestAddSuccess": "¡Amigo agregado con éxito!",
     "matchCancelled": "Este partido ha sido cancelado",
     "paymentInfo": "Información de Pago",
     "paymentMethod": "Método de Pago",
@@ -88,12 +88,13 @@
     "location": "Ubicación",
     "max": "Máx",
     "substitutes": "Suplentes",
-    "availableSpots": "Disponibles"
+    "availableSpots": "Disponibles",
+    "free": "Gratis"
   },
   "actions": {
     "in": "¡Estás adentro!",
     "wantToPlay": "¿Querés jugar?",
-    "cancelOrGuest": "Podés cancelar tu lugar o anotar un invitado abajo.",
+    "cancelOrGuest": "Podés cancelar tu lugar o invitar un amigo abajo.",
     "spotsLeft_one": "¡Queda {{count}} lugar!",
     "spotsLeft_other": "¡Quedan {{count}} lugares!",
     "matchFull": "¡Partido completo!",
@@ -101,21 +102,21 @@
     "join": "Anotarme",
     "cancelling": "Cancelando...",
     "cancel": "Cancelar mi lugar",
-    "signUpGuest": "Anotar invitado",
+    "signUpGuest": "Invitar amigo",
     "cancelled": "Cancelaste tu lugar."
   },
   "players": {
     "title": "Jugadores",
     "updating": "Actualizando jugadores...",
     "noPlayers": "Aún no hay jugadores anotados",
-    "guest": "(Invitado)",
+    "guest": "(Amigo)",
     "cancelledSection": "Cancelados"
   },
   "guest": {
-    "title": "Anotar invitado",
-    "label": "Nombre del invitado (opcional)",
-    "placeholder": "Nombre del invitado (opcional)",
-    "add": "Agregar invitado",
+    "title": "Invitar amigo",
+    "label": "Nombre del amigo",
+    "placeholder": "Nombre del amigo",
+    "add": "Agregar amigo",
     "adding": "Agregando...",
     "nameTooLong": "Nombre demasiado largo"
   },
@@ -136,7 +137,7 @@
       "Pagar antes de jugar. Sin pago, no se juega.",
       "Respetar a todos los jugadores y árbitros.",
       "Regla 2x1: Si cancelás tarde, pagás doble la próxima vez.",
-      "Se permiten invitados si hay lugares disponibles."
+      "Se permiten amigos si hay lugares disponibles."
     ],
     "matchTitle": "Reglas del partido",
     "match": [
@@ -329,7 +330,7 @@
     "actions": "Acciones",
     "cancelling": "Cancelando...",
     "cancelSpot": "Cancelar lugar",
-    "cancelGuest": "Cancelar invitado",
+    "cancelGuest": "Cancelar amigo",
     "cancelSuccess": "Lugar de {name} cancelado.",
     "cancelError": "No se pudo cancelar el lugar del jugador."
   },
@@ -508,6 +509,7 @@
   "voting": {
     "title": "Votación del Partido",
     "selectMatch": "Seleccionar Partido",
+    "voteForMatch": "Votar por este Partido",
     "thirdTimeSection": "Estadísticas del 3er Tiempo",
     "didYouGo": "¿Fuiste al 3er tiempo?",
     "yes": "Sí",

@@ -14,9 +14,10 @@ import {
   type SelectOption,
   type SelectionItem,
 } from "@repo/ui";
-import { Stack, router } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useSession, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "tamagui";
 import { ChevronLeft, Minus, Plus, Check } from "@tamagui/lucide-icons";
 
 interface Match {
@@ -56,9 +57,11 @@ interface UserVotes {
 
 export default function StatsVotingScreen() {
   const { t, i18n } = useTranslation();
+  const theme = useTheme();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const [selectedMatchId, setSelectedMatchId] = useState<string>("");
+  const { matchId: preselectedMatchId } = useLocalSearchParams<{ matchId?: string }>();
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(preselectedMatchId || "");
   const [beersCount, setBeersCount] = useState(0);
   const [attendedThirdTime, setAttendedThirdTime] = useState<boolean | null>(null);
   const [voteSelections, setVoteSelections] = useState<Record<string, string | undefined>>({});
@@ -198,7 +201,7 @@ export default function StatsVotingScreen() {
   const playerOptions: SelectOption[] = useMemo(() => {
     if (!matchPlayersData?.players) return [];
     return matchPlayersData.players
-      .filter((p: any) => !p.isCancelled && p.userId !== userId)
+      .filter((p: any) => !p.isCancelled && p.userId !== userId && !p.isGuest)
       .map((player: any) => ({
         value: player.userId,
         label: player.displayUsername || player.username || player.name || player.guestName || "Unknown",
@@ -265,7 +268,7 @@ export default function StatsVotingScreen() {
           headerBackVisible: false,
           headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ marginLeft: 8 }}>
-              <ChevronLeft size={28} color="black" />
+              <ChevronLeft size={28} color={theme.color?.val} />
             </Pressable>
           ),
         }}

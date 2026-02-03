@@ -225,6 +225,19 @@ export class VotingRepository {
     const db = getDatabase();
     const now = new Date().toISOString();
 
+    // Validate that the voted-for user exists in the user table
+    const votedForUser = await db
+      .selectFrom("user")
+      .select("id")
+      .where("id", "=", data.votedForUserId)
+      .executeTakeFirst();
+
+    if (!votedForUser) {
+      throw new Error(
+        `Cannot vote for user ${data.votedForUserId}: user does not exist. Guests cannot receive votes.`
+      );
+    }
+
     // Check if vote already exists for this voter/criteria combo
     const existing = await db
       .selectFrom("match_votes")

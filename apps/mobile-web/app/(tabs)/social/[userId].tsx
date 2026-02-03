@@ -1,5 +1,4 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState } from "react";
 import {
   Container,
   Card,
@@ -9,8 +8,6 @@ import {
   Spinner,
   Button,
   StatsSummary,
-  StatsInputRow,
-  Tabs,
   UserAvatar,
   H2,
 } from "@repo/ui";
@@ -29,7 +26,6 @@ interface MatchPlayerStat {
   id: string;
   matchId: string;
   userId: string;
-  goals: number;
   thirdTimeAttended: boolean;
   thirdTimeBeers: number;
   confirmed: boolean;
@@ -52,20 +48,16 @@ interface PlayerProfile {
     nationality?: string;
   };
   totalMatchesPlayed: number;
-  totalGoals: number;
   totalThirdTimeAttendances: number;
   totalBeers: number;
   matchStats: MatchPlayerStat[];
 }
-
-type StatsTab = "goals" | "thirdTime";
 
 export default function PlayerDetailScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { t } = useTranslation();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<StatsTab>("goals");
 
   const isAdmin = session?.user?.role === "admin";
   const isSelf = session?.user?.id === userId;
@@ -153,24 +145,6 @@ export default function PlayerDetailScreen() {
     },
   });
 
-  const handleGoalsConfirm = (matchId: string, goals: number) => {
-    const existingStat = profile?.matchStats?.find(
-      (s) => s.matchId === matchId,
-    );
-    if (existingStat) {
-      updateStatsMutation.mutate({
-        matchId,
-        targetUserId: userId!,
-        data: { goals, confirmed: true },
-      });
-    } else {
-      recordStatsMutation.mutate({
-        matchId,
-        data: { userId: userId!, goals },
-      });
-    }
-  };
-
   const handleThirdTimeConfirm = (
     matchId: string,
     beers: number,
@@ -205,11 +179,6 @@ export default function PlayerDetailScreen() {
       day: "numeric",
     });
   };
-
-  const tabs = [
-    { value: "goals", label: t("playerStats.goals") },
-    { value: "thirdTime", label: t("playerStats.thirdTime") },
-  ];
 
   if (isLoading) {
     return (
@@ -274,11 +243,6 @@ export default function PlayerDetailScreen() {
                     color: "$blue10",
                   },
                   {
-                    label: t("playerStats.totalGoals"),
-                    value: profile.totalGoals,
-                    color: "$green10",
-                  },
-                  {
                     label: t("playerStats.totalThirdTimes"),
                     value: profile.totalThirdTimeAttendances,
                     color: "$orange10",
@@ -293,115 +257,76 @@ export default function PlayerDetailScreen() {
             </YStack>
           </Card>
 
-          {/* Stats Tabs */}
-          <YStack gap="$3">
-            <Tabs
-              value={activeTab}
-              onValueChange={(value) => setActiveTab(value as StatsTab)}
-              tabs={tabs}
-            />
-
-            <Card variant="outlined">
-              <YStack padding="$3">
-                {activeTab === "goals" && (
-                  <YStack gap="$1">
-                    <Text fontSize="$4" fontWeight="600" marginBottom="$2">
-                      {t("playerStats.goalsPerMatch")}
-                    </Text>
-                    {(!profile.matchStats ||
-                      profile.matchStats.length === 0) && (
-                      <Text color="$gray11" padding="$3" textAlign="center">
-                        {t("playerStats.noStats")}
+          {/* 3rd Time Stats */}
+          <Card variant="outlined">
+            <YStack padding="$3">
+              <YStack gap="$1">
+                <Text fontSize="$4" fontWeight="600" marginBottom="$2">
+                  {t("playerStats.thirdTimeDesc")}
+                </Text>
+                {(!profile.matchStats ||
+                  profile.matchStats.length === 0) && (
+                  <Text color="$gray11" padding="$3" textAlign="center">
+                    {t("playerStats.noStats")}
+                  </Text>
+                )}
+                {profile.matchStats?.map((stat) => (
+                  <XStack
+                    key={stat.id || stat.matchId}
+                    alignItems="center"
+                    padding="$2"
+                    borderBottomWidth={1}
+                    borderBottomColor="$gray5"
+                    gap="$2"
+                  >
+                    <YStack flex={1} gap="$1">
+                      <Text fontSize="$3" fontWeight="500">
+                        {formatDate(stat.match?.date || stat.createdAt)}
                       </Text>
-                    )}
-                    {profile.matchStats?.map((stat) => (
-                      <StatsInputRow
-                        key={stat.id || stat.matchId}
-                        matchDate={formatDate(stat.match?.date || stat.createdAt)}
-                        matchVenue={stat.match?.location?.name}
-                        value={stat.goals}
-                        confirmed={stat.confirmed}
-                        editable={canEdit}
-                        confirmLabel={t("playerStats.confirm")}
-                        modifyLabel={t("playerStats.modify")}
-                        onConfirm={(goals) =>
-                          handleGoalsConfirm(stat.matchId, goals)
+                      {stat.match?.location?.name && (
+                        <Text fontSize="$2" color="$gray10">
+                          {stat.match.location.name}
+                        </Text>
+                      )}
+                    </YStack>
+                    <XStack alignItems="center" gap="$2">
+                      <Text
+                        fontSize="$2"
+                        color={
+                          stat.thirdTimeAttended ? "$green10" : "$red10"
                         }
-                      />
-                    ))}
-                  </YStack>
-                )}
-
-                {activeTab === "thirdTime" && (
-                  <YStack gap="$1">
-                    <Text fontSize="$4" fontWeight="600" marginBottom="$2">
-                      {t("playerStats.thirdTimeDesc")}
-                    </Text>
-                    {(!profile.matchStats ||
-                      profile.matchStats.length === 0) && (
-                      <Text color="$gray11" padding="$3" textAlign="center">
-                        {t("playerStats.noStats")}
-                      </Text>
-                    )}
-                    {profile.matchStats?.map((stat) => (
-                      <XStack
-                        key={stat.id || stat.matchId}
-                        alignItems="center"
-                        padding="$2"
-                        borderBottomWidth={1}
-                        borderBottomColor="$gray5"
-                        gap="$2"
+                        fontWeight="500"
                       >
-                        <YStack flex={1} gap="$1">
-                          <Text fontSize="$3" fontWeight="500">
-                            {formatDate(stat.match?.date || stat.createdAt)}
-                          </Text>
-                          {stat.match?.location?.name && (
-                            <Text fontSize="$2" color="$gray10">
-                              {stat.match.location.name}
-                            </Text>
-                          )}
-                        </YStack>
-                        <XStack alignItems="center" gap="$2">
-                          <Text
-                            fontSize="$2"
-                            color={
-                              stat.thirdTimeAttended ? "$green10" : "$red10"
-                            }
-                            fontWeight="500"
-                          >
-                            {stat.thirdTimeAttended
-                              ? t("playerStats.attended")
-                              : t("playerStats.notAttended")}
-                          </Text>
-                          {stat.thirdTimeAttended && (
-                            <Text fontSize="$4" fontWeight="700">
-                              {stat.thirdTimeBeers}
-                            </Text>
-                          )}
-                          {canEdit && (
-                            <Button
-                              size="$2"
-                              variant="outline"
-                              onPress={() =>
-                                handleThirdTimeConfirm(
-                                  stat.matchId,
-                                  stat.thirdTimeBeers + 1,
-                                  true,
-                                )
-                              }
-                            >
-                              +1
-                            </Button>
-                          )}
-                        </XStack>
-                      </XStack>
-                    ))}
-                  </YStack>
-                )}
+                        {stat.thirdTimeAttended
+                          ? t("playerStats.attended")
+                          : t("playerStats.notAttended")}
+                      </Text>
+                      {stat.thirdTimeAttended && (
+                        <Text fontSize="$4" fontWeight="700">
+                          {stat.thirdTimeBeers}
+                        </Text>
+                      )}
+                      {canEdit && (
+                        <Button
+                          size="$2"
+                          variant="outline"
+                          onPress={() =>
+                            handleThirdTimeConfirm(
+                              stat.matchId,
+                              stat.thirdTimeBeers + 1,
+                              true,
+                            )
+                          }
+                        >
+                          +1
+                        </Button>
+                      )}
+                    </XStack>
+                  </XStack>
+                ))}
               </YStack>
-            </Card>
-          </YStack>
+            </YStack>
+          </Card>
         </YStack>
       </ScrollView>
     </Container>

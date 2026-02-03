@@ -9,11 +9,9 @@ export interface PlayerStatsCardProps {
   nationality?: string;
   profilePicture?: string;
   totalMatches: number;
-  totalGoals: number;
   totalThirdTimes: number;
   onPress?: () => void;
   matchesLabel?: string;
-  goalsLabel?: string;
   thirdTimesLabel?: string;
 }
 
@@ -23,11 +21,9 @@ export function PlayerStatsCard({
   nationality,
   profilePicture,
   totalMatches,
-  totalGoals,
   totalThirdTimes,
   onPress,
   matchesLabel = "Matches",
-  goalsLabel = "Goals",
   thirdTimesLabel = "3rd Half",
 }: PlayerStatsCardProps) {
   return (
@@ -58,9 +54,6 @@ export function PlayerStatsCard({
       <XStack marginTop="$3" gap="$2" flexWrap="wrap">
         <Badge variant="info">
           {totalMatches} {matchesLabel}
-        </Badge>
-        <Badge variant="success">
-          {totalGoals} {goalsLabel}
         </Badge>
         <Badge variant="warning">
           {totalThirdTimes} {thirdTimesLabel}
