@@ -1,9 +1,9 @@
 // @ts-nocheck - Tamagui type recursion workaround
+import { ChevronLeft } from "@tamagui/lucide-icons";
 import { Stack, router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "tamagui";
 import { Pressable } from "react-native";
-import { ChevronLeft } from "@tamagui/lucide-icons";
+import { useTheme } from "tamagui";
 
 export default function SocialLayout() {
   const { t } = useTranslation();

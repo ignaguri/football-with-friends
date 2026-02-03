@@ -1,6 +1,11 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState, useMemo } from "react";
-import { ScrollView, RefreshControl, Pressable } from "react-native";
+import {
+  useSession,
+  client,
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -14,11 +19,12 @@ import {
   type SelectOption,
   type SelectionItem,
 } from "@repo/ui";
-import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useSession, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
-import { useTranslation } from "react-i18next";
-import { useTheme } from "tamagui";
 import { ChevronLeft, Minus, Plus, Check } from "@tamagui/lucide-icons";
+import { Stack, router, useLocalSearchParams } from "expo-router";
+import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { ScrollView, Pressable } from "react-native";
+import { useTheme } from "tamagui";
 
 interface Match {
   id: string;
@@ -60,11 +66,19 @@ export default function StatsVotingScreen() {
   const theme = useTheme();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const { matchId: preselectedMatchId } = useLocalSearchParams<{ matchId?: string }>();
-  const [selectedMatchId, setSelectedMatchId] = useState<string>(preselectedMatchId || "");
+  const { matchId: preselectedMatchId } = useLocalSearchParams<{
+    matchId?: string;
+  }>();
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(
+    preselectedMatchId || "",
+  );
   const [beersCount, setBeersCount] = useState(0);
-  const [attendedThirdTime, setAttendedThirdTime] = useState<boolean | null>(null);
-  const [voteSelections, setVoteSelections] = useState<Record<string, string | undefined>>({});
+  const [attendedThirdTime, setAttendedThirdTime] = useState<boolean | null>(
+    null,
+  );
+  const [voteSelections, setVoteSelections] = useState<
+    Record<string, string | undefined>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -134,7 +148,9 @@ export default function StatsVotingScreen() {
 
   // Submit votes mutation
   const submitVotesMutation = useMutation({
-    mutationFn: async (votes: Array<{ criteriaId: string; votedForUserId: string }>) => {
+    mutationFn: async (
+      votes: Array<{ criteriaId: string; votedForUserId: string }>,
+    ) => {
       const res = await client.api.voting.matches[":matchId"].$post({
         param: { matchId: selectedMatchId },
         json: { votes },
@@ -146,7 +162,9 @@ export default function StatsVotingScreen() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-votes", selectedMatchId] });
+      queryClient.invalidateQueries({
+        queryKey: ["user-votes", selectedMatchId],
+      });
       setSubmitSuccess(true);
       setSubmitError(null);
       setTimeout(() => setSubmitSuccess(false), 3000);
@@ -170,7 +188,9 @@ export default function StatsVotingScreen() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-votes", selectedMatchId] });
+      queryClient.invalidateQueries({
+        queryKey: ["user-votes", selectedMatchId],
+      });
       setVoteSelections({});
     },
   });
@@ -204,7 +224,12 @@ export default function StatsVotingScreen() {
       .filter((p: any) => !p.isCancelled && p.userId !== userId && !p.isGuest)
       .map((player: any) => ({
         value: player.userId,
-        label: player.displayUsername || player.username || player.name || player.guestName || "Unknown",
+        label:
+          player.displayUsername ||
+          player.username ||
+          player.name ||
+          player.guestName ||
+          "Unknown",
       }));
   }, [matchPlayersData, userId]);
 
@@ -317,14 +342,18 @@ export default function StatsVotingScreen() {
                     <XStack space="$2">
                       <Button
                         size="$3"
-                        variant={attendedThirdTime === true ? "primary" : "outline"}
+                        variant={
+                          attendedThirdTime === true ? "primary" : "outline"
+                        }
                         onPress={() => setAttendedThirdTime(true)}
                       >
                         {t("voting.yes")}
                       </Button>
                       <Button
                         size="$3"
-                        variant={attendedThirdTime === false ? "primary" : "outline"}
+                        variant={
+                          attendedThirdTime === false ? "primary" : "outline"
+                        }
                         onPress={() => setAttendedThirdTime(false)}
                       >
                         {t("voting.no")}
@@ -342,9 +371,16 @@ export default function StatsVotingScreen() {
                           icon={Minus}
                           variant="outline"
                           disabled={beersCount <= 0}
-                          onPress={() => setBeersCount(Math.max(0, beersCount - 1))}
+                          onPress={() =>
+                            setBeersCount(Math.max(0, beersCount - 1))
+                          }
                         />
-                        <Text fontSize="$5" fontWeight="600" width={40} textAlign="center">
+                        <Text
+                          fontSize="$5"
+                          fontWeight="600"
+                          width={40}
+                          textAlign="center"
+                        >
                           {beersCount}
                         </Text>
                         <Button
@@ -428,7 +464,12 @@ export default function StatsVotingScreen() {
                   <Button
                     variant="primary"
                     onPress={handleSubmitVotes}
-                    disabled={isSubmitting || Object.keys(voteSelections).filter(k => voteSelections[k]).length === 0}
+                    disabled={
+                      isSubmitting ||
+                      Object.keys(voteSelections).filter(
+                        (k) => voteSelections[k],
+                      ).length === 0
+                    }
                   >
                     {isSubmitting ? (
                       <XStack alignItems="center" space="$2">

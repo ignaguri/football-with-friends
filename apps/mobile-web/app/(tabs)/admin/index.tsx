@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+import {
+  useSession,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -12,15 +18,9 @@ import {
   Spinner,
   Dialog,
 } from "@repo/ui";
-import {
-  useSession,
-  useQuery,
-  useMutation,
-  useQueryClient,
-  client,
-} from "@repo/api-client";
-import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollView, RefreshControl, Alert } from "react-native";
 
 type Tab = "matches" | "locations" | "courts" | "settings" | "voting";
@@ -155,7 +155,9 @@ function MatchesTab() {
   } = useQuery({
     queryKey: ["matches", "all"],
     queryFn: async () => {
-      const res = await client.api.matches.$get({ query: { type: "all", limit: "999" } });
+      const res = await client.api.matches.$get({
+        query: { type: "all", limit: "999" },
+      });
       return res.json();
     },
   });
@@ -195,18 +197,14 @@ function MatchesTab() {
   });
 
   const handleDelete = (match: Match) => {
-    Alert.alert(
-      t("organizer.deleteTitle"),
-      t("organizer.deleteMatchConfirm"),
-      [
-        { text: t("shared.cancel"), style: "cancel" },
-        {
-          text: t("organizer.deleteConfirm"),
-          style: "destructive",
-          onPress: () => deleteMutation.mutate(match.id),
-        },
-      ]
-    );
+    Alert.alert(t("organizer.deleteTitle"), t("organizer.deleteMatchConfirm"), [
+      { text: t("shared.cancel"), style: "cancel" },
+      {
+        text: t("organizer.deleteConfirm"),
+        style: "destructive",
+        onPress: () => deleteMutation.mutate(match.id),
+      },
+    ]);
   };
 
   const handleCancel = (match: Match) => {
@@ -220,7 +218,7 @@ function MatchesTab() {
           style: "destructive",
           onPress: () => cancelMutation.mutate(match.id),
         },
-      ]
+      ],
     );
   };
 
@@ -260,7 +258,10 @@ function MatchesTab() {
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Match Button */}
-        <Button variant="primary" onPress={() => router.push("/(tabs)/admin/add-match")}>
+        <Button
+          variant="primary"
+          onPress={() => router.push("/(tabs)/admin/add-match")}
+        >
           {t("addMatch.title")}
         </Button>
 
@@ -287,7 +288,9 @@ function MatchesTab() {
 
                 <XStack gap="$3">
                   <Text color="$gray11">{match.time}</Text>
-                  <Text color="$gray11">{match.max_players} {t("players.title").toLowerCase()}</Text>
+                  <Text color="$gray11">
+                    {match.max_players} {t("players.title").toLowerCase()}
+                  </Text>
                   {match.cost_per_player && (
                     <Text color="$gray11">{match.cost_per_player}</Text>
                   )}
@@ -702,7 +705,9 @@ function CourtsTab() {
   };
 
   const getLocationName = (locId: string) => {
-    return locations.find((l) => l.id === locId)?.name || t("courts.unknownLocation");
+    return (
+      locations.find((l) => l.id === locId)?.name || t("courts.unknownLocation")
+    );
   };
 
   const locationOptions = locations.map((loc) => ({
@@ -894,11 +899,19 @@ function SettingsTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const [defaultCostPerPlayer, setDefaultCostPerPlayer] = useState("");
-  const [sameDayExtraCost, setSameDayExtraCost] = useState("");
-  const [defaultMaxSubstitutes, setDefaultMaxSubstitutes] = useState("");
-  const [paypalUrl, setPaypalUrl] = useState("");
-  const [organizerWhatsapp, setOrganizerWhatsapp] = useState("");
+  const [defaultCostPerPlayerOverride, setDefaultCostPerPlayerOverride] =
+    useState<string | null>(null);
+  const [sameDayExtraCostOverride, setSameDayExtraCostOverride] = useState<
+    string | null
+  >(null);
+  const [defaultMaxSubstitutesOverride, setDefaultMaxSubstitutesOverride] =
+    useState<string | null>(null);
+  const [paypalUrlOverride, setPaypalUrlOverride] = useState<string | null>(
+    null,
+  );
+  const [organizerWhatsappOverride, setOrganizerWhatsappOverride] = useState<
+    string | null
+  >(null);
 
   const {
     data: settings,
@@ -913,16 +926,15 @@ function SettingsTab() {
     },
   });
 
-  // Populate form when settings load
-  useEffect(() => {
-    if (settings) {
-      setDefaultCostPerPlayer(settings.default_cost_per_player || "");
-      setSameDayExtraCost(settings.same_day_extra_cost || "");
-      setDefaultMaxSubstitutes(settings.default_max_substitutes || "");
-      setPaypalUrl(settings.paypal_url || "");
-      setOrganizerWhatsapp(settings.organizer_whatsapp || "");
-    }
-  }, [settings]);
+  const defaultCostPerPlayer =
+    defaultCostPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
+  const sameDayExtraCost =
+    sameDayExtraCostOverride ?? settings?.same_day_extra_cost ?? "";
+  const defaultMaxSubstitutes =
+    defaultMaxSubstitutesOverride ?? settings?.default_max_substitutes ?? "";
+  const paypalUrl = paypalUrlOverride ?? settings?.paypal_url ?? "";
+  const organizerWhatsapp =
+    organizerWhatsappOverride ?? settings?.organizer_whatsapp ?? "";
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<AppSettings>) => {
@@ -978,7 +990,7 @@ function SettingsTab() {
               label={t("settings.defaultCostPerPlayer")}
               placeholder="10"
               value={defaultCostPerPlayer}
-              onChangeText={setDefaultCostPerPlayer}
+              onChangeText={setDefaultCostPerPlayerOverride}
               keyboardType="numeric"
             />
 
@@ -986,7 +998,7 @@ function SettingsTab() {
               label={t("settings.sameDayExtraCost")}
               placeholder="2"
               value={sameDayExtraCost}
-              onChangeText={setSameDayExtraCost}
+              onChangeText={setSameDayExtraCostOverride}
               keyboardType="numeric"
             />
 
@@ -994,7 +1006,7 @@ function SettingsTab() {
               label={t("settings.defaultMaxSubstitutes")}
               placeholder="2"
               value={defaultMaxSubstitutes}
-              onChangeText={setDefaultMaxSubstitutes}
+              onChangeText={setDefaultMaxSubstitutesOverride}
               keyboardType="numeric"
             />
           </YStack>
@@ -1011,7 +1023,7 @@ function SettingsTab() {
               label={t("settings.paypalUrl")}
               placeholder="https://paypal.me/..."
               value={paypalUrl}
-              onChangeText={setPaypalUrl}
+              onChangeText={setPaypalUrlOverride}
               autoCapitalize="none"
               keyboardType="url"
             />
@@ -1020,7 +1032,7 @@ function SettingsTab() {
               label={t("settings.organizerWhatsapp")}
               placeholder="+1234567890"
               value={organizerWhatsapp}
-              onChangeText={setOrganizerWhatsapp}
+              onChangeText={setOrganizerWhatsappOverride}
               keyboardType="phone-pad"
             />
           </YStack>
@@ -1057,7 +1069,9 @@ function VotingCriteriaTab() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [editingCriteria, setEditingCriteria] = useState<VotingCriteria | null>(null);
+  const [editingCriteria, setEditingCriteria] = useState<VotingCriteria | null>(
+    null,
+  );
   const [code, setCode] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [nameEs, setNameEs] = useState("");
@@ -1193,22 +1207,20 @@ function VotingCriteriaTab() {
   };
 
   const handleDelete = (c: VotingCriteria) => {
-    Alert.alert(
-      t("shared.confirmDelete"),
-      t("shared.deleteConfirm"),
-      [
-        { text: t("shared.cancel"), style: "cancel" },
-        {
-          text: t("shared.delete"),
-          style: "destructive",
-          onPress: () => deleteMutation.mutate(c.id),
-        },
-      ]
-    );
+    Alert.alert(t("shared.confirmDelete"), t("shared.deleteConfirm"), [
+      { text: t("shared.cancel"), style: "cancel" },
+      {
+        text: t("shared.delete"),
+        style: "destructive",
+        onPress: () => deleteMutation.mutate(c.id),
+      },
+    ]);
   };
 
-  const getName = (c: VotingCriteria) => language === "es" ? c.nameEs : c.nameEn;
-  const getDescription = (c: VotingCriteria) => language === "es" ? c.descriptionEs : c.descriptionEn;
+  const getName = (c: VotingCriteria) =>
+    language === "es" ? c.nameEs : c.nameEn;
+  const getDescription = (c: VotingCriteria) =>
+    language === "es" ? c.descriptionEs : c.descriptionEn;
 
   if (isLoading) {
     return (
@@ -1250,7 +1262,9 @@ function VotingCriteriaTab() {
                     <Badge variant={c.isActive ? "default" : "secondary"}>
                       {c.isActive ? t("status.active") : t("status.inactive")}
                     </Badge>
-                    <Text color="$gray10" fontSize="$2">#{c.sortOrder}</Text>
+                    <Text color="$gray10" fontSize="$2">
+                      #{c.sortOrder}
+                    </Text>
                   </XStack>
                 </XStack>
 
@@ -1268,7 +1282,12 @@ function VotingCriteriaTab() {
                   <Button
                     size="$3"
                     variant="outline"
-                    onPress={() => toggleActiveMutation.mutate({ id: c.id, isActive: !c.isActive })}
+                    onPress={() =>
+                      toggleActiveMutation.mutate({
+                        id: c.id,
+                        isActive: !c.isActive,
+                      })
+                    }
                     disabled={toggleActiveMutation.isPending}
                   >
                     {c.isActive ? t("admin.deactivate") : t("admin.activate")}
@@ -1355,9 +1374,13 @@ function VotingCriteriaTab() {
                 flex={1}
                 variant="primary"
                 onPress={() => createMutation.mutate()}
-                disabled={!code || !nameEn || !nameEs || createMutation.isPending}
+                disabled={
+                  !code || !nameEn || !nameEs || createMutation.isPending
+                }
               >
-                {createMutation.isPending ? t("shared.loading") : t("shared.save")}
+                {createMutation.isPending
+                  ? t("shared.loading")
+                  : t("shared.save")}
               </Button>
             </XStack>
           </YStack>
@@ -1427,9 +1450,13 @@ function VotingCriteriaTab() {
                 flex={1}
                 variant="primary"
                 onPress={() => updateMutation.mutate()}
-                disabled={!code || !nameEn || !nameEs || updateMutation.isPending}
+                disabled={
+                  !code || !nameEn || !nameEs || updateMutation.isPending
+                }
               >
-                {updateMutation.isPending ? t("shared.loading") : t("shared.save")}
+                {updateMutation.isPending
+                  ? t("shared.loading")
+                  : t("shared.save")}
               </Button>
             </XStack>
           </YStack>

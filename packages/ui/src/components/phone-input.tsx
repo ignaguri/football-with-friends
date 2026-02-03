@@ -128,7 +128,7 @@ export function PhoneInput({
     [countryCode, getFullPhoneNumber, onChangeValue]
   );
 
-  const selectedCountry = getCountryByCode(countryCode);
+  const _selectedCountry = getCountryByCode(countryCode);
 
   // Create options for the Select component - show full info in dropdown
   const countryOptions = COUNTRIES_WITH_DIAL_CODES.map((country) => ({

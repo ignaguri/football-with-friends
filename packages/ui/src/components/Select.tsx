@@ -4,7 +4,6 @@ import {
   Select as TamaguiSelect,
   SelectProps,
   YStack,
-  XStack,
   Text,
   Adapt,
   Sheet,

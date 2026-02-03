@@ -1,12 +1,19 @@
 // @ts-nocheck - Tamagui's type system with custom config causes recursive type resolution issues
-import { TamaguiProvider, Theme, YStack, useTheme as useTamaguiTheme } from "tamagui";
+import {
+  TamaguiProvider,
+  Theme,
+  YStack,
+  useTheme as useTamaguiTheme,
+} from "tamagui";
+import {
+  APIProvider,
+  configureApiClient,
+  configureGeneralApiClient,
+} from "@repo/api-client";
+import { Toast } from "@repo/ui";
 import { PortalProvider } from "@tamagui/portal";
 import { Stack } from "expo-router";
-import { APIProvider, configureApiClient, configureGeneralApiClient } from "@repo/api-client";
-import { Toast } from "@repo/ui";
-import config from "../tamagui.config";
-import { ThemeProvider, useThemeContext } from "../lib/theme-context";
-import { RulesModalProvider } from "../lib/rules-modal-context";
+
 import { ErrorBoundary } from "../lib/error-boundary";
 
 // Initialize i18n
@@ -20,6 +27,10 @@ import "../global.css";
 // (The Expo plugin stores session in AsyncStorage, bypassing cookie domain issues)
 // General API client: Can use Vercel proxy on web for same-origin requests
 import { Platform } from "react-native";
+
+import { RulesModalProvider } from "../lib/rules-modal-context";
+import { ThemeProvider, useThemeContext } from "../lib/theme-context";
+import config from "../tamagui.config";
 
 // Auth always uses direct API URL for proper OAuth callback handling
 const getAuthApiUrl = () => process.env.EXPO_PUBLIC_API_URL;

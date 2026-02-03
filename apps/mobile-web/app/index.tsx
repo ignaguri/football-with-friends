@@ -1,9 +1,9 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useEffect, useState } from "react";
-import { Redirect } from "expo-router";
 import { useSession, getSession, storeBearerToken } from "@repo/api-client";
-import { YStack, Spinner } from "tamagui";
+import { Redirect } from "expo-router";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
+import { YStack, Spinner } from "tamagui";
 
 /**
  * Root index route - handles "/" navigation on web
@@ -56,7 +56,12 @@ export default function Index() {
   // Show loading spinner while checking authentication or handling callback
   if (isPending || isHandlingCallback) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
         <Spinner size="large" />
       </YStack>
     );

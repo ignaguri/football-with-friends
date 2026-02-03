@@ -1,5 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState } from "react";
+import { useQuery, client } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -9,9 +9,9 @@ import {
   Input,
   PlayerStatsCard,
 } from "@repo/ui";
-import { useQuery, client } from "@repo/api-client";
-import { useTranslation } from "react-i18next";
 import { router } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView } from "react-native";
 
 export default function PlayersStatsScreen() {
@@ -66,9 +66,7 @@ export default function PlayersStatsScreen() {
           {error && (
             <Card variant="outlined" backgroundColor="$red2">
               <YStack padding="$3">
-                <Text color="$red11">
-                  {t("shared.error")}
-                </Text>
+                <Text color="$red11">{t("shared.error")}</Text>
               </YStack>
             </Card>
           )}
@@ -100,9 +98,7 @@ export default function PlayersStatsScreen() {
                 totalThirdTimes={player.totalThirdTimes}
                 matchesLabel={t("playerStats.totalMatches")}
                 thirdTimesLabel={t("playerStats.thirdTime")}
-                onPress={() =>
-                  router.push(`/(tabs)/social/${player.userId}`)
-                }
+                onPress={() => router.push(`/(tabs)/social/${player.userId}`)}
               />
             ))}
         </YStack>

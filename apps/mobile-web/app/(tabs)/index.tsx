@@ -1,12 +1,23 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Container, Card, Text, YStack, XStack, Button, Spinner, Dialog, List } from "@repo/ui";
 import { useSession } from "@repo/api-client";
-import { useTranslation } from "react-i18next";
+import {
+  Container,
+  Card,
+  Text,
+  YStack,
+  XStack,
+  Button,
+  Spinner,
+  Dialog,
+  List,
+} from "@repo/ui";
+import { User, Calendar, Users } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
-import { useTheme } from "tamagui";
-import { User, Calendar, Users } from "@tamagui/lucide-icons";
+import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";
+import { useTheme } from "tamagui";
+
 import { useRulesModal } from "../../lib/rules-modal-context";
 
 export default function HomeScreen() {
@@ -19,7 +30,9 @@ export default function HomeScreen() {
 
   // Get the first 4 general rules for the modal
   const generalRules = t("rules.general", { returnObjects: true }) as string[];
-  const rulesPreview = Array.isArray(generalRules) ? generalRules.slice(0, 4) : [];
+  const rulesPreview = Array.isArray(generalRules)
+    ? generalRules.slice(0, 4)
+    : [];
 
   return (
     <>
@@ -50,7 +63,10 @@ export default function HomeScreen() {
           ) : isAuthenticated ? (
             <YStack gap="$4" width="100%" maxWidth={400}>
               <Text fontSize="$5" color="$gray11" textAlign="center">
-                {t("home.welcome", { name: session?.user?.name || session?.user?.email?.split("@")[0] })}
+                {t("home.welcome", {
+                  name:
+                    session?.user?.name || session?.user?.email?.split("@")[0],
+                })}
               </Text>
 
               <Pressable onPress={() => router.push("/(tabs)/player")}>
@@ -177,10 +193,7 @@ export default function HomeScreen() {
               {t("matchDetail.viewRules")}
             </Button>
 
-            <Button
-              variant="outline"
-              onPress={dismissPermanently}
-            >
+            <Button variant="outline" onPress={dismissPermanently}>
               I already read the rules
             </Button>
           </YStack>

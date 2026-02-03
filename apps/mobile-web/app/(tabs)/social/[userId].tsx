@@ -1,5 +1,12 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+  useSession,
+} from "@repo/api-client";
+import {
   Container,
   Card,
   Text,
@@ -11,15 +18,8 @@ import {
   UserAvatar,
   H2,
 } from "@repo/ui";
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  client,
-  useSession,
-} from "@repo/api-client";
-import { useTranslation } from "react-i18next";
 import { useLocalSearchParams } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView } from "react-native";
 
 interface MatchPlayerStat {
@@ -264,8 +264,7 @@ export default function PlayerDetailScreen() {
                 <Text fontSize="$4" fontWeight="600" marginBottom="$2">
                   {t("playerStats.thirdTimeDesc")}
                 </Text>
-                {(!profile.matchStats ||
-                  profile.matchStats.length === 0) && (
+                {(!profile.matchStats || profile.matchStats.length === 0) && (
                   <Text color="$gray11" padding="$3" textAlign="center">
                     {t("playerStats.noStats")}
                   </Text>
@@ -292,9 +291,7 @@ export default function PlayerDetailScreen() {
                     <XStack alignItems="center" gap="$2">
                       <Text
                         fontSize="$2"
-                        color={
-                          stat.thirdTimeAttended ? "$green10" : "$red10"
-                        }
+                        color={stat.thirdTimeAttended ? "$green10" : "$red10"}
                         fontWeight="500"
                       >
                         {stat.thirdTimeAttended

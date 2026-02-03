@@ -1,5 +1,11 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+  useSession,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -19,16 +25,6 @@ import {
   type PlayerStatusType,
 } from "@repo/ui";
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  client,
-  useSession,
-} from "@repo/api-client";
-import { useTranslation } from "react-i18next";
-import { useLocalSearchParams, router } from "expo-router";
-import { RefreshControl, ScrollView, Share, Linking, Alert } from "react-native";
-import {
   BanknoteArrowUp,
   BanknoteArrowDown,
   MessageCircle,
@@ -37,6 +33,16 @@ import {
   UserPlus,
   RotateCcw,
 } from "@tamagui/lucide-icons";
+import { useLocalSearchParams, router } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  RefreshControl,
+  ScrollView,
+  Share,
+  Linking,
+  Alert,
+} from "react-native";
 
 interface Signup {
   id: string;
@@ -113,7 +119,9 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as { error?: string }).error || "Failed to sign up");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to sign up",
+        );
       }
       return res.json();
     },
@@ -141,7 +149,9 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as { error?: string }).error || "Failed to update");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to update",
+        );
       }
       return res.json();
     },
@@ -165,7 +175,9 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as { error?: string }).error || "Failed to add guest");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to add guest",
+        );
       }
       return res.json();
     },
@@ -190,7 +202,10 @@ export default function MatchDetailScreen() {
     });
   };
 
-  const handleCancelSignup = (signupId: string, currentStatus: PlayerStatusType) => {
+  const handleCancelSignup = (
+    signupId: string,
+    currentStatus: PlayerStatusType,
+  ) => {
     setSignupToCancel({ id: signupId, status: currentStatus });
     setShowCancelAlert(true);
   };
@@ -362,7 +377,6 @@ END:VCALENDAR`;
           variant: "outline",
         });
         break;
-
     }
 
     return actions;
@@ -388,18 +402,22 @@ END:VCALENDAR`;
   const isParticipating = match?.isUserSignedUp;
 
   // Check if user was a participant (PAID or PENDING, not CANCELLED)
-  const userWasParticipant = match?.userSignup?.status === "PAID" || match?.userSignup?.status === "PENDING";
+  const userWasParticipant =
+    match?.userSignup?.status === "PAID" ||
+    match?.userSignup?.status === "PENDING";
 
   // Check if match is today for same-day cost
-  const isMatchToday = match ? (() => {
-    const today = new Date();
-    const matchDate = new Date(match.date);
-    return (
-      today.getFullYear() === matchDate.getFullYear() &&
-      today.getMonth() === matchDate.getMonth() &&
-      today.getDate() === matchDate.getDate()
-    );
-  })() : false;
+  const isMatchToday = match
+    ? (() => {
+        const today = new Date();
+        const matchDate = new Date(match.date);
+        return (
+          today.getFullYear() === matchDate.getFullYear() &&
+          today.getMonth() === matchDate.getMonth() &&
+          today.getDate() === matchDate.getDate()
+        );
+      })()
+    : false;
 
   // Calculate total cost for same-day matches
   const baseCost = parseFloat(match?.costPerPlayer || "0");
@@ -505,7 +523,9 @@ END:VCALENDAR`;
 
               <YStack alignItems="center">
                 <Text fontSize="$7" fontWeight="bold">
-                  {match.costPerPlayer ? `€${match.costPerPlayer}` : t("stats.free")}
+                  {match.costPerPlayer
+                    ? `€${match.costPerPlayer}`
+                    : t("stats.free")}
                 </Text>
                 <Text fontSize="$3" color="$gray10">
                   {t("stats.cost")}
@@ -553,10 +573,12 @@ END:VCALENDAR`;
           {isPlayed && userWasParticipant && (
             <Button
               variant="primary"
-              onPress={() => router.push({
-                pathname: "/stats-voting",
-                params: { matchId: match.id }
-              })}
+              onPress={() =>
+                router.push({
+                  pathname: "/stats-voting",
+                  params: { matchId: match.id },
+                })
+              }
             >
               {t("voting.voteForMatch")}
             </Button>
@@ -575,17 +597,19 @@ END:VCALENDAR`;
                   <Text fontSize="$6" fontWeight="bold">
                     {t("players.title")} ({match.signups?.length || 0})
                   </Text>
-                  {!isPlayed && (match.userSignup?.status === "PAID" || match.userSignup?.status === "PENDING") && (
-                    <Button
-                      variant="outline"
-                      size="$3"
-                      onPress={() => setShowGuestDialog(true)}
-                      disabled={match.availableSpots === 0}
-                    >
-                      <UserPlus size={16} />
-                      <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
-                    </Button>
-                  )}
+                  {!isPlayed &&
+                    (match.userSignup?.status === "PAID" ||
+                      match.userSignup?.status === "PENDING") && (
+                      <Button
+                        variant="outline"
+                        size="$3"
+                        onPress={() => setShowGuestDialog(true)}
+                        disabled={match.availableSpots === 0}
+                      >
+                        <UserPlus size={16} />
+                        <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
+                      </Button>
+                    )}
                 </XStack>
 
                 <PlayersTable
@@ -633,7 +657,9 @@ END:VCALENDAR`;
           }
         }}
         onCancel={() => setShowJoinModal(false)}
-        confirmText={signupMutation.isPending ? t("actions.joining") : t("actions.join")}
+        confirmText={
+          signupMutation.isPending ? t("actions.joining") : t("actions.join")
+        }
         cancelText={t("shared.cancel")}
       >
         {/* Payment Information */}
@@ -647,22 +673,38 @@ END:VCALENDAR`;
               <Text fontWeight="500">{match.costPerPlayer}</Text>
             </XStack>
           )}
-          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && (
-            <XStack justifyContent="space-between">
-              <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
-              <Text fontWeight="500" color="$orange10">+{match.sameDayCost}</Text>
-            </XStack>
-          )}
-          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && match.costPerPlayer && (
-            <XStack justifyContent="space-between" paddingTop="$1" borderTopWidth={1} borderColor="$gray6">
-              <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
-              <Text fontWeight="700" fontSize="$5">{totalCost}</Text>
-            </XStack>
-          )}
+          {isMatchToday &&
+            match.sameDayCost &&
+            parseFloat(match.sameDayCost) > 0 && (
+              <XStack justifyContent="space-between">
+                <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
+                <Text fontWeight="500" color="$orange10">
+                  +{match.sameDayCost}
+                </Text>
+              </XStack>
+            )}
+          {isMatchToday &&
+            match.sameDayCost &&
+            parseFloat(match.sameDayCost) > 0 &&
+            match.costPerPlayer && (
+              <XStack
+                justifyContent="space-between"
+                paddingTop="$1"
+                borderTopWidth={1}
+                borderColor="$gray6"
+              >
+                <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
+                <Text fontWeight="700" fontSize="$5">
+                  {totalCost}
+                </Text>
+              </XStack>
+            )}
           {process.env.EXPO_PUBLIC_PAYPAL_URL && (
             <XStack justifyContent="space-between">
               <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
-              <Text fontWeight="500" color="$blue10">PayPal</Text>
+              <Text fontWeight="500" color="$blue10">
+                PayPal
+              </Text>
             </XStack>
           )}
         </YStack>
@@ -780,10 +822,7 @@ END:VCALENDAR`;
               </List>
             </YStack>
 
-            <Button
-              variant="outline"
-              onPress={() => setShowRulesModal(false)}
-            >
+            <Button variant="outline" onPress={() => setShowRulesModal(false)}>
               {t("shared.close")}
             </Button>
           </YStack>

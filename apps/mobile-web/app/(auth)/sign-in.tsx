@@ -1,11 +1,27 @@
-import { useState, useEffect } from "react";
-import { Container, Card, Text, YStack, XStack, Input, Button, Spinner, PhoneInput } from "@repo/ui";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  signIn,
+  getSession,
+  getConfiguredApiUrl,
+  signInWithPhone,
+} from "@repo/api-client";
+import {
+  Container,
+  Card,
+  Text,
+  YStack,
+  XStack,
+  Input,
+  Button,
+  Spinner,
+  PhoneInput,
+} from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signIn, getSession, getConfiguredApiUrl, signInWithPhone } from "@repo/api-client";
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   signInSchema,
   phoneSignInSchema,
@@ -175,7 +191,13 @@ export default function SignInScreen() {
 
   return (
     <Container variant="padded">
-      <YStack space="$6" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto">
+      <YStack
+        space="$6"
+        flex={1}
+        justifyContent="center"
+        maxWidth={400}
+        marginHorizontal="auto"
+      >
         <YStack space="$2" alignItems="center">
           <Text fontSize="$9" fontWeight="bold">
             {t("auth.welcomeBack")}
@@ -193,7 +215,11 @@ export default function SignInScreen() {
           disabled={isGoogleLoading || isLoading}
           opacity={isGoogleLoading || isLoading ? 0.5 : 1}
         >
-          {isGoogleLoading ? <Spinner size="small" /> : t("signin.signInWithGoogle")}
+          {isGoogleLoading ? (
+            <Spinner size="small" />
+          ) : (
+            t("signin.signInWithGoogle")
+          )}
         </Button>
 
         {/* Divider */}
@@ -245,7 +271,11 @@ export default function SignInScreen() {
                     onChangeText={onChange}
                     autoCapitalize="none"
                     keyboardType="email-address"
-                    error={emailForm.formState.errors.email ? t(emailForm.formState.errors.email.message as string) : undefined}
+                    error={
+                      emailForm.formState.errors.email
+                        ? t(emailForm.formState.errors.email.message as string)
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -260,7 +290,14 @@ export default function SignInScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
-                    error={emailForm.formState.errors.password ? t(emailForm.formState.errors.password.message as string) : undefined}
+                    error={
+                      emailForm.formState.errors.password
+                        ? t(
+                            emailForm.formState.errors.password
+                              .message as string,
+                          )
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -297,7 +334,14 @@ export default function SignInScreen() {
                     placeholder={t("auth.phonePlaceholder")}
                     value={value}
                     onChangeValue={(phone) => onChange(phone)}
-                    error={phoneForm.formState.errors.phoneNumber ? t(phoneForm.formState.errors.phoneNumber.message as string) : undefined}
+                    error={
+                      phoneForm.formState.errors.phoneNumber
+                        ? t(
+                            phoneForm.formState.errors.phoneNumber
+                              .message as string,
+                          )
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -312,7 +356,14 @@ export default function SignInScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
-                    error={phoneForm.formState.errors.password ? t(phoneForm.formState.errors.password.message as string) : undefined}
+                    error={
+                      phoneForm.formState.errors.password
+                        ? t(
+                            phoneForm.formState.errors.password
+                              .message as string,
+                          )
+                        : undefined
+                    }
                   />
                 )}
               />

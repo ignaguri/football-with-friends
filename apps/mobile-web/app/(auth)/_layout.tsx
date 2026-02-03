@@ -1,8 +1,8 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Stack, Redirect } from "expo-router";
-import { useTheme, YStack, Spinner } from "tamagui";
-import { useTranslation } from "react-i18next";
 import { useSession } from "@repo/api-client";
+import { Stack, Redirect } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { useTheme, YStack, Spinner } from "tamagui";
 
 export default function AuthLayout() {
   const theme = useTheme();
@@ -12,7 +12,12 @@ export default function AuthLayout() {
   // Show loading spinner while checking authentication
   if (isPending) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
         <Spinner size="large" />
       </YStack>
     );

@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+import {
+  useSession,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+} from "@repo/api-client";
 import {
   Text,
   YStack,
@@ -11,10 +17,10 @@ import {
   useToastController,
   ScrollView,
 } from "@repo/ui";
-import { useSession, useQuery, useMutation, useQueryClient, client } from "@repo/api-client";
-import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
 import { format } from "date-fns";
+import { router } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Location {
   id: string;
@@ -49,10 +55,13 @@ export default function AddMatchScreen() {
   const [locationId, setLocationId] = useState("");
   const [courtId, setCourtId] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("10");
-  const [costPerPlayer, setCostPerPlayer] = useState("");
-  const [sameDayCost, setSameDayCost] = useState("");
+  const [costPerPlayerOverride, setCostPerPlayerOverride] = useState<
+    string | null
+  >(null);
+  const [sameDayCostOverride, setSameDayCostOverride] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const isAdmin = session?.user?.role === "admin";
 
@@ -65,18 +74,10 @@ export default function AddMatchScreen() {
     },
   });
 
-  // Pre-fill costs from settings (only once when settings load)
-  useEffect(() => {
-    if (settings && !settingsLoaded) {
-      if (settings.default_cost_per_player) {
-        setCostPerPlayer(settings.default_cost_per_player);
-      }
-      if (settings.same_day_extra_cost) {
-        setSameDayCost(settings.same_day_extra_cost);
-      }
-      setSettingsLoaded(true);
-    }
-  }, [settings, settingsLoaded]);
+  const costPerPlayer =
+    costPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
+  const sameDayCost =
+    sameDayCostOverride ?? settings?.same_day_extra_cost ?? "";
 
   // Fetch locations
   const { data: locations = [], isLoading: isLoadingLocations } = useQuery({
@@ -98,11 +99,6 @@ export default function AddMatchScreen() {
     },
     enabled: !!locationId,
   });
-
-  // Reset court when location changes
-  useEffect(() => {
-    setCourtId("");
-  }, [locationId]);
 
   // Create match mutation
   const createMutation = useMutation({
@@ -169,9 +165,17 @@ export default function AddMatchScreen() {
   // Loading state
   if (isSessionPending) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4" backgroundColor="$background">
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
         <Spinner size="large" />
-        <Text marginTop="$2" color="$gray11">{t("shared.loading")}</Text>
+        <Text marginTop="$2" color="$gray11">
+          {t("shared.loading")}
+        </Text>
       </YStack>
     );
   }
@@ -179,7 +183,13 @@ export default function AddMatchScreen() {
   // Auth check
   if (!session?.user) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4" backgroundColor="$background">
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
         <Text color="$gray11">{t("addMatch.mustSignIn")}</Text>
         <Button marginTop="$4" onPress={() => router.push("/(auth)/sign-in")}>
           {t("shared.signIn")}
@@ -191,7 +201,13 @@ export default function AddMatchScreen() {
   // Admin check
   if (!isAdmin) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4" backgroundColor="$background">
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
         <Text color="$red10">{t("addMatch.unauthorized")}</Text>
       </YStack>
     );
@@ -234,7 +250,10 @@ export default function AddMatchScreen() {
         {/* Location Select */}
         <Select
           value={locationId}
-          onValueChange={setLocationId}
+          onValueChange={(id) => {
+            setLocationId(id);
+            setCourtId("");
+          }}
           label={t("addMatch.location")}
           placeholder={t("addMatch.selectLocation")}
           options={locationOptions}
@@ -265,7 +284,7 @@ export default function AddMatchScreen() {
         {/* Cost Per Player */}
         <Input
           value={costPerPlayer}
-          onChangeText={setCostPerPlayer}
+          onChangeText={setCostPerPlayerOverride}
           label={t("addMatch.costPerPlayer")}
           placeholder={t("addMatch.costPlaceholder")}
           keyboardType="decimal-pad"
@@ -275,7 +294,7 @@ export default function AddMatchScreen() {
         {/* Same Day Extra Cost */}
         <Input
           value={sameDayCost}
-          onChangeText={setSameDayCost}
+          onChangeText={setSameDayCostOverride}
           label={t("addMatch.sameDayCost")}
           placeholder={t("addMatch.costPlaceholder")}
           keyboardType="decimal-pad"

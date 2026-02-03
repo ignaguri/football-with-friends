@@ -1,4 +1,4 @@
-import { Container, Card, Text, YStack, XStack, H2, List } from "@repo/ui";
+import { Container, Card, YStack, H2, List } from "@repo/ui";
 import { useTranslation } from "react-i18next";
 import { ScrollView } from "react-native";
 

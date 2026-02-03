@@ -1,11 +1,28 @@
-import { useState, useEffect } from "react";
-import { Container, Card, Text, YStack, XStack, Input, Button, Spinner, PhoneInput } from "@repo/ui";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  signUp,
+  signIn,
+  getSession,
+  getConfiguredApiUrl,
+  signUpWithPhone,
+} from "@repo/api-client";
+import {
+  Container,
+  Card,
+  Text,
+  YStack,
+  XStack,
+  Input,
+  Button,
+  Spinner,
+  PhoneInput,
+} from "@repo/ui";
 import { Link, router } from "expo-router";
-import { signUp, signIn, getSession, getConfiguredApiUrl, signUpWithPhone } from "@repo/api-client";
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
   signUpSchema,
   phoneSignUpSchema,
@@ -181,7 +198,13 @@ export default function SignUpScreen() {
 
   return (
     <Container variant="padded">
-      <YStack space="$6" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto">
+      <YStack
+        space="$6"
+        flex={1}
+        justifyContent="center"
+        maxWidth={400}
+        marginHorizontal="auto"
+      >
         <YStack space="$2" alignItems="center">
           <Text fontSize="$9" fontWeight="bold">
             {t("auth.createAccount")}
@@ -229,7 +252,11 @@ export default function SignUpScreen() {
                     placeholder={t("auth.namePlaceholder")}
                     value={value}
                     onChangeText={onChange}
-                    error={emailForm.formState.errors.name ? t(emailForm.formState.errors.name.message as string) : undefined}
+                    error={
+                      emailForm.formState.errors.name
+                        ? t(emailForm.formState.errors.name.message as string)
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -245,7 +272,11 @@ export default function SignUpScreen() {
                     onChangeText={onChange}
                     autoCapitalize="none"
                     keyboardType="email-address"
-                    error={emailForm.formState.errors.email ? t(emailForm.formState.errors.email.message as string) : undefined}
+                    error={
+                      emailForm.formState.errors.email
+                        ? t(emailForm.formState.errors.email.message as string)
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -260,7 +291,14 @@ export default function SignUpScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
-                    error={emailForm.formState.errors.password ? t(emailForm.formState.errors.password.message as string) : undefined}
+                    error={
+                      emailForm.formState.errors.password
+                        ? t(
+                            emailForm.formState.errors.password
+                              .message as string,
+                          )
+                        : undefined
+                    }
                     helperText={t("auth.passwordHelp")}
                   />
                 )}
@@ -277,7 +315,14 @@ export default function SignUpScreen() {
                     onChangeText={onChange}
                     autoCapitalize="none"
                     helperText={t("auth.usernameHelp")}
-                    error={emailForm.formState.errors.username ? t(emailForm.formState.errors.username.message as string) : undefined}
+                    error={
+                      emailForm.formState.errors.username
+                        ? t(
+                            emailForm.formState.errors.username
+                              .message as string,
+                          )
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -309,7 +354,11 @@ export default function SignUpScreen() {
                   variant="outline"
                   width="100%"
                 >
-                  {isGoogleLoading ? <Spinner size="small" /> : t("signin.signInWithGoogle")}
+                  {isGoogleLoading ? (
+                    <Spinner size="small" />
+                  ) : (
+                    t("signin.signInWithGoogle")
+                  )}
                 </Button>
               </YStack>
             </YStack>
@@ -329,7 +378,11 @@ export default function SignUpScreen() {
                     placeholder={t("auth.namePlaceholder")}
                     value={value}
                     onChangeText={onChange}
-                    error={phoneForm.formState.errors.name ? t(phoneForm.formState.errors.name.message as string) : undefined}
+                    error={
+                      phoneForm.formState.errors.name
+                        ? t(phoneForm.formState.errors.name.message as string)
+                        : undefined
+                    }
                   />
                 )}
               />
@@ -343,7 +396,14 @@ export default function SignUpScreen() {
                     placeholder={t("auth.phonePlaceholder")}
                     value={value}
                     onChangeValue={(phone) => onChange(phone)}
-                    error={phoneForm.formState.errors.phoneNumber ? t(phoneForm.formState.errors.phoneNumber.message as string) : undefined}
+                    error={
+                      phoneForm.formState.errors.phoneNumber
+                        ? t(
+                            phoneForm.formState.errors.phoneNumber
+                              .message as string,
+                          )
+                        : undefined
+                    }
                     helperText={t("auth.phoneHelp")}
                   />
                 )}
@@ -359,7 +419,14 @@ export default function SignUpScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
-                    error={phoneForm.formState.errors.password ? t(phoneForm.formState.errors.password.message as string) : undefined}
+                    error={
+                      phoneForm.formState.errors.password
+                        ? t(
+                            phoneForm.formState.errors.password
+                              .message as string,
+                          )
+                        : undefined
+                    }
                     helperText={t("auth.passwordHelp")}
                   />
                 )}
@@ -392,7 +459,11 @@ export default function SignUpScreen() {
                   variant="outline"
                   width="100%"
                 >
-                  {isGoogleLoading ? <Spinner size="small" /> : t("signin.signInWithGoogle")}
+                  {isGoogleLoading ? (
+                    <Spinner size="small" />
+                  ) : (
+                    t("signin.signInWithGoogle")
+                  )}
                 </Button>
               </YStack>
             </YStack>

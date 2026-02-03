@@ -1,8 +1,8 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Container, Card, Text, YStack, XStack } from "@repo/ui";
-import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
 import { BarChart3, Image } from "@tamagui/lucide-icons";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";
 
 export default function SocialHubScreen() {
@@ -10,7 +10,14 @@ export default function SocialHubScreen() {
 
   return (
     <Container variant="padded">
-      <YStack gap="$4" flex={1} justifyContent="center" maxWidth={400} marginHorizontal="auto" width="100%">
+      <YStack
+        gap="$4"
+        flex={1}
+        justifyContent="center"
+        maxWidth={400}
+        marginHorizontal="auto"
+        width="100%"
+      >
         <Pressable onPress={() => router.push("/(tabs)/social/stats")}>
           <Card variant="elevated" padding="$5">
             <XStack gap="$4" alignItems="center">

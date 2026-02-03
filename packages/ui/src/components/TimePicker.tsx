@@ -44,7 +44,7 @@ export function TimePicker({
     return `${hours}:${minutes}`;
   };
 
-  const handleTimeChange = (event: any, selectedDate?: Date) => {
+  const handleTimeChange = (_event: unknown, selectedDate?: Date) => {
     if (Platform.OS === "android") {
       setShowPicker(false);
       if (selectedDate) {

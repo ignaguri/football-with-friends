@@ -1,9 +1,15 @@
 // @ts-nocheck - Tamagui type recursion workaround
+import { useSession } from "@repo/api-client";
+import {
+  Home,
+  Calendar,
+  Users,
+  Settings,
+  CircleUser,
+} from "@tamagui/lucide-icons";
 import { Tabs, Redirect, router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Home, Calendar, Users, Settings, CircleUser } from "@tamagui/lucide-icons";
 import { useTheme, YStack, Spinner } from "tamagui";
-import { useSession } from "@repo/api-client";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
@@ -13,7 +19,12 @@ export default function TabsLayout() {
   // Show loading spinner while checking authentication
   if (isPending) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
         <Spinner size="large" />
       </YStack>
     );
@@ -54,7 +65,9 @@ export default function TabsLayout() {
         name="matches"
         options={{
           title: t("nav.matches"),
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Calendar size={size} color={color} />
+          ),
           headerShown: false,
         }}
       />
@@ -76,7 +89,9 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: t("profile.myProfile"),
-          tabBarIcon: ({ color, size }) => <CircleUser size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <CircleUser size={size} color={color} />
+          ),
           headerShown: false,
         }}
       />
@@ -91,7 +106,9 @@ export default function TabsLayout() {
         name="admin"
         options={{
           title: t("nav.admin"),
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Settings size={size} color={color} />
+          ),
           headerShown: false,
           href: isAdmin ? undefined : null, // Hide tab if not admin
         }}

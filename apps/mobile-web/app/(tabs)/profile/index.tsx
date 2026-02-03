@@ -1,7 +1,11 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState, useEffect } from "react";
-import { ScrollView, RefreshControl, Pressable, Platform, Alert } from "react-native";
-import * as ImagePicker from "expo-image-picker";
+import {
+  useSession,
+  signOut,
+  client,
+  useQuery,
+  getConfiguredApiUrl,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -22,12 +26,21 @@ import {
   getCountryFlag,
   getCountryName,
 } from "@repo/ui";
-import { Link, router } from "expo-router";
-import { useSession, signOut, client, useQuery, getConfiguredApiUrl } from "@repo/api-client";
-import { useTranslation } from "react-i18next";
-import { useThemeContext } from "../../../lib/theme-context";
-import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
 import { Camera } from "@tamagui/lucide-icons";
+import * as ImagePicker from "expo-image-picker";
+import { Link, router } from "expo-router";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  ScrollView,
+  RefreshControl,
+  Pressable,
+  Platform,
+  Alert,
+} from "react-native";
+
+import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
+import { useThemeContext } from "../../../lib/theme-context";
 
 interface PlayerProfile {
   user: {
@@ -63,7 +76,8 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [isChangingPasswordLoading, setIsChangingPasswordLoading] = useState(false);
+  const [isChangingPasswordLoading, setIsChangingPasswordLoading] =
+    useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [requiresCurrentPassword, setRequiresCurrentPassword] = useState(false);
 
@@ -194,7 +208,11 @@ export default function ProfileScreen() {
         });
       }
 
-      const data = await res.json() as { success?: boolean; error?: string; hasExistingPassword?: boolean };
+      const data = (await res.json()) as {
+        success?: boolean;
+        error?: string;
+        hasExistingPassword?: boolean;
+      };
 
       if (!res.ok) {
         // Check if user needs to provide current password
@@ -218,7 +236,9 @@ export default function ProfileScreen() {
 
       // Try to extract error response from the exception
       // The API client attaches response data to the error
-      const errorData = err?.data as { hasExistingPassword?: boolean } | undefined;
+      const errorData = err?.data as
+        | { hasExistingPassword?: boolean }
+        | undefined;
       if (errorData?.hasExistingPassword) {
         setRequiresCurrentPassword(true);
         setPasswordError(t("profile.currentPasswordRequired"));
@@ -236,7 +256,8 @@ export default function ProfileScreen() {
     if (!session?.user) return;
 
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         setError(t("profile.photoPermissionDenied"));
         return;
@@ -378,7 +399,10 @@ export default function ProfileScreen() {
               {/* Avatar with upload button */}
               <XStack justifyContent="center">
                 <YStack alignItems="center">
-                  <Pressable onPress={handleUploadPhoto} disabled={isUploadingPhoto}>
+                  <Pressable
+                    onPress={handleUploadPhoto}
+                    disabled={isUploadingPhoto}
+                  >
                     <YStack position="relative">
                       <UserAvatar
                         name={user.name}
@@ -477,22 +501,33 @@ export default function ProfileScreen() {
                   {/* Profile details */}
                   <YStack space="$2" marginTop="$2">
                     {user.nationality && (
-                      <XStack justifyContent="space-between" alignItems="center">
+                      <XStack
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
                         <Text color="$gray11">{t("profile.nationality")}</Text>
                         <XStack alignItems="center" space="$2">
-                          <Text fontSize="$4">{getCountryFlag(user.nationality)}</Text>
+                          <Text fontSize="$4">
+                            {getCountryFlag(user.nationality)}
+                          </Text>
                           <Text>{getCountryName(user.nationality)}</Text>
                         </XStack>
                       </XStack>
                     )}
                     {user.email && (
-                      <XStack justifyContent="space-between" alignItems="center">
+                      <XStack
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
                         <Text color="$gray11">{t("auth.email")}</Text>
                         <Text>{user.email}</Text>
                       </XStack>
                     )}
                     {user.phoneNumber && (
-                      <XStack justifyContent="space-between" alignItems="center">
+                      <XStack
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
                         <Text color="$gray11">{t("auth.phone")}</Text>
                         <Text>{user.phoneNumber}</Text>
                       </XStack>
@@ -538,7 +573,11 @@ export default function ProfileScreen() {
                   </Button>
                 </XStack>
               ) : (
-                <Button variant="outline" onPress={() => setIsEditing(true)} marginTop="$2">
+                <Button
+                  variant="outline"
+                  onPress={() => setIsEditing(true)}
+                  marginTop="$2"
+                >
                   {t("profile.editProfile")}
                 </Button>
               )}
