@@ -89,11 +89,13 @@ function AppNavigation() {
 
 function AppContent() {
   const { theme } = useThemeContext();
+  // Ensure we always pass a valid theme name (Tamagui throws "Missing theme" if invalid/missing)
+  const themeName = theme === "dark" ? "dark" : "light";
 
   return (
-    <TamaguiProvider config={config} defaultTheme={theme}>
+    <TamaguiProvider config={config} defaultTheme={themeName}>
       <PortalProvider shouldAddRootHost>
-        <Theme name={theme}>
+        <Theme name={themeName}>
           <Toast>
             <YStack flex={1} backgroundColor="$background">
               <ErrorBoundary>

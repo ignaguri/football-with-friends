@@ -19,9 +19,11 @@ const THEME_KEY = "user-theme";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   // Default to "light" - don't auto-detect system preference as it causes inconsistency
-  // between localhost and deployed versions depending on browser settings
+  // between localhost and deployed versions depending on browser settings.
+  // Render children immediately so TamaguiProvider is always mounted from first paint;
+  // returning null until AsyncStorage loads can cause "Missing theme" in production
+  // (e.g. code-splitting or hydration timing).
   const [theme, setThemeState] = useState<ThemeType>("light");
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     // Load saved theme preference only - default to light if none saved
@@ -29,8 +31,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (saved === "light" || saved === "dark") {
         setThemeState(saved);
       }
-      // If no saved preference, keep default "light" theme
-      setIsLoaded(true);
     });
   }, []);
 
@@ -42,11 +42,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
   };
-
-  // Don't render children until theme is loaded to avoid flash
-  if (!isLoaded) {
-    return null;
-  }
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
