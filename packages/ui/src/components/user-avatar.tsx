@@ -51,7 +51,7 @@ export function UserAvatar({
             alignItems="center"
             justifyContent="center"
           >
-            <Text color="$white1" fontWeight="bold" fontSize={size / 2.5}>
+            <Text color="white" fontWeight="bold" fontSize={size / 2.5}>
               {initials}
             </Text>
           </AvatarFallback>
