@@ -264,11 +264,12 @@ export default function StatsVotingScreen() {
           title: t("voting.title"),
           headerRight: () => (
             <Button
-              size="$2"
+              size="$3"
               variant="ghost"
               icon={X}
               onPress={() => router.back()}
-              padding={0}
+              marginRight="$3"
+              scaleIcon={1.5}
             />
           ),
         }}
