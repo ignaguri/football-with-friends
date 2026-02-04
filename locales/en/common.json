@@ -223,6 +223,8 @@
     "photoPermissionDenied": "Permission to access photos was denied",
     "phoneHelp": "Used for WhatsApp contact by admins",
     "emailNotEditable": "Email cannot be changed",
+    "emailLockedByAuth": "Email cannot be changed (used for authentication)",
+    "phoneLockedByAuth": "Phone number cannot be changed (used for authentication)",
     "profileUpdated": "Profile updated successfully",
     "updateFailed": "Failed to update profile"
   },

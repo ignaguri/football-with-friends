@@ -224,6 +224,8 @@
     "photoPermissionDenied": "Se denegó el permiso para acceder a las fotos",
     "phoneHelp": "Se usa para contacto por WhatsApp por los admins",
     "emailNotEditable": "El email no se puede cambiar",
+    "emailLockedByAuth": "El email no se puede cambiar (se usa para autenticación)",
+    "phoneLockedByAuth": "El teléfono no se puede cambiar (se usa para autenticación)",
     "profileUpdated": "Perfil actualizado exitosamente",
     "updateFailed": "Error al actualizar el perfil"
   },

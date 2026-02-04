@@ -383,6 +383,12 @@ export default function ProfileScreen() {
   const user = session.user as any;
   const displayName = user.displayUsername || user.username || user.name;
 
+  // Determine auth method to disable editing the auth identifier
+  // Phone auth users have generated emails like "phone_*@football.local"
+  const isPhoneAuthUser = user.email?.startsWith("phone_") && user.email?.endsWith("@football.local");
+  const canEditEmail = isPhoneAuthUser; // Phone users can't edit phone, but can change email
+  const canEditPhone = !isPhoneAuthUser; // Email/Google users can't edit email, but can change phone
+
   return (
     <Container variant="padded">
       <ScrollView
@@ -474,6 +480,8 @@ export default function ProfileScreen() {
                     onChangeText={setEmail}
                     autoCapitalize="none"
                     keyboardType="email-address"
+                    disabled={!canEditEmail}
+                    helperText={!canEditEmail ? t("profile.emailLockedByAuth") : undefined}
                   />
 
                   <PhoneInput
@@ -481,7 +489,8 @@ export default function ProfileScreen() {
                     placeholder={t("auth.phonePlaceholder")}
                     value={phoneNumber}
                     onChangeValue={(phone) => setPhoneNumber(phone)}
-                    helperText={t("profile.phoneHelp")}
+                    disabled={!canEditPhone}
+                    helperText={!canEditPhone ? t("profile.phoneLockedByAuth") : t("profile.phoneHelp")}
                   />
                 </YStack>
               ) : (
