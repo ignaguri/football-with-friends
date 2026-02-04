@@ -10,6 +10,7 @@ import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
 import playersRoute from "./routes/players";
+import { phoneAuthRoute } from "./routes/phone-auth";
 import cronRoute from "./routes/cron";
 
 // Import auth - uses lazy initialization via Proxy for CF Workers compatibility
@@ -143,8 +144,40 @@ app.get("/api/auth/web-callback", async (c) => {
 });
 
 // Better Auth routes - uses lazy-initialized auth
-app.on(["POST", "GET"], "/api/auth/*", (c) => {
-  return auth.handler(c.req.raw);
+// Wrap to filter cookies and avoid expo client infinite refetch bug
+// See: https://github.com/better-auth/better-auth/issues/4744
+app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const response = await auth.handler(c.req.raw);
+
+  // Filter Set-Cookie headers to only include better-auth cookies
+  const setCookieHeader = response.headers.get("set-cookie");
+  if (setCookieHeader) {
+    // Create new headers without the original set-cookie
+    const newHeaders = new Headers(response.headers);
+    newHeaders.delete("set-cookie");
+
+    // Filter to only include better-auth related cookies
+    const cookies = setCookieHeader.split(/,(?=\s*[^;]+=[^;]+)/).filter((cookie) => {
+      const cookieName = cookie.trim().split("=")[0]?.toLowerCase() ?? "";
+      return (
+        cookieName.startsWith("better-auth") ||
+        cookieName === "session_token" ||
+        cookieName.includes("auth")
+      );
+    });
+
+    if (cookies.length > 0) {
+      newHeaders.set("set-cookie", cookies.join(", "));
+    }
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders,
+    });
+  }
+
+  return response;
 });
 
 // API routes
@@ -156,6 +189,7 @@ app
   .route("/profile", profileRoute)
   .route("/settings", settingsRoute)
   .route("/players", playersRoute)
+  .route("/phone-auth", phoneAuthRoute)
   .route("/cron", cronRoute);
 
 // Export for Cloudflare Workers with scheduled event handler

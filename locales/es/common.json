@@ -271,7 +271,10 @@
     "signInFailed": "Error al iniciar sesión",
     "signUpFailed": "Error al crear la cuenta",
     "googleSignInFailed": "Error al iniciar sesión con Google",
-    "unexpectedError": "Ocurrió un error inesperado"
+    "unexpectedError": "Ocurrió un error inesperado",
+    "serviceUnavailable": "Servicio temporalmente no disponible. Por favor, inténtalo más tarde.",
+    "phoneAlreadyRegistered": "Este número de teléfono ya está registrado.",
+    "invalidPhone": "Por favor, ingresa un número de teléfono válido."
   },
   "addMatch": {
     "title": "Crear partido",

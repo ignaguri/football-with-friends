@@ -1,7 +1,7 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { getEnv, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
-import { admin, username, oAuthProxy, bearer } from "better-auth/plugins";
+import { admin, username, oAuthProxy, bearer, phoneNumber } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 
 // Get database configuration for authentication
@@ -159,6 +159,40 @@ function createAuthInstance() {
         maxUsernameLength: 20,
       }),
       expo(),
+      // Phone number authentication with password-as-OTP
+      // We use the native phoneNumber plugin for session management,
+      // but validate the password (passed as "code") against the credential account
+      phoneNumber({
+        sendOTP: async () => {
+          // No-op: we don't send real SMS
+          // The client will pass the password as "code" to verify()
+        },
+        verifyOTP: async ({ phoneNumber: phone, code }, ctx) => {
+          // 'code' is actually the user's password
+          // Find user by phone number
+          const user = await ctx?.context.adapter.findOne({
+            model: "user",
+            where: [{ field: "phoneNumber", value: phone }],
+          }) as { id: string } | null;
+
+          if (!user) return false;
+
+          // Get credential account with password hash
+          const accounts = await ctx?.context.internalAdapter.findAccountByUserId(user.id);
+          const credentialAccount = accounts?.find((a: any) => a.providerId === "credential");
+
+          if (!credentialAccount?.password) return false;
+
+          // Verify password against stored hash
+          const isValid = await ctx?.context.password.verify({
+            hash: credentialAccount.password,
+            password: code,
+          });
+
+          return isValid ?? false;
+        },
+        // Don't auto-create users on verify - we handle signup via custom endpoint
+      }),
       // OAuth Proxy plugin - handles OAuth callbacks for cross-domain setups
       // This allows preview deployments (Vercel) to work with OAuth without
       // needing to register each preview URL with the OAuth provider

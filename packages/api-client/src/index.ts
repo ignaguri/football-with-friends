@@ -28,8 +28,10 @@ export {
   storeBearerToken,
   clearBearerToken,
   getBearerToken,
+  signUpWithPhone,
+  signInWithPhone,
 } from "./auth";
-export type { Session, User } from "./auth";
+export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

@@ -1,6 +1,6 @@
 // Auth client for Expo/React Native
 import { createAuthClient } from "better-auth/react";
-import { usernameClient } from "better-auth/client/plugins";
+import { usernameClient, phoneNumberClient } from "better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -176,6 +176,7 @@ export const authClient = createAuthClient({
   },
   plugins: [
     usernameClient(),
+    phoneNumberClient(),
     expoClient({
       scheme: "football-with-friends", // Deep link scheme from app.json
       storagePrefix: "football_auth",
@@ -209,9 +210,10 @@ export interface PhoneSignInData {
 
 /**
  * Sign up with phone number and password.
- * Phone is stored for admin contact purposes (e.g., WhatsApp).
+ * Creates user via custom endpoint, then establishes session via native phoneNumber.verify()
  */
 export async function signUpWithPhone(data: PhoneSignUpData) {
+  // Step 1: Create user with password (no session yet)
   const response = await fetch(`${getApiUrl()}/api/phone-auth/sign-up`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -225,54 +227,43 @@ export async function signUpWithPhone(data: PhoneSignUpData) {
     throw new Error(result.error || "Failed to sign up");
   }
 
-  // On web, store the bearer token if returned
-  if (Platform.OS === "web" && result.session?.token) {
-    await storeBearerToken(result.session.token);
+  // Step 2: Create session via native phoneNumber flow (password as OTP)
+  // sendOtp is a no-op on server, but required by the flow
+  await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
+
+  // verify() with password as code - server validates against stored hash
+  const verifyResult = await authClient.phoneNumber.verify({
+    phoneNumber: data.phoneNumber,
+    code: data.password,
+  });
+
+  if (verifyResult.error) {
+    throw new Error(verifyResult.error.message || "Failed to create session");
   }
 
-  return result;
+  return verifyResult.data;
 }
 
 /**
  * Sign in with phone number and password.
+ * Uses native phoneNumber.verify() for session management (fixes infinite polling)
  */
 export async function signInWithPhone(data: PhoneSignInData) {
-  const response = await fetch(`${getApiUrl()}/api/phone-auth/sign-in`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-    credentials: "include",
+  // sendOtp is a no-op on server, but required by the flow
+  await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
+
+  // verify() with password as code - server validates against stored hash
+  const result = await authClient.phoneNumber.verify({
+    phoneNumber: data.phoneNumber,
+    code: data.password,
   });
 
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.error || "Invalid phone number or password");
+  // verify() returns { status, token, user } on success
+  if (result.error || !result.data?.token) {
+    throw new Error("Invalid phone number or password");
   }
 
-  // On web, store the bearer token if returned
-  if (Platform.OS === "web" && result.session?.token) {
-    await storeBearerToken(result.session.token);
-  }
-
-  return result;
-}
-
-/**
- * Check if a phone number is available for registration.
- */
-export async function checkPhoneAvailability(phoneNumber: string): Promise<boolean> {
-  const response = await fetch(
-    `${getApiUrl()}/api/phone-auth/check-phone?phoneNumber=${encodeURIComponent(phoneNumber)}`,
-    { credentials: "include" }
-  );
-
-  if (!response.ok) {
-    return false;
-  }
-
-  const result = await response.json();
-  return result.available ?? false;
+  return result.data;
 }
 
 // Export types

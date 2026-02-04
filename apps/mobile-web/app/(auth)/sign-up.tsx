@@ -102,6 +102,23 @@ export default function SignUpScreen() {
     }
   };
 
+  const getPhoneErrorMessage = (error: any): string => {
+    const message = error.message || '';
+
+    // Map technical errors to user-friendly translation keys
+    if (message.includes('not a function')) {
+      return t("auth.serviceUnavailable");
+    }
+    if (message.includes('already registered')) {
+      return t("auth.phoneAlreadyRegistered");
+    }
+    if (message.includes('invalid phone')) {
+      return t("auth.invalidPhone");
+    }
+
+    return t("auth.signUpFailed");
+  };
+
   const onPhoneSubmit = async (data: PhoneSignUpFormData) => {
     setIsLoading(true);
     setServerError(null);
@@ -115,7 +132,7 @@ export default function SignUpScreen() {
 
       router.replace("/(tabs)");
     } catch (err: any) {
-      setServerError(err.message || t("auth.signUpFailed"));
+      setServerError(getPhoneErrorMessage(err));
       console.error("Phone sign up error:", err);
     } finally {
       setIsLoading(false);
