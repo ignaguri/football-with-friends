@@ -20,6 +20,7 @@ import {
 // This prevents "View config getter callback for component `RNSVGPath` must be a function" errors
 import "react-native-svg";
 
+import { PWAInstallPrompt } from "../components/pwa-install-prompt";
 import { ErrorBoundary } from "../lib/error-boundary";
 import "../lib/i18n"; // Initialize i18n
 import { registerServiceWorker } from "../lib/register-service-worker";
@@ -142,6 +143,7 @@ function AppContent() {
                   </APIProvider>
                 </ErrorBoundary>
               </YStack>
+              <PWAInstallPrompt />
             </Toast>
           </Theme>
         </PortalProvider>
