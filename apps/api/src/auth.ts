@@ -143,6 +143,12 @@ function createAuthInstance() {
           defaultValue: 0,
           input: false,
         },
+        primaryAuthMethod: {
+          type: "string",
+          required: false,
+          defaultValue: "email",
+          input: false,
+        },
       },
     },
     socialProviders: {

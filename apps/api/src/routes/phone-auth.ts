@@ -57,12 +57,13 @@ app.post("/sign-up", zValidator("json", signUpSchema), async (c) => {
       return c.json({ error: "Failed to create account" }, 500);
     }
 
-    // Update the user with the phone number
+    // Update the user with the phone number and auth method
     await db
       .updateTable("user")
       .set({
         phoneNumber,
         phoneNumberVerified: 0,
+        primaryAuthMethod: "phone",
       })
       .where("id", "=", signUpResponse.user.id)
       .execute();

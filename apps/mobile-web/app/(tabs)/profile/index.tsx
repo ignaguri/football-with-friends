@@ -384,8 +384,9 @@ export default function ProfileScreen() {
   const displayName = user.displayUsername || user.username || user.name;
 
   // Determine auth method to disable editing the auth identifier
-  // Phone auth users have generated emails like "phone_*@football.local"
-  const isPhoneAuthUser = user.email?.startsWith("phone_") && user.email?.endsWith("@football.local");
+  // primaryAuthMethod is set when the user signs up: "phone", "email", or "google"
+  const primaryAuthMethod = user.primaryAuthMethod || "email";
+  const isPhoneAuthUser = primaryAuthMethod === "phone";
   const canEditEmail = isPhoneAuthUser; // Phone users can't edit phone, but can change email
   const canEditPhone = !isPhoneAuthUser; // Email/Google users can't edit email, but can change phone
 
