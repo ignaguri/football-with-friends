@@ -292,7 +292,7 @@ function NativeSelect({
             dismissOnSnapToBottom
             snapPointsMode="fit"
           >
-            <Sheet.Frame paddingTop={top} paddingLeft={left} paddingRight={right}>
+            <Sheet.Frame backgroundColor="$background" paddingTop={top} paddingLeft={left} paddingRight={right}>
               {searchable && (
                 <YStack paddingHorizontal="$4" paddingTop="$3" paddingBottom="$2">
                   <TamaguiInput
@@ -312,6 +312,7 @@ function NativeSelect({
             </Sheet.Frame>
             <Sheet.Overlay
               animation="lazy"
+              backgroundColor="rgba(0, 0, 0, 0.5)"
               enterStyle={{ opacity: 0 }}
               exitStyle={{ opacity: 0 }}
             />
