@@ -41,9 +41,9 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
 
 #### Packages (`packages/`)
 - **`@repo/api-client`** - Type-safe API client
-  - oRPC client for consuming the Hono API
-  - React hooks via @orpc/react
-  - TanStack Query integration
+  - Hono RPC client (`hc`) for consuming the Hono API
+  - TanStack React Query hooks for data fetching
+  - BetterAuth client for authentication
 
 - **`@repo/shared`** - Shared business logic and utilities
   - Domain models and types
@@ -64,7 +64,7 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
 
 ### Key Technologies
 - **Frontend**: Expo, React 19, React Native, TypeScript, Tamagui
-- **Backend**: Hono, Bun runtime, oRPC
+- **Backend**: Hono (with built-in RPC), Bun runtime
 - **UI Components**: Tamagui (universal design system)
 - **Authentication**: BetterAuth with Google OAuth + Expo integration
 - **Database**: Turso (LibSQL) with Kysely query builder
@@ -75,9 +75,10 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
 
 ### Authentication System
 - BetterAuth with @better-auth/expo adapter
-- Google OAuth provider
+- **Google OAuth** provider for social login
+- **Phone number authentication** with password-as-OTP pattern (see `docs/phone-auth-password-as-otp.md`)
 - Expo SecureStore for token persistence (mobile)
-- AsyncStorage fallback for web
+- AsyncStorage + Bearer tokens for web (cross-domain auth)
 - Database stores user sessions and profiles
 - Admin role system with role-based access
 
@@ -181,7 +182,7 @@ wrangler secret put GOOGLE_CLIENT_SECRET --env=preview
 
 ### Monorepo Benefits
 - **Code Sharing**: Common types, utilities, and components across apps
-- **Type Safety**: End-to-end type safety from API to client via oRPC
+- **Type Safety**: End-to-end type safety from API to client via Hono RPC
 - **Consistent Tooling**: Shared TypeScript, ESLint configs
 - **Efficient Development**: Turborepo caching and parallel execution
 - **Universal Code**: Write once, run on mobile, web, and native platforms
