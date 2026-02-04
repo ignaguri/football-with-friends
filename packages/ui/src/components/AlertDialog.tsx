@@ -41,6 +41,7 @@ export function AlertDialog({
           key="overlay"
           animation="quick"
           opacity={0.5}
+          backgroundColor="rgba(0, 0, 0, 0.5)"
           enterStyle={{ opacity: 0 }}
           exitStyle={{ opacity: 0 }}
         />
