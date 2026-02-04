@@ -105,13 +105,13 @@ function WebSelect({
   };
 
   return (
-    <YStack gap="$2">
+    <YStack gap="$2" zIndex={isOpen ? 10000 : "auto"}>
       {label && (
         <Text fontSize="$3" fontWeight="600" color="$gray12">
           {label}
         </Text>
       )}
-      <div ref={containerRef} style={{ position: "relative" }}>
+      <div ref={containerRef} style={{ position: "relative", zIndex: isOpen ? 10000 : "auto" }}>
         {/* Trigger button */}
         <button
           type="button"
@@ -153,7 +153,7 @@ function WebSelect({
               border: `1px solid ${cssVars.borderColor}`,
               borderRadius: "8px",
               boxShadow: "var(--shadow6)",
-              zIndex: 1000,
+              zIndex: 10000,
               maxHeight: "300px",
               display: "flex",
               flexDirection: "column",
