@@ -21,7 +21,7 @@ import { Link, router } from "expo-router";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable } from "react-native";
+import { Platform, Pressable, ScrollView } from "react-native";
 
 import {
   signUpSchema,
@@ -198,21 +198,25 @@ export default function SignUpScreen() {
 
   return (
     <Container variant="padded">
-      <YStack
-        gap="$6"
-        flex={1}
-        justifyContent="center"
-        maxWidth={400}
-        marginHorizontal="auto"
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
       >
-        <YStack gap="$2" alignItems="center">
-          <Text fontSize="$9" fontWeight="bold">
-            {t("auth.createAccount")}
-          </Text>
-          <Text color="$gray11" textAlign="center">
-            {t("auth.signUpDescription")}
-          </Text>
-        </YStack>
+        <YStack
+          gap="$6"
+          justifyContent="center"
+          maxWidth={400}
+          marginHorizontal="auto"
+          paddingVertical="$8"
+        >
+          <YStack gap="$2" alignItems="center">
+            <Text fontSize="$9" fontWeight="bold">
+              {t("auth.createAccount")}
+            </Text>
+            <Text color="$gray11" textAlign="center">
+              {t("auth.signUpDescription")}
+            </Text>
+          </YStack>
 
         {/* Auth Method Toggle */}
         <XStack justifyContent="center" gap="$2">
@@ -481,6 +485,7 @@ export default function SignUpScreen() {
           </Text>
         </YStack>
       </YStack>
+      </ScrollView>
     </Container>
   );
 }

@@ -15,6 +15,10 @@ import {
   YStack,
 } from "tamagui";
 
+// Import react-native-svg to ensure it's loaded and registered before any SVG components are used
+// This prevents "View config getter callback for component `RNSVGPath` must be a function" errors
+import "react-native-svg";
+
 import { ErrorBoundary } from "../lib/error-boundary";
 import "../lib/i18n"; // Initialize i18n
 import { RulesModalProvider } from "../lib/rules-modal-context";

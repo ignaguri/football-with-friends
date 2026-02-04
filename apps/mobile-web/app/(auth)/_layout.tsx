@@ -42,15 +42,13 @@ export default function AuthLayout() {
       <Stack.Screen
         name="sign-in"
         options={{
-          title: t("auth.signIn"),
-          headerBackVisible: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="sign-up"
         options={{
-          title: t("auth.signUp"),
-          headerBackVisible: true,
+          headerShown: false,
         }}
       />
     </Stack>

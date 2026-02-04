@@ -20,7 +20,7 @@ import { Link, router } from "expo-router";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable } from "react-native";
+import { Platform, Pressable, ScrollView } from "react-native";
 
 import {
   signInSchema,
@@ -191,21 +191,25 @@ export default function SignInScreen() {
 
   return (
     <Container variant="padded">
-      <YStack
-        gap="$6"
-        flex={1}
-        justifyContent="center"
-        maxWidth={400}
-        marginHorizontal="auto"
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
       >
-        <YStack gap="$2" alignItems="center">
-          <Text fontSize="$9" fontWeight="bold">
-            {t("auth.welcomeBack")}
-          </Text>
-          <Text color="$gray11" textAlign="center">
-            {t("auth.signInDescription")}
-          </Text>
-        </YStack>
+        <YStack
+          gap="$6"
+          justifyContent="center"
+          maxWidth={400}
+          marginHorizontal="auto"
+          paddingVertical="$8"
+        >
+          <YStack gap="$2" alignItems="center">
+            <Text fontSize="$9" fontWeight="bold">
+              {t("auth.welcomeBack")}
+            </Text>
+            <Text color="$gray11" textAlign="center">
+              {t("auth.signInDescription")}
+            </Text>
+          </YStack>
 
         {/* Google Sign In - Primary Action */}
         <Button
@@ -398,6 +402,7 @@ export default function SignInScreen() {
           </Text>
         </YStack>
       </YStack>
+      </ScrollView>
     </Container>
   );
 }
