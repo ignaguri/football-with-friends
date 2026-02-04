@@ -7,6 +7,7 @@ import {
 import { Toast } from "@repo/ui";
 import { PortalProvider } from "@tamagui/portal";
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import {
@@ -25,6 +26,7 @@ import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
 import config from "../tamagui.config";
 import "../global.css"; // Global CSS to fix React Native Web background
+import "../assets/fonts/fonts.css"; // Montserrat font declarations for web
 
 // Auth always uses direct API URL for proper OAuth callback handling
 const getAuthApiUrl = () => process.env.EXPO_PUBLIC_API_URL;
@@ -88,23 +90,42 @@ function AppContent() {
   }, [themeName]);
 
   return (
-    <TamaguiProvider key={themeName} config={config} defaultTheme={themeName}>
-      <PortalProvider shouldAddRootHost>
-        <Theme name={themeName}>
-          <Toast>
-            <YStack flex={1} backgroundColor="$background">
-              <ErrorBoundary>
-                <APIProvider>
-                  <RulesModalProvider>
-                    <AppNavigation />
-                  </RulesModalProvider>
-                </APIProvider>
-              </ErrorBoundary>
-            </YStack>
-          </Toast>
-        </Theme>
-      </PortalProvider>
-    </TamaguiProvider>
+    <>
+      {Platform.OS === "web" && (
+        <Head>
+          <link
+            rel="preconnect"
+            href="https://fonts.googleapis.com"
+          />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
+          <link
+            href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+            rel="stylesheet"
+          />
+        </Head>
+      )}
+      <TamaguiProvider key={themeName} config={config} defaultTheme={themeName}>
+        <PortalProvider shouldAddRootHost>
+          <Theme name={themeName}>
+            <Toast>
+              <YStack flex={1} backgroundColor="$background">
+                <ErrorBoundary>
+                  <APIProvider>
+                    <RulesModalProvider>
+                      <AppNavigation />
+                    </RulesModalProvider>
+                  </APIProvider>
+                </ErrorBoundary>
+              </YStack>
+            </Toast>
+          </Theme>
+        </PortalProvider>
+      </TamaguiProvider>
+    </>
   );
 }
 

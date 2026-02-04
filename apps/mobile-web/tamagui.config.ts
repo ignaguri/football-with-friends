@@ -1,6 +1,7 @@
 // @ts-nocheck - Tamagui's complex recursive types can cause "Maximum call stack size exceeded" during type checking
 import { createTamagui } from 'tamagui'
 import { themes } from './lib/themes'
+import { fonts } from './lib/fonts'
 import { defaultConfig } from '@tamagui/config/v4'
 import { shorthands } from '@tamagui/shorthands'
 import { Platform } from 'react-native'
@@ -13,6 +14,7 @@ const webSettings = Platform.OS === 'web' ? {
 
 const config = createTamagui({
   ...defaultConfig,
+  fonts,
   themes,
   shorthands,
   settings: {
