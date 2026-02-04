@@ -22,6 +22,7 @@ import "react-native-svg";
 
 import { ErrorBoundary } from "../lib/error-boundary";
 import "../lib/i18n"; // Initialize i18n
+import { registerServiceWorker } from "../lib/register-service-worker";
 import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
 import config from "../tamagui.config";
@@ -89,6 +90,13 @@ function AppContent() {
     }
   }, [themeName]);
 
+  // Register service worker for PWA support
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      registerServiceWorker();
+    }
+  }, []);
+
   return (
     <>
       {Platform.OS === "web" && (
@@ -106,6 +114,19 @@ function AppContent() {
             href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
             rel="stylesheet"
           />
+
+          {/* PWA Meta Tags */}
+          <meta name="application-name" content="Football with Friends" />
+          <meta name="description" content="Organize and manage football matches with friends" />
+          <meta name="theme-color" content="#3d7c48" media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content="#4ca861" media="(prefers-color-scheme: dark)" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta name="apple-mobile-web-app-title" content="Football" />
+          <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
+          <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+          <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+          <link rel="manifest" href="/manifest.json" />
         </Head>
       )}
       <TamaguiProvider key={themeName} config={config} defaultTheme={themeName}>

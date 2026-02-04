@@ -7,7 +7,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web --port 8084",
-    "build": "expo export --platform web --output-dir dist",
+    "build": "pnpm generate-icons && expo export --platform web --output-dir dist && pnpm copy-public && pnpm build:sw",
+    "generate-icons": "node scripts/generate-pwa-icons.js",
+    "copy-public": "node scripts/copy-public-files.js",
+    "build:sw": "workbox generateSW workbox-config.js",
     "lint": "eslint app --ext .ts,.tsx",
     "typecheck": "echo '⚠️  TypeScript check disabled for mobile-web due to Tamagui type recursion (see TAMAGUI_TYPECHECK.md)' && exit 0"
   },
@@ -64,7 +67,9 @@
     "@repo/typescript-config": "workspace:*",
     "@tamagui/babel-plugin": "1.144.3",
     "@types/react": "19.1.17",
-    "typescript": "~5.9.3"
+    "sharp": "^0.34.5",
+    "typescript": "~5.9.3",
+    "workbox-cli": "^7.4.0"
   },
   "private": true
 }
