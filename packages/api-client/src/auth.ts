@@ -72,6 +72,9 @@ const LOCALHOST_API = "http://localhost:3001";
 // Configured API URL (set via configureApiClient)
 let _configuredApiUrl: string | null = null;
 
+// Google Client ID for One Tap (set via configureGoogleClientId)
+let _googleClientId: string | null = null;
+
 /**
  * Configure the API client with the API URL.
  * Call this early in your app initialization (e.g., in _layout.tsx).
@@ -81,6 +84,24 @@ export function configureApiClient(apiUrl: string | undefined) {
   if (apiUrl && apiUrl.length > 0 && !apiUrl.includes("${")) {
     _configuredApiUrl = apiUrl.trim();
   }
+}
+
+/**
+ * Configure the Google Client ID for One Tap authentication (web only).
+ * Call this early in your app initialization (e.g., in _layout.tsx).
+ * For Expo apps, pass process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID.
+ */
+export function configureGoogleClientId(clientId: string | undefined) {
+  if (clientId && clientId.length > 0 && !clientId.includes("${")) {
+    _googleClientId = clientId.trim();
+  }
+}
+
+/**
+ * Get the configured Google Client ID.
+ */
+export function getGoogleClientId(): string | null {
+  return _googleClientId;
 }
 
 // Get API URL dynamically at runtime

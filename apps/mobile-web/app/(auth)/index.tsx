@@ -13,7 +13,10 @@ import { Mail } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 import { useTheme } from "tamagui";
+
+import { GoogleSignInWeb } from "../../components/GoogleSignInWeb";
 
 export default function AuthLandingScreen() {
   const { t } = useTranslation();
@@ -141,60 +144,81 @@ export default function AuthLandingScreen() {
             </XStack>
           </Button>
 
-          {/* Google Button - Following Google Brand Guidelines */}
-          <Button
-            onPress={handleGoogleAuth}
-            size="$5"
-            width="100%"
-            disabled={isGoogleLoading}
-            opacity={isGoogleLoading ? 0.5 : 1}
-            backgroundColor={isDark ? "#131314" : "white"}
-            borderWidth={1}
-            borderColor={isDark ? "#8E918F" : "#747775"}
-            hoverStyle={{
-              backgroundColor: isDark ? "#2A2A2A" : "#F8F9FA",
-              borderColor: isDark ? "#C1C1C1" : "#4285F4",
-              transform: [{ scale: 1.01 }],
-            }}
-            pressStyle={{
-              backgroundColor: isDark ? "#3A3A3A" : "#E8F0FE",
-              borderColor: isDark ? "#C1C1C1" : "#4285F4",
-              transform: [{ scale: 0.99 }],
-            }}
-            paddingHorizontal="$3"
-            animation="quick"
-          >
-            <XStack gap="$3" alignItems="center" justifyContent="center">
-              {isGoogleLoading ? (
-                <Text
-                  color={isDark ? "#E3E3E3" : "#1F1F1F"}
-                  fontSize="$5"
-                  fontFamily="$body"
-                >
-                  ...
-                </Text>
-              ) : (
-                <>
-                  <Image
-                    source={
-                      isDark
-                        ? require("../../assets/google/google-logo-dark.svg")
-                        : require("../../assets/google/google-logo.svg")
-                    }
-                    style={{ width: 24, height: 24 }}
-                  />
+          {/* Google Button - Web uses GIS (ID token flow), Native uses redirect flow */}
+          {Platform.OS === "web" ? (
+            <GoogleSignInWeb
+              clientId={process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || ""}
+              onSuccess={() => {
+                console.log("[AUTH] Google sign-in successful, navigating to tabs");
+                // Use window.location.href instead of router.replace to force a full page reload
+                // This ensures useSession() gets fresh state instead of cached "no session"
+                if (typeof window !== "undefined") {
+                  window.location.href = "/(tabs)";
+                } else {
+                  router.replace("/(tabs)");
+                }
+              }}
+              onError={(err) => {
+                console.error("[AUTH] Google sign-in error:", err);
+                setServerError(err);
+              }}
+            />
+          ) : (
+            // Native button - uses redirect-based OAuth (for future mobile support)
+            <Button
+              onPress={handleGoogleAuth}
+              size="$5"
+              width="100%"
+              disabled={isGoogleLoading}
+              opacity={isGoogleLoading ? 0.5 : 1}
+              backgroundColor={isDark ? "#131314" : "white"}
+              borderWidth={1}
+              borderColor={isDark ? "#8E918F" : "#747775"}
+              hoverStyle={{
+                backgroundColor: isDark ? "#2A2A2A" : "#F8F9FA",
+                borderColor: isDark ? "#C1C1C1" : "#4285F4",
+                transform: [{ scale: 1.01 }],
+              }}
+              pressStyle={{
+                backgroundColor: isDark ? "#3A3A3A" : "#E8F0FE",
+                borderColor: isDark ? "#C1C1C1" : "#4285F4",
+                transform: [{ scale: 0.99 }],
+              }}
+              paddingHorizontal="$3"
+              animation="quick"
+            >
+              <XStack gap="$3" alignItems="center" justifyContent="center">
+                {isGoogleLoading ? (
                   <Text
                     color={isDark ? "#E3E3E3" : "#1F1F1F"}
                     fontSize="$5"
                     fontFamily="$body"
-                    fontWeight="500"
                   >
-                    {t("auth.signInWithGmail")}
+                    ...
                   </Text>
-                </>
-              )}
-            </XStack>
-          </Button>
+                ) : (
+                  <>
+                    <Image
+                      source={
+                        isDark
+                          ? require("../../assets/google/google-logo-dark.svg")
+                          : require("../../assets/google/google-logo.svg")
+                      }
+                      style={{ width: 24, height: 24 }}
+                    />
+                    <Text
+                      color={isDark ? "#E3E3E3" : "#1F1F1F"}
+                      fontSize="$5"
+                      fontFamily="$body"
+                      fontWeight="500"
+                    >
+                      {t("auth.signInWithGmail")}
+                    </Text>
+                  </>
+                )}
+              </XStack>
+            </Button>
+          )}
 
           {/* Email Button - Secondary */}
           <Button

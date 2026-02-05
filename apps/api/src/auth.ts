@@ -1,7 +1,7 @@
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 import { getEnv, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
-import { admin, username, oAuthProxy, bearer, phoneNumber } from "better-auth/plugins";
+import { admin, username, oAuthProxy, bearer, phoneNumber, oneTap } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
 
 // Get database configuration for authentication
@@ -205,6 +205,10 @@ function createAuthInstance() {
       oAuthProxy({
         productionURL: process.env.BETTER_AUTH_BASE_URL || "https://football-api.pepe-grillo-parlante.workers.dev",
       }),
+      // One Tap plugin - enables ID token-based Google authentication
+      // This bypasses cross-domain cookie issues by using Google Identity Services
+      // instead of redirect-based OAuth flow
+      oneTap(),
     ],
     logger: {
       level: "info",

@@ -144,6 +144,9 @@ function AppContent() {
             href="/icons/icon-192x192.png"
           />
           <link rel="manifest" href="/manifest.json" />
+
+          {/* Google Identity Services for OAuth without redirect flow */}
+          <script src="https://accounts.google.com/gsi/client" async defer />
         </Head>
       )}
       <TamaguiProvider key={themeName} config={config} defaultTheme={themeName}>
