@@ -90,6 +90,8 @@ export interface UserTable {
   // Phone authentication fields
   phoneNumber: string | null;
   phoneNumberVerified: number;
+  // Auth method tracking
+  primaryAuthMethod: string | null;
 }
 
 export interface VotingCriteriaTable {

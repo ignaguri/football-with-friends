@@ -62,7 +62,7 @@ app.get("/api/auth/callback/google", async (c) => {
     if (setCookie) {
       const sessionCookieMatch = setCookie.match(/better-auth\.session_token=([^;]+)/);
       if (sessionCookieMatch) {
-        sessionToken = sessionCookieMatch[1];
+        sessionToken = sessionCookieMatch[1] ?? null;
         console.log("[OAUTH-CALLBACK] ✅ Found session token in cookie");
       }
     }

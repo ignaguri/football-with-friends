@@ -1,6 +1,14 @@
+import { getConfiguredApiUrl, signIn } from "@repo/api-client";
 // @ts-nocheck - Tamagui type recursion workaround
-import { signIn } from "@repo/api-client";
-import { Container, Button, Text, YStack, XStack, Image, colors } from "@repo/ui";
+import {
+  Container,
+  Button,
+  Text,
+  YStack,
+  XStack,
+  Image,
+  colors,
+} from "@repo/ui";
 import { Mail } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -14,7 +22,9 @@ export default function AuthLandingScreen() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   // Detect dark mode for Google button styling
-  const isDark = theme.background?.val === "#000000" || theme.background?.val?.startsWith("#1");
+  const isDark =
+    theme.background?.val === "#000000" ||
+    theme.background?.val?.startsWith("#1");
 
   const handleGoogleAuth = async () => {
     console.log("[AUTH] 🔵 Google OAuth button clicked");
@@ -23,9 +33,12 @@ export default function AuthLandingScreen() {
 
     try {
       // For web, we need to pass the full URL since the OAuth callback comes from Google
-      const callbackURL = typeof window !== "undefined"
-        ? window.location.origin + "/"
-        : "/";
+      const callbackURL =
+        typeof window !== "undefined"
+          ? `${getConfiguredApiUrl()}/api/auth/web-callback?redirect=${encodeURIComponent(
+              window.location.origin + "/",
+            )}`
+          : "/";
 
       console.log("[AUTH] 🚀 Calling signIn.social with BetterAuth client");
       console.log("[AUTH] 📍 Callback URL:", callbackURL);
@@ -38,7 +51,8 @@ export default function AuthLandingScreen() {
         fetchOptions: {
           onSuccess: (ctx) => {
             // Handle redirect manually using window.location.assign() which works on Vercel
-            const redirectUrl = ctx.response.headers.get("location") || (ctx.data as any)?.url;
+            const redirectUrl =
+              ctx.response.headers.get("location") || (ctx.data as any)?.url;
             if (redirectUrl) {
               console.log("[AUTH] ➡️ Manually redirecting to:", redirectUrl);
               window.location.assign(redirectUrl);
@@ -116,7 +130,12 @@ export default function AuthLandingScreen() {
                 style={{ width: 24, height: 24 }}
                 tintColor="#25D366"
               />
-              <Text color="white" fontSize="$5" fontFamily="$body" fontWeight="400">
+              <Text
+                color="white"
+                fontSize="$5"
+                fontFamily="$body"
+                fontWeight="400"
+              >
                 {t("auth.signInWithPhone")}
               </Text>
             </XStack>
