@@ -53,7 +53,7 @@ export default function AuthLandingScreen() {
 
         if (result.url) {
           console.log("[AUTH] ➡️ Redirecting to Google:", result.url);
-          window.location.href = result.url;
+          window.location.replace(result.url);
           return; // Exit early to prevent re-render from finally block
         } else {
           console.error("[AUTH] ❌ OAuth did not return redirect URL:", result);
