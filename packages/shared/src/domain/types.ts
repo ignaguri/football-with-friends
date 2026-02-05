@@ -171,6 +171,52 @@ export interface PlayerSummary {
   totalThirdTimes: number;
 }
 
+// Ranking types for player leaderboards
+
+export type RankingCriteria =
+  | "matches"
+  | "third_times"
+  | "beers"
+  | "total_votes";
+
+export interface PlayerRanking {
+  rank: number;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  nationality?: string;
+  profilePicture?: string;
+  value: number;
+}
+
+export interface PlayerVotingStats {
+  userId: string;
+  totalVotesReceived: number;
+  criteriaBreakdown: Array<{
+    criteriaId: string;
+    criteriaCode: string;
+    criteriaName: string;
+    timesVoted: number;
+    rank?: number;
+  }>;
+}
+
+export interface VotingLeaderboard {
+  criteria: Array<{
+    criteriaId: string;
+    criteriaCode: string;
+    criteriaName: string;
+    criteriaDescription: string;
+    topPlayers: Array<{
+      userId: string;
+      userName: string;
+      nationality?: string;
+      profilePicture?: string;
+      voteCount: number;
+    }>;
+  }>;
+}
+
 // Data transfer objects (DTOs) for creating/updating entities
 
 export interface CreateLocationData {

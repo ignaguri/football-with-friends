@@ -482,7 +482,9 @@ export default function ProfileScreen() {
                     autoCapitalize="none"
                     keyboardType="email-address"
                     disabled={!canEditEmail}
-                    helperText={!canEditEmail ? t("profile.emailLockedByAuth") : undefined}
+                    helperText={
+                      !canEditEmail ? t("profile.emailLockedByAuth") : undefined
+                    }
                   />
 
                   <PhoneInput
@@ -491,7 +493,11 @@ export default function ProfileScreen() {
                     value={phoneNumber}
                     onChangeValue={(phone) => setPhoneNumber(phone)}
                     disabled={!canEditPhone}
-                    helperText={!canEditPhone ? t("profile.phoneLockedByAuth") : t("profile.phoneHelp")}
+                    helperText={
+                      !canEditPhone
+                        ? t("profile.phoneLockedByAuth")
+                        : t("profile.phoneHelp")
+                    }
                   />
                 </YStack>
               ) : (

@@ -469,7 +469,12 @@
     "statsCard": "Estadísticas de Jugadores",
     "statsCardDesc": "Ver estadísticas y tabla de posiciones",
     "multimediaCard": "Multimedia",
-    "multimediaCardDesc": "Próximamente"
+    "multimediaCardDesc": "Próximamente",
+    "tabs": {
+      "players": "Jugadores",
+      "rankings": "Rankings",
+      "awards": "Premios"
+    }
   },
   "playerStats": {
     "tabTitle": "Social",
@@ -509,7 +514,29 @@
     "goalsOnlyPlayed": "Los goles solo se pueden registrar para partidos que jugaste",
     "played": "Jugado",
     "didNotPlay": "No jugó",
-    "noFinishedMatches": "Aún no hay partidos terminados"
+    "noFinishedMatches": "Aún no hay partidos terminados",
+    "awardsSection": "Premios y Reconocimientos",
+    "totalVotes": "Votos Totales",
+    "votingBreakdown": "Premios Ganados"
+  },
+  "rankings": {
+    "title": "Rankings",
+    "selectCriteria": "Ordenar por",
+    "criteria": {
+      "matches": "Partidos Totales",
+      "third_times": "Tercer Tiempo",
+      "beers": "Cervezas Consumidas",
+      "total_votes": "Votos Totales"
+    },
+    "rank": "#{{rank}}",
+    "noData": "No hay datos de ranking"
+  },
+  "awards": {
+    "title": "Premios del Partido",
+    "topPlayers": "Top Jugadores",
+    "votesCount": "{{count}} votos",
+    "votesCount_one": "{{count}} voto",
+    "noVotes": "Sin votos aún"
   },
   "voting": {
     "title": "Votación del Partido",

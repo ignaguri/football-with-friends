@@ -81,6 +81,18 @@ export type { PlayerStatsCardProps } from "./components/PlayerStatsCard";
 export { StatsInputRow } from "./components/StatsInputRow";
 export type { StatsInputRowProps } from "./components/StatsInputRow";
 
+export { RankingCard } from "./components/RankingCard";
+export type { RankingCardProps } from "./components/RankingCard";
+
+export { PodiumDisplay } from "./components/PodiumDisplay";
+export type { PodiumDisplayProps } from "./components/PodiumDisplay";
+
+export { AwardCard } from "./components/AwardCard";
+export type { AwardCardProps } from "./components/AwardCard";
+
+export { VotingStatsSection } from "./components/VotingStatsSection";
+export type { VotingStatsSectionProps } from "./components/VotingStatsSection";
+
 export { ExclusiveMultiSelect } from "./components/exclusive-multi-select";
 export type {
   ExclusiveMultiSelectProps,

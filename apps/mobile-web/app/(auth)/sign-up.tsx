@@ -103,16 +103,16 @@ export default function SignUpScreen() {
   };
 
   const getPhoneErrorMessage = (error: any): string => {
-    const message = error.message || '';
+    const message = error.message || "";
 
     // Map technical errors to user-friendly translation keys
-    if (message.includes('not a function')) {
+    if (message.includes("not a function")) {
       return t("auth.serviceUnavailable");
     }
-    if (message.includes('already registered')) {
+    if (message.includes("already registered")) {
       return t("auth.phoneAlreadyRegistered");
     }
-    if (message.includes('invalid phone')) {
+    if (message.includes("invalid phone")) {
       return t("auth.invalidPhone");
     }
 
@@ -235,273 +235,276 @@ export default function SignUpScreen() {
             </Text>
           </YStack>
 
-        {/* Auth Method Toggle */}
-        <XStack justifyContent="center" gap="$2">
-          <Pressable onPress={switchToEmail}>
-            <Text
-              color={authMethod === "email" ? "$blue10" : "$gray10"}
-              fontWeight={authMethod === "email" ? "600" : "400"}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-            >
-              {t("auth.useEmail")}
-            </Text>
-          </Pressable>
-          <Text color="$gray6">|</Text>
-          <Pressable onPress={switchToPhone}>
-            <Text
-              color={authMethod === "phone" ? "$blue10" : "$gray10"}
-              fontWeight={authMethod === "phone" ? "600" : "400"}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-            >
-              {t("auth.usePhone")}
-            </Text>
-          </Pressable>
-        </XStack>
-
-        {/* Email Sign Up Form */}
-        {authMethod === "email" && (
-          <Card variant="elevated" padding="$4">
-            <YStack gap="$4">
-              <Controller
-                control={emailForm.control}
-                name="name"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={`${t("auth.name")} *`}
-                    placeholder={t("auth.namePlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    error={
-                      emailForm.formState.errors.name
-                        ? t(emailForm.formState.errors.name.message as string)
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                control={emailForm.control}
-                name="email"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={`${t("auth.email")} *`}
-                    placeholder={t("auth.emailPlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    error={
-                      emailForm.formState.errors.email
-                        ? t(emailForm.formState.errors.email.message as string)
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                control={emailForm.control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={`${t("auth.password")} *`}
-                    placeholder={t("auth.passwordMinLength")}
-                    value={value}
-                    onChangeText={onChange}
-                    secureTextEntry
-                    error={
-                      emailForm.formState.errors.password
-                        ? t(
-                            emailForm.formState.errors.password
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                    helperText={t("auth.passwordHelp")}
-                  />
-                )}
-              />
-
-              <Controller
-                control={emailForm.control}
-                name="username"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={t("auth.username")}
-                    placeholder={t("auth.usernamePlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    helperText={t("auth.usernameHelp")}
-                    error={
-                      emailForm.formState.errors.username
-                        ? t(
-                            emailForm.formState.errors.username
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              {serverError && (
-                <Text color="$red10" fontSize="$3" textAlign="center">
-                  {serverError}
-                </Text>
-              )}
-
-              <YStack paddingTop="$4">
-                <Button
-                  onPress={emailForm.handleSubmit(onEmailSubmit)}
-                  disabled={isLoading || isGoogleLoading}
-                  variant="primary"
-                >
-                  {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
-                </Button>
-              </YStack>
-
-              <YStack gap="$3" alignItems="center">
-                <Text color="$gray10" fontSize="$3">
-                  {t("auth.orContinueWith")}
-                </Text>
-
-                <Button
-                  onPress={handleGoogleSignUp}
-                  disabled={isLoading || isGoogleLoading}
-                  variant="outline"
-                  width="100%"
-                >
-                  {isGoogleLoading ? (
-                    <Spinner size="small" />
-                  ) : (
-                    t("signin.signInWithGoogle")
-                  )}
-                </Button>
-              </YStack>
-            </YStack>
-          </Card>
-        )}
-
-        {/* Phone Sign Up Form */}
-        {authMethod === "phone" && (
-          <Card variant="elevated" padding="$4">
-            <YStack gap="$4">
-              <Controller
-                control={phoneForm.control}
-                name="name"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={`${t("auth.name")} *`}
-                    placeholder={t("auth.namePlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    error={
-                      phoneForm.formState.errors.name
-                        ? t(phoneForm.formState.errors.name.message as string)
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                control={phoneForm.control}
-                name="phoneNumber"
-                render={({ field: { onChange, value } }) => (
-                  <PhoneInput
-                    label={`${t("auth.phone")} *`}
-                    placeholder={t("auth.phonePlaceholder")}
-                    value={value}
-                    onChangeValue={(phone) => onChange(phone)}
-                    error={
-                      phoneForm.formState.errors.phoneNumber
-                        ? t(
-                            phoneForm.formState.errors.phoneNumber
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                    helperText={t("auth.phoneHelp")}
-                  />
-                )}
-              />
-
-              <Controller
-                control={phoneForm.control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={`${t("auth.password")} *`}
-                    placeholder={t("auth.passwordMinLength")}
-                    value={value}
-                    onChangeText={onChange}
-                    secureTextEntry
-                    error={
-                      phoneForm.formState.errors.password
-                        ? t(
-                            phoneForm.formState.errors.password
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                    helperText={t("auth.passwordHelp")}
-                  />
-                )}
-              />
-
-              {serverError && (
-                <Text color="$red10" fontSize="$3" textAlign="center">
-                  {serverError}
-                </Text>
-              )}
-
-              <YStack paddingTop="$4">
-                <Button
-                  onPress={phoneForm.handleSubmit(onPhoneSubmit)}
-                  disabled={isLoading || isGoogleLoading}
-                  variant="primary"
-                >
-                  {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
-                </Button>
-              </YStack>
-
-              <YStack gap="$3" alignItems="center">
-                <Text color="$gray10" fontSize="$3">
-                  {t("auth.orContinueWith")}
-                </Text>
-
-                <Button
-                  onPress={handleGoogleSignUp}
-                  disabled={isLoading || isGoogleLoading}
-                  variant="outline"
-                  width="100%"
-                >
-                  {isGoogleLoading ? (
-                    <Spinner size="small" />
-                  ) : (
-                    t("signin.signInWithGoogle")
-                  )}
-                </Button>
-              </YStack>
-            </YStack>
-          </Card>
-        )}
-
-        <YStack gap="$2" alignItems="center">
-          <Text color="$gray11">
-            {t("auth.hasAccount")}{" "}
-            <Link href="/(auth)/sign-in" asChild>
-              <Text color="$blue10" fontWeight="600">
-                {t("auth.signInLink")}
+          {/* Auth Method Toggle */}
+          <XStack justifyContent="center" gap="$2">
+            <Pressable onPress={switchToEmail}>
+              <Text
+                color={authMethod === "email" ? "$blue10" : "$gray10"}
+                fontWeight={authMethod === "email" ? "600" : "400"}
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+              >
+                {t("auth.useEmail")}
               </Text>
-            </Link>
-          </Text>
+            </Pressable>
+            <Text color="$gray6">|</Text>
+            <Pressable onPress={switchToPhone}>
+              <Text
+                color={authMethod === "phone" ? "$blue10" : "$gray10"}
+                fontWeight={authMethod === "phone" ? "600" : "400"}
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+              >
+                {t("auth.usePhone")}
+              </Text>
+            </Pressable>
+          </XStack>
+
+          {/* Email Sign Up Form */}
+          {authMethod === "email" && (
+            <Card variant="elevated" padding="$4">
+              <YStack gap="$4">
+                <Controller
+                  control={emailForm.control}
+                  name="name"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={`${t("auth.name")} *`}
+                      placeholder={t("auth.namePlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      error={
+                        emailForm.formState.errors.name
+                          ? t(emailForm.formState.errors.name.message as string)
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={emailForm.control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={`${t("auth.email")} *`}
+                      placeholder={t("auth.emailPlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      error={
+                        emailForm.formState.errors.email
+                          ? t(
+                              emailForm.formState.errors.email
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={emailForm.control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={`${t("auth.password")} *`}
+                      placeholder={t("auth.passwordMinLength")}
+                      value={value}
+                      onChangeText={onChange}
+                      secureTextEntry
+                      error={
+                        emailForm.formState.errors.password
+                          ? t(
+                              emailForm.formState.errors.password
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                      helperText={t("auth.passwordHelp")}
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={emailForm.control}
+                  name="username"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={t("auth.username")}
+                      placeholder={t("auth.usernamePlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      autoCapitalize="none"
+                      helperText={t("auth.usernameHelp")}
+                      error={
+                        emailForm.formState.errors.username
+                          ? t(
+                              emailForm.formState.errors.username
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                {serverError && (
+                  <Text color="$red10" fontSize="$3" textAlign="center">
+                    {serverError}
+                  </Text>
+                )}
+
+                <YStack paddingTop="$4">
+                  <Button
+                    onPress={emailForm.handleSubmit(onEmailSubmit)}
+                    disabled={isLoading || isGoogleLoading}
+                    variant="primary"
+                  >
+                    {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
+                  </Button>
+                </YStack>
+
+                <YStack gap="$3" alignItems="center">
+                  <Text color="$gray10" fontSize="$3">
+                    {t("auth.orContinueWith")}
+                  </Text>
+
+                  <Button
+                    onPress={handleGoogleSignUp}
+                    disabled={isLoading || isGoogleLoading}
+                    variant="outline"
+                    width="100%"
+                  >
+                    {isGoogleLoading ? (
+                      <Spinner size="small" />
+                    ) : (
+                      t("signin.signInWithGoogle")
+                    )}
+                  </Button>
+                </YStack>
+              </YStack>
+            </Card>
+          )}
+
+          {/* Phone Sign Up Form */}
+          {authMethod === "phone" && (
+            <Card variant="elevated" padding="$4">
+              <YStack gap="$4">
+                <Controller
+                  control={phoneForm.control}
+                  name="name"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={`${t("auth.name")} *`}
+                      placeholder={t("auth.namePlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      error={
+                        phoneForm.formState.errors.name
+                          ? t(phoneForm.formState.errors.name.message as string)
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={phoneForm.control}
+                  name="phoneNumber"
+                  render={({ field: { onChange, value } }) => (
+                    <PhoneInput
+                      label={`${t("auth.phone")} *`}
+                      placeholder={t("auth.phonePlaceholder")}
+                      value={value}
+                      onChangeValue={(phone) => onChange(phone)}
+                      error={
+                        phoneForm.formState.errors.phoneNumber
+                          ? t(
+                              phoneForm.formState.errors.phoneNumber
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                      helperText={t("auth.phoneHelp")}
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={phoneForm.control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={`${t("auth.password")} *`}
+                      placeholder={t("auth.passwordMinLength")}
+                      value={value}
+                      onChangeText={onChange}
+                      secureTextEntry
+                      error={
+                        phoneForm.formState.errors.password
+                          ? t(
+                              phoneForm.formState.errors.password
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                      helperText={t("auth.passwordHelp")}
+                    />
+                  )}
+                />
+
+                {serverError && (
+                  <Text color="$red10" fontSize="$3" textAlign="center">
+                    {serverError}
+                  </Text>
+                )}
+
+                <YStack paddingTop="$4">
+                  <Button
+                    onPress={phoneForm.handleSubmit(onPhoneSubmit)}
+                    disabled={isLoading || isGoogleLoading}
+                    variant="primary"
+                  >
+                    {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
+                  </Button>
+                </YStack>
+
+                <YStack gap="$3" alignItems="center">
+                  <Text color="$gray10" fontSize="$3">
+                    {t("auth.orContinueWith")}
+                  </Text>
+
+                  <Button
+                    onPress={handleGoogleSignUp}
+                    disabled={isLoading || isGoogleLoading}
+                    variant="outline"
+                    width="100%"
+                  >
+                    {isGoogleLoading ? (
+                      <Spinner size="small" />
+                    ) : (
+                      t("signin.signInWithGoogle")
+                    )}
+                  </Button>
+                </YStack>
+              </YStack>
+            </Card>
+          )}
+
+          <YStack gap="$2" alignItems="center">
+            <Text color="$gray11">
+              {t("auth.hasAccount")}{" "}
+              <Link href="/(auth)/sign-in" asChild>
+                <Text color="$blue10" fontWeight="600">
+                  {t("auth.signInLink")}
+                </Text>
+              </Link>
+            </Text>
+          </YStack>
         </YStack>
-      </YStack>
       </ScrollView>
     </Container>
   );

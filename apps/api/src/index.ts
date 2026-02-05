@@ -12,6 +12,7 @@ import playersRoute from "./routes/players";
 import cronRoute from "./routes/cron";
 import phoneAuthRoute from "./routes/phone-auth";
 import votingRoute from "./routes/voting";
+import rankingsRoute from "./routes/rankings";
 
 const app = new Hono();
 
@@ -111,6 +112,7 @@ const apiRoutes = app
   .route("/profile", profileRoute)
   .route("/settings", settingsRoute)
   .route("/players", playersRoute)
+  .route("/rankings", rankingsRoute)
   .route("/cron", cronRoute)
   .route("/phone-auth", phoneAuthRoute)
   .route("/voting", votingRoute);

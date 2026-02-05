@@ -211,197 +211,200 @@ export default function SignInScreen() {
             </Text>
           </YStack>
 
-        {/* Google Sign In - Primary Action */}
-        <Button
-          variant="outline"
-          size="$5"
-          onPress={handleGoogleSignIn}
-          disabled={isGoogleLoading || isLoading}
-          opacity={isGoogleLoading || isLoading ? 0.5 : 1}
-        >
-          {isGoogleLoading ? (
-            <Spinner size="small" />
-          ) : (
-            t("signin.signInWithGoogle")
-          )}
-        </Button>
+          {/* Google Sign In - Primary Action */}
+          <Button
+            variant="outline"
+            size="$5"
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading || isLoading}
+            opacity={isGoogleLoading || isLoading ? 0.5 : 1}
+          >
+            {isGoogleLoading ? (
+              <Spinner size="small" />
+            ) : (
+              t("signin.signInWithGoogle")
+            )}
+          </Button>
 
-        {/* Divider */}
-        <XStack gap="$3" alignItems="center">
-          <YStack flex={1} height={1} backgroundColor="$gray6" />
-          <Text color="$gray10" fontSize="$3">
-            {t("auth.orContinueWith")}
-          </Text>
-          <YStack flex={1} height={1} backgroundColor="$gray6" />
-        </XStack>
-
-        {/* Auth Method Toggle */}
-        <XStack justifyContent="center" gap="$2">
-          <Pressable onPress={switchToEmail}>
-            <Text
-              color={authMethod === "email" ? "$blue10" : "$gray10"}
-              fontWeight={authMethod === "email" ? "600" : "400"}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-            >
-              {t("auth.useEmail")}
+          {/* Divider */}
+          <XStack gap="$3" alignItems="center">
+            <YStack flex={1} height={1} backgroundColor="$gray6" />
+            <Text color="$gray10" fontSize="$3">
+              {t("auth.orContinueWith")}
             </Text>
-          </Pressable>
-          <Text color="$gray6">|</Text>
-          <Pressable onPress={switchToPhone}>
-            <Text
-              color={authMethod === "phone" ? "$blue10" : "$gray10"}
-              fontWeight={authMethod === "phone" ? "600" : "400"}
-              paddingHorizontal="$3"
-              paddingVertical="$2"
-            >
-              {t("auth.usePhone")}
-            </Text>
-          </Pressable>
-        </XStack>
+            <YStack flex={1} height={1} backgroundColor="$gray6" />
+          </XStack>
 
-        {/* Email/Password Sign In */}
-        {authMethod === "email" && (
-          <Card variant="elevated" padding="$4">
-            <YStack gap="$4">
-              <Controller
-                control={emailForm.control}
-                name="email"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={t("auth.email")}
-                    placeholder={t("auth.emailPlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    error={
-                      emailForm.formState.errors.email
-                        ? t(emailForm.formState.errors.email.message as string)
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                control={emailForm.control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={t("auth.password")}
-                    placeholder={t("auth.passwordPlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    secureTextEntry
-                    error={
-                      emailForm.formState.errors.password
-                        ? t(
-                            emailForm.formState.errors.password
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              {serverError && (
-                <Text color="$red10" fontSize="$3" textAlign="center">
-                  {serverError}
-                </Text>
-              )}
-
-              <YStack paddingTop="$4">
-                <Button
-                  onPress={emailForm.handleSubmit(onEmailSubmit)}
-                  disabled={isLoading || isGoogleLoading}
-                  variant="primary"
-                >
-                  {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
-                </Button>
-              </YStack>
-            </YStack>
-          </Card>
-        )}
-
-        {/* Phone/Password Sign In */}
-        {authMethod === "phone" && (
-          <Card variant="elevated" padding="$4">
-            <YStack gap="$4">
-              <Controller
-                control={phoneForm.control}
-                name="phoneNumber"
-                render={({ field: { onChange, value } }) => (
-                  <PhoneInput
-                    label={t("auth.phone")}
-                    placeholder={t("auth.phonePlaceholder")}
-                    value={value}
-                    onChangeValue={(phone) => onChange(phone)}
-                    error={
-                      phoneForm.formState.errors.phoneNumber
-                        ? t(
-                            phoneForm.formState.errors.phoneNumber
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              <Controller
-                control={phoneForm.control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={t("auth.password")}
-                    placeholder={t("auth.passwordPlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    secureTextEntry
-                    error={
-                      phoneForm.formState.errors.password
-                        ? t(
-                            phoneForm.formState.errors.password
-                              .message as string,
-                          )
-                        : undefined
-                    }
-                  />
-                )}
-              />
-
-              {serverError && (
-                <Text color="$red10" fontSize="$3" textAlign="center">
-                  {serverError}
-                </Text>
-              )}
-
-              <YStack paddingTop="$4">
-                <Button
-                  onPress={phoneForm.handleSubmit(onPhoneSubmit)}
-                  disabled={isLoading || isGoogleLoading}
-                  variant="primary"
-                >
-                  {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
-                </Button>
-              </YStack>
-            </YStack>
-          </Card>
-        )}
-
-        <YStack gap="$2" alignItems="center">
-          <Text color="$gray11">
-            {t("auth.noAccount")}{" "}
-            <Link href="/(auth)/sign-up" asChild>
-              <Text color="$blue10" fontWeight="600">
-                {t("auth.signUpLink")}
+          {/* Auth Method Toggle */}
+          <XStack justifyContent="center" gap="$2">
+            <Pressable onPress={switchToEmail}>
+              <Text
+                color={authMethod === "email" ? "$blue10" : "$gray10"}
+                fontWeight={authMethod === "email" ? "600" : "400"}
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+              >
+                {t("auth.useEmail")}
               </Text>
-            </Link>
-          </Text>
+            </Pressable>
+            <Text color="$gray6">|</Text>
+            <Pressable onPress={switchToPhone}>
+              <Text
+                color={authMethod === "phone" ? "$blue10" : "$gray10"}
+                fontWeight={authMethod === "phone" ? "600" : "400"}
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+              >
+                {t("auth.usePhone")}
+              </Text>
+            </Pressable>
+          </XStack>
+
+          {/* Email/Password Sign In */}
+          {authMethod === "email" && (
+            <Card variant="elevated" padding="$4">
+              <YStack gap="$4">
+                <Controller
+                  control={emailForm.control}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={t("auth.email")}
+                      placeholder={t("auth.emailPlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      error={
+                        emailForm.formState.errors.email
+                          ? t(
+                              emailForm.formState.errors.email
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={emailForm.control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={t("auth.password")}
+                      placeholder={t("auth.passwordPlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      secureTextEntry
+                      error={
+                        emailForm.formState.errors.password
+                          ? t(
+                              emailForm.formState.errors.password
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                {serverError && (
+                  <Text color="$red10" fontSize="$3" textAlign="center">
+                    {serverError}
+                  </Text>
+                )}
+
+                <YStack paddingTop="$4">
+                  <Button
+                    onPress={emailForm.handleSubmit(onEmailSubmit)}
+                    disabled={isLoading || isGoogleLoading}
+                    variant="primary"
+                  >
+                    {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
+                  </Button>
+                </YStack>
+              </YStack>
+            </Card>
+          )}
+
+          {/* Phone/Password Sign In */}
+          {authMethod === "phone" && (
+            <Card variant="elevated" padding="$4">
+              <YStack gap="$4">
+                <Controller
+                  control={phoneForm.control}
+                  name="phoneNumber"
+                  render={({ field: { onChange, value } }) => (
+                    <PhoneInput
+                      label={t("auth.phone")}
+                      placeholder={t("auth.phonePlaceholder")}
+                      value={value}
+                      onChangeValue={(phone) => onChange(phone)}
+                      error={
+                        phoneForm.formState.errors.phoneNumber
+                          ? t(
+                              phoneForm.formState.errors.phoneNumber
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={phoneForm.control}
+                  name="password"
+                  render={({ field: { onChange, value } }) => (
+                    <Input
+                      label={t("auth.password")}
+                      placeholder={t("auth.passwordPlaceholder")}
+                      value={value}
+                      onChangeText={onChange}
+                      secureTextEntry
+                      error={
+                        phoneForm.formState.errors.password
+                          ? t(
+                              phoneForm.formState.errors.password
+                                .message as string,
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+
+                {serverError && (
+                  <Text color="$red10" fontSize="$3" textAlign="center">
+                    {serverError}
+                  </Text>
+                )}
+
+                <YStack paddingTop="$4">
+                  <Button
+                    onPress={phoneForm.handleSubmit(onPhoneSubmit)}
+                    disabled={isLoading || isGoogleLoading}
+                    variant="primary"
+                  >
+                    {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
+                  </Button>
+                </YStack>
+              </YStack>
+            </Card>
+          )}
+
+          <YStack gap="$2" alignItems="center">
+            <Text color="$gray11">
+              {t("auth.noAccount")}{" "}
+              <Link href="/(auth)/sign-up" asChild>
+                <Text color="$blue10" fontWeight="600">
+                  {t("auth.signUpLink")}
+                </Text>
+              </Link>
+            </Text>
+          </YStack>
         </YStack>
-      </YStack>
       </ScrollView>
     </Container>
   );

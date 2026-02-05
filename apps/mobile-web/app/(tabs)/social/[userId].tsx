@@ -17,6 +17,7 @@ import {
   StatsSummary,
   UserAvatar,
   H2,
+  VotingStatsSection,
 } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -87,6 +88,18 @@ export default function PlayerDetailScreen() {
       // Get all matches to cross-reference with stats
       const res = await client.api.matches.$get({
         query: { type: "past" },
+      });
+      return res.json();
+    },
+    enabled: !!userId,
+  });
+
+  // Fetch voting statistics for this player
+  const { data: votingStats } = useQuery({
+    queryKey: ["player-voting-stats", userId],
+    queryFn: async () => {
+      const res = await client.api.players[":userId"]["voting-stats"].$get({
+        param: { userId: userId! },
       });
       return res.json();
     },
@@ -324,6 +337,21 @@ export default function PlayerDetailScreen() {
               </YStack>
             </YStack>
           </Card>
+
+          {/* Awards & Recognition */}
+          {votingStats && votingStats.totalVotesReceived > 0 && (
+            <Card variant="elevated">
+              <YStack padding="$4" gap="$3">
+                <H2 fontSize="$5" fontWeight="600">
+                  {t("playerStats.awardsSection")}
+                </H2>
+                <VotingStatsSection
+                  stats={votingStats.criteriaBreakdown}
+                  totalVotes={votingStats.totalVotesReceived}
+                />
+              </YStack>
+            </Card>
+          )}
         </YStack>
       </ScrollView>
     </Container>

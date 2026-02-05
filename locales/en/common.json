@@ -466,7 +466,12 @@
     "statsCard": "Player Stats",
     "statsCardDesc": "Browse all player stats & leaderboard",
     "multimediaCard": "Multimedia",
-    "multimediaCardDesc": "Coming soon"
+    "multimediaCardDesc": "Coming soon",
+    "tabs": {
+      "players": "Players",
+      "rankings": "Rankings",
+      "awards": "Awards"
+    }
   },
   "playerStats": {
     "tabTitle": "Social",
@@ -506,7 +511,29 @@
     "goalsOnlyPlayed": "Goals can only be recorded for matches you played in",
     "played": "Played",
     "didNotPlay": "Didn't play",
-    "noFinishedMatches": "No finished matches yet"
+    "noFinishedMatches": "No finished matches yet",
+    "awardsSection": "Awards & Recognition",
+    "totalVotes": "Total Votes",
+    "votingBreakdown": "Award Wins"
+  },
+  "rankings": {
+    "title": "Rankings",
+    "selectCriteria": "Sort by",
+    "criteria": {
+      "matches": "Total Matches",
+      "third_times": "Third Times",
+      "beers": "Beers Consumed",
+      "total_votes": "Total Votes"
+    },
+    "rank": "#{{rank}}",
+    "noData": "No ranking data available"
+  },
+  "awards": {
+    "title": "Match Awards",
+    "topPlayers": "Top Players",
+    "votesCount": "{{count}} votes",
+    "votesCount_one": "{{count}} vote",
+    "noVotes": "No votes yet"
   },
   "voting": {
     "title": "Match Voting",

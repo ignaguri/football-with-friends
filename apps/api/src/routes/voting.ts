@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { votingService } from "@repo/shared/services";
+import { votingService, getServiceFactory } from "@repo/shared/services";
 import { auth } from "../auth";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
@@ -275,6 +275,27 @@ app.get("/matches/:matchId/has-voted", async (c) => {
       return c.json({ error: error.message }, 401);
     }
     return c.json({ error: error.message || "Failed to check vote status" }, 500);
+  }
+});
+
+// Get voting leaderboard (top N players per criteria across all matches)
+app.get("/leaderboard", async (c) => {
+  try {
+    await requireAuth(c.req.raw.headers);
+    const { topN = "3" } = c.req.query();
+    const language = getLanguage(c.req.header("Accept-Language"));
+    const rankingService = getServiceFactory().rankingService;
+    const leaderboard = await rankingService.getVotingLeaderboard(
+      language,
+      parseInt(topN, 10)
+    );
+    return c.json(leaderboard);
+  } catch (error: any) {
+    console.error("Get leaderboard error:", error);
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
+    }
+    return c.json({ error: error.message || "Failed to get leaderboard" }, 500);
   }
 });
 

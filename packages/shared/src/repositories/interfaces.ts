@@ -9,6 +9,7 @@ import type {
   MatchInvitation,
   MatchPlayerStats,
   PlayerSummary,
+  PlayerRanking,
   CreateLocationData,
   UpdateLocationData,
   CreateCourtData,
@@ -348,6 +349,21 @@ export interface PlayerStatsRepository {
    * Get user info by ID (from user table)
    */
   getUserById(userId: string): Promise<User | null>;
+
+  /**
+   * Get player rankings by total matches played
+   */
+  getRankingsByMatches(limit: number): Promise<PlayerRanking[]>;
+
+  /**
+   * Get player rankings by third time attendances
+   */
+  getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]>;
+
+  /**
+   * Get player rankings by total beers consumed
+   */
+  getRankingsByBeers(limit: number): Promise<PlayerRanking[]>;
 }
 
 // Repository factory interface for dependency injection

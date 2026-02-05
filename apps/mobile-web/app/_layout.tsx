@@ -10,11 +10,7 @@ import { Stack } from "expo-router";
 import Head from "expo-router/head";
 import { useEffect } from "react";
 import { Platform } from "react-native";
-import {
-  TamaguiProvider,
-  Theme,
-  YStack,
-} from "tamagui";
+import { TamaguiProvider, Theme, YStack } from "tamagui";
 
 // Import react-native-svg to ensure it's loaded and registered before any SVG components are used
 // This prevents "View config getter callback for component `RNSVGPath` must be a function" errors
@@ -93,7 +89,7 @@ function AppContent() {
 
   // Register service worker for PWA support
   useEffect(() => {
-    if (Platform.OS === 'web') {
+    if (Platform.OS === "web") {
       registerServiceWorker();
     }
   }, []);
@@ -102,10 +98,7 @@ function AppContent() {
     <>
       {Platform.OS === "web" && (
         <Head>
-          <link
-            rel="preconnect"
-            href="https://fonts.googleapis.com"
-          />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link
             rel="preconnect"
             href="https://fonts.gstatic.com"
@@ -118,15 +111,37 @@ function AppContent() {
 
           {/* PWA Meta Tags */}
           <meta name="application-name" content="Football with Friends" />
-          <meta name="description" content="Organize and manage football matches with friends" />
-          <meta name="theme-color" content="#3d7c48" media="(prefers-color-scheme: light)" />
-          <meta name="theme-color" content="#4ca861" media="(prefers-color-scheme: dark)" />
+          <meta
+            name="description"
+            content="Organize and manage football matches with friends"
+          />
+          <meta
+            name="theme-color"
+            content="#3d7c48"
+            media="(prefers-color-scheme: light)"
+          />
+          <meta
+            name="theme-color"
+            content="#4ca861"
+            media="(prefers-color-scheme: dark)"
+          />
           <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+          <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="default"
+          />
           <meta name="apple-mobile-web-app-title" content="Football" />
           <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
-          <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-          <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+          <link
+            rel="apple-touch-icon"
+            sizes="152x152"
+            href="/icons/icon-152x152.png"
+          />
+          <link
+            rel="apple-touch-icon"
+            sizes="192x192"
+            href="/icons/icon-192x192.png"
+          />
           <link rel="manifest" href="/manifest.json" />
         </Head>
       )}

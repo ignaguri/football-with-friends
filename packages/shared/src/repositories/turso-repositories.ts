@@ -21,6 +21,7 @@ import type {
   MatchInvitation,
   MatchPlayerStats,
   PlayerSummary,
+  PlayerRanking,
   CreateLocationData,
   UpdateLocationData,
   CreateCourtData,
@@ -1322,5 +1323,117 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       createdAt: new Date(row.createdAt),
       updatedAt: new Date(row.updatedAt),
     };
+  }
+
+  async getRankingsByMatches(limit: number): Promise<PlayerRanking[]> {
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      value: number;
+      rank: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COUNT(DISTINCT s.match_id) as value,
+        ROW_NUMBER() OVER (ORDER BY COUNT(DISTINCT s.match_id) DESC, u.name ASC) as rank
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      GROUP BY u.id
+      ORDER BY rank ASC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      rank: Number(row.rank),
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      value: Number(row.value),
+    }));
+  }
+
+  async getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]> {
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      value: number;
+      rank: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COALESCE(SUM(mps.third_time_attended), 0) as value,
+        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_attended), 0) DESC, u.name ASC) as rank
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      GROUP BY u.id
+      HAVING value > 0
+      ORDER BY rank ASC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      rank: Number(row.rank),
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      value: Number(row.value),
+    }));
+  }
+
+  async getRankingsByBeers(limit: number): Promise<PlayerRanking[]> {
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      value: number;
+      rank: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COALESCE(SUM(mps.third_time_beers), 0) as value,
+        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_beers), 0) DESC, u.name ASC) as rank
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      GROUP BY u.id
+      HAVING value > 0
+      ORDER BY rank ASC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      rank: Number(row.rank),
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      value: Number(row.value),
+    }));
   }
 }
