@@ -631,7 +631,7 @@ END:VCALENDAR`;
                 </Text>
                 <Button
                   variant="primary"
-                  onPress={() => router.push("/(auth)/sign-in")}
+                  onPress={() => router.push("/(auth)")}
                 >
                   {t("shared.signIn")}
                 </Button>

@@ -30,9 +30,9 @@ export default function TabsLayout() {
     );
   }
 
-  // Redirect to sign-in if not authenticated
+  // Redirect to auth landing page if not authenticated
   if (!session?.user) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href="/(auth)" />;
   }
 
   const isAdmin = session?.user?.role === "admin";

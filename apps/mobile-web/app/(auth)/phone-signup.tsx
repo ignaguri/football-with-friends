@@ -181,7 +181,7 @@ export default function PhoneSignUpScreen() {
             <Text color="$gray11">
               {t("auth.hasAccount")}{" "}
               <Link href="/(auth)/phone-signin" asChild>
-                <Text color="$blue10" fontWeight="600">
+                <Text color="$blue10" fontWeight="600" cursor="pointer">
                   {t("auth.signInLink")}
                 </Text>
               </Link>

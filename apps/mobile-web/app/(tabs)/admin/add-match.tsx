@@ -191,7 +191,7 @@ export default function AddMatchScreen() {
         backgroundColor="$background"
       >
         <Text color="$gray11">{t("addMatch.mustSignIn")}</Text>
-        <Button marginTop="$4" onPress={() => router.push("/(auth)/sign-in")}>
+        <Button marginTop="$4" onPress={() => router.push("/(auth)")}>
           {t("shared.signIn")}
         </Button>
       </YStack>

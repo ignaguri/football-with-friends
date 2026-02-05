@@ -113,7 +113,7 @@ export default function ProfileScreen() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.replace("/(auth)/sign-in");
+    router.replace("/(auth)");
   };
 
   const handleLanguageChange = async (lang: "en" | "es") => {
@@ -348,11 +348,8 @@ export default function ProfileScreen() {
             </Text>
 
             <YStack gap="$3" width="100%" maxWidth={300}>
-              <Link href="/(auth)/sign-in" asChild>
+              <Link href="/(auth)" asChild>
                 <Button variant="primary">{t("shared.signIn")}</Button>
-              </Link>
-              <Link href="/(auth)/sign-up" asChild>
-                <Button variant="outline">{t("auth.signUpLink")}</Button>
               </Link>
             </YStack>
 

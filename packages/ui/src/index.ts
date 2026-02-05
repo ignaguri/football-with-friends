@@ -135,3 +135,7 @@ export {
   DIAL_CODE_OPTIONS,
 } from "./utils/country-flags";
 export type { Country, CountryWithDialCode } from "./utils/country-flags";
+
+// Colors
+export { colors } from "./colors";
+export type { ColorKey } from "./colors";

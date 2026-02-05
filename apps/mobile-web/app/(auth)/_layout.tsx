@@ -37,18 +37,37 @@ export default function AuthLayout() {
         headerTintColor: theme.color?.val,
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
+        headerTitle: "", // Hide the route name from header
       }}
     >
       <Stack.Screen
-        name="sign-in"
+        name="index"
         options={{
           headerShown: false,
         }}
       />
       <Stack.Screen
-        name="sign-up"
+        name="phone-signin"
         options={{
-          headerShown: false,
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="phone-signup"
+        options={{
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="email-signin"
+        options={{
+          headerTitle: "",
+        }}
+      />
+      <Stack.Screen
+        name="email-signup"
+        options={{
+          headerTitle: "",
         }}
       />
     </Stack>

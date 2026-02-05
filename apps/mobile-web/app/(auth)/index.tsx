@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { signIn, getConfiguredApiUrl } from "@repo/api-client";
-import { Container, Button, Text, YStack } from "@repo/ui";
+import { Container, Button, Text, YStack, colors } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,13 +12,17 @@ export default function AuthLandingScreen() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const handleGoogleAuth = async () => {
+    console.log("[AUTH] 🔵 Google OAuth button clicked");
     setIsGoogleLoading(true);
     setServerError(null);
 
     try {
       if (Platform.OS === "web") {
         const apiUrl = getConfiguredApiUrl();
-        const webCallbackUrl = `${apiUrl}/api/auth/web-callback?redirect=${encodeURIComponent(window.location.origin + "/")}`;
+        // Use the frontend URL as callback - oAuthProxy will handle adding the session token
+        const frontendCallbackUrl = window.location.origin + "/";
+        console.log("[AUTH] 🌐 API URL:", apiUrl);
+        console.log("[AUTH] 🔄 Frontend callback URL:", frontendCallbackUrl);
 
         const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
           method: "POST",
@@ -27,23 +31,25 @@ export default function AuthLandingScreen() {
           },
           body: JSON.stringify({
             provider: "google",
-            callbackURL: webCallbackUrl,
+            callbackURL: frontendCallbackUrl,
           }),
           credentials: "include",
         });
 
         const result = await response.json();
+        console.log("[AUTH] 📥 OAuth response:", result);
 
         if (!response.ok || result.error) {
-          console.error("Google sign in error:", result.error || result);
+          console.error("[AUTH] ❌ Google sign in error:", result.error || result);
           setServerError(result.error?.message || t("auth.googleSignInFailed"));
           return;
         }
 
         if (result.url) {
+          console.log("[AUTH] ➡️ Redirecting to Google:", result.url);
           window.location.href = result.url;
         } else {
-          console.error("OAuth did not return redirect URL:", result);
+          console.error("[AUTH] ❌ OAuth did not return redirect URL:", result);
           setServerError(t("auth.googleSignInFailed"));
         }
       } else {
@@ -53,7 +59,7 @@ export default function AuthLandingScreen() {
         });
 
         if (result.error) {
-          console.error("Google sign in error:", result.error);
+          console.error("[AUTH] ❌ Google sign in error:", result.error);
           setServerError(result.error.message || t("auth.googleSignInFailed"));
           return;
         }
@@ -61,7 +67,7 @@ export default function AuthLandingScreen() {
         router.replace("/(tabs)");
       }
     } catch (err) {
-      console.error("Google sign in error:", err);
+      console.error("[AUTH] ❌ Google sign in error:", err);
       setServerError(t("auth.googleSignInFailed"));
     } finally {
       setIsGoogleLoading(false);
@@ -97,6 +103,9 @@ export default function AuthLandingScreen() {
             variant="primary"
             size="$5"
             width="100%"
+            backgroundColor={colors.navyBlue}
+            hoverStyle={{ backgroundColor: colors.navyBlueHover }}
+            pressStyle={{ backgroundColor: colors.navyBlueHover }}
           >
             📱 {t("auth.signInWithPhone")}
           </Button>

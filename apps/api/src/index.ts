@@ -39,38 +39,66 @@ app.get("/health", (c) =>
   c.json({ status: "ok", timestamp: new Date().toISOString() })
 );
 
-// Web OAuth callback - must be defined BEFORE the wildcard /api/auth/* route
-// Extracts session token and redirects to web app with token in URL
-app.get("/api/auth/web-callback", async (c) => {
-  const redirect = c.req.query("redirect");
-  if (!redirect) {
-    return c.json({ error: "Missing redirect parameter" }, 400);
-  }
+// Custom OAuth callback interceptor for web - extracts session and passes token to frontend
+// This handles the cross-domain session token passing for localhost development
+app.get("/api/auth/callback/google", async (c) => {
+  console.log("[OAUTH-CALLBACK] 🔵 Intercepting Google OAuth callback");
 
-  try {
-    // The session cookie is on the same domain, so getSession() can read it
-    const session = await auth.api.getSession({
-      headers: c.req.raw.headers,
-    });
+  // Let BetterAuth process the OAuth callback first
+  const response = await auth.handler(c.req.raw);
 
-    if (session?.session?.token) {
-      const url = new URL(redirect);
-      // Pass the raw session token — the bearer plugin looks up this token directly
-      url.searchParams.set("session_token", session.session.token);
-      return c.redirect(url.toString());
+  // If it's a redirect (successful OAuth)
+  if (response.status === 302) {
+    const redirectUrl = response.headers.get("location");
+    console.log("[OAUTH-CALLBACK] 🎯 Original redirect:", redirectUrl);
+
+    // Try to get the session that was just created
+    // We need to extract the session cookie from the response
+    const setCookie = response.headers.get("set-cookie");
+    console.log("[OAUTH-CALLBACK] 🍪 Set-Cookie header:", setCookie);
+
+    // Parse session token from set-cookie header
+    let sessionToken: string | null = null;
+    if (setCookie) {
+      const sessionCookieMatch = setCookie.match(/better-auth\.session_token=([^;]+)/);
+      if (sessionCookieMatch) {
+        sessionToken = sessionCookieMatch[1];
+        console.log("[OAUTH-CALLBACK] ✅ Found session token in cookie");
+      }
     }
-  } catch (error) {
-    console.error("web-callback error:", error);
+
+    if (sessionToken && redirectUrl) {
+      // Add session token to redirect URL
+      const url = new URL(redirectUrl);
+      url.searchParams.set("session_token", sessionToken);
+      console.log("[OAUTH-CALLBACK] ➡️ Redirecting with token to:", url.toString());
+
+      return c.redirect(url.toString());
+    } else {
+      console.warn("[OAUTH-CALLBACK] ⚠️ No session token found, using original redirect");
+    }
   }
 
-  // Fallback: redirect without token (user will see sign-in page)
-  return c.redirect(redirect);
+  // Return the original response if not a redirect or no token found
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
 });
 
 // Better Auth routes - wrap to filter cookies and avoid expo client infinite refetch bug
 // See: https://github.com/better-auth/better-auth/issues/4744
 app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const path = c.req.path;
+  console.log(`[AUTH] ${c.req.method} ${path}`);
+
   const response = await auth.handler(c.req.raw);
+
+  // Log redirects
+  if (response.status === 302 || response.status === 301) {
+    console.log(`[AUTH] → Redirect ${response.status} to:`, response.headers.get("location"));
+  }
 
   // Filter Set-Cookie headers to only include better-auth cookies
   const setCookieHeader = response.headers.get("set-cookie");
