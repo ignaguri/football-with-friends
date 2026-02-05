@@ -1,15 +1,21 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { signIn, getConfiguredApiUrl } from "@repo/api-client";
-import { Container, Button, Text, YStack, colors } from "@repo/ui";
+import { Container, Button, Text, YStack, XStack, Image, colors } from "@repo/ui";
+import { Mail } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
+import { useTheme } from "tamagui";
 
 export default function AuthLandingScreen() {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // Detect dark mode for Google button styling
+  const isDark = theme.background?.val === "#000000" || theme.background?.val?.startsWith("#1");
 
   const handleGoogleAuth = async () => {
     console.log("[AUTH] 🔵 Google OAuth button clicked");
@@ -86,7 +92,7 @@ export default function AuthLandingScreen() {
         paddingVertical="$8"
       >
         {/* Title */}
-        <YStack gap="$2" alignItems="center" marginBottom="$4">
+        <YStack gap="$5" alignItems="center" marginBottom="$4">
           <Text fontSize="$10" fontWeight="bold" textAlign="center">
             Football con los pibes
           </Text>
@@ -106,20 +112,73 @@ export default function AuthLandingScreen() {
             backgroundColor={colors.navyBlue}
             hoverStyle={{ backgroundColor: colors.navyBlueHover }}
             pressStyle={{ backgroundColor: colors.navyBlueHover }}
+            fontWeight="400"
           >
-            📱 {t("auth.signInWithPhone")}
+            <XStack gap="$3" alignItems="center" justifyContent="center">
+              <Image
+                source={require("../../assets/whatsapp-logo.svg")}
+                style={{ width: 24, height: 24 }}
+                tintColor="#25D366"
+              />
+              <Text color="white" fontSize="$5" fontFamily="$body" fontWeight="400">
+                {t("auth.signInWithPhone")}
+              </Text>
+            </XStack>
           </Button>
 
-          {/* Google Button - Secondary */}
+          {/* Google Button - Following Google Brand Guidelines */}
           <Button
             onPress={handleGoogleAuth}
-            variant="outline"
             size="$5"
             width="100%"
             disabled={isGoogleLoading}
             opacity={isGoogleLoading ? 0.5 : 1}
+            backgroundColor={isDark ? "#131314" : "white"}
+            borderWidth={1}
+            borderColor={isDark ? "#8E918F" : "#747775"}
+            hoverStyle={{
+              backgroundColor: isDark ? "#2A2A2A" : "#F8F9FA",
+              borderColor: isDark ? "#C1C1C1" : "#4285F4",
+              transform: [{ scale: 1.01 }],
+            }}
+            pressStyle={{
+              backgroundColor: isDark ? "#3A3A3A" : "#E8F0FE",
+              borderColor: isDark ? "#C1C1C1" : "#4285F4",
+              transform: [{ scale: 0.99 }],
+            }}
+            paddingHorizontal="$3"
+            animation="quick"
           >
-            {isGoogleLoading ? "..." : `🔵 ${t("auth.signInWithGmail")}`}
+            <XStack gap="$3" alignItems="center" justifyContent="center">
+              {isGoogleLoading ? (
+                <Text
+                  color={isDark ? "#E3E3E3" : "#1F1F1F"}
+                  fontSize="$5"
+                  fontFamily="$body"
+                >
+                  ...
+                </Text>
+              ) : (
+                <>
+                  <Image
+                    source={
+                      isDark
+                        ? require("../../assets/google/google-logo-dark.svg")
+                        : require("../../assets/google/google-logo.svg")
+                    }
+                    style={{ width: 24, height: 24 }}
+                  />
+                  <Text
+                    color={isDark ? "#E3E3E3" : "#1F1F1F"}
+                    fontSize="$5"
+                    fontFamily="$body"
+                    fontWeight="500"
+                  >
+                    {t("auth.signInWithGmail")}
+                  </Text>
+                </>
+              )}
+            </XStack>
           </Button>
 
           {/* Email Button - Secondary */}
@@ -128,8 +187,14 @@ export default function AuthLandingScreen() {
             variant="outline"
             size="$5"
             width="100%"
+            fontWeight="400"
           >
-            ✉️ {t("auth.withYourEmail")}
+            <XStack gap="$3" alignItems="center" justifyContent="center">
+              <Mail size={24} color="$gray11" />
+              <Text fontSize="$5" fontFamily="$body" fontWeight="400">
+                {t("auth.withYourEmail")}
+              </Text>
+            </XStack>
           </Button>
         </YStack>
 
