@@ -53,8 +53,8 @@ export default function AuthLandingScreen() {
 
         if (result.url) {
           console.log("[AUTH] ➡️ Redirecting to Google:", result.url);
-          // Direct navigation - service worker denylist handles OAuth callbacks
-          window.location.href = result.url;
+          // Use window.location.assign() - .href doesn't work reliably in PWA context
+          window.location.assign(result.url);
           return; // Exit early to prevent re-render from finally block
         } else {
           console.error("[AUTH] ❌ OAuth did not return redirect URL:", result);
