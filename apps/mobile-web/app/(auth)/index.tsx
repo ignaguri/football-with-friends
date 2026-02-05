@@ -22,9 +22,7 @@ export default function AuthLandingScreen() {
     setServerError(null);
 
     try {
-      // Use BetterAuth's signIn.social() - it handles the redirect internally
-      // Works for both web and native (expoClient plugin handles native deep links)
-      // For web, we need to pass the full URL since the OAuth callback comes from Google (no Origin header)
+      // For web, we need to pass the full URL since the OAuth callback comes from Google
       const callbackURL = typeof window !== "undefined"
         ? window.location.origin + "/"
         : "/";
@@ -32,9 +30,21 @@ export default function AuthLandingScreen() {
       console.log("[AUTH] 🚀 Calling signIn.social with BetterAuth client");
       console.log("[AUTH] 📍 Callback URL:", callbackURL);
 
+      // Use fetchOptions to get the redirect URL without auto-redirecting
+      // BetterAuth's default redirect uses window.location.href which doesn't work on Vercel
       const result = await signIn.social({
         provider: "google",
         callbackURL,
+        fetchOptions: {
+          onSuccess: (ctx) => {
+            // Handle redirect manually using window.location.assign() which works on Vercel
+            const redirectUrl = ctx.response.headers.get("location") || (ctx.data as any)?.url;
+            if (redirectUrl) {
+              console.log("[AUTH] ➡️ Manually redirecting to:", redirectUrl);
+              window.location.assign(redirectUrl);
+            }
+          },
+        },
       });
 
       console.log("[AUTH] 📥 signIn.social result:", result);
@@ -46,8 +56,14 @@ export default function AuthLandingScreen() {
         return;
       }
 
+      // If we have a URL in the result, redirect manually
+      if ((result.data as any)?.url) {
+        console.log("[AUTH] ➡️ Redirecting via result.data.url");
+        window.location.assign((result.data as any).url);
+        return;
+      }
+
       // If we get here without redirect, navigate to tabs
-      // (This typically won't happen as BetterAuth redirects automatically)
       if (result.data?.user) {
         console.log("[AUTH] ✅ Sign in successful, navigating to tabs");
         router.replace("/(tabs)");
