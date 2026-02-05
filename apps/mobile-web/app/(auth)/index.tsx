@@ -1,11 +1,10 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { signIn, getConfiguredApiUrl } from "@repo/api-client";
+import { signIn } from "@repo/api-client";
 import { Container, Button, Text, YStack, XStack, Image, colors } from "@repo/ui";
 import { Mail } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
 import { useTheme } from "tamagui";
 
 export default function AuthLandingScreen() {
@@ -22,71 +21,37 @@ export default function AuthLandingScreen() {
     setIsGoogleLoading(true);
     setServerError(null);
 
-    let isNavigating = false;
-
     try {
-      if (Platform.OS === "web") {
-        const apiUrl = getConfiguredApiUrl();
-        // Use the frontend URL as callback - oAuthProxy will handle adding the session token
-        const frontendCallbackUrl = window.location.origin + "/";
-        console.log("[AUTH] 🌐 API URL:", apiUrl);
-        console.log("[AUTH] 🔄 Frontend callback URL:", frontendCallbackUrl);
+      // Use BetterAuth's signIn.social() - it handles the redirect internally
+      // Works for both web and native (expoClient plugin handles native deep links)
+      console.log("[AUTH] 🚀 Calling signIn.social with BetterAuth client");
 
-        const response = await fetch(`${apiUrl}/api/auth/sign-in/social`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            provider: "google",
-            callbackURL: frontendCallbackUrl,
-          }),
-          credentials: "include",
-        });
+      const result = await signIn.social({
+        provider: "google",
+        callbackURL: "/", // BetterAuth handles converting this to full URL
+      });
 
-        const result = await response.json();
-        console.log("[AUTH] 📥 OAuth response:", result);
+      console.log("[AUTH] 📥 signIn.social result:", result);
 
-        if (!response.ok || result.error) {
-          console.error("[AUTH] ❌ Google sign in error:", result.error || result);
-          setServerError(result.error?.message || t("auth.googleSignInFailed"));
-          return;
-        }
+      if (result.error) {
+        console.error("[AUTH] ❌ Google sign in error:", result.error);
+        setServerError(result.error.message || t("auth.googleSignInFailed"));
+        setIsGoogleLoading(false);
+        return;
+      }
 
-        if (result.url) {
-          console.log("[AUTH] ➡️ Redirecting to Google:", result.url);
-          // Mark that we're navigating to prevent finally block from re-rendering
-          isNavigating = true;
-          // Use window.location.assign() - .href doesn't work reliably in PWA context
-          window.location.assign(result.url);
-          return;
-        } else {
-          console.error("[AUTH] ❌ OAuth did not return redirect URL:", result);
-          setServerError(t("auth.googleSignInFailed"));
-        }
-      } else {
-        const result = await signIn.social({
-          provider: "google",
-          callbackURL: "/",
-        });
-
-        if (result.error) {
-          console.error("[AUTH] ❌ Google sign in error:", result.error);
-          setServerError(result.error.message || t("auth.googleSignInFailed"));
-          return;
-        }
-
+      // If we get here without redirect, navigate to tabs
+      // (This typically won't happen as BetterAuth redirects automatically)
+      if (result.data?.user) {
+        console.log("[AUTH] ✅ Sign in successful, navigating to tabs");
         router.replace("/(tabs)");
       }
     } catch (err) {
       console.error("[AUTH] ❌ Google sign in error:", err);
       setServerError(t("auth.googleSignInFailed"));
-    } finally {
-      // Don't update state if we're navigating away - it cancels the navigation
-      if (!isNavigating) {
-        setIsGoogleLoading(false);
-      }
+      setIsGoogleLoading(false);
     }
+    // Note: Don't reset loading state here - BetterAuth will redirect away
   };
 
   return (
