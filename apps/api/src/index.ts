@@ -69,7 +69,17 @@ app.get("/api/auth/callback/google", async (c) => {
 
     if (sessionToken && redirectUrl) {
       // Add session token to redirect URL
-      const url = new URL(redirectUrl);
+      // Handle relative URLs by using request origin as base
+      let fullRedirectUrl: string;
+      if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
+        fullRedirectUrl = redirectUrl;
+      } else {
+        // For relative URLs, use the Origin header or Referer to build full URL
+        const origin = c.req.header("origin") || c.req.header("referer")?.replace(/\/[^/]*$/, "") || "http://localhost:8084";
+        fullRedirectUrl = origin + (redirectUrl.startsWith("/") ? redirectUrl : "/" + redirectUrl);
+      }
+
+      const url = new URL(fullRedirectUrl);
       url.searchParams.set("session_token", sessionToken);
       console.log("[OAUTH-CALLBACK] ➡️ Redirecting with token to:", url.toString());
 
