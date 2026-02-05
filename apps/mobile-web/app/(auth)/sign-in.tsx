@@ -1,10 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  signIn,
-  getSession,
-  getConfiguredApiUrl,
-  signInWithPhone,
-} from "@repo/api-client";
+import { signIn, getConfiguredApiUrl, signInWithPhone } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -17,7 +12,7 @@ import {
   PhoneInput,
 } from "@repo/ui";
 import { Link, router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView } from "react-native";
@@ -55,22 +50,6 @@ export default function SignInScreen() {
       password: "",
     },
   });
-
-  // Check session on mount - this handles the OAuth callback redirect
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const session = await getSession();
-        if (session?.data?.user) {
-          // User is already logged in, redirect to home
-          router.replace("/(tabs)");
-        }
-      } catch (err) {
-        // Not logged in, stay on sign-in page
-      }
-    };
-    checkSession();
-  }, []);
 
   const onEmailSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
