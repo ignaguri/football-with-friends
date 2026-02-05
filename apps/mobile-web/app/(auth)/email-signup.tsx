@@ -1,0 +1,208 @@
+// @ts-nocheck - Tamagui type recursion workaround
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signUp } from "@repo/api-client";
+import {
+  Container,
+  Card,
+  Text,
+  YStack,
+  Input,
+  Button,
+  Spinner,
+} from "@repo/ui";
+import { Link, router } from "expo-router";
+import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { ScrollView } from "react-native";
+
+import {
+  signUpSchema,
+  type SignUpFormData,
+} from "../../lib/validation";
+
+export default function EmailSignUpScreen() {
+  const { t } = useTranslation();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const emailForm = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      username: "",
+    },
+  });
+
+  const onSubmit = async (data: SignUpFormData) => {
+    setIsLoading(true);
+    setServerError(null);
+
+    try {
+      const result = await signUp.email({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        username: data.username || undefined,
+      });
+
+      if (result.error) {
+        setServerError(result.error.message || t("auth.signUpFailed"));
+        return;
+      }
+
+      router.replace("/(tabs)");
+    } catch (err) {
+      setServerError(t("auth.unexpectedError"));
+      console.error("Sign up error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container variant="padded">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <YStack
+          gap="$6"
+          justifyContent="center"
+          maxWidth={400}
+          marginHorizontal="auto"
+          paddingVertical="$8"
+        >
+          <YStack gap="$2" alignItems="center">
+            <Text fontSize="$9" fontWeight="bold">
+              {t("auth.createAccount")}
+            </Text>
+            <Text color="$gray11" textAlign="center">
+              {t("auth.withYourEmail")}
+            </Text>
+          </YStack>
+
+          <Card variant="elevated" padding="$4">
+            <YStack gap="$4">
+              <Controller
+                control={emailForm.control}
+                name="name"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={`${t("auth.name")} *`}
+                    placeholder={t("auth.namePlaceholder")}
+                    value={value}
+                    onChangeText={onChange}
+                    error={
+                      emailForm.formState.errors.name
+                        ? t(emailForm.formState.errors.name.message as string)
+                        : undefined
+                    }
+                  />
+                )}
+              />
+
+              <Controller
+                control={emailForm.control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={`${t("auth.email")} *`}
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={value}
+                    onChangeText={onChange}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    error={
+                      emailForm.formState.errors.email
+                        ? t(
+                            emailForm.formState.errors.email
+                              .message as string,
+                          )
+                        : undefined
+                    }
+                  />
+                )}
+              />
+
+              <Controller
+                control={emailForm.control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={`${t("auth.password")} *`}
+                    placeholder={t("auth.passwordMinLength")}
+                    value={value}
+                    onChangeText={onChange}
+                    secureTextEntry
+                    error={
+                      emailForm.formState.errors.password
+                        ? t(
+                            emailForm.formState.errors.password
+                              .message as string,
+                          )
+                        : undefined
+                    }
+                    helperText={t("auth.passwordHelp")}
+                  />
+                )}
+              />
+
+              <Controller
+                control={emailForm.control}
+                name="username"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label={t("auth.username")}
+                    placeholder={t("auth.usernamePlaceholder")}
+                    value={value}
+                    onChangeText={onChange}
+                    autoCapitalize="none"
+                    helperText={t("auth.usernameHelp")}
+                    error={
+                      emailForm.formState.errors.username
+                        ? t(
+                            emailForm.formState.errors.username
+                              .message as string,
+                          )
+                        : undefined
+                    }
+                  />
+                )}
+              />
+
+              {serverError && (
+                <Text color="$red10" fontSize="$3" textAlign="center">
+                  {serverError}
+                </Text>
+              )}
+
+              <YStack paddingTop="$4">
+                <Button
+                  onPress={emailForm.handleSubmit(onSubmit)}
+                  disabled={isLoading}
+                  variant="primary"
+                >
+                  {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
+                </Button>
+              </YStack>
+            </YStack>
+          </Card>
+
+          <YStack gap="$2" alignItems="center">
+            <Text color="$gray11">
+              {t("auth.hasAccount")}{" "}
+              <Link href="/(auth)/email-signin" asChild>
+                <Text color="$blue10" fontWeight="600">
+                  {t("auth.signInLink")}
+                </Text>
+              </Link>
+            </Text>
+          </YStack>
+        </YStack>
+      </ScrollView>
+    </Container>
+  );
+}

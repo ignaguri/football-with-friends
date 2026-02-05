@@ -68,5 +68,5 @@ export default function Index() {
   }
 
   // Redirect based on auth status
-  return <Redirect href={session?.user ? "/(tabs)" : "/(auth)/sign-in"} />;
+  return <Redirect href={session?.user ? "/(tabs)" : "/(auth)"} />;
 }
