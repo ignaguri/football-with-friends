@@ -10,7 +10,7 @@
     "build": "pnpm generate-icons && expo export --platform web --output-dir dist && pnpm copy-public && pnpm build:sw",
     "generate-icons": "node scripts/generate-pwa-icons.js",
     "copy-public": "node scripts/copy-public-files.js",
-    "build:sw": "workbox generateSW workbox-config.js",
+    "build:sw": "workbox injectManifest workbox-config.js",
     "lint": "eslint app --ext .ts,.tsx",
     "typecheck": "echo '⚠️  TypeScript check disabled for mobile-web due to Tamagui type recursion (see TAMAGUI_TYPECHECK.md)' && exit 0"
   },
