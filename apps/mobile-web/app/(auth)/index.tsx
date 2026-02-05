@@ -24,11 +24,17 @@ export default function AuthLandingScreen() {
     try {
       // Use BetterAuth's signIn.social() - it handles the redirect internally
       // Works for both web and native (expoClient plugin handles native deep links)
+      // For web, we need to pass the full URL since the OAuth callback comes from Google (no Origin header)
+      const callbackURL = typeof window !== "undefined"
+        ? window.location.origin + "/"
+        : "/";
+
       console.log("[AUTH] 🚀 Calling signIn.social with BetterAuth client");
+      console.log("[AUTH] 📍 Callback URL:", callbackURL);
 
       const result = await signIn.social({
         provider: "google",
-        callbackURL: "/", // BetterAuth handles converting this to full URL
+        callbackURL,
       });
 
       console.log("[AUTH] 📥 signIn.social result:", result);
