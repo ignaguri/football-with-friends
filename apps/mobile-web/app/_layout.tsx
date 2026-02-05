@@ -87,12 +87,12 @@ function AppContent() {
     }
   }, [themeName]);
 
-  // Register service worker for PWA support
-  useEffect(() => {
-    if (Platform.OS === "web") {
-      registerServiceWorker();
-    }
-  }, []);
+  // Service worker disabled - was causing OAuth redirect issues
+  // useEffect(() => {
+  //   if (Platform.OS === "web") {
+  //     registerServiceWorker();
+  //   }
+  // }, []);
 
   return (
     <>
