@@ -22,6 +22,8 @@ export default function AuthLandingScreen() {
     setIsGoogleLoading(true);
     setServerError(null);
 
+    let isNavigating = false;
+
     try {
       if (Platform.OS === "web") {
         const apiUrl = getConfiguredApiUrl();
@@ -53,9 +55,11 @@ export default function AuthLandingScreen() {
 
         if (result.url) {
           console.log("[AUTH] ➡️ Redirecting to Google:", result.url);
+          // Mark that we're navigating to prevent finally block from re-rendering
+          isNavigating = true;
           // Use window.location.assign() - .href doesn't work reliably in PWA context
           window.location.assign(result.url);
-          return; // Exit early to prevent re-render from finally block
+          return;
         } else {
           console.error("[AUTH] ❌ OAuth did not return redirect URL:", result);
           setServerError(t("auth.googleSignInFailed"));
@@ -78,7 +82,10 @@ export default function AuthLandingScreen() {
       console.error("[AUTH] ❌ Google sign in error:", err);
       setServerError(t("auth.googleSignInFailed"));
     } finally {
-      setIsGoogleLoading(false);
+      // Don't update state if we're navigating away - it cancels the navigation
+      if (!isNavigating) {
+        setIsGoogleLoading(false);
+      }
     }
   };
 
