@@ -53,7 +53,13 @@ export default function AuthLandingScreen() {
 
         if (result.url) {
           console.log("[AUTH] ➡️ Redirecting to Google:", result.url);
-          window.location.replace(result.url);
+          // Use a link element to bypass Service Worker navigation interception
+          const link = document.createElement("a");
+          link.href = result.url;
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
           return; // Exit early to prevent re-render from finally block
         } else {
           console.error("[AUTH] ❌ OAuth did not return redirect URL:", result);
