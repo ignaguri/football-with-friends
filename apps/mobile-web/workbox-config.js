@@ -43,7 +43,13 @@ module.exports = {
   ],
 
   navigateFallback: '/index.html',
-  navigateFallbackDenylist: [/^\/api/, /\/_expo\/static/],
+  navigateFallbackDenylist: [
+    /^\/api/,           // API routes should hit the network
+    /\/_expo\/static/,  // Expo static files
+    /\?.*session_token/, // OAuth callback with session token
+    /\?.*code=/,        // OAuth callback with authorization code
+    /\?.*state=/,       // OAuth callback with state parameter
+  ],
   skipWaiting: true,
   clientsClaim: true,
 };
