@@ -19,7 +19,7 @@ import "react-native-svg";
 import { PWAInstallPrompt } from "../components/pwa-install-prompt";
 import { ErrorBoundary } from "../lib/error-boundary";
 import "../lib/i18n"; // Initialize i18n
-import { registerServiceWorker } from "../lib/register-service-worker";
+import { unregisterServiceWorker } from "../lib/register-service-worker";
 import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
 import config from "../tamagui.config";
@@ -87,12 +87,13 @@ function AppContent() {
     }
   }, [themeName]);
 
-  // Service worker disabled - was causing OAuth redirect issues
-  // useEffect(() => {
-  //   if (Platform.OS === "web") {
-  //     registerServiceWorker();
-  //   }
-  // }, []);
+  // Ensure any previously registered service workers are removed.
+  // Old service workers can serve HTML for hashed JS assets, causing MIME errors.
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      unregisterServiceWorker().catch(console.error);
+    }
+  }, []);
 
   return (
     <>

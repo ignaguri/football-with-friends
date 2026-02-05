@@ -129,10 +129,43 @@ app.get("/api/auth/web-callback", async (c) => {
       headers: c.req.raw.headers,
     });
 
-    if (session?.session?.token) {
+    const cookieHeader = c.req.header("cookie") || "";
+    const rawCookieToken =
+      cookieHeader.match(/__Secure-better-auth\.session_token=([^;]+)/)?.[1] ||
+      cookieHeader.match(/better-auth\.session_token=([^;]+)/)?.[1] ||
+      null;
+
+    let decodedCookieToken = rawCookieToken;
+    if (rawCookieToken) {
+      try {
+        // Cookies are URL-encoded; decode to avoid double-encoding in query params.
+        decodedCookieToken = decodeURIComponent(rawCookieToken);
+      } catch {
+        decodedCookieToken = rawCookieToken;
+      }
+    }
+
+    const candidateTokens = [
+      session?.session?.token ?? null,
+      decodedCookieToken,
+      rawCookieToken,
+    ].filter((token): token is string => Boolean(token));
+
+    let sessionToken: string | null = null;
+    for (const token of candidateTokens) {
+      const verifiedSession = await auth.api.getSession({
+        headers: new Headers({ authorization: `Bearer ${token}` }),
+      });
+      if (verifiedSession?.session?.token) {
+        sessionToken = token;
+        break;
+      }
+    }
+
+    if (sessionToken) {
       const url = new URL(redirect);
       // Pass the raw session token — the bearer plugin looks up this token directly
-      url.searchParams.set("session_token", session.session.token);
+      url.searchParams.set("session_token", sessionToken);
       return c.redirect(url.toString());
     }
   } catch (error) {
