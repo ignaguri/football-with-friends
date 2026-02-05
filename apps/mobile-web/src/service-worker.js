@@ -1,9 +1,12 @@
 /* eslint-disable no-restricted-globals */
-import { clientsClaim } from 'workbox-core';
-import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
-import { NetworkFirst, CacheFirst } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
+// Import Workbox from CDN (ES6 imports don't work in service workers)
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
+
+const { clientsClaim } = workbox.core;
+const { precacheAndRoute, createHandlerBoundToURL } = workbox.precaching;
+const { registerRoute, NavigationRoute } = workbox.routing;
+const { NetworkFirst, CacheFirst } = workbox.strategies;
+const { ExpirationPlugin } = workbox.expiration;
 
 // Log service worker lifecycle
 console.log('[SW] 🔵 Service Worker initializing');
