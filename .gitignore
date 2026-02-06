@@ -112,3 +112,4 @@ client_secret*.json
 *.swo
 *~
 .history/
+apps/api/.dev.vars

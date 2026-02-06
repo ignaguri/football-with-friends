@@ -161,7 +161,44 @@ export default function AuthLandingScreen() {
               onError={(err) => {
                 console.error("[AUTH] Google sign-in error:", err);
                 setServerError(err);
+                setIsGoogleLoading(false);
               }}
+              renderCustomButton={(onClick) => (
+                <Button
+                  onPress={() => {
+                    setIsGoogleLoading(true);
+                    onClick();
+                  }}
+                  variant="outline"
+                  size="$5"
+                  width="100%"
+                  disabled={isGoogleLoading}
+                  opacity={isGoogleLoading ? 0.5 : 1}
+                  fontWeight="400"
+                >
+                  <XStack gap="$3" alignItems="center" justifyContent="center">
+                    {isGoogleLoading ? (
+                      <Text fontSize="$5" fontFamily="$body">
+                        ...
+                      </Text>
+                    ) : (
+                      <>
+                        <Image
+                          source={require("../../assets/google/google-logo.svg")}
+                          style={{ width: 24, height: 24 }}
+                        />
+                        <Text
+                          fontSize="$5"
+                          fontFamily="$body"
+                          fontWeight="400"
+                        >
+                          {t("auth.signInWithGmail")}
+                        </Text>
+                      </>
+                    )}
+                  </XStack>
+                </Button>
+              )}
             />
           ) : (
             // Native button - uses redirect-based OAuth (for future mobile support)

@@ -13,6 +13,7 @@ interface GoogleSignInWebProps {
   onSuccess?: () => void;
   onError?: (error: string) => void;
   disabled?: boolean;
+  renderCustomButton?: (onClick: () => void) => React.ReactNode;
 }
 
 export function GoogleSignInWeb({
@@ -20,8 +21,10 @@ export function GoogleSignInWeb({
   onSuccess,
   onError,
   disabled = false,
+  renderCustomButton,
 }: GoogleSignInWebProps) {
   const buttonRef = useRef<HTMLDivElement>(null);
+  const hiddenButtonRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -92,6 +95,14 @@ export function GoogleSignInWeb({
     [onSuccess, onError]
   );
 
+  // Trigger Google Sign-In by clicking the hidden button
+  const triggerGoogleSignIn = useCallback(() => {
+    const btn = hiddenButtonRef.current?.querySelector('[role="button"]');
+    if (btn) {
+      (btn as HTMLElement).click();
+    }
+  }, []);
+
   // Initialize Google Identity Services
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined") return;
@@ -118,25 +129,33 @@ export function GoogleSignInWeb({
         cancel_on_tap_outside: true,
       });
 
-      // Render the button
-      if (buttonRef.current) {
-        console.log("[GoogleSignInWeb] Rendering Google Sign-In button");
-        window.google.accounts.id.renderButton(buttonRef.current, {
-          theme: "outline",
-          size: "large",
-          type: "standard",
-          text: "signin_with",
-          shape: "rectangular",
-          logo_alignment: "left",
-          width: 300,
-        });
+      const buttonConfig = {
+        theme: "outline" as const,
+        size: "large" as const,
+        type: "standard" as const,
+        text: "signin_with" as const,
+        shape: "rectangular" as const,
+        logo_alignment: "left" as const,
+        width: 300,
+      };
+
+      // Always render hidden button
+      if (hiddenButtonRef.current) {
+        console.log("[GoogleSignInWeb] Rendering hidden Google Sign-In button");
+        window.google.accounts.id.renderButton(hiddenButtonRef.current, buttonConfig);
+      }
+
+      // Render visible button only if no custom button
+      if (!renderCustomButton && buttonRef.current) {
+        console.log("[GoogleSignInWeb] Rendering visible Google Sign-In button");
+        window.google.accounts.id.renderButton(buttonRef.current, buttonConfig);
       }
 
       setIsInitialized(true);
     };
 
     initGoogleSignIn();
-  }, [clientId, handleCredentialResponse]);
+  }, [clientId, handleCredentialResponse, renderCustomButton]);
 
   // Only render on web
   if (Platform.OS !== "web") {
@@ -146,16 +165,29 @@ export function GoogleSignInWeb({
   // Show loading overlay when processing
   return (
     <View style={styles.container}>
+      {/* Hidden official button (always rendered for authentication) */}
       <div
-        ref={buttonRef}
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          opacity: isLoading || disabled ? 0.5 : 1,
-          pointerEvents: isLoading || disabled ? "none" : "auto",
-        }}
+        ref={hiddenButtonRef}
+        style={{ display: "none" }}
+        aria-hidden="true"
       />
+
+      {/* Custom button OR official visible button */}
+      {renderCustomButton ? (
+        renderCustomButton(triggerGoogleSignIn)
+      ) : (
+        <div
+          ref={buttonRef}
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            opacity: isLoading || disabled ? 0.5 : 1,
+            pointerEvents: isLoading || disabled ? "none" : "auto",
+          }}
+        />
+      )}
+
       {!isInitialized && !clientId && (
         <div style={{ color: "red", fontSize: 12, marginTop: 8 }}>
           Google Client ID not configured
