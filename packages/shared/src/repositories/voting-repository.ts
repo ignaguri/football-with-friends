@@ -211,11 +211,7 @@ export class VotingRepository {
   async deleteCriteria(id: string): Promise<void> {
     const db = getDatabase();
     await db
-      .updateTable("voting_criteria")
-      .set({
-        is_active: 0,
-        updated_at: new Date().toISOString(),
-      })
+      .deleteFrom("voting_criteria")
       .where("id", "=", id)
       .execute();
   }

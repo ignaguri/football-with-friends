@@ -170,6 +170,7 @@
     "updateError": "Failed to update match",
     "deleteSuccess": "Match deleted successfully",
     "deleteError": "Failed to delete match",
+    "cancelSuccess": "Match cancelled successfully",
     "tabs": {
       "matches": "Matches",
       "locations": "Locations",
@@ -180,7 +181,7 @@
     "editMatch": "Edit Match",
     "editMatchDesc": "Update the match details below and save your changes.",
     "cancelMatch": "Cancel Match",
-    "cancelMatchConfirm": "Are you sure you want to cancel the match on {date} at {time}? This action cannot be undone.",
+    "cancelMatchConfirm": "Are you sure you want to cancel the match on {{date}} at {{time}}? This action cannot be undone.",
     "matchCancelledSuccess": "Match cancelled successfully",
     "deleteMatchConfirm": "Are you sure you want to delete this match? This action cannot be undone.",
     "noMatches": "No matches found",
@@ -410,7 +411,11 @@
     "paypalUrl": "PayPal URL",
     "organizerWhatsapp": "Organizer WhatsApp",
     "saved": "Settings saved",
-    "saveError": "Failed to save settings"
+    "saveError": "Failed to save settings",
+    "invalidCost": "Please enter a valid cost amount",
+    "invalidUrl": "Please enter a valid URL starting with http:// or https://",
+    "invalidPhone": "Please enter a valid phone number with country code",
+    "saveSuccess": "Settings saved successfully"
   },
   "locations": {
     "title": "Locations",
@@ -589,7 +594,11 @@
       "jesucristo_desc": "Always pulls off a miracle",
       "el_aguinaldo": "The Bonus",
       "el_aguinaldo_desc": "You don't know when, but brings joy"
-    }
+    },
+    "deleteSuccess": "Voting criteria deleted successfully",
+    "createSuccess": "Voting criteria created successfully",
+    "updateSuccess": "Voting criteria updated successfully",
+    "duplicateSortOrder": "A criteria with this order number already exists"
   },
   "admin": {
     "addCriteria": "Add Criteria",
@@ -603,5 +612,17 @@
     "sortOrder": "Sort Order",
     "activate": "Activate",
     "deactivate": "Deactivate"
+  },
+  "errors": {
+    "matchAlreadyExists": "A match already exists on this date",
+    "matchNotFound": "Match not found",
+    "locationNotFound": "Location not found",
+    "courtNotFound": "Court not found",
+    "votingCriteriaNotFound": "Voting criteria not found",
+    "deleteFailed": "Failed to delete",
+    "updateFailed": "Failed to update",
+    "createFailed": "Failed to create",
+    "adminOnly": "Only administrators can perform this action",
+    "unauthorized": "You are not authorized to perform this action"
   }
 }

@@ -17,11 +17,14 @@ import {
   Badge,
   Spinner,
   Dialog,
+  AlertDialog,
+  useToastController,
+  isValidPhoneNumber,
 } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, RefreshControl, Alert } from "react-native";
+import { ScrollView, RefreshControl } from "react-native";
 
 type Tab = "matches" | "locations" | "courts" | "settings" | "voting";
 
@@ -51,6 +54,37 @@ interface Court {
   locationId: string;
   isActive: boolean;
 }
+
+// Helper to get localized error message
+const getLocalizedError = (error: string, t: any): string => {
+  // Map common API error patterns to translation keys
+  const errorMap: Record<string, string> = {
+    "A match already exists on this date": "errors.matchAlreadyExists",
+    "Match not found": "errors.matchNotFound",
+    "Location not found": "errors.locationNotFound",
+    "Court not found": "errors.courtNotFound",
+    "Voting criteria not found": "errors.votingCriteriaNotFound",
+    "Failed to delete": "errors.deleteFailed",
+    "Failed to update": "errors.updateFailed",
+    "Failed to create": "errors.createFailed",
+    "Only administrators can": "errors.adminOnly",
+    "Unauthorized": "errors.unauthorized",
+  };
+
+  // Check if error message matches any known pattern
+  for (const [pattern, key] of Object.entries(errorMap)) {
+    if (error.includes(pattern)) {
+      return t(key);
+    }
+  }
+
+  // If no match, check if error is already a translation key
+  const translated = t(error, { defaultValue: "" });
+  if (translated) return translated;
+
+  // Fallback to original error
+  return error;
+};
 
 export default function OrganizerScreen() {
   const { t } = useTranslation();
@@ -116,18 +150,18 @@ export default function OrganizerScreen() {
           <Button
             flex={1}
             size="$3"
-            variant={activeTab === "settings" ? "primary" : "outline"}
-            onPress={() => setActiveTab("settings")}
-          >
-            {t("settings.title")}
-          </Button>
-          <Button
-            flex={1}
-            size="$3"
             variant={activeTab === "voting" ? "primary" : "outline"}
             onPress={() => setActiveTab("voting")}
           >
             {t("voting.title")}
+          </Button>
+          <Button
+            flex={1}
+            size="$3"
+            variant={activeTab === "settings" ? "primary" : "outline"}
+            onPress={() => setActiveTab("settings")}
+          >
+            {t("settings.title")}
           </Button>
         </XStack>
 
@@ -135,8 +169,8 @@ export default function OrganizerScreen() {
         {activeTab === "matches" && <MatchesTab />}
         {activeTab === "locations" && <LocationsTab />}
         {activeTab === "courts" && <CourtsTab />}
-        {activeTab === "settings" && <SettingsTab />}
         {activeTab === "voting" && <VotingCriteriaTab />}
+        {activeTab === "settings" && <SettingsTab />}
       </YStack>
     </Container>
   );
@@ -146,6 +180,10 @@ export default function OrganizerScreen() {
 function MatchesTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const toast = useToastController();
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [targetMatch, setTargetMatch] = useState<Match | null>(null);
 
   const {
     data: matchesData,
@@ -162,22 +200,30 @@ function MatchesTab() {
     },
   });
 
-  const matches = matchesData?.matches || [];
+  const matches = (matchesData?.matches || []).sort((a, b) => {
+    const dateA = new Date(`${a.date}T${a.time}`);
+    const dateB = new Date(`${b.date}T${b.time}`);
+    return dateB.getTime() - dateA.getTime(); // Descending (newest first)
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async (matchId: string) => {
       const res = await client.api.matches[":id"].$delete({
         param: { id: matchId },
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to delete");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
-      Alert.alert(t("organizer.deleteSuccess"));
+      toast.show(t("organizer.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
-    onError: () => {
-      Alert.alert(t("organizer.deleteError"));
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -187,39 +233,30 @@ function MatchesTab() {
         param: { id: matchId },
         json: { status: "cancelled" },
       });
-      if (!res.ok) throw new Error("Failed to cancel");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to cancel");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
-      Alert.alert(t("organizer.matchCancelledSuccess"));
+      toast.show(t("organizer.cancelSuccess"), { duration: 3000, customData: { variant: "success" } });
+    },
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
   const handleDelete = (match: Match) => {
-    Alert.alert(t("organizer.deleteTitle"), t("organizer.deleteMatchConfirm"), [
-      { text: t("shared.cancel"), style: "cancel" },
-      {
-        text: t("organizer.deleteConfirm"),
-        style: "destructive",
-        onPress: () => deleteMutation.mutate(match.id),
-      },
-    ]);
+    setTargetMatch(match);
+    setShowDeleteAlert(true);
   };
 
   const handleCancel = (match: Match) => {
-    Alert.alert(
-      t("organizer.cancelMatch"),
-      t("organizer.cancelMatchConfirm", { date: match.date, time: match.time }),
-      [
-        { text: t("shared.cancel"), style: "cancel" },
-        {
-          text: t("organizer.cancelMatch"),
-          style: "destructive",
-          onPress: () => cancelMutation.mutate(match.id),
-        },
-      ],
-    );
+    setTargetMatch(match);
+    setShowCancelAlert(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -251,6 +288,7 @@ function MatchesTab() {
 
   return (
     <ScrollView
+      backgroundColor="$background"
       style={{ flex: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -337,6 +375,40 @@ function MatchesTab() {
           ))
         )}
       </YStack>
+
+      {/* Delete Match AlertDialog */}
+      <AlertDialog
+        open={showDeleteAlert}
+        onOpenChange={setShowDeleteAlert}
+        title={t("organizer.deleteTitle")}
+        description={t("organizer.deleteMatchConfirm")}
+        confirmText={t("organizer.deleteConfirm")}
+        cancelText={t("shared.cancel")}
+        variant="destructive"
+        onConfirm={() => {
+          if (targetMatch) {
+            deleteMutation.mutate(targetMatch.id);
+            setShowDeleteAlert(false);
+          }
+        }}
+      />
+
+      {/* Cancel Match AlertDialog */}
+      <AlertDialog
+        open={showCancelAlert}
+        onOpenChange={setShowCancelAlert}
+        title={t("organizer.cancelMatch")}
+        description={targetMatch ? t("organizer.cancelMatchConfirm", { date: targetMatch.date, time: targetMatch.time }) : ""}
+        confirmText={t("organizer.cancelMatch")}
+        cancelText={t("shared.cancel")}
+        variant="destructive"
+        onConfirm={() => {
+          if (targetMatch) {
+            cancelMutation.mutate(targetMatch.id);
+            setShowCancelAlert(false);
+          }
+        }}
+      />
     </ScrollView>
   );
 }
@@ -345,8 +417,11 @@ function MatchesTab() {
 function LocationsTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const toast = useToastController();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
 
@@ -368,16 +443,22 @@ function LocationsTab() {
       const res = await client.api.locations.$post({
         json: { name, address: address || undefined },
       });
-      if (!res.ok) throw new Error("Failed to create");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to create");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["locations"] });
-      Alert.alert(t("locations.createSuccess"));
+      toast.show(t("locations.createSuccess"), { duration: 3000, customData: { variant: "success" } });
       setShowAddDialog(false);
       resetForm();
     },
-    onError: () => Alert.alert(t("locations.createError")),
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+    },
   });
 
   const updateMutation = useMutation({
@@ -387,16 +468,22 @@ function LocationsTab() {
         param: { id: editingLocation.id },
         json: { name, address: address || undefined },
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to update");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["locations"] });
-      Alert.alert(t("locations.updateSuccess"));
+      toast.show(t("locations.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
       setEditingLocation(null);
       resetForm();
     },
-    onError: () => Alert.alert(t("locations.updateError")),
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -404,14 +491,20 @@ function LocationsTab() {
       const res = await client.api.locations[":id"].$delete({
         param: { id: locationId },
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to delete");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["locations"] });
-      Alert.alert(t("locations.deleteSuccess"));
+      toast.show(t("locations.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
-    onError: () => Alert.alert(t("locations.deleteError")),
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+    },
   });
 
   const resetForm = () => {
@@ -426,14 +519,8 @@ function LocationsTab() {
   };
 
   const handleDelete = (location: Location) => {
-    Alert.alert(t("shared.confirmDelete"), t("shared.deleteConfirm"), [
-      { text: t("shared.cancel"), style: "cancel" },
-      {
-        text: t("shared.delete"),
-        style: "destructive",
-        onPress: () => deleteMutation.mutate(location.id),
-      },
-    ]);
+    setDeleteTarget(location);
+    setShowDeleteAlert(true);
   };
 
   if (isLoading) {
@@ -446,6 +533,7 @@ function LocationsTab() {
 
   return (
     <ScrollView
+      backgroundColor="$background"
       style={{ flex: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -502,6 +590,13 @@ function LocationsTab() {
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
           title={t("locations.addLocation")}
+          onConfirm={() => createMutation.mutate()}
+          onCancel={() => {
+            setShowAddDialog(false);
+            resetForm();
+          }}
+          confirmText={createMutation.isPending ? t("locations.creating") : t("locations.create")}
+          cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
             <Input
@@ -516,28 +611,6 @@ function LocationsTab() {
               value={address}
               onChangeText={setAddress}
             />
-            <XStack gap="$2">
-              <Button
-                flex={1}
-                variant="outline"
-                onPress={() => {
-                  setShowAddDialog(false);
-                  resetForm();
-                }}
-              >
-                {t("shared.cancel")}
-              </Button>
-              <Button
-                flex={1}
-                variant="primary"
-                onPress={() => createMutation.mutate()}
-                disabled={!name || createMutation.isPending}
-              >
-                {createMutation.isPending
-                  ? t("locations.creating")
-                  : t("locations.create")}
-              </Button>
-            </XStack>
           </YStack>
         </Dialog>
 
@@ -549,6 +622,13 @@ function LocationsTab() {
             resetForm();
           }}
           title={t("locations.editLocation")}
+          onConfirm={() => updateMutation.mutate()}
+          onCancel={() => {
+            setEditingLocation(null);
+            resetForm();
+          }}
+          confirmText={updateMutation.isPending ? t("locations.updating") : t("locations.update")}
+          cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
             <Input
@@ -563,30 +643,25 @@ function LocationsTab() {
               value={address}
               onChangeText={setAddress}
             />
-            <XStack gap="$2">
-              <Button
-                flex={1}
-                variant="outline"
-                onPress={() => {
-                  setEditingLocation(null);
-                  resetForm();
-                }}
-              >
-                {t("shared.cancel")}
-              </Button>
-              <Button
-                flex={1}
-                variant="primary"
-                onPress={() => updateMutation.mutate()}
-                disabled={!name || updateMutation.isPending}
-              >
-                {updateMutation.isPending
-                  ? t("locations.updating")
-                  : t("locations.update")}
-              </Button>
-            </XStack>
           </YStack>
         </Dialog>
+
+        {/* Delete Location AlertDialog */}
+        <AlertDialog
+          open={showDeleteAlert}
+          onOpenChange={setShowDeleteAlert}
+          title={t("shared.confirmDelete")}
+          description={t("shared.deleteConfirm")}
+          confirmText={t("shared.delete")}
+          cancelText={t("shared.cancel")}
+          variant="destructive"
+          onConfirm={() => {
+            if (deleteTarget) {
+              deleteMutation.mutate(deleteTarget.id);
+              setShowDeleteAlert(false);
+            }
+          }}
+        />
       </YStack>
     </ScrollView>
   );
@@ -596,8 +671,11 @@ function LocationsTab() {
 function CourtsTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const toast = useToastController();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingCourt, setEditingCourt] = useState<Court | null>(null);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Court | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -634,14 +712,21 @@ function CourtsTab() {
           isActive: true,
         },
       });
-      if (!res.ok) throw new Error("Failed to create");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to create");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courts"] });
-      Alert.alert(t("courts.createSuccess"));
+      toast.show(t("courts.createSuccess"), { duration: 3000 });
       setShowAddDialog(false);
       resetForm();
+    },
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -655,14 +740,21 @@ function CourtsTab() {
           description: description || undefined,
         },
       });
-      if (!res.ok) throw new Error("Failed to update");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to update");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courts"] });
-      Alert.alert(t("courts.updateSuccess"));
+      toast.show(t("courts.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
       setEditingCourt(null);
       resetForm();
+    },
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -671,12 +763,19 @@ function CourtsTab() {
       const res = await client.api.courts[":id"].$delete({
         param: { id: courtId },
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to delete");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courts"] });
-      Alert.alert(t("courts.deleteSuccess"));
+      toast.show(t("courts.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
+    },
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -694,14 +793,8 @@ function CourtsTab() {
   };
 
   const handleDelete = (court: Court) => {
-    Alert.alert(t("courts.deleteConfirm"), "", [
-      { text: t("shared.cancel"), style: "cancel" },
-      {
-        text: t("courts.delete"),
-        style: "destructive",
-        onPress: () => deleteMutation.mutate(court.id),
-      },
-    ]);
+    setDeleteTarget(court);
+    setShowDeleteAlert(true);
   };
 
   const getLocationName = (locId: string) => {
@@ -725,6 +818,7 @@ function CourtsTab() {
 
   return (
     <ScrollView
+      backgroundColor="$background"
       style={{ flex: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -789,6 +883,13 @@ function CourtsTab() {
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
           title={t("courts.createTitle")}
+          onConfirm={() => createMutation.mutate()}
+          onCancel={() => {
+            setShowAddDialog(false);
+            resetForm();
+          }}
+          confirmText={createMutation.isPending ? t("courts.creating") : t("courts.create")}
+          cancelText={t("courts.cancel")}
         >
           <YStack gap="$4" padding="$4">
             <Select
@@ -810,28 +911,6 @@ function CourtsTab() {
               value={description}
               onChangeText={setDescription}
             />
-            <XStack gap="$2">
-              <Button
-                flex={1}
-                variant="outline"
-                onPress={() => {
-                  setShowAddDialog(false);
-                  resetForm();
-                }}
-              >
-                {t("courts.cancel")}
-              </Button>
-              <Button
-                flex={1}
-                variant="primary"
-                onPress={() => createMutation.mutate()}
-                disabled={!name || !locationId || createMutation.isPending}
-              >
-                {createMutation.isPending
-                  ? t("courts.creating")
-                  : t("courts.create")}
-              </Button>
-            </XStack>
           </YStack>
         </Dialog>
 
@@ -843,6 +922,13 @@ function CourtsTab() {
             resetForm();
           }}
           title={t("courts.editTitle")}
+          onConfirm={() => updateMutation.mutate()}
+          onCancel={() => {
+            setEditingCourt(null);
+            resetForm();
+          }}
+          confirmText={updateMutation.isPending ? t("courts.updating") : t("courts.update")}
+          cancelText={t("courts.cancel")}
         >
           <YStack gap="$4" padding="$4">
             <Input
@@ -857,36 +943,45 @@ function CourtsTab() {
               value={description}
               onChangeText={setDescription}
             />
-            <XStack gap="$2">
-              <Button
-                flex={1}
-                variant="outline"
-                onPress={() => {
-                  setEditingCourt(null);
-                  resetForm();
-                }}
-              >
-                {t("courts.cancel")}
-              </Button>
-              <Button
-                flex={1}
-                variant="primary"
-                onPress={() => updateMutation.mutate()}
-                disabled={!name || updateMutation.isPending}
-              >
-                {updateMutation.isPending
-                  ? t("courts.updating")
-                  : t("courts.update")}
-              </Button>
-            </XStack>
           </YStack>
         </Dialog>
+
+        {/* Delete Court AlertDialog */}
+        <AlertDialog
+          open={showDeleteAlert}
+          onOpenChange={setShowDeleteAlert}
+          title={t("courts.deleteConfirm")}
+          description=""
+          confirmText={t("courts.delete")}
+          cancelText={t("shared.cancel")}
+          variant="destructive"
+          onConfirm={() => {
+            if (deleteTarget) {
+              deleteMutation.mutate(deleteTarget.id);
+              setShowDeleteAlert(false);
+            }
+          }}
+        />
       </YStack>
     </ScrollView>
   );
 }
 
 // ============ SETTINGS TAB ============
+// Validation helper functions
+const isValidUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const isValidNumeric = (value: string): boolean => {
+  return !isNaN(parseFloat(value)) && isFinite(parseFloat(value));
+};
+
 interface AppSettings {
   default_cost_per_player: string;
   same_day_extra_cost: string;
@@ -898,6 +993,7 @@ interface AppSettings {
 function SettingsTab() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const toast = useToastController();
 
   const [defaultCostPerPlayerOverride, setDefaultCostPerPlayerOverride] =
     useState<string | null>(null);
@@ -941,19 +1037,49 @@ function SettingsTab() {
       const res = await client.api.settings.$patch({
         json: updates,
       });
-      if (!res.ok) throw new Error("Failed to update settings");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to update settings");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      Alert.alert(t("settings.saved"));
+      toast.show(t("settings.saveSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
-    onError: () => {
-      Alert.alert(t("settings.saveError"));
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
   const handleSave = () => {
+    // Validate numeric fields
+    if (defaultCostPerPlayer && !isValidNumeric(defaultCostPerPlayer)) {
+      toast.show(t("settings.invalidCost"), { duration: 3000, customData: { variant: "error" } });
+      return;
+    }
+    if (sameDayExtraCost && !isValidNumeric(sameDayExtraCost)) {
+      toast.show(t("settings.invalidCost"), { duration: 3000, customData: { variant: "error" } });
+      return;
+    }
+    if (defaultMaxSubstitutes && !isValidNumeric(defaultMaxSubstitutes)) {
+      toast.show(t("settings.invalidCost"), { duration: 3000, customData: { variant: "error" } });
+      return;
+    }
+
+    // Validate URL
+    if (paypalUrl && !isValidUrl(paypalUrl)) {
+      toast.show(t("settings.invalidUrl"), { duration: 3000, customData: { variant: "error" } });
+      return;
+    }
+
+    // Validate phone
+    if (organizerWhatsapp && !isValidPhoneNumber(organizerWhatsapp)) {
+      toast.show(t("settings.invalidPhone"), { duration: 3000, customData: { variant: "error" } });
+      return;
+    }
+
     updateMutation.mutate({
       default_cost_per_player: defaultCostPerPlayer,
       same_day_extra_cost: sameDayExtraCost,
@@ -973,6 +1099,7 @@ function SettingsTab() {
 
   return (
     <ScrollView
+      backgroundColor="$background"
       style={{ flex: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -1068,10 +1195,13 @@ interface VotingCriteria {
 function VotingCriteriaTab() {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
+  const toast = useToastController();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingCriteria, setEditingCriteria] = useState<VotingCriteria | null>(
     null,
   );
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<VotingCriteria | null>(null);
   const [code, setCode] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [nameEs, setNameEs] = useState("");
@@ -1098,6 +1228,14 @@ function VotingCriteriaTab() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      const order = parseInt(sortOrder, 10) || 0;
+
+      // Check for duplicate sort order
+      const existingWithOrder = criteria.find(c => c.sortOrder === order);
+      if (existingWithOrder) {
+        throw new Error(t("voting.duplicateSortOrder"));
+      }
+
       const res = await client.api.voting.criteria.$post({
         json: {
           code,
@@ -1105,7 +1243,7 @@ function VotingCriteriaTab() {
           nameEs,
           descriptionEn: descriptionEn || undefined,
           descriptionEs: descriptionEs || undefined,
-          sortOrder: parseInt(sortOrder, 10) || 0,
+          sortOrder: order,
         },
       });
       if (!res.ok) {
@@ -1116,18 +1254,30 @@ function VotingCriteriaTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
-      Alert.alert(t("shared.createSuccess"));
+      toast.show(t("voting.createSuccess"), { duration: 3000, customData: { variant: "success" } });
       setShowAddDialog(false);
       resetForm();
     },
     onError: (error: Error) => {
-      Alert.alert(t("shared.createError"), error.message);
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async () => {
       if (!editingCriteria) return;
+
+      const order = parseInt(sortOrder, 10) || 0;
+
+      // Check for duplicate sort order (excluding current criteria)
+      const existingWithOrder = criteria.find(
+        c => c.sortOrder === order && c.id !== editingCriteria.id
+      );
+      if (existingWithOrder) {
+        throw new Error(t("voting.duplicateSortOrder"));
+      }
+
       const res = await client.api.voting.criteria[":id"].$patch({
         param: { id: editingCriteria.id },
         json: {
@@ -1136,7 +1286,7 @@ function VotingCriteriaTab() {
           nameEs,
           descriptionEn: descriptionEn || undefined,
           descriptionEs: descriptionEs || undefined,
-          sortOrder: parseInt(sortOrder, 10) || 0,
+          sortOrder: order,
         },
       });
       if (!res.ok) {
@@ -1147,12 +1297,13 @@ function VotingCriteriaTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
-      Alert.alert(t("shared.updateSuccess"));
+      toast.show(t("voting.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
       setEditingCriteria(null);
       resetForm();
     },
     onError: (error: Error) => {
-      Alert.alert(t("shared.updateError"), error.message);
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -1162,11 +1313,18 @@ function VotingCriteriaTab() {
         param: { id },
         json: { isActive },
       });
-      if (!res.ok) throw new Error("Failed to toggle active status");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to toggle active status");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
+    },
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -1175,15 +1333,19 @@ function VotingCriteriaTab() {
       const res = await client.api.voting.criteria[":id"].$delete({
         param: { id: criteriaId },
       });
-      if (!res.ok) throw new Error("Failed to delete criteria");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error((data as any).error || "Failed to delete criteria");
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
-      Alert.alert(t("shared.deleteSuccess"));
+      toast.show(t("voting.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
-    onError: () => {
-      Alert.alert(t("shared.deleteError"));
+    onError: (error: Error) => {
+      const localizedMessage = getLocalizedError(error.message, t);
+      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -1207,14 +1369,8 @@ function VotingCriteriaTab() {
   };
 
   const handleDelete = (c: VotingCriteria) => {
-    Alert.alert(t("shared.confirmDelete"), t("shared.deleteConfirm"), [
-      { text: t("shared.cancel"), style: "cancel" },
-      {
-        text: t("shared.delete"),
-        style: "destructive",
-        onPress: () => deleteMutation.mutate(c.id),
-      },
-    ]);
+    setDeleteTarget(c);
+    setShowDeleteAlert(true);
   };
 
   const getName = (c: VotingCriteria) =>
@@ -1232,6 +1388,7 @@ function VotingCriteriaTab() {
 
   return (
     <ScrollView
+      backgroundColor="$background"
       style={{ flex: 1 }}
       refreshControl={
         <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
@@ -1318,7 +1475,13 @@ function VotingCriteriaTab() {
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
           title={t("admin.addCriteria")}
-          showActions={false}
+          onConfirm={() => createMutation.mutate()}
+          onCancel={() => {
+            setShowAddDialog(false);
+            resetForm();
+          }}
+          confirmText={createMutation.isPending ? t("shared.loading") : t("shared.save")}
+          cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
             <Input
@@ -1359,30 +1522,6 @@ function VotingCriteriaTab() {
               onChangeText={setSortOrder}
               keyboardType="numeric"
             />
-            <XStack gap="$2">
-              <Button
-                flex={1}
-                variant="outline"
-                onPress={() => {
-                  setShowAddDialog(false);
-                  resetForm();
-                }}
-              >
-                {t("shared.cancel")}
-              </Button>
-              <Button
-                flex={1}
-                variant="primary"
-                onPress={() => createMutation.mutate()}
-                disabled={
-                  !code || !nameEn || !nameEs || createMutation.isPending
-                }
-              >
-                {createMutation.isPending
-                  ? t("shared.loading")
-                  : t("shared.save")}
-              </Button>
-            </XStack>
           </YStack>
         </Dialog>
 
@@ -1394,7 +1533,13 @@ function VotingCriteriaTab() {
             resetForm();
           }}
           title={t("admin.editCriteria")}
-          showActions={false}
+          onConfirm={() => updateMutation.mutate()}
+          onCancel={() => {
+            setEditingCriteria(null);
+            resetForm();
+          }}
+          confirmText={updateMutation.isPending ? t("shared.loading") : t("shared.save")}
+          cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
             <Input
@@ -1435,32 +1580,25 @@ function VotingCriteriaTab() {
               onChangeText={setSortOrder}
               keyboardType="numeric"
             />
-            <XStack gap="$2">
-              <Button
-                flex={1}
-                variant="outline"
-                onPress={() => {
-                  setEditingCriteria(null);
-                  resetForm();
-                }}
-              >
-                {t("shared.cancel")}
-              </Button>
-              <Button
-                flex={1}
-                variant="primary"
-                onPress={() => updateMutation.mutate()}
-                disabled={
-                  !code || !nameEn || !nameEs || updateMutation.isPending
-                }
-              >
-                {updateMutation.isPending
-                  ? t("shared.loading")
-                  : t("shared.save")}
-              </Button>
-            </XStack>
           </YStack>
         </Dialog>
+
+        {/* Delete Voting Criteria AlertDialog */}
+        <AlertDialog
+          open={showDeleteAlert}
+          onOpenChange={setShowDeleteAlert}
+          title={t("shared.confirmDelete")}
+          description={t("shared.deleteConfirm")}
+          confirmText={t("shared.delete")}
+          cancelText={t("shared.cancel")}
+          variant="destructive"
+          onConfirm={() => {
+            if (deleteTarget) {
+              deleteMutation.mutate(deleteTarget.id);
+              setShowDeleteAlert(false);
+            }
+          }}
+        />
       </YStack>
     </ScrollView>
   );

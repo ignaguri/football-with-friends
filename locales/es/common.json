@@ -171,6 +171,7 @@
     "updateError": "No se pudo actualizar el partido",
     "deleteSuccess": "Partido eliminado con éxito",
     "deleteError": "No se pudo eliminar el partido",
+    "cancelSuccess": "Partido cancelado exitosamente",
     "tabs": {
       "matches": "Partidos",
       "locations": "Predios",
@@ -181,7 +182,7 @@
     "editMatch": "Editar Partido",
     "editMatchDesc": "Actualizá los detalles del partido abajo y guardá los cambios.",
     "cancelMatch": "Cancelar Partido",
-    "cancelMatchConfirm": "¿Estás seguro de que querés cancelar el partido del {date} a las {time}? Esta acción no se puede deshacer.",
+    "cancelMatchConfirm": "¿Estás seguro de que querés cancelar el partido del {{date}} a las {{time}}? Esta acción no se puede deshacer.",
     "matchCancelledSuccess": "Partido cancelado exitosamente",
     "deleteMatchConfirm": "¿Estás seguro de que querés eliminar este partido? Esta acción no se puede deshacer.",
     "noMatches": "No se encontraron partidos",
@@ -413,7 +414,11 @@
     "paypalUrl": "URL de PayPal",
     "organizerWhatsapp": "WhatsApp del organizador",
     "saved": "Configuración guardada",
-    "saveError": "Error al guardar configuración"
+    "saveError": "Error al guardar configuración",
+    "invalidCost": "Por favor ingrese un monto válido",
+    "invalidUrl": "Por favor ingrese una URL válida que comience con http:// o https://",
+    "invalidPhone": "Por favor ingrese un número de teléfono válido con código de país",
+    "saveSuccess": "Configuración guardada exitosamente"
   },
   "locations": {
     "title": "Predios",
@@ -592,7 +597,11 @@
       "jesucristo_desc": "Siempre se manda alguna de milagro",
       "el_aguinaldo": "El Aguinaldo",
       "el_aguinaldo_desc": "No sabés cuándo, pero te da una alegría"
-    }
+    },
+    "deleteSuccess": "Criterio de votación eliminado exitosamente",
+    "createSuccess": "Criterio de votación creado exitosamente",
+    "updateSuccess": "Criterio de votación actualizado exitosamente",
+    "duplicateSortOrder": "Ya existe un criterio con este número de orden"
   },
   "admin": {
     "addCriteria": "Agregar Criterio",
@@ -606,5 +615,17 @@
     "sortOrder": "Orden",
     "activate": "Activar",
     "deactivate": "Desactivar"
+  },
+  "errors": {
+    "matchAlreadyExists": "Ya existe un partido en esta fecha",
+    "matchNotFound": "Partido no encontrado",
+    "locationNotFound": "Ubicación no encontrada",
+    "courtNotFound": "Cancha no encontrada",
+    "votingCriteriaNotFound": "Criterio de votación no encontrado",
+    "deleteFailed": "Error al eliminar",
+    "updateFailed": "Error al actualizar",
+    "createFailed": "Error al crear",
+    "adminOnly": "Solo los administradores pueden realizar esta acción",
+    "unauthorized": "No está autorizado para realizar esta acción"
   }
 }
