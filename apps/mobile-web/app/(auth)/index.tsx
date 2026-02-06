@@ -177,25 +177,17 @@ export default function AuthLandingScreen() {
                   fontWeight="400"
                 >
                   <XStack gap="$3" alignItems="center" justifyContent="center">
-                    {isGoogleLoading ? (
-                      <Text fontSize="$5" fontFamily="$body">
-                        ...
-                      </Text>
-                    ) : (
-                      <>
-                        <Image
-                          source={require("../../assets/google/google-logo.svg")}
-                          style={{ width: 24, height: 24 }}
-                        />
-                        <Text
-                          fontSize="$5"
-                          fontFamily="$body"
-                          fontWeight="400"
-                        >
-                          {t("auth.signInWithGmail")}
-                        </Text>
-                      </>
-                    )}
+                    <Image
+                      source={require("../../assets/google/google-logo.svg")}
+                      style={{ width: 24, height: 24 }}
+                    />
+                    <Text
+                      fontSize="$5"
+                      fontFamily="$body"
+                      fontWeight="400"
+                    >
+                      {isGoogleLoading ? t("auth.signingIn") : t("auth.signInWithGmail")}
+                    </Text>
                   </XStack>
                 </Button>
               )}
