@@ -15,6 +15,9 @@ export default function RulesLayout() {
         },
         headerTintColor: theme.color?.val,
         headerShadowVisible: false,
+        contentStyle: {
+          backgroundColor: theme.background?.val,
+        },
       }}
     >
       <Stack.Screen

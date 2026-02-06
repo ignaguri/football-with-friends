@@ -18,6 +18,9 @@ export default function MatchesLayout() {
         headerTintColor: theme.color?.val,
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
+        contentStyle: {
+          backgroundColor: theme.background?.val,
+        },
       }}
     >
       <Stack.Screen
