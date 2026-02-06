@@ -5,12 +5,14 @@ export interface AlertDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   title: string;
-  description: string;
+  description?: string;
+  children?: React.ReactNode;
   cancelText?: string;
   confirmText?: string;
   onCancel?: () => void;
   onConfirm?: () => void;
   variant?: "default" | "destructive";
+  showCancel?: boolean;
 }
 
 export function AlertDialog({
@@ -18,11 +20,13 @@ export function AlertDialog({
   onOpenChange,
   title,
   description,
+  children,
   cancelText = "Cancel",
   confirmText = "Confirm",
   onCancel,
   onConfirm,
   variant = "default",
+  showCancel = true,
 }: AlertDialogProps) {
   const handleCancel = () => {
     onCancel?.();
@@ -73,17 +77,34 @@ export function AlertDialog({
               {title}
             </TamaguiAlertDialog.Title>
 
-            <TamaguiAlertDialog.Description fontSize="$4" color="$gray11">
-              {description}
-            </TamaguiAlertDialog.Description>
+            {description && (
+              <TamaguiAlertDialog.Description fontSize="$4" color="$gray11">
+                {description}
+              </TamaguiAlertDialog.Description>
+            )}
+
+            {children && (
+              <TamaguiAlertDialog.Description fontSize="$4" color="$gray11" asChild>
+                <div>{children}</div>
+              </TamaguiAlertDialog.Description>
+            )}
           </YStack>
 
-          <XStack gap="$3" justifyContent="flex-end" marginTop="$4">
-            <TamaguiAlertDialog.Cancel asChild>
-              <Button variant="outline" onPress={handleCancel}>
-                {cancelText}
-              </Button>
-            </TamaguiAlertDialog.Cancel>
+          <XStack
+            gap="$3"
+            justifyContent="flex-end"
+            marginTop="$6"
+            paddingTop="$4"
+            borderTopWidth={1}
+            borderTopColor="$gray5"
+          >
+            {showCancel && (
+              <TamaguiAlertDialog.Cancel asChild>
+                <Button variant="outline" onPress={handleCancel}>
+                  {cancelText}
+                </Button>
+              </TamaguiAlertDialog.Cancel>
+            )}
             <TamaguiAlertDialog.Action asChild>
               <Button
                 variant={variant === "destructive" ? "danger" : "primary"}

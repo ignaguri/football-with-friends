@@ -70,7 +70,10 @@
     "matchCompletelyFull": "El partido y la lista de suplentes están completos",
     "cancelSpotTitle": "¿Cancelar tu lugar?",
     "cancelSpotMessage": "¿Estás seguro que querés cancelar tu lugar? Podés volver a anotarte más tarde si cambiás de opinión.",
-    "confirmCancel": "Sí, cancelar lugar"
+    "confirmCancel": "Sí, cancelar lugar",
+    "confirmation": "Confirmación",
+    "confirmationMessage": "¡Gracias por anotarte! Acordate que la confirmación se hace con el pago.<br/><br/>Importante: El pago el día del partido tiene un sobrecargo de 2 Euros. Por favor no te olvides.<br/><br/>Por cada día sin pagar posterior al partido habrá una penalización de 1 Euro!",
+    "acceptConditions": "Aceptar condiciones"
   },
   "share": {
     "title": "Compartir este partido",
@@ -356,6 +359,10 @@
     "none": "Ninguna",
     "search": "Buscar",
     "addToCalendar": "Agregar al calendario",
+    "share": "Compartir",
+    "footballMatch": "Partido de Fútbol",
+    "at": "a las",
+    "joinUs": "Unite",
     "iosSafari": "Para agregar este evento a tu calendario, abrí esta página en Safari y tocá 'Agregar al calendario'. O usá Google Calendar en su lugar.",
     "logOut": "Cerrar sesión",
     "logIn": "Iniciar sesión",

@@ -25,24 +25,26 @@ import {
   type PlayerStatusType,
 } from "@repo/ui";
 import {
-  BanknoteArrowUp,
   BanknoteArrowDown,
-  MessageCircle,
+  Euro,
   X,
   Calendar,
   UserPlus,
   RotateCcw,
+  Share2,
 } from "@tamagui/lucide-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import {
   RefreshControl,
   ScrollView,
   Share,
   Linking,
   Alert,
+  Image,
 } from "react-native";
+import { formatFullDate } from "../../../lib/date-utils";
 
 interface Signup {
   id: string;
@@ -76,12 +78,23 @@ interface MatchDetails {
   userSignup?: Signup;
 }
 
+// WhatsApp icon component using the existing SVG
+function WhatsAppIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Image
+      source={require("../../../assets/whatsapp-logo.svg")}
+      style={{ width: size, height: size, tintColor: "#25D366" }}
+    />
+  );
+}
+
 export default function MatchDetailScreen() {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { t } = useTranslation();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [showCancelAlert, setShowCancelAlert] = useState(false);
@@ -128,7 +141,7 @@ export default function MatchDetailScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
       setShowJoinModal(false);
-      Alert.alert(t("matchDetail.signupSuccess"));
+      setShowConfirmationModal(true);
     },
     onError: (err: Error) => {
       Alert.alert("Error", err.message);
@@ -192,16 +205,6 @@ export default function MatchDetailScreen() {
     },
   });
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const handleCancelSignup = (
     signupId: string,
     currentStatus: PlayerStatusType,
@@ -260,7 +263,7 @@ export default function MatchDetailScreen() {
       return;
     }
     const message = t("notify.whatsappMessage", {
-      date: formatDate(match?.date || ""),
+      date: formatFullDate(match?.date || ""),
       name: session?.user?.name || "",
     });
     const url = `https://wa.me/${organizerPhone}?text=${encodeURIComponent(message)}`;
@@ -277,6 +280,15 @@ export default function MatchDetailScreen() {
     Share.share({
       message: icsContent,
       title: t("shared.addToCalendar"),
+    });
+  };
+
+  const handleShareMatch = () => {
+    if (!match) return;
+    const message = `${t("shared.footballMatch")} - ${formatFullDate(match.date)} ${t("shared.at")} ${match.time}\n${match.location?.name || ""}\n\n${t("shared.joinUs")}!`;
+    Share.share({
+      message,
+      title: t("shared.share"),
     });
   };
 
@@ -318,13 +330,13 @@ END:VCALENDAR`;
         if (isOwn) {
           // Own user: Pay, Notify I paid, Cancel
           actions.push({
-            icon: BanknoteArrowUp,
+            icon: Euro,
             label: t("matchDetail.pay"),
             onPress: handleOpenPayment,
             variant: "outline",
           });
           actions.push({
-            icon: MessageCircle,
+            icon: WhatsAppIcon,
             label: t("notify.trigger"),
             onPress: handleNotifyPaid,
             variant: "outline",
@@ -371,7 +383,7 @@ END:VCALENDAR`;
           variant: "primary",
         });
         actions.push({
-          icon: MessageCircle,
+          icon: WhatsAppIcon,
           label: t("notify.cantPlay"),
           onPress: handleNotifyPaid,
           variant: "outline",
@@ -460,6 +472,7 @@ END:VCALENDAR`;
     <Container variant="padded">
       <ScrollView
         style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
@@ -468,17 +481,48 @@ END:VCALENDAR`;
           {/* Match Header Card */}
           <Card variant="elevated">
             <YStack padding="$3" gap="$2">
-              {isCancelled && (
-                <StatusBadge
-                  status="cancelled"
-                  type="match"
-                  label={t("matchDetail.matchCancelled")}
-                />
-              )}
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack flex={1}>
+                  {isCancelled && (
+                    <StatusBadge
+                      status="cancelled"
+                      type="match"
+                      label={t("matchDetail.matchCancelled")}
+                    />
+                  )}
 
-              <Text fontSize="$7" fontWeight="bold">
-                {formatDate(match.date)}
-              </Text>
+                  <Text fontSize="$7" fontWeight="bold">
+                    {formatFullDate(match.date)}
+                  </Text>
+                </YStack>
+
+                {/* Action buttons */}
+                <XStack gap="$2">
+                  {/* Add to Calendar Button */}
+                  {(isParticipating || match.userSignup?.status === "PAID") && (
+                    <Button
+                      variant="outline"
+                      size="$3"
+                      circular
+                      onPress={handleAddToCalendar}
+                      padding="$2"
+                    >
+                      <Calendar size={20} />
+                    </Button>
+                  )}
+
+                  {/* Share Button */}
+                  <Button
+                    variant="outline"
+                    size="$3"
+                    circular
+                    onPress={handleShareMatch}
+                    padding="$2"
+                  >
+                    <Share2 size={20} />
+                  </Button>
+                </XStack>
+              </XStack>
 
               <XStack gap="$4" flexWrap="wrap">
                 <YStack>
@@ -497,7 +541,6 @@ END:VCALENDAR`;
                     </Text>
                     <Text fontSize="$5">
                       {match.location.name}
-                      {match.court && ` - ${match.court.name}`}
                     </Text>
                   </YStack>
                 )}
@@ -509,6 +552,9 @@ END:VCALENDAR`;
           <Card variant="outlined">
             <XStack padding="$3" justifyContent="space-around">
               <YStack alignItems="center">
+                <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                  {t("stats.availableSpots")}
+                </Text>
                 <Text
                   fontSize="$7"
                   fontWeight="bold"
@@ -516,28 +562,25 @@ END:VCALENDAR`;
                 >
                   {match.availableSpots}
                 </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {t("stats.availableSpots")}
-                </Text>
               </YStack>
 
               <YStack alignItems="center">
+                <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                  {t("stats.cost")}
+                </Text>
                 <Text fontSize="$7" fontWeight="bold">
                   {match.costPerPlayer
                     ? `€${match.costPerPlayer}`
                     : t("stats.free")}
                 </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {t("stats.cost")}
-                </Text>
               </YStack>
 
               <YStack alignItems="center">
+                <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                  {t("stats.court")}
+                </Text>
                 <Text fontSize="$7" fontWeight="bold">
                   {match.court?.name || "-"}
-                </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {t("stats.court")}
                 </Text>
               </YStack>
             </XStack>
@@ -651,6 +694,7 @@ END:VCALENDAR`;
         open={showJoinModal}
         onOpenChange={setShowJoinModal}
         title={t("actions.wantToPlay")}
+        showClose={false}
         onConfirm={() => {
           if (!signupMutation.isPending) {
             signupMutation.mutate();
@@ -669,8 +713,12 @@ END:VCALENDAR`;
           </Text>
           {match.costPerPlayer && (
             <XStack justifyContent="space-between">
-              <Text color="$gray11">{t("stats.cost")}</Text>
-              <Text fontWeight="500">{match.costPerPlayer}</Text>
+              <Text color="$gray11" fontSize="$3">
+                {t("stats.cost")}
+              </Text>
+              <Text fontWeight="500" fontSize="$3">
+                {match.costPerPlayer}€
+              </Text>
             </XStack>
           )}
           {isMatchToday &&
@@ -679,7 +727,7 @@ END:VCALENDAR`;
               <XStack justifyContent="space-between">
                 <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
                 <Text fontWeight="500" color="$orange10">
-                  +{match.sameDayCost}
+                  +{match.sameDayCost}€
                 </Text>
               </XStack>
             )}
@@ -695,14 +743,16 @@ END:VCALENDAR`;
               >
                 <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
                 <Text fontWeight="700" fontSize="$5">
-                  {totalCost}
+                  {totalCost}€
                 </Text>
               </XStack>
             )}
           {process.env.EXPO_PUBLIC_PAYPAL_URL && (
             <XStack justifyContent="space-between">
-              <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
-              <Text fontWeight="500" color="$blue10">
+              <Text color="$gray11" fontSize="$3">
+                {t("matchDetail.paymentMethod")}
+              </Text>
+              <Text fontWeight="500" color="$blue10" fontSize="$3">
                 PayPal
               </Text>
             </XStack>
@@ -759,6 +809,19 @@ END:VCALENDAR`;
           </XStack>
         </YStack>
       </Dialog>
+
+      {/* Confirmation Modal after Joining */}
+      <AlertDialog
+        open={showConfirmationModal}
+        onOpenChange={setShowConfirmationModal}
+        title={t("matchDetail.confirmation")}
+        confirmText={t("matchDetail.acceptConditions")}
+        onConfirm={() => setShowConfirmationModal(false)}
+        variant="default"
+        showCancel={false}
+      >
+        <Trans i18nKey="matchDetail.confirmationMessage" />
+      </AlertDialog>
 
       {/* Cancel Confirmation Alert */}
       <AlertDialog

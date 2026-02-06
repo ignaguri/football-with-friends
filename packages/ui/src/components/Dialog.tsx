@@ -12,6 +12,7 @@ export interface CustomDialogProps extends DialogProps {
   confirmText?: string;
   cancelText?: string;
   showActions?: boolean;
+  showClose?: boolean;
 }
 
 export function Dialog({
@@ -24,6 +25,7 @@ export function Dialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   showActions = true,
+  showClose = true,
   ...props
 }: CustomDialogProps) {
   return (
@@ -69,15 +71,17 @@ export function Dialog({
               <TamaguiDialog.Title fontSize="$6" fontWeight="bold">
                 {title}
               </TamaguiDialog.Title>
-              <TamaguiDialog.Close asChild>
-                <Button
-                  variant="ghost"
-                  size="$3"
-                  circular
-                  icon={X}
-                  padding="$2"
-                />
-              </TamaguiDialog.Close>
+              {showClose && (
+                <TamaguiDialog.Close asChild>
+                  <Button
+                    variant="ghost"
+                    size="$3"
+                    circular
+                    icon={X}
+                    padding="$2"
+                  />
+                </TamaguiDialog.Close>
+              )}
             </XStack>
           )}
 

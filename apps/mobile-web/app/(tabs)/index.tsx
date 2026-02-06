@@ -10,12 +10,12 @@ import {
   Spinner,
   Dialog,
   List,
+  colors,
 } from "@repo/ui";
-import { User, Calendar, Users } from "@tamagui/lucide-icons";
+import { Calendar, Trophy, CircleUserRound } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable } from "react-native";
 import { useTheme } from "tamagui";
 
 import { useRulesModal } from "../../lib/rules-modal-context";
@@ -53,99 +53,75 @@ export default function HomeScreen() {
             <Text fontSize="$9" fontWeight="bold" textAlign="center">
               {t("home.title")}
             </Text>
-            <Text color="$gray11" textAlign="center" maxWidth={300}>
-              {t("home.description")}
-            </Text>
           </YStack>
 
           {isPending ? (
             <Spinner size="large" />
           ) : isAuthenticated ? (
             <YStack gap="$4" width="100%" maxWidth={400}>
-              <Text fontSize="$5" color="$gray11" textAlign="center">
+              <Text fontSize="$4" color="$gray11" textAlign="center">
                 {t("home.welcome", {
                   name:
                     session?.user?.name || session?.user?.email?.split("@")[0],
                 })}
               </Text>
 
-              {/* Matches Card - First */}
-              <Pressable onPress={() => router.push("/(tabs)/matches")}>
-                <Card variant="elevated" padding="$5">
-                  <XStack gap="$4" alignItems="center">
-                    <YStack
-                      width={48}
-                      height={48}
-                      borderRadius={12}
-                      backgroundColor="$blue4"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <Calendar size={24} color="$blue10" />
-                    </YStack>
-                    <YStack flex={1}>
-                      <Text fontSize="$6" fontWeight="bold">
-                        {t("home.matchesCard")}
-                      </Text>
-                      <Text fontSize="$3" color="$gray11" marginTop="$1">
-                        {t("home.matchesCardDesc")}
-                      </Text>
-                    </YStack>
-                  </XStack>
-                </Card>
-              </Pressable>
+              {/* Matches Button */}
+              <Button
+                variant="primary"
+                size="$5"
+                onPress={() => router.push("/(tabs)/matches")}
+                backgroundColor={colors.navyBlue}
+                hoverStyle={{ backgroundColor: colors.navyBlueHover }}
+                pressStyle={{ backgroundColor: colors.navyBlueHover }}
+                borderRadius={28}
+                height={60}
+              >
+                <XStack gap="$3" alignItems="center">
+                  <Calendar size={24} color="white" />
+                  <Text color="white" fontSize="$6" fontWeight="500">
+                    {t("home.matchesCard")}
+                  </Text>
+                </XStack>
+              </Button>
 
-              {/* Social Card - Second */}
-              <Pressable onPress={() => router.push("/(tabs)/social")}>
-                <Card variant="elevated" padding="$5">
-                  <XStack gap="$4" alignItems="center">
-                    <YStack
-                      width={48}
-                      height={48}
-                      borderRadius={12}
-                      backgroundColor="$purple4"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <Users size={24} color="$purple10" />
-                    </YStack>
-                    <YStack flex={1}>
-                      <Text fontSize="$6" fontWeight="bold">
-                        {t("home.socialCard")}
-                      </Text>
-                      <Text fontSize="$3" color="$gray11" marginTop="$1">
-                        {t("home.socialCardDesc")}
-                      </Text>
-                    </YStack>
-                  </XStack>
-                </Card>
-              </Pressable>
+              {/* Social Button */}
+              <Button
+                variant="primary"
+                size="$5"
+                onPress={() => router.push("/(tabs)/social")}
+                backgroundColor={colors.navyBlue}
+                hoverStyle={{ backgroundColor: colors.navyBlueHover }}
+                pressStyle={{ backgroundColor: colors.navyBlueHover }}
+                borderRadius={28}
+                height={60}
+              >
+                <XStack gap="$3" alignItems="center">
+                  <Trophy size={24} color="white" />
+                  <Text color="white" fontSize="$6" fontWeight="500">
+                    {t("home.socialCard")}
+                  </Text>
+                </XStack>
+              </Button>
 
-              {/* Profile Card - Third */}
-              <Pressable onPress={() => router.push("/(tabs)/profile")}>
-                <Card variant="elevated" padding="$5">
-                  <XStack gap="$4" alignItems="center">
-                    <YStack
-                      width={48}
-                      height={48}
-                      borderRadius={12}
-                      backgroundColor="$green4"
-                      alignItems="center"
-                      justifyContent="center"
-                    >
-                      <User size={24} color="$green10" />
-                    </YStack>
-                    <YStack flex={1}>
-                      <Text fontSize="$6" fontWeight="bold">
-                        {t("home.playerCard")}
-                      </Text>
-                      <Text fontSize="$3" color="$gray11" marginTop="$1">
-                        {t("home.playerCardDesc")}
-                      </Text>
-                    </YStack>
-                  </XStack>
-                </Card>
-              </Pressable>
+              {/* Profile Button */}
+              <Button
+                variant="primary"
+                size="$5"
+                onPress={() => router.push("/(tabs)/profile")}
+                backgroundColor={colors.navyBlue}
+                hoverStyle={{ backgroundColor: colors.navyBlueHover }}
+                pressStyle={{ backgroundColor: colors.navyBlueHover }}
+                borderRadius={28}
+                height={60}
+              >
+                <XStack gap="$3" alignItems="center">
+                  <CircleUserRound size={24} color="white" />
+                  <Text color="white" fontSize="$6" fontWeight="500">
+                    {t("home.playerCard")}
+                  </Text>
+                </XStack>
+              </Button>
             </YStack>
           ) : (
             <Card variant="elevated" width="100%" maxWidth={300}>

@@ -7,18 +7,16 @@ import {
   XStack,
   Spinner,
   Tabs,
-  StatusBadge,
   Button,
-  type MatchStatusType,
-  type PlayerStatusType,
+  colors,
 } from "@repo/ui";
 import { Plus, BookOpen } from "@tamagui/lucide-icons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView } from "react-native";
-import { Pressable } from "react-native";
+import { RefreshControl, ScrollView, Pressable } from "react-native";
 import { useTheme } from "tamagui";
+import { formatMatchDateTime } from "../../../lib/date-utils";
 
 type MatchType = "upcoming" | "past";
 
@@ -57,53 +55,6 @@ export default function MatchesListScreen() {
   // Flatten paginated data
   const matches = data?.pages.flatMap((page) => page.matches) ?? [];
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getMatchStatus = (status: string): MatchStatusType | null => {
-    switch (status) {
-      case "cancelled":
-        return "cancelled";
-      case "completed":
-      case "played":
-        return "played";
-      case "upcoming":
-        return "upcoming";
-      default:
-        return null;
-    }
-  };
-
-  const getStatusLabel = (status: MatchStatusType): string => {
-    switch (status) {
-      case "cancelled":
-        return t("status.cancelled");
-      case "played":
-        return t("status.played");
-      case "upcoming":
-        return t("status.upcoming");
-    }
-  };
-
-  const getPlayerStatusLabel = (status: PlayerStatusType): string => {
-    switch (status) {
-      case "PAID":
-        return t("status.paid");
-      case "PENDING":
-        return t("status.pending");
-      case "CANCELLED":
-        return t("status.cancelled");
-      case "SUBSTITUTE":
-        return t("status.substitute");
-    }
-  };
-
   const tabs = [
     { value: "upcoming", label: t("matches.upcoming") },
     { value: "past", label: t("matches.past") },
@@ -113,28 +64,20 @@ export default function MatchesListScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Matches",
-          headerStyle: {
-            backgroundColor: theme.background?.val,
-          },
-          headerTintColor: theme.color?.val,
-          headerShadowVisible: false,
+          title: "",
+          headerShown: true,
           headerRight: () => (
-            <Pressable
+            <Button
+              variant="ghost"
+              size="$3"
               onPress={() => router.push("/(tabs)/rules")}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-              }}
+              paddingHorizontal="$3"
             >
-              <BookOpen size={20} color={theme.color?.val} />
-              <Text fontSize="$3" color={theme.color?.val}>
-                {t("rules.title")}
-              </Text>
-            </Pressable>
+              <XStack gap="$2" alignItems="center">
+                <BookOpen size={20} />
+                <Text fontSize="$4">{t("rules.title")}</Text>
+              </XStack>
+            </Button>
           ),
         }}
       />
@@ -150,6 +93,7 @@ export default function MatchesListScreen() {
 
         <ScrollView
           style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
           }
@@ -186,61 +130,34 @@ export default function MatchesListScreen() {
               !error &&
               matches &&
               matches.map((match) => (
-                <Card
+                <Pressable
                   key={match.id}
-                  variant="elevated"
-                  pressStyle={{ scale: 0.98, opacity: 0.9 }}
                   onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
+                  style={{ width: "100%" }}
                 >
-                  <YStack padding="$3" gap="$2">
-                    <XStack justifyContent="space-between" alignItems="center">
-                      <Text fontSize="$6" fontWeight="600">
-                        {formatDate(match.date)}
-                      </Text>
-                      {match.userSignupStatus ? (
-                        <StatusBadge
-                          status={match.userSignupStatus}
-                          type="player"
-                          label={getPlayerStatusLabel(match.userSignupStatus)}
-                        />
-                      ) : (
-                        match.status === "upcoming" &&
-                        getMatchStatus(match.status) && (
-                          <StatusBadge
-                            status={getMatchStatus(match.status)!}
-                            type="match"
-                            label={getStatusLabel(
-                              getMatchStatus(match.status)!,
-                            )}
-                          />
-                        )
-                      )}
-                    </XStack>
-
-                    <XStack gap="$4">
-                      <YStack>
-                        <Text fontSize="$3" color="$gray10">
-                          {t("shared.time")}
-                        </Text>
-                        <Text fontSize="$4">{match.time}</Text>
-                      </YStack>
-
-                      <YStack>
-                        <Text fontSize="$3" color="$gray10">
-                          {t("addMatch.maxPlayers")}
-                        </Text>
-                        <Text fontSize="$4">{match.maxPlayers}</Text>
-                      </YStack>
-                    </XStack>
-
+                  <YStack
+                    backgroundColor={colors.navyBlue}
+                    borderRadius={16}
+                    padding="$4"
+                    gap="$1"
+                    pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                    borderWidth={2}
+                    borderColor="rgba(0, 0, 0, 0.6)"
+                    $platform-web={{
+                      // @ts-ignore - boxShadow is web-only
+                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    <Text color="white" fontSize="$5" fontWeight="500">
+                      {formatMatchDateTime(match.date, match.time)}
+                    </Text>
                     {match.location?.name && (
-                      <Text fontSize="$3" color="$gray11">
+                      <Text color="white" fontSize="$4" opacity={0.9}>
                         {match.location.name}
-                        {match.court?.name && ` - ${match.court.name}`}
                       </Text>
                     )}
                   </YStack>
-                </Card>
+                </Pressable>
               ))}
 
             {/* Load More Button */}

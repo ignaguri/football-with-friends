@@ -3,7 +3,6 @@ import {
   useSession,
   signOut,
   client,
-  useQuery,
   getConfiguredApiUrl,
 } from "@repo/api-client";
 import {
@@ -20,7 +19,6 @@ import {
   LanguageSwitcher,
   Select,
   COUNTRIES,
-  StatsSummary,
   PhoneInput,
   AlertDialog,
   getCountryFlag,
@@ -28,7 +26,7 @@ import {
 } from "@repo/ui";
 import { Camera } from "@tamagui/lucide-icons";
 import * as ImagePicker from "expo-image-picker";
-import { Link, router } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -41,19 +39,6 @@ import {
 
 import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
 import { useThemeContext } from "../../../lib/theme-context";
-
-interface PlayerProfile {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    nationality?: string;
-  };
-  totalMatchesPlayed: number;
-  totalGoals: number;
-  totalThirdTimeAttendances: number;
-  totalBeers: number;
-}
 
 export default function ProfileScreen() {
   const { data: session, isPending, refetch: refetchSession } = useSession();
@@ -70,6 +55,7 @@ export default function ProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -82,23 +68,6 @@ export default function ProfileScreen() {
   const [requiresCurrentPassword, setRequiresCurrentPassword] = useState(false);
 
   const userId = session?.user?.id;
-
-  // Fetch player stats
-  const {
-    data: profile,
-    isLoading: isLoadingStats,
-    refetch: refetchStats,
-    isRefetching,
-  } = useQuery({
-    queryKey: ["player-profile", userId],
-    queryFn: async () => {
-      const res = await client.api.players[":userId"].$get({
-        param: { userId: userId! },
-      });
-      return res.json() as Promise<PlayerProfile>;
-    },
-    enabled: !!userId,
-  });
 
   useEffect(() => {
     if (session?.user) {
@@ -122,7 +91,9 @@ export default function ProfileScreen() {
   };
 
   const handleRefresh = async () => {
-    await Promise.all([refetchSession(), refetchStats()]);
+    setIsRefreshing(true);
+    await refetchSession();
+    setIsRefreshing(false);
   };
 
   const handleSaveProfile = async () => {
@@ -388,12 +359,18 @@ export default function ProfileScreen() {
   const canEditPhone = !isPhoneAuthUser; // Email/Google users can't edit email, but can change phone
 
   return (
-    <Container variant="padded">
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Container variant="padded">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
       >
         <YStack gap="$4">
@@ -471,19 +448,6 @@ export default function ProfileScreen() {
                     ]}
                   />
 
-                  <Input
-                    label={t("auth.email")}
-                    placeholder={t("auth.emailPlaceholder")}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    disabled={!canEditEmail}
-                    helperText={
-                      !canEditEmail ? t("profile.emailLockedByAuth") : undefined
-                    }
-                  />
-
                   <PhoneInput
                     label={t("auth.phone")}
                     placeholder={t("auth.phonePlaceholder")}
@@ -494,6 +458,19 @@ export default function ProfileScreen() {
                       !canEditPhone
                         ? t("profile.phoneLockedByAuth")
                         : t("profile.phoneHelp")
+                    }
+                  />
+
+                  <Input
+                    label={t("auth.email")}
+                    placeholder={t("auth.emailPlaceholder")}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    disabled={!canEditEmail}
+                    helperText={
+                      !canEditEmail ? t("profile.emailLockedByAuth") : undefined
                     }
                   />
                 </YStack>
@@ -508,42 +485,6 @@ export default function ProfileScreen() {
                       <Text color="$gray10" fontSize="$4">
                         @{user.username}
                       </Text>
-                    )}
-                  </YStack>
-
-                  {/* Profile details */}
-                  <YStack gap="$2" marginTop="$2">
-                    {user.nationality && (
-                      <XStack
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        <Text color="$gray11">{t("profile.nationality")}</Text>
-                        <XStack alignItems="center" gap="$2">
-                          <Text fontSize="$4">
-                            {getCountryFlag(user.nationality)}
-                          </Text>
-                          <Text>{getCountryName(user.nationality)}</Text>
-                        </XStack>
-                      </XStack>
-                    )}
-                    {user.email && (
-                      <XStack
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        <Text color="$gray11">{t("auth.email")}</Text>
-                        <Text>{user.email}</Text>
-                      </XStack>
-                    )}
-                    {user.phoneNumber && (
-                      <XStack
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        <Text color="$gray11">{t("auth.phone")}</Text>
-                        <Text>{user.phoneNumber}</Text>
-                      </XStack>
                     )}
                   </YStack>
                 </YStack>
@@ -586,72 +527,49 @@ export default function ProfileScreen() {
                   </Button>
                 </XStack>
               ) : (
-                <Button
-                  variant="outline"
-                  onPress={() => setIsEditing(true)}
-                  marginTop="$2"
-                >
-                  {t("profile.editProfile")}
-                </Button>
-              )}
-            </YStack>
-          </Card>
-
-          {/* My Stats Card */}
-          <Card variant="elevated">
-            <YStack gap="$3">
-              <Text fontSize="$5" fontWeight="600">
-                {t("profile.myStats")}
-              </Text>
-
-              {isLoadingStats ? (
-                <YStack alignItems="center" padding="$4">
-                  <Spinner size="small" />
+                <YStack gap="$2" marginTop="$2">
+                  <Button
+                    variant="outline"
+                    onPress={() => setIsEditing(true)}
+                  >
+                    {t("profile.editProfile")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onPress={() => router.push("/stats-voting")}
+                  >
+                    {t("profile.openStatsVoting")}
+                  </Button>
                 </YStack>
-              ) : profile ? (
-                <StatsSummary
-                  stats={[
-                    {
-                      label: t("playerStats.totalMatches"),
-                      value: profile.totalMatchesPlayed,
-                      color: "$blue10",
-                    },
-                    {
-                      label: t("playerStats.totalThirdTimes"),
-                      value: profile.totalThirdTimeAttendances,
-                      color: "$orange10",
-                    },
-                    {
-                      label: t("playerStats.totalBeers"),
-                      value: profile.totalBeers,
-                      color: "$yellow10",
-                    },
-                  ]}
-                />
-              ) : (
-                <Text color="$gray11" textAlign="center">
-                  {t("playerStats.noStats")}
-                </Text>
               )}
-
-              <Button
-                variant="outline"
-                onPress={() => router.push("/stats-voting")}
-              >
-                {t("profile.openStatsVoting")}
-              </Button>
             </YStack>
           </Card>
 
-          {/* Change Password Card */}
+          {/* Settings Card - Combined with Password Change and Sign Out */}
           <Card variant="outlined">
             <YStack gap="$3">
               <Text fontSize="$5" fontWeight="600">
-                {t("profile.security")}
+                {t("shared.settings")}
               </Text>
 
+              {/* Language Switcher */}
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text color="$gray11">{t("shared.language")}</Text>
+                <LanguageSwitcher
+                  currentLanguage={currentLanguage}
+                  onLanguageChange={handleLanguageChange}
+                />
+              </XStack>
+
+              {/* Theme Toggle */}
+              <XStack justifyContent="space-between" alignItems="center">
+                <Text color="$gray11">{t("shared.toggleTheme")}</Text>
+                <ThemeToggle theme={theme} onToggle={toggleTheme} />
+              </XStack>
+
+              {/* Change Password Section */}
               {isChangingPassword ? (
-                <YStack gap="$3">
+                <YStack gap="$3" marginTop="$2">
                   {requiresCurrentPassword && (
                     <Input
                       label={t("profile.currentPassword")}
@@ -683,7 +601,7 @@ export default function ProfileScreen() {
                     </Text>
                   )}
 
-                  <XStack gap="$2" marginTop="$3">
+                  <XStack gap="$2" marginTop="$2">
                     <Button
                       flex={1}
                       variant="outline"
@@ -721,33 +639,13 @@ export default function ProfileScreen() {
                   {t("profile.changePassword")}
                 </Button>
               )}
+
+              {/* Sign Out Button */}
+              <Button variant="danger" onPress={handleSignOut} marginTop="$2">
+                {t("shared.signOut")}
+              </Button>
             </YStack>
           </Card>
-
-          {/* Settings Card */}
-          <Card variant="outlined">
-            <YStack gap="$3">
-              <Text fontSize="$5" fontWeight="600">
-                {t("shared.settings")}
-              </Text>
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color="$gray11">{t("shared.language")}</Text>
-                <LanguageSwitcher
-                  currentLanguage={currentLanguage}
-                  onLanguageChange={handleLanguageChange}
-                />
-              </XStack>
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color="$gray11">{t("shared.toggleTheme")}</Text>
-                <ThemeToggle theme={theme} onToggle={toggleTheme} />
-              </XStack>
-            </YStack>
-          </Card>
-
-          {/* Sign Out Button */}
-          <Button variant="danger" onPress={handleSignOut}>
-            {t("shared.signOut")}
-          </Button>
         </YStack>
       </ScrollView>
 
@@ -763,5 +661,6 @@ export default function ProfileScreen() {
         variant="default"
       />
     </Container>
+    </>
   );
 }

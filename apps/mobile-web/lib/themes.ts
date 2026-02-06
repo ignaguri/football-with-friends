@@ -120,7 +120,7 @@ const builtThemes = createThemes({
         ...Colors.gray,
         ...Colors.purple,
         ...lightShadows,
-        shadowColor: lightShadows.shadow1,
+        shadowColor: lightShadows.shadow3,
       },
       dark: {
         ...Colors.blueDark,
@@ -131,7 +131,7 @@ const builtThemes = createThemes({
         ...Colors.grayDark,
         ...Colors.purpleDark,
         ...darkShadows,
-        shadowColor: darkShadows.shadow1,
+        shadowColor: darkShadows.shadow3,
       },
     },
   },
