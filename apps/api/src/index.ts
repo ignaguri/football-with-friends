@@ -3,16 +3,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 import { auth } from "./auth";
-import matchesRoute from "./routes/matches";
-import courtsRoute from "./routes/courts";
-import locationsRoute from "./routes/locations";
-import profileRoute from "./routes/profile";
-import settingsRoute from "./routes/settings";
-import playersRoute from "./routes/players";
-import cronRoute from "./routes/cron";
-import phoneAuthRoute from "./routes/phone-auth";
-import votingRoute from "./routes/voting";
-import rankingsRoute from "./routes/rankings";
+import { registerApiRoutes } from "./api-routes";
 
 const app = new Hono();
 
@@ -142,25 +133,14 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
 });
 
 // API routes
-const apiRoutes = app
-  .basePath("/api")
-  .route("/matches", matchesRoute)
-  .route("/courts", courtsRoute)
-  .route("/locations", locationsRoute)
-  .route("/profile", profileRoute)
-  .route("/settings", settingsRoute)
-  .route("/players", playersRoute)
-  .route("/rankings", rankingsRoute)
-  .route("/cron", cronRoute)
-  .route("/phone-auth", phoneAuthRoute)
-  .route("/voting", votingRoute);
+registerApiRoutes(app);
 
 const port = process.env.PORT || 3001;
 
 console.log(`🚀 API Server running on http://localhost:${port}`);
 
-// Export type for RPC client
-export type ApiRoutes = typeof apiRoutes;
+// Re-export type for RPC client
+export type { ApiRoutes } from "./api-routes";
 
 export default {
   port,

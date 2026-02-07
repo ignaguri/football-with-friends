@@ -3,20 +3,11 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
-// Import routes
-import matchesRoute from "./routes/matches";
-import courtsRoute from "./routes/courts";
-import locationsRoute from "./routes/locations";
-import profileRoute from "./routes/profile";
-import settingsRoute from "./routes/settings";
-import playersRoute from "./routes/players";
-import { phoneAuthRoute } from "./routes/phone-auth";
-import cronRoute from "./routes/cron";
-import votingRoute from "./routes/voting";
-import rankingsRoute from "./routes/rankings";
+// Import shared route registrations
+import { registerApiRoutes } from "./api-routes";
 
 // Import auth - uses lazy initialization via Proxy for CF Workers compatibility
-import { auth, resetAuth } from "./auth";
+import { auth } from "./auth";
 
 // Import cron jobs
 import { updateMatchStatuses } from "./cron/update-match-statuses";
@@ -216,18 +207,7 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
 });
 
 // API routes
-app
-  .basePath("/api")
-  .route("/matches", matchesRoute)
-  .route("/courts", courtsRoute)
-  .route("/locations", locationsRoute)
-  .route("/profile", profileRoute)
-  .route("/settings", settingsRoute)
-  .route("/players", playersRoute)
-  .route("/phone-auth", phoneAuthRoute)
-  .route("/cron", cronRoute)
-  .route("/voting", votingRoute)
-  .route("/rankings", rankingsRoute);
+registerApiRoutes(app);
 
 // Export for Cloudflare Workers with scheduled event handler
 export default {
