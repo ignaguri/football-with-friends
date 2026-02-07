@@ -12,6 +12,8 @@ import settingsRoute from "./routes/settings";
 import playersRoute from "./routes/players";
 import { phoneAuthRoute } from "./routes/phone-auth";
 import cronRoute from "./routes/cron";
+import votingRoute from "./routes/voting";
+import rankingsRoute from "./routes/rankings";
 
 // Import auth - uses lazy initialization via Proxy for CF Workers compatibility
 import { auth, resetAuth } from "./auth";
@@ -223,7 +225,9 @@ app
   .route("/settings", settingsRoute)
   .route("/players", playersRoute)
   .route("/phone-auth", phoneAuthRoute)
-  .route("/cron", cronRoute);
+  .route("/cron", cronRoute)
+  .route("/voting", votingRoute)
+  .route("/rankings", rankingsRoute);
 
 // Export for Cloudflare Workers with scheduled event handler
 export default {
