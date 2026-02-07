@@ -31,24 +31,29 @@ const storage = {
   },
 };
 
-// Bearer token management (web only - native uses expo plugin with SecureStore)
+// Bearer token management (all platforms - uses SecureStore on native, AsyncStorage on web)
 const BEARER_TOKEN_KEY = "football_auth_bearer_token";
 let _cachedBearerToken: string | undefined;
 
-// Load cached bearer token on module init (web only)
-if (Platform.OS === "web") {
-  AsyncStorage.getItem(BEARER_TOKEN_KEY).then((token) => {
+// Promise that resolves when the initial bearer token load completes.
+// The custom fetch awaits this before the first request to avoid a race condition
+// where useSession() fires getSession() before the token is loaded from storage.
+const _tokenLoadPromise: Promise<void> = storage
+  .getItem(BEARER_TOKEN_KEY)
+  .then((token) => {
     if (token) _cachedBearerToken = token;
+  })
+  .catch(() => {
+    // Ignore storage errors on init
   });
-}
 
 /**
- * Store a bearer token for web authentication.
- * Used after OAuth callback to persist the session token.
+ * Store a bearer token for authentication.
+ * Used after OAuth callback or sign-in to persist the session token.
  */
 export async function storeBearerToken(token: string) {
   _cachedBearerToken = token;
-  await AsyncStorage.setItem(BEARER_TOKEN_KEY, token);
+  await storage.setItem(BEARER_TOKEN_KEY, token);
 }
 
 /**
@@ -56,7 +61,7 @@ export async function storeBearerToken(token: string) {
  */
 export async function clearBearerToken() {
   _cachedBearerToken = undefined;
-  await AsyncStorage.removeItem(BEARER_TOKEN_KEY);
+  await storage.deleteItem(BEARER_TOKEN_KEY);
 }
 
 /**
@@ -132,59 +137,65 @@ export function getConfiguredApiUrl(): string {
 }
 
 // Custom fetch that resolves URL at request time
-// On web: injects Bearer token and captures set-auth-token response header
+// Injects Bearer token and captures set-auth-token response header (all platforms)
 // Note: Type assertion needed because fetch type includes preconnect which we don't need
 function createDynamicFetch() {
   return ((input: RequestInfo | URL, init?: RequestInit) => {
-    let originalUrl: string;
-    if (typeof input === "string") {
-      originalUrl = input;
-    } else if (input instanceof URL) {
-      originalUrl = input.toString();
-    } else {
-      originalUrl = input.url;
-    }
+    // Wait for the initial token load to complete before making any request.
+    // This prevents a race where getSession() fires before the token is loaded from storage.
+    return _tokenLoadPromise.then(() => {
+      let originalUrl: string;
+      if (typeof input === "string") {
+        originalUrl = input;
+      } else if (input instanceof URL) {
+        originalUrl = input.toString();
+      } else {
+        originalUrl = input.url;
+      }
 
-    const apiBase = getApiUrl();
-    const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
+      const apiBase = getApiUrl();
+      const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
-    const fetchInit: RequestInit = { ...init, credentials: "include" };
+      const fetchInit: RequestInit = { ...init, credentials: "include" };
 
-    // Web: inject Bearer token header for cross-domain auth
-    // Also omit cookies — stale better-auth cookies (e.g. state) interfere with the bearer plugin
-    if (Platform.OS === "web" && _cachedBearerToken) {
-      const headers = new Headers(init?.headers);
-      headers.set("Authorization", `Bearer ${_cachedBearerToken}`);
-      fetchInit.headers = headers;
-      fetchInit.credentials = "omit";
-    }
+      // Inject Bearer token header for authenticated requests (all platforms)
+      if (_cachedBearerToken) {
+        const headers = new Headers(init?.headers);
+        headers.set("Authorization", `Bearer ${_cachedBearerToken}`);
+        fetchInit.headers = headers;
+        // Omit cookies when using bearer token — stale session cookies interfere
+        // with the bearer plugin (server checks cookies first, finds invalid session,
+        // returns null before the bearer plugin gets a chance to run)
+        fetchInit.credentials = "omit";
+      }
 
-    let responsePromise: Promise<Response>;
+      let responsePromise: Promise<Response>;
 
-    if (typeof input !== "string" && !(input instanceof URL)) {
-      responsePromise = fetch(new Request(finalUrl, input), fetchInit);
-    } else {
-      responsePromise = fetch(finalUrl, fetchInit);
-    }
+      if (typeof input !== "string" && !(input instanceof URL)) {
+        responsePromise = fetch(new Request(finalUrl, input), fetchInit);
+      } else {
+        responsePromise = fetch(finalUrl, fetchInit);
+      }
 
-    // Web: capture set-auth-token from responses and clear token on sign-out
-    if (Platform.OS === "web") {
+      // Capture set-auth-token from responses and clear token on sign-out (all platforms)
       return responsePromise.then((response) => {
         const newToken = response.headers.get("set-auth-token");
         if (newToken) {
-          _cachedBearerToken = newToken;
-          AsyncStorage.setItem(BEARER_TOKEN_KEY, newToken).catch(console.error);
+          // The set-auth-token value is "token.hash" (URL-encoded). Store just the
+          // token part (before the dot) — the bearer plugin accepts it without hash
+          // verification, and avoids URL-encoding issues across platforms.
+          const tokenPart = newToken.split(".")[0] || newToken;
+          _cachedBearerToken = tokenPart;
+          storage.setItem(BEARER_TOKEN_KEY, tokenPart).catch(console.error);
         }
         // Clear token when signing out
         if (finalUrl.includes("/sign-out")) {
           _cachedBearerToken = undefined;
-          AsyncStorage.removeItem(BEARER_TOKEN_KEY).catch(console.error);
+          storage.deleteItem(BEARER_TOKEN_KEY).catch(console.error);
         }
         return response;
       });
-    }
-
-    return responsePromise;
+    });
   }) as typeof fetch;
 }
 
