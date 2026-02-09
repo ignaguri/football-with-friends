@@ -18,6 +18,7 @@ import {
   UserAvatar,
   H2,
   VotingStatsSection,
+  getCountryFlag,
 } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -230,12 +231,18 @@ export default function PlayerDetailScreen() {
             <YStack padding="$4" alignItems="center" gap="$3">
               <UserAvatar
                 name={profile.user.name}
-                countryCode={profile.user.nationality}
                 size={64}
               />
-              <Text fontSize="$7" fontWeight="700">
-                {profile.user.name}
-              </Text>
+              <XStack gap="$2" alignItems="center">
+                {profile.user.nationality && (
+                  <Text fontSize="$7">
+                    {getCountryFlag(profile.user.nationality)}
+                  </Text>
+                )}
+                <Text fontSize="$7" fontWeight="700">
+                  {profile.user.name}
+                </Text>
+              </XStack>
               <Text fontSize="$3" color="$gray10">
                 {profile.user.email}
               </Text>
