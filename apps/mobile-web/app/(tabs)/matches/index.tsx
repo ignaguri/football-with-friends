@@ -148,9 +148,27 @@ export default function MatchesListScreen() {
                       boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
                     }}
                   >
-                    <Text color="white" fontSize="$5" fontWeight="500">
-                      {formatMatchDateTime(match.date, match.time)}
-                    </Text>
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <Text color="white" fontSize="$5" fontWeight="500">
+                        {formatMatchDateTime(match.date, match.time)}
+                      </Text>
+                      {(match as any).userSignupStatus &&
+                        (match as any).userSignupStatus !== "CANCELLED" && (
+                          <Text
+                            fontSize="$2"
+                            fontWeight="600"
+                            color="white"
+                            backgroundColor="rgba(255, 255, 255, 0.2)"
+                            paddingHorizontal="$2"
+                            paddingVertical="$1"
+                            borderRadius="$2"
+                          >
+                            {activeTab === "upcoming"
+                              ? t("matches.youJoined")
+                              : t("matches.youPlayed")}
+                          </Text>
+                        )}
+                    </XStack>
                     {match.location?.name && (
                       <Text color="white" fontSize="$4" opacity={0.9}>
                         {match.location.name}

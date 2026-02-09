@@ -33,7 +33,9 @@
     "past": "Past Matches",
     "view": "View",
     "none": "No matches found.",
-    "error": "Failed to load matches."
+    "error": "Failed to load matches.",
+    "youJoined": "You joined",
+    "youPlayed": "You played"
   },
   "matchDetail": {
     "pay": "Pay",

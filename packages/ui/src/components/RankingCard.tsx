@@ -1,6 +1,7 @@
 import { Text, XStack, YStack, Circle } from "tamagui";
 import { Card } from "./Card";
 import { UserAvatar } from "./user-avatar";
+import { getCountryFlag } from "../utils/country-flags";
 
 export interface RankingCardProps {
   rank: number;
@@ -73,18 +74,24 @@ export function RankingCard({
         <UserAvatar
           name={userName}
           profilePicture={profilePicture}
-          countryCode={nationality}
           size={avatarSize}
         />
 
         {/* Player Info */}
         <YStack flex={1} gap="$1">
-          <Text
-            fontSize={isPodium && rank <= 3 ? "$6" : "$5"}
-            fontWeight={isPodium && rank <= 3 ? "700" : "600"}
-          >
-            {userName}
-          </Text>
+          <XStack gap="$1.5" alignItems="center">
+            {nationality && (
+              <Text fontSize={isPodium && rank <= 3 ? "$6" : "$5"}>
+                {getCountryFlag(nationality)}
+              </Text>
+            )}
+            <Text
+              fontSize={isPodium && rank <= 3 ? "$6" : "$5"}
+              fontWeight={isPodium && rank <= 3 ? "700" : "600"}
+            >
+              {userName}
+            </Text>
+          </XStack>
           <Text fontSize="$3" color="$gray11">
             {value} {valueLabel}
           </Text>

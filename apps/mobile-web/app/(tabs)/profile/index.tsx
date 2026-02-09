@@ -478,9 +478,16 @@ export default function ProfileScreen() {
                 <YStack gap="$2">
                   {/* Display name prominently */}
                   <YStack alignItems="center" gap="$1">
-                    <Text fontSize="$7" fontWeight="bold">
-                      {displayName}
-                    </Text>
+                    <XStack gap="$2" alignItems="center" justifyContent="center">
+                      {user.nationality && (
+                        <Text fontSize="$7">
+                          {getCountryFlag(user.nationality)}
+                        </Text>
+                      )}
+                      <Text fontSize="$7" fontWeight="bold">
+                        {displayName}
+                      </Text>
+                    </XStack>
                     {user.username && (
                       <Text color="$gray10" fontSize="$4">
                         @{user.username}

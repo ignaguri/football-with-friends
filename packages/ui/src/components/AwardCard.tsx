@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from "tamagui";
 import { Card } from "./Card";
 import { UserAvatar } from "./user-avatar";
 import { Award } from "@tamagui/lucide-icons";
+import { getCountryFlag } from "../utils/country-flags";
 
 export interface AwardCardProps {
   criteriaName: string;
@@ -99,15 +100,19 @@ export function AwardCard({
                 <UserAvatar
                   name={player.userName}
                   profilePicture={player.profilePicture}
-                  countryCode={player.nationality}
                   size={32}
                 />
 
                 {/* Name and votes */}
                 <YStack flex={1}>
-                  <Text fontSize="$4" fontWeight="600" numberOfLines={1}>
-                    {player.userName}
-                  </Text>
+                  <XStack gap="$1.5" alignItems="center">
+                    {player.nationality && (
+                      <Text fontSize="$4">{getCountryFlag(player.nationality)}</Text>
+                    )}
+                    <Text fontSize="$4" fontWeight="600" numberOfLines={1}>
+                      {player.userName}
+                    </Text>
+                  </XStack>
                   <Text fontSize="$2" color="$gray11">
                     {player.voteCount} {player.voteCount === 1 ? "vote" : "votes"}
                   </Text>

@@ -1,6 +1,7 @@
 import { Text, XStack, YStack } from "tamagui";
 import { UserAvatar } from "./user-avatar";
 import { Trophy } from "@tamagui/lucide-icons";
+import { getCountryFlag } from "../utils/country-flags";
 
 export interface PodiumDisplayProps {
   rankings: Array<{
@@ -62,7 +63,6 @@ function PodiumSpot({
         <UserAvatar
           name={userName}
           profilePicture={profilePicture}
-          countryCode={nationality}
           size={avatarSize}
         />
         {rank === 1 && (
@@ -80,14 +80,21 @@ function PodiumSpot({
       </YStack>
 
       {/* Player name */}
-      <Text
-        fontSize={rank === 1 ? "$5" : "$4"}
-        fontWeight={rank === 1 ? "700" : "600"}
-        textAlign="center"
-        numberOfLines={1}
-      >
-        {userName}
-      </Text>
+      <XStack gap="$1" alignItems="center" justifyContent="center">
+        {nationality && (
+          <Text fontSize={rank === 1 ? "$5" : "$4"}>
+            {getCountryFlag(nationality)}
+          </Text>
+        )}
+        <Text
+          fontSize={rank === 1 ? "$5" : "$4"}
+          fontWeight={rank === 1 ? "700" : "600"}
+          textAlign="center"
+          numberOfLines={1}
+        >
+          {userName}
+        </Text>
+      </XStack>
 
       {/* Value */}
       <Text fontSize="$3" color="$gray11" textAlign="center">

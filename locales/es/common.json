@@ -34,7 +34,9 @@
     "past": "Partidos anteriores",
     "view": "Ver",
     "none": "No se encontraron partidos.",
-    "error": "No se pudieron cargar los partidos."
+    "error": "No se pudieron cargar los partidos.",
+    "youJoined": "Anotado",
+    "youPlayed": "Jugaste"
   },
   "matchDetail": {
     "pay": "Pagar",

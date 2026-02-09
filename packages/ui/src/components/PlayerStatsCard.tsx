@@ -2,6 +2,7 @@ import { Text, XStack, YStack } from "tamagui";
 import { Card } from "./Card";
 import { Badge } from "./Badge";
 import { UserAvatar } from "./user-avatar";
+import { getCountryFlag } from "../utils/country-flags";
 
 export interface PlayerStatsCardProps {
   name: string;
@@ -37,13 +38,17 @@ export function PlayerStatsCard({
         <UserAvatar
           name={name}
           profilePicture={profilePicture}
-          countryCode={nationality}
           size={44}
         />
         <YStack flex={1} gap="$1">
-          <Text fontSize="$5" fontWeight="600">
-            {name}
-          </Text>
+          <XStack gap="$1.5" alignItems="center">
+            {nationality && (
+              <Text fontSize="$5">{getCountryFlag(nationality)}</Text>
+            )}
+            <Text fontSize="$5" fontWeight="600">
+              {name}
+            </Text>
+          </XStack>
           {email && (
             <Text fontSize="$2" color="$gray10">
               {email}
