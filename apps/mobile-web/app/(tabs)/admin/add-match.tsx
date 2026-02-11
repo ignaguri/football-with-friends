@@ -228,98 +228,100 @@ export default function AddMatchScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-    <ScrollView style={{ flex: 1 }}>
-      <YStack padding="$4" gap="$4" paddingBottom="$8">
-        {/* Date Picker */}
-        <DatePicker
-          value={date}
-          onChange={setDate}
-          label={t("shared.date")}
-          placeholder={t("addMatch.selectDate")}
-          disabled={createMutation.isPending}
-        />
-
-        {/* Time Picker */}
-        <TimePicker
-          value={time}
-          onChange={setTime}
-          label={t("shared.time")}
-          placeholder={t("addMatch.selectTime")}
-          disabled={createMutation.isPending}
-        />
-
-        {/* Location Select */}
-        <Select
-          value={locationId}
-          onValueChange={(id) => {
-            setLocationId(id);
-            setCourtId("");
-          }}
-          label={t("addMatch.location")}
-          placeholder={t("addMatch.selectLocation")}
-          options={locationOptions}
-          disabled={createMutation.isPending || isLoadingLocations}
-        />
-
-        {/* Court Select */}
-        {!!locationId && (
-          <Select
-            value={courtId}
-            onValueChange={setCourtId}
-            label={t("addMatch.court")}
-            placeholder={t("addMatch.selectCourt")}
-            options={courtOptions}
-            disabled={createMutation.isPending || isLoadingCourts}
+      <ScrollView style={{ flex: 1 }}>
+        <YStack padding="$4" gap="$4" paddingBottom="$8">
+          {/* Date Picker */}
+          <DatePicker
+            value={date}
+            onChange={setDate}
+            label={t("shared.date")}
+            placeholder={t("addMatch.selectDate")}
+            disabled={createMutation.isPending}
           />
-        )}
 
-        {/* Max Players */}
-        <Input
-          value={maxPlayers}
-          onChangeText={setMaxPlayers}
-          label={t("addMatch.maxPlayers")}
-          keyboardType="number-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Time Picker */}
+          <TimePicker
+            value={time}
+            onChange={setTime}
+            label={t("shared.time")}
+            placeholder={t("addMatch.selectTime")}
+            disabled={createMutation.isPending}
+          />
 
-        {/* Cost Per Player */}
-        <Input
-          value={costPerPlayer}
-          onChangeText={setCostPerPlayerOverride}
-          label={t("addMatch.costPerPlayer")}
-          placeholder={t("addMatch.costPlaceholder")}
-          keyboardType="decimal-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Location Select */}
+          <Select
+            value={locationId}
+            onValueChange={(id) => {
+              setLocationId(id);
+              setCourtId("");
+            }}
+            label={t("addMatch.location")}
+            placeholder={t("addMatch.selectLocation")}
+            options={locationOptions}
+            disabled={createMutation.isPending || isLoadingLocations}
+          />
 
-        {/* Same Day Extra Cost */}
-        <Input
-          value={sameDayCost}
-          onChangeText={setSameDayCostOverride}
-          label={t("addMatch.sameDayCost")}
-          placeholder={t("addMatch.costPlaceholder")}
-          keyboardType="decimal-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Court Select */}
+          {!!locationId && (
+            <Select
+              value={courtId}
+              onValueChange={setCourtId}
+              label={t("addMatch.court")}
+              placeholder={t("addMatch.selectCourt")}
+              options={courtOptions}
+              disabled={createMutation.isPending || isLoadingCourts}
+            />
+          )}
 
-        {/* Error Message */}
-        {error && (
-          <Text color="$red10" textAlign="center">
-            {error}
-          </Text>
-        )}
+          {/* Max Players */}
+          <Input
+            value={maxPlayers}
+            onChangeText={setMaxPlayers}
+            label={t("addMatch.maxPlayers")}
+            keyboardType="number-pad"
+            disabled={createMutation.isPending}
+          />
 
-        {/* Submit Button */}
-        <Button
-          variant="primary"
-          size="$5"
-          onPress={handleSubmit}
-          disabled={createMutation.isPending}
-        >
-          {createMutation.isPending ? t("addMatch.adding") : t("addMatch.add")}
-        </Button>
-      </YStack>
-    </ScrollView>
+          {/* Cost Per Player */}
+          <Input
+            value={costPerPlayer}
+            onChangeText={setCostPerPlayerOverride}
+            label={t("addMatch.costPerPlayer")}
+            placeholder={t("addMatch.costPlaceholder")}
+            keyboardType="decimal-pad"
+            disabled={createMutation.isPending}
+          />
+
+          {/* Same Day Extra Cost */}
+          <Input
+            value={sameDayCost}
+            onChangeText={setSameDayCostOverride}
+            label={t("addMatch.sameDayCost")}
+            placeholder={t("addMatch.costPlaceholder")}
+            keyboardType="decimal-pad"
+            disabled={createMutation.isPending}
+          />
+
+          {/* Error Message */}
+          {error && (
+            <Text color="$red10" textAlign="center">
+              {error}
+            </Text>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            variant="primary"
+            size="$5"
+            onPress={handleSubmit}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending
+              ? t("addMatch.adding")
+              : t("addMatch.add")}
+          </Button>
+        </YStack>
+      </ScrollView>
     </YStack>
   );
 }

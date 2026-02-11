@@ -17,7 +17,7 @@ import {
   ScrollView,
 } from "@repo/ui";
 import { router, useLocalSearchParams } from "expo-router";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Location {
@@ -49,7 +49,11 @@ interface MatchDetails {
 // Extract the actual error message from API errors.
 const getApiErrorMessage = (error: Error): string => {
   const apiError = error as Error & { data?: { error?: string } };
-  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
+  if (
+    apiError.data &&
+    typeof apiError.data === "object" &&
+    "error" in apiError.data
+  ) {
     return (apiError.data as { error: string }).error;
   }
   return error.message;
@@ -108,18 +112,16 @@ export default function EditMatchScreen() {
     enabled: !!locationId,
   });
 
-  // Pre-fill form when match data loads
-  useEffect(() => {
-    if (match && !initialized) {
-      setTime(match.time || "");
-      setLocationId(match.location?.id || "");
-      setCourtId(match.court?.id || "");
-      setMaxPlayers(String(match.maxPlayers || 10));
-      setCostPerPlayer(match.costPerPlayer || "");
-      setSameDayCost(match.sameDayCost || "");
-      setInitialized(true);
-    }
-  }, [match, initialized]);
+  // Pre-fill form when match data loads (set state during render, not in effect)
+  if (match && !initialized) {
+    setTime(match.time || "");
+    setLocationId(match.location?.id || "");
+    setCourtId(match.court?.id || "");
+    setMaxPlayers(String(match.maxPlayers || 10));
+    setCostPerPlayer(match.costPerPlayer || "");
+    setSameDayCost(match.sameDayCost || "");
+    setInitialized(true);
+  }
 
   // Update match mutation
   const updateMutation = useMutation({
@@ -145,7 +147,10 @@ export default function EditMatchScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
-      toast.show(t("organizer.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("organizer.updateSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
       router.navigate("/(tabs)/admin");
     },
     onError: (err: Error) => {
@@ -248,101 +253,99 @@ export default function EditMatchScreen() {
 
   return (
     <YStack flex={1} backgroundColor="$background">
-    <ScrollView style={{ flex: 1 }}>
-      <YStack padding="$4" gap="$4" paddingBottom="$8">
-        {/* Date (read-only) */}
-        <YStack gap="$1">
-          <Text fontSize="$3" color="$gray11" fontWeight="500">
-            {t("shared.date")}
-          </Text>
-          <Input
-            value={match.date}
-            disabled
-            opacity={0.6}
+      <ScrollView style={{ flex: 1 }}>
+        <YStack padding="$4" gap="$4" paddingBottom="$8">
+          {/* Date (read-only) */}
+          <YStack gap="$1">
+            <Text fontSize="$3" color="$gray11" fontWeight="500">
+              {t("shared.date")}
+            </Text>
+            <Input value={match.date} disabled opacity={0.6} />
+          </YStack>
+
+          {/* Time Picker */}
+          <TimePicker
+            value={time}
+            onChange={setTime}
+            label={t("shared.time")}
+            placeholder={t("addMatch.selectTime")}
+            disabled={updateMutation.isPending}
           />
-        </YStack>
 
-        {/* Time Picker */}
-        <TimePicker
-          value={time}
-          onChange={setTime}
-          label={t("shared.time")}
-          placeholder={t("addMatch.selectTime")}
-          disabled={updateMutation.isPending}
-        />
-
-        {/* Location Select */}
-        <Select
-          value={locationId}
-          onValueChange={(id) => {
-            setLocationId(id);
-            setCourtId("");
-          }}
-          label={t("addMatch.location")}
-          placeholder={t("addMatch.selectLocation")}
-          options={locationOptions}
-          disabled={updateMutation.isPending || isLoadingLocations}
-        />
-
-        {/* Court Select */}
-        {!!locationId && (
+          {/* Location Select */}
           <Select
-            value={courtId}
-            onValueChange={setCourtId}
-            label={t("addMatch.court")}
-            placeholder={t("addMatch.selectCourt")}
-            options={courtOptions}
-            disabled={updateMutation.isPending || isLoadingCourts}
+            value={locationId}
+            onValueChange={(id) => {
+              setLocationId(id);
+              setCourtId("");
+            }}
+            label={t("addMatch.location")}
+            placeholder={t("addMatch.selectLocation")}
+            options={locationOptions}
+            disabled={updateMutation.isPending || isLoadingLocations}
           />
-        )}
 
-        {/* Max Players */}
-        <Input
-          value={maxPlayers}
-          onChangeText={setMaxPlayers}
-          label={t("addMatch.maxPlayers")}
-          keyboardType="number-pad"
-          disabled={updateMutation.isPending}
-        />
+          {/* Court Select */}
+          {!!locationId && (
+            <Select
+              value={courtId}
+              onValueChange={setCourtId}
+              label={t("addMatch.court")}
+              placeholder={t("addMatch.selectCourt")}
+              options={courtOptions}
+              disabled={updateMutation.isPending || isLoadingCourts}
+            />
+          )}
 
-        {/* Cost Per Player */}
-        <Input
-          value={costPerPlayer}
-          onChangeText={setCostPerPlayer}
-          label={t("addMatch.costPerPlayer")}
-          placeholder={t("addMatch.costPlaceholder")}
-          keyboardType="decimal-pad"
-          disabled={updateMutation.isPending}
-        />
+          {/* Max Players */}
+          <Input
+            value={maxPlayers}
+            onChangeText={setMaxPlayers}
+            label={t("addMatch.maxPlayers")}
+            keyboardType="number-pad"
+            disabled={updateMutation.isPending}
+          />
 
-        {/* Same Day Extra Cost */}
-        <Input
-          value={sameDayCost}
-          onChangeText={setSameDayCost}
-          label={t("addMatch.sameDayCost")}
-          placeholder={t("addMatch.costPlaceholder")}
-          keyboardType="decimal-pad"
-          disabled={updateMutation.isPending}
-        />
+          {/* Cost Per Player */}
+          <Input
+            value={costPerPlayer}
+            onChangeText={setCostPerPlayer}
+            label={t("addMatch.costPerPlayer")}
+            placeholder={t("addMatch.costPlaceholder")}
+            keyboardType="decimal-pad"
+            disabled={updateMutation.isPending}
+          />
 
-        {/* Error Message */}
-        {error && (
-          <Text color="$red10" textAlign="center">
-            {error}
-          </Text>
-        )}
+          {/* Same Day Extra Cost */}
+          <Input
+            value={sameDayCost}
+            onChangeText={setSameDayCost}
+            label={t("addMatch.sameDayCost")}
+            placeholder={t("addMatch.costPlaceholder")}
+            keyboardType="decimal-pad"
+            disabled={updateMutation.isPending}
+          />
 
-        {/* Submit Button */}
-        <Button
-          variant="primary"
-          size="$5"
-          onPress={handleSubmit}
-          disabled={updateMutation.isPending}
-        >
-          {updateMutation.isPending ? t("editMatch.saving") : t("editMatch.save")}
-        </Button>
-      </YStack>
-    </ScrollView>
+          {/* Error Message */}
+          {error && (
+            <Text color="$red10" textAlign="center">
+              {error}
+            </Text>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            variant="primary"
+            size="$5"
+            onPress={handleSubmit}
+            disabled={updateMutation.isPending}
+          >
+            {updateMutation.isPending
+              ? t("editMatch.saving")
+              : t("editMatch.save")}
+          </Button>
+        </YStack>
+      </ScrollView>
     </YStack>
   );
 }

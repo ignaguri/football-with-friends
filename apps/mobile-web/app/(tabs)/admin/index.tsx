@@ -59,8 +59,15 @@ interface Court {
 // The custom fetch in api-client throws Error("API error: 400 ...") with
 // the real error details in error.data (e.g. { error: "Match not found" }).
 const getApiErrorMessage = (error: Error): string => {
-  const apiError = error as Error & { data?: { error?: string }; status?: number };
-  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
+  const apiError = error as Error & {
+    data?: { error?: string };
+    status?: number;
+  };
+  if (
+    apiError.data &&
+    typeof apiError.data === "object" &&
+    "error" in apiError.data
+  ) {
     return (apiError.data as { error: string }).error;
   }
   return error.message;
@@ -79,7 +86,7 @@ const getLocalizedError = (error: string, t: any): string => {
     "Failed to update": "errors.updateFailed",
     "Failed to create": "errors.createFailed",
     "Only administrators can": "errors.adminOnly",
-    "Unauthorized": "errors.unauthorized",
+    Unauthorized: "errors.unauthorized",
   };
 
   // Check if error message matches any known pattern
@@ -226,12 +233,18 @@ function MatchesTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
-      toast.show(t("organizer.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("organizer.deleteSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (error: Error) => {
       const message = getApiErrorMessage(error);
       const localizedMessage = getLocalizedError(message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -245,12 +258,18 @@ function MatchesTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
-      toast.show(t("organizer.cancelSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("organizer.cancelSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (error: Error) => {
       const message = getApiErrorMessage(error);
       const localizedMessage = getLocalizedError(message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -360,7 +379,12 @@ function MatchesTab() {
                       flex={1}
                       size="$3"
                       variant="outline"
-                      onPress={() => router.push({ pathname: "/(tabs)/admin/edit-match", params: { matchId: match.id } })}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(tabs)/admin/edit-match",
+                          params: { matchId: match.id },
+                        })
+                      }
                     >
                       {t("organizer.edit")}
                     </Button>
@@ -413,7 +437,14 @@ function MatchesTab() {
         open={showCancelAlert}
         onOpenChange={setShowCancelAlert}
         title={t("organizer.cancelMatch")}
-        description={targetMatch ? t("organizer.cancelMatchConfirm", { date: targetMatch.date, time: targetMatch.time }) : ""}
+        description={
+          targetMatch
+            ? t("organizer.cancelMatchConfirm", {
+                date: targetMatch.date,
+                time: targetMatch.time,
+              })
+            : ""
+        }
         confirmText={t("organizer.cancelMatch")}
         cancelText={t("shared.cancel")}
         variant="destructive"
@@ -466,13 +497,19 @@ function LocationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["locations"] });
-      toast.show(t("locations.createSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("locations.createSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
       setShowAddDialog(false);
       resetForm();
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -491,13 +528,19 @@ function LocationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["locations"] });
-      toast.show(t("locations.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("locations.updateSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
       setEditingLocation(null);
       resetForm();
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -514,11 +557,17 @@ function LocationsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["locations"] });
-      toast.show(t("locations.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("locations.deleteSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -610,7 +659,11 @@ function LocationsTab() {
             setShowAddDialog(false);
             resetForm();
           }}
-          confirmText={createMutation.isPending ? t("locations.creating") : t("locations.create")}
+          confirmText={
+            createMutation.isPending
+              ? t("locations.creating")
+              : t("locations.create")
+          }
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -642,7 +695,11 @@ function LocationsTab() {
             setEditingLocation(null);
             resetForm();
           }}
-          confirmText={updateMutation.isPending ? t("locations.updating") : t("locations.update")}
+          confirmText={
+            updateMutation.isPending
+              ? t("locations.updating")
+              : t("locations.update")
+          }
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -741,7 +798,10 @@ function CourtsTab() {
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -763,13 +823,19 @@ function CourtsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courts"] });
-      toast.show(t("courts.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("courts.updateSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
       setEditingCourt(null);
       resetForm();
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -786,11 +852,17 @@ function CourtsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courts"] });
-      toast.show(t("courts.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("courts.deleteSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -903,7 +975,9 @@ function CourtsTab() {
             setShowAddDialog(false);
             resetForm();
           }}
-          confirmText={createMutation.isPending ? t("courts.creating") : t("courts.create")}
+          confirmText={
+            createMutation.isPending ? t("courts.creating") : t("courts.create")
+          }
           cancelText={t("courts.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -942,7 +1016,9 @@ function CourtsTab() {
             setEditingCourt(null);
             resetForm();
           }}
-          confirmText={updateMutation.isPending ? t("courts.updating") : t("courts.update")}
+          confirmText={
+            updateMutation.isPending ? t("courts.updating") : t("courts.update")
+          }
           cancelText={t("courts.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -1060,38 +1136,59 @@ function SettingsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
-      toast.show(t("settings.saveSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("settings.saveSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
   const handleSave = () => {
     // Validate numeric fields
     if (defaultCostPerPlayer && !isValidNumeric(defaultCostPerPlayer)) {
-      toast.show(t("settings.invalidCost"), { duration: 3000, customData: { variant: "error" } });
+      toast.show(t("settings.invalidCost"), {
+        duration: 3000,
+        customData: { variant: "error" },
+      });
       return;
     }
     if (sameDayExtraCost && !isValidNumeric(sameDayExtraCost)) {
-      toast.show(t("settings.invalidCost"), { duration: 3000, customData: { variant: "error" } });
+      toast.show(t("settings.invalidCost"), {
+        duration: 3000,
+        customData: { variant: "error" },
+      });
       return;
     }
     if (defaultMaxSubstitutes && !isValidNumeric(defaultMaxSubstitutes)) {
-      toast.show(t("settings.invalidCost"), { duration: 3000, customData: { variant: "error" } });
+      toast.show(t("settings.invalidCost"), {
+        duration: 3000,
+        customData: { variant: "error" },
+      });
       return;
     }
 
     // Validate URL
     if (paypalUrl && !isValidUrl(paypalUrl)) {
-      toast.show(t("settings.invalidUrl"), { duration: 3000, customData: { variant: "error" } });
+      toast.show(t("settings.invalidUrl"), {
+        duration: 3000,
+        customData: { variant: "error" },
+      });
       return;
     }
 
     // Validate phone
     if (organizerWhatsapp && !isValidPhoneNumber(organizerWhatsapp)) {
-      toast.show(t("settings.invalidPhone"), { duration: 3000, customData: { variant: "error" } });
+      toast.show(t("settings.invalidPhone"), {
+        duration: 3000,
+        customData: { variant: "error" },
+      });
       return;
     }
 
@@ -1246,7 +1343,7 @@ function VotingCriteriaTab() {
       const order = parseInt(sortOrder, 10) || 0;
 
       // Check for duplicate sort order
-      const existingWithOrder = criteria.find(c => c.sortOrder === order);
+      const existingWithOrder = criteria.find((c) => c.sortOrder === order);
       if (existingWithOrder) {
         throw new Error(t("voting.duplicateSortOrder"));
       }
@@ -1269,13 +1366,19 @@ function VotingCriteriaTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
-      toast.show(t("voting.createSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("voting.createSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
       setShowAddDialog(false);
       resetForm();
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -1287,7 +1390,7 @@ function VotingCriteriaTab() {
 
       // Check for duplicate sort order (excluding current criteria)
       const existingWithOrder = criteria.find(
-        c => c.sortOrder === order && c.id !== editingCriteria.id
+        (c) => c.sortOrder === order && c.id !== editingCriteria.id,
       );
       if (existingWithOrder) {
         throw new Error(t("voting.duplicateSortOrder"));
@@ -1312,13 +1415,19 @@ function VotingCriteriaTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
-      toast.show(t("voting.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("voting.updateSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
       setEditingCriteria(null);
       resetForm();
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -1330,7 +1439,9 @@ function VotingCriteriaTab() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as any).error || "Failed to toggle active status");
+        throw new Error(
+          (data as any).error || "Failed to toggle active status",
+        );
       }
       return res.json();
     },
@@ -1339,7 +1450,10 @@ function VotingCriteriaTab() {
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -1356,11 +1470,17 @@ function VotingCriteriaTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["voting-criteria-all"] });
-      toast.show(t("voting.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("voting.deleteSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (error: Error) => {
       const localizedMessage = getLocalizedError(error.message, t);
-      toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
+      toast.show(localizedMessage, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -1495,7 +1615,9 @@ function VotingCriteriaTab() {
             setShowAddDialog(false);
             resetForm();
           }}
-          confirmText={createMutation.isPending ? t("shared.loading") : t("shared.save")}
+          confirmText={
+            createMutation.isPending ? t("shared.loading") : t("shared.save")
+          }
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -1553,7 +1675,9 @@ function VotingCriteriaTab() {
             setEditingCriteria(null);
             resetForm();
           }}
-          confirmText={updateMutation.isPending ? t("shared.loading") : t("shared.save")}
+          confirmText={
+            updateMutation.isPending ? t("shared.loading") : t("shared.save")
+          }
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">

@@ -45,6 +45,7 @@ import {
   Alert,
   Image,
 } from "react-native";
+
 import { formatFullDate } from "../../../lib/date-utils";
 
 interface Signup {
@@ -493,17 +494,24 @@ END:VCALENDAR`;
                 {/* Action buttons */}
                 <XStack gap="$2">
                   {/* Edit Button (admin only, non-cancelled) */}
-                  {isAdmin && match.status !== "cancelled" && match.status !== "completed" && (
-                    <Button
-                      variant="outline"
-                      size="$3"
-                      circular
-                      onPress={() => router.push({ pathname: "/(tabs)/admin/edit-match", params: { matchId: match.id } })}
-                      padding="$2"
-                    >
-                      <Pencil size={20} />
-                    </Button>
-                  )}
+                  {isAdmin &&
+                    match.status !== "cancelled" &&
+                    match.status !== "completed" && (
+                      <Button
+                        variant="outline"
+                        size="$3"
+                        circular
+                        onPress={() =>
+                          router.push({
+                            pathname: "/(tabs)/admin/edit-match",
+                            params: { matchId: match.id },
+                          })
+                        }
+                        padding="$2"
+                      >
+                        <Pencil size={20} />
+                      </Button>
+                    )}
 
                   {/* Add to Calendar Button */}
                   {(isParticipating || match.userSignup?.status === "PAID") && (
@@ -546,9 +554,7 @@ END:VCALENDAR`;
                     <Text fontSize="$3" color="$gray10">
                       {t("stats.location")}
                     </Text>
-                    <Text fontSize="$5">
-                      {match.location.name}
-                    </Text>
+                    <Text fontSize="$5">{match.location.name}</Text>
                   </YStack>
                 )}
               </XStack>
