@@ -11,15 +11,13 @@ import {
   Button,
   Input,
   Select,
-  DatePicker,
   TimePicker,
   Spinner,
   useToastController,
   ScrollView,
 } from "@repo/ui";
-import { format } from "date-fns";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 interface Location {
@@ -35,49 +33,59 @@ interface Court {
   locationId: string;
 }
 
-interface AppSettings {
-  default_cost_per_player: string;
-  same_day_extra_cost: string;
-  default_max_substitutes: string;
-  paypal_url: string;
-  organizer_whatsapp: string;
+interface MatchDetails {
+  id: string;
+  date: string;
+  time: string;
+  status: string;
+  maxPlayers: number;
+  maxSubstitutes?: number;
+  costPerPlayer?: string;
+  sameDayCost?: string;
+  location?: { id: string; name: string; address?: string };
+  court?: { id: string; name: string };
 }
 
-export default function AddMatchScreen() {
+// Extract the actual error message from API errors.
+const getApiErrorMessage = (error: Error): string => {
+  const apiError = error as Error & { data?: { error?: string } };
+  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
+    return (apiError.data as { error: string }).error;
+  }
+  return error.message;
+};
+
+export default function EditMatchScreen() {
   const { t } = useTranslation();
+  const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { data: session, isPending: isSessionPending } = useSession();
   const queryClient = useQueryClient();
   const toast = useToastController();
 
   // Form state
-  const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState("");
   const [locationId, setLocationId] = useState("");
   const [courtId, setCourtId] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("10");
-  const [costPerPlayerOverride, setCostPerPlayerOverride] = useState<
-    string | null
-  >(null);
-  const [sameDayCostOverride, setSameDayCostOverride] = useState<string | null>(
-    null,
-  );
+  const [costPerPlayer, setCostPerPlayer] = useState("");
+  const [sameDayCost, setSameDayCost] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   const isAdmin = session?.user?.role === "admin";
 
-  // Fetch settings to pre-fill costs
-  const { data: settings } = useQuery({
-    queryKey: ["settings"],
+  // Fetch existing match data
+  const { data: match, isLoading: isLoadingMatch } = useQuery({
+    queryKey: ["match", matchId],
     queryFn: async () => {
-      const res = await client.api.settings.$get();
-      return res.json() as Promise<AppSettings>;
+      const res = await client.api.matches[":id"].$get({
+        param: { id: matchId! },
+        query: { userId: session?.user?.id || "" },
+      });
+      return res.json() as Promise<MatchDetails>;
     },
+    enabled: !!matchId && !!session?.user,
   });
-
-  const costPerPlayer =
-    costPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
-  const sameDayCost =
-    sameDayCostOverride ?? settings?.same_day_extra_cost ?? "";
 
   // Fetch locations
   const { data: locations = [], isLoading: isLoadingLocations } = useQuery({
@@ -100,18 +108,29 @@ export default function AddMatchScreen() {
     enabled: !!locationId,
   });
 
-  // Create match mutation
-  const createMutation = useMutation({
+  // Pre-fill form when match data loads
+  useEffect(() => {
+    if (match && !initialized) {
+      setTime(match.time || "");
+      setLocationId(match.location?.id || "");
+      setCourtId(match.court?.id || "");
+      setMaxPlayers(String(match.maxPlayers || 10));
+      setCostPerPlayer(match.costPerPlayer || "");
+      setSameDayCost(match.sameDayCost || "");
+      setInitialized(true);
+    }
+  }, [match, initialized]);
+
+  // Update match mutation
+  const updateMutation = useMutation({
     mutationFn: async () => {
-      if (!date || !time || !locationId) {
+      if (!time || !locationId) {
         throw new Error(t("errors.missingFields"));
       }
 
-      const formattedDate = format(date, "yyyy-MM-dd");
-
-      const res = await client.api.matches.$post({
+      const res = await client.api.matches[":id"].$patch({
+        param: { id: matchId! },
         json: {
-          date: formattedDate,
           time,
           locationId,
           courtId: courtId || undefined,
@@ -121,35 +140,22 @@ export default function AddMatchScreen() {
         },
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error((data as any).error || t("addMatch.error"));
-      }
-
       return res.json();
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
-      toast.show(t("addMatch.created"), { duration: 3000 });
-      // Auto-redirect after successful creation
-      if (data?.match?.id) {
-        router.replace(`/(tabs)/matches/${data.match.id}`);
-      } else {
-        router.replace("/(tabs)/matches");
-      }
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+      toast.show(t("organizer.updateSuccess"), { duration: 3000, customData: { variant: "success" } });
+      router.navigate("/(tabs)/admin");
     },
     onError: (err: Error) => {
-      setError(err.message);
+      setError(getApiErrorMessage(err));
     },
   });
 
   const handleSubmit = () => {
     setError(null);
 
-    if (!date) {
-      setError(t("addMatch.dateRequired"));
-      return;
-    }
     if (!time) {
       setError(t("addMatch.timeFormat"));
       return;
@@ -159,11 +165,11 @@ export default function AddMatchScreen() {
       return;
     }
 
-    createMutation.mutate();
+    updateMutation.mutate();
   };
 
   // Loading state
-  if (isSessionPending) {
+  if (isSessionPending || isLoadingMatch) {
     return (
       <YStack
         flex={1}
@@ -213,6 +219,20 @@ export default function AddMatchScreen() {
     );
   }
 
+  if (!match) {
+    return (
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
+        <Text color="$red10">{t("errors.matchNotFound")}</Text>
+      </YStack>
+    );
+  }
+
   const locationOptions = locations.map((loc) => ({
     value: loc.id,
     label: loc.name + (loc.address ? ` - ${loc.address}` : ""),
@@ -230,14 +250,17 @@ export default function AddMatchScreen() {
     <YStack flex={1} backgroundColor="$background">
     <ScrollView style={{ flex: 1 }}>
       <YStack padding="$4" gap="$4" paddingBottom="$8">
-        {/* Date Picker */}
-        <DatePicker
-          value={date}
-          onChange={setDate}
-          label={t("shared.date")}
-          placeholder={t("addMatch.selectDate")}
-          disabled={createMutation.isPending}
-        />
+        {/* Date (read-only) */}
+        <YStack gap="$1">
+          <Text fontSize="$3" color="$gray11" fontWeight="500">
+            {t("shared.date")}
+          </Text>
+          <Input
+            value={match.date}
+            disabled
+            opacity={0.6}
+          />
+        </YStack>
 
         {/* Time Picker */}
         <TimePicker
@@ -245,7 +268,7 @@ export default function AddMatchScreen() {
           onChange={setTime}
           label={t("shared.time")}
           placeholder={t("addMatch.selectTime")}
-          disabled={createMutation.isPending}
+          disabled={updateMutation.isPending}
         />
 
         {/* Location Select */}
@@ -258,7 +281,7 @@ export default function AddMatchScreen() {
           label={t("addMatch.location")}
           placeholder={t("addMatch.selectLocation")}
           options={locationOptions}
-          disabled={createMutation.isPending || isLoadingLocations}
+          disabled={updateMutation.isPending || isLoadingLocations}
         />
 
         {/* Court Select */}
@@ -269,7 +292,7 @@ export default function AddMatchScreen() {
             label={t("addMatch.court")}
             placeholder={t("addMatch.selectCourt")}
             options={courtOptions}
-            disabled={createMutation.isPending || isLoadingCourts}
+            disabled={updateMutation.isPending || isLoadingCourts}
           />
         )}
 
@@ -279,27 +302,27 @@ export default function AddMatchScreen() {
           onChangeText={setMaxPlayers}
           label={t("addMatch.maxPlayers")}
           keyboardType="number-pad"
-          disabled={createMutation.isPending}
+          disabled={updateMutation.isPending}
         />
 
         {/* Cost Per Player */}
         <Input
           value={costPerPlayer}
-          onChangeText={setCostPerPlayerOverride}
+          onChangeText={setCostPerPlayer}
           label={t("addMatch.costPerPlayer")}
           placeholder={t("addMatch.costPlaceholder")}
           keyboardType="decimal-pad"
-          disabled={createMutation.isPending}
+          disabled={updateMutation.isPending}
         />
 
         {/* Same Day Extra Cost */}
         <Input
           value={sameDayCost}
-          onChangeText={setSameDayCostOverride}
+          onChangeText={setSameDayCost}
           label={t("addMatch.sameDayCost")}
           placeholder={t("addMatch.costPlaceholder")}
           keyboardType="decimal-pad"
-          disabled={createMutation.isPending}
+          disabled={updateMutation.isPending}
         />
 
         {/* Error Message */}
@@ -314,9 +337,9 @@ export default function AddMatchScreen() {
           variant="primary"
           size="$5"
           onPress={handleSubmit}
-          disabled={createMutation.isPending}
+          disabled={updateMutation.isPending}
         >
-          {createMutation.isPending ? t("addMatch.adding") : t("addMatch.add")}
+          {updateMutation.isPending ? t("editMatch.saving") : t("editMatch.save")}
         </Button>
       </YStack>
     </ScrollView>

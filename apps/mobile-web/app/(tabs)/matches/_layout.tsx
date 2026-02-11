@@ -2,7 +2,7 @@
 import { ChevronLeft } from "@tamagui/lucide-icons";
 import { Stack, router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable } from "react-native";
+import { Platform, Pressable } from "react-native";
 import { useTheme } from "tamagui";
 
 export default function MatchesLayout() {
@@ -21,6 +21,7 @@ export default function MatchesLayout() {
         contentStyle: {
           backgroundColor: theme.background?.val,
         },
+        ...(Platform.OS === "web" ? { animation: "none" } : {}),
       }}
     >
       <Stack.Screen

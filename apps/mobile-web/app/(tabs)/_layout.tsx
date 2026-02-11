@@ -39,6 +39,9 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      sceneContainerStyle={{
+        backgroundColor: theme.background?.val,
+      }}
       screenOptions={{
         tabBarActiveTintColor: theme.blue10?.val,
         tabBarInactiveTintColor: theme.gray10?.val,
@@ -51,6 +54,9 @@ export default function TabsLayout() {
         },
         headerTintColor: theme.color?.val,
         headerShadowVisible: false,
+        sceneStyle: {
+          backgroundColor: theme.background?.val,
+        },
       }}
     >
       <Tabs.Screen

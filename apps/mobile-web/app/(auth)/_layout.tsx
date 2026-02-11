@@ -2,6 +2,7 @@
 import { useSession } from "@repo/api-client";
 import { Stack, Redirect } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 import { useTheme, YStack, Spinner } from "tamagui";
 
 export default function AuthLayout() {
@@ -38,6 +39,11 @@ export default function AuthLayout() {
         headerShadowVisible: false,
         headerBackButtonDisplayMode: "minimal",
         headerTitle: "", // Hide the route name from header
+        contentStyle: {
+          backgroundColor: theme.background?.val,
+        },
+        // Disable slide animation on web to prevent bleed-through
+        ...(Platform.OS === "web" ? { animation: "none" } : {}),
       }}
     >
       <Stack.Screen

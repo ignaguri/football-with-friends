@@ -32,6 +32,7 @@ import {
   UserPlus,
   RotateCcw,
   Share2,
+  Pencil,
 } from "@tamagui/lucide-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
@@ -327,8 +328,16 @@ END:VCALENDAR`;
 
     switch (player.status) {
       case "PENDING":
-        if (isOwn) {
-          // Own user: Pay, Notify I paid, Cancel
+        if (isAdmin) {
+          // Admin can directly mark as paid (including themselves)
+          actions.push({
+            icon: BanknoteArrowDown,
+            label: t("matchDetail.markPaid"),
+            onPress: () => handleMarkAsPaid(player.id),
+            variant: "outline",
+          });
+        } else if (isOwn) {
+          // Non-admin players get Pay and Notify options
           actions.push({
             icon: Euro,
             label: t("matchDetail.pay"),
@@ -341,14 +350,6 @@ END:VCALENDAR`;
             onPress: handleNotifyPaid,
             variant: "outline",
           });
-        } else if (isAdmin) {
-          // Admin viewing another user: Mark as Paid
-          actions.push({
-            icon: BanknoteArrowDown,
-            label: t("matchDetail.markPaid"),
-            onPress: () => handleMarkAsPaid(player.id),
-            variant: "outline",
-          });
         }
         actions.push({
           icon: X,
@@ -359,18 +360,11 @@ END:VCALENDAR`;
         break;
 
       case "PAID":
-        // Cancel, Add to calendar
         actions.push({
           icon: X,
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
           variant: "danger-outline",
-        });
-        actions.push({
-          icon: Calendar,
-          label: t("shared.addToCalendar"),
-          onPress: handleAddToCalendar,
-          variant: "outline",
         });
         break;
 
@@ -498,6 +492,19 @@ END:VCALENDAR`;
 
                 {/* Action buttons */}
                 <XStack gap="$2">
+                  {/* Edit Button (admin only, non-cancelled) */}
+                  {isAdmin && match.status !== "cancelled" && match.status !== "completed" && (
+                    <Button
+                      variant="outline"
+                      size="$3"
+                      circular
+                      onPress={() => router.push({ pathname: "/(tabs)/admin/edit-match", params: { matchId: match.id } })}
+                      padding="$2"
+                    >
+                      <Pencil size={20} />
+                    </Button>
+                  )}
+
                   {/* Add to Calendar Button */}
                   {(isParticipating || match.userSignup?.status === "PAID") && (
                     <Button

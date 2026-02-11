@@ -1,6 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 import { useTheme } from "tamagui";
 
 export default function ProfileLayout() {
@@ -18,6 +19,8 @@ export default function ProfileLayout() {
         contentStyle: {
           backgroundColor: theme.background?.val,
         },
+        // Disable slide animation on web to prevent bleed-through from other tabs
+        ...(Platform.OS === "web" ? { animation: "none" } : {}),
       }}
     >
       <Stack.Screen

@@ -55,6 +55,17 @@ interface Court {
   isActive: boolean;
 }
 
+// Extract the actual error message from API errors.
+// The custom fetch in api-client throws Error("API error: 400 ...") with
+// the real error details in error.data (e.g. { error: "Match not found" }).
+const getApiErrorMessage = (error: Error): string => {
+  const apiError = error as Error & { data?: { error?: string }; status?: number };
+  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
+    return (apiError.data as { error: string }).error;
+  }
+  return error.message;
+};
+
 // Helper to get localized error message
 const getLocalizedError = (error: string, t: any): string => {
   // Map common API error patterns to translation keys
@@ -211,10 +222,6 @@ function MatchesTab() {
       const res = await client.api.matches[":id"].$delete({
         param: { id: matchId },
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error((data as any).error || "Failed to delete");
-      }
       return res.json();
     },
     onSuccess: () => {
@@ -222,7 +229,8 @@ function MatchesTab() {
       toast.show(t("organizer.deleteSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
     onError: (error: Error) => {
-      const localizedMessage = getLocalizedError(error.message, t);
+      const message = getApiErrorMessage(error);
+      const localizedMessage = getLocalizedError(message, t);
       toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
@@ -233,10 +241,6 @@ function MatchesTab() {
         param: { id: matchId },
         json: { status: "cancelled" },
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error((data as any).error || "Failed to cancel");
-      }
       return res.json();
     },
     onSuccess: () => {
@@ -244,7 +248,8 @@ function MatchesTab() {
       toast.show(t("organizer.cancelSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
     onError: (error: Error) => {
-      const localizedMessage = getLocalizedError(error.message, t);
+      const message = getApiErrorMessage(error);
+      const localizedMessage = getLocalizedError(message, t);
       toast.show(localizedMessage, { duration: 4000, customData: { variant: "error" } });
     },
   });
@@ -341,7 +346,7 @@ function MatchesTab() {
                   </Text>
                 )}
 
-                <XStack gap="$2" marginTop="$2">
+                <XStack gap="$2" marginTop="$2" flexWrap="wrap">
                   <Button
                     flex={1}
                     size="$3"
@@ -350,6 +355,16 @@ function MatchesTab() {
                   >
                     {t("organizer.viewMatch")}
                   </Button>
+                  {match.status !== "cancelled" && (
+                    <Button
+                      flex={1}
+                      size="$3"
+                      variant="outline"
+                      onPress={() => router.push({ pathname: "/(tabs)/admin/edit-match", params: { matchId: match.id } })}
+                    >
+                      {t("organizer.edit")}
+                    </Button>
+                  )}
                   {match.status !== "cancelled" && (
                     <Button
                       flex={1}
