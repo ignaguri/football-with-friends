@@ -74,7 +74,12 @@
     "confirmCancel": "Yes, cancel spot",
     "confirmation": "Confirmation",
     "confirmationMessage": "Thank you for signing up! Remember that confirmation is done with payment.<br/><br/>Important: Payment on match day has a 2 Euro surcharge. Please don't forget.<br/><br/>For each day without paying after the match there will be a 1 Euro penalty!",
-    "acceptConditions": "Accept conditions"
+    "acceptConditions": "Accept conditions",
+    "editName": "Edit Name",
+    "playerName": "Player Name",
+    "removePlayer": "Remove",
+    "removePlayerTitle": "Remove player?",
+    "removePlayerMessage": "This will permanently remove the player from this match. This cannot be undone."
   },
   "share": {
     "title": "Share this match",
@@ -391,7 +396,8 @@
     "deleteConfirm": "Are you sure you want to delete this item?",
     "confirmDelete": "Confirm deletion",
     "delete": "Delete",
-    "error": "Error: {message}"
+    "error": "Error: {message}",
+    "saving": "Saving..."
   },
   "status": {
     "paid": "Paid",
@@ -542,8 +548,7 @@
     "criteria": {
       "matches": "Total Matches",
       "third_times": "Third Times",
-      "beers": "Beers Consumed",
-      "total_votes": "Total Votes"
+      "beers": "Beers Consumed"
     },
     "rank": "#{{rank}}",
     "noData": "No ranking data available"

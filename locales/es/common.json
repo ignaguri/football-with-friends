@@ -75,7 +75,12 @@
     "confirmCancel": "Sí, cancelar lugar",
     "confirmation": "Confirmación",
     "confirmationMessage": "¡Gracias por anotarte! Acordate que la confirmación se hace con el pago.<br/><br/>Importante: El pago el día del partido tiene un sobrecargo de 2 Euros. Por favor no te olvides.<br/><br/>Por cada día sin pagar posterior al partido habrá una penalización de 1 Euro!",
-    "acceptConditions": "Aceptar condiciones"
+    "acceptConditions": "Aceptar condiciones",
+    "editName": "Editar Nombre",
+    "playerName": "Nombre del Jugador",
+    "removePlayer": "Eliminar",
+    "removePlayerTitle": "¿Eliminar jugador?",
+    "removePlayerMessage": "Esto eliminará permanentemente al jugador de este partido. No se puede deshacer."
   },
   "share": {
     "title": "Compartir este partido",
@@ -394,7 +399,8 @@
     "deleteConfirm": "¿Estás seguro de que querés eliminar este elemento?",
     "confirmDelete": "Confirmar eliminación",
     "delete": "Eliminar",
-    "error": "Error: {message}"
+    "error": "Error: {message}",
+    "saving": "Guardando..."
   },
   "status": {
     "paid": "Pagado",
@@ -545,8 +551,7 @@
     "criteria": {
       "matches": "Partidos Totales",
       "third_times": "Tercer Tiempo",
-      "beers": "Cervezas Consumidas",
-      "total_votes": "Votos Totales"
+      "beers": "Cervezas Consumidas"
     },
     "rank": "#{{rank}}",
     "noData": "No hay datos de ranking"

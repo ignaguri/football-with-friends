@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui";
 import { UserAvatar } from "./user-avatar";
-import { Trophy } from "@tamagui/lucide-icons";
+import { Trophy, Award } from "@tamagui/lucide-icons";
 import { getCountryFlag } from "../utils/country-flags";
 
 export interface PodiumDisplayProps {
@@ -58,25 +58,27 @@ function PodiumSpot({
 
   return (
     <YStack alignItems="center" flex={1} gap="$2">
-      {/* Avatar with trophy for 1st place */}
+      {/* Avatar with medal badge */}
       <YStack position="relative" alignItems="center" marginBottom="$2">
         <UserAvatar
           name={userName}
           profilePicture={profilePicture}
           size={avatarSize}
         />
-        {rank === 1 && (
-          <YStack
-            position="absolute"
-            top={-8}
-            right={-8}
-            backgroundColor={color}
-            borderRadius={100}
-            padding="$1.5"
-          >
+        <YStack
+          position="absolute"
+          top={-8}
+          right={-8}
+          backgroundColor={color}
+          borderRadius={100}
+          padding="$1.5"
+        >
+          {rank === 1 ? (
             <Trophy size={16} color="white" />
-          </YStack>
-        )}
+          ) : (
+            <Award size={16} color="white" />
+          )}
+        </YStack>
       </YStack>
 
       {/* Player name */}

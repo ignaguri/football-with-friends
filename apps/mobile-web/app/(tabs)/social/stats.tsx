@@ -87,7 +87,6 @@ export default function PlayersStatsScreen() {
     { value: "matches", label: t("rankings.criteria.matches") },
     { value: "third_times", label: t("rankings.criteria.third_times") },
     { value: "beers", label: t("rankings.criteria.beers") },
-    { value: "total_votes", label: t("rankings.criteria.total_votes") },
   ];
 
   return (

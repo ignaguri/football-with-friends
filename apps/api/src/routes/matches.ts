@@ -334,6 +334,7 @@ app.patch(
     "json",
     z.object({
       status: z.enum(["PENDING", "PAID", "CANCELLED", "SUBSTITUTE"]).optional(),
+      playerName: z.string().min(1).optional(),
     })
   ),
   async (c) => {
@@ -356,6 +357,26 @@ app.patch(
     }
   }
 );
+
+// Admin: Remove a player from a match (hard delete)
+app.delete("/:id/signup/:signupId", async (c) => {
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const signupId = c.req.param("signupId");
+  const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const user = sessionUserToUser(sessionUser);
+
+  try {
+    await getMatchService().removePlayerByAdmin(signupId, user);
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to remove player";
+    return c.json({ error: message }, 400);
+  }
+});
 
 // Get all player stats for a match
 app.get("/:id/player-stats", async (c) => {

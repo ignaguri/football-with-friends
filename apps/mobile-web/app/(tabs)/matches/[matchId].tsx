@@ -33,6 +33,7 @@ import {
   RotateCcw,
   Share2,
   Pencil,
+  Trash2,
 } from "@tamagui/lucide-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
@@ -105,6 +106,14 @@ export default function MatchDetailScreen() {
     id: string;
     status: PlayerStatusType;
   } | null>(null);
+  const [showEditNameDialog, setShowEditNameDialog] = useState(false);
+  const [editingSignup, setEditingSignup] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [editedName, setEditedName] = useState("");
+  const [showRemoveAlert, setShowRemoveAlert] = useState(false);
+  const [signupToRemove, setSignupToRemove] = useState<string | null>(null);
 
   const userId = session?.user?.id;
   const isAdmin = session?.user?.role === "admin";
@@ -207,6 +216,58 @@ export default function MatchDetailScreen() {
     },
   });
 
+  const editPlayerNameMutation = useMutation({
+    mutationFn: async ({
+      signupId,
+      playerName,
+    }: {
+      signupId: string;
+      playerName: string;
+    }) => {
+      const res = await client.api.matches[":id"].signup[":signupId"].$patch({
+        param: { id: matchId!, signupId },
+        json: { playerName },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(
+          (data as { error?: string }).error || "Failed to update name",
+        );
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+      setShowEditNameDialog(false);
+      setEditingSignup(null);
+      setEditedName("");
+    },
+    onError: (err: Error) => {
+      Alert.alert("Error", err.message);
+    },
+  });
+
+  const removePlayerMutation = useMutation({
+    mutationFn: async (signupId: string) => {
+      const res = await client.api.matches[":id"].signup[":signupId"].$delete({
+        param: { id: matchId!, signupId },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(
+          (data as { error?: string }).error || "Failed to remove player",
+        );
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+    },
+    onError: (err: Error) => {
+      Alert.alert("Error", err.message);
+    },
+  });
+
   const handleCancelSignup = (
     signupId: string,
     currentStatus: PlayerStatusType,
@@ -243,6 +304,24 @@ export default function MatchDetailScreen() {
 
   const handleMarkAsPaid = (signupId: string) => {
     updateSignupMutation.mutate({ signupId, status: "PAID" });
+  };
+
+  const handleEditPlayerName = (signupId: string, currentName: string) => {
+    setEditingSignup({ id: signupId, name: currentName });
+    setEditedName(currentName);
+    setShowEditNameDialog(true);
+  };
+
+  const handleRemovePlayer = (signupId: string) => {
+    setSignupToRemove(signupId);
+    setShowRemoveAlert(true);
+  };
+
+  const confirmRemovePlayer = () => {
+    if (!signupToRemove) return;
+    removePlayerMutation.mutate(signupToRemove);
+    setShowRemoveAlert(false);
+    setSignupToRemove(null);
   };
 
   const handleOpenPayment = () => {
@@ -327,6 +406,16 @@ END:VCALENDAR`;
 
     const actions: PlayerAction[] = [];
 
+    // Admin: edit guest player name
+    if (isAdmin && player.signupType === "guest") {
+      actions.push({
+        icon: Pencil,
+        label: t("matchDetail.editName"),
+        onPress: () => handleEditPlayerName(player.id, player.playerName),
+        variant: "outline",
+      });
+    }
+
     switch (player.status) {
       case "PENDING":
         if (isAdmin) {
@@ -384,6 +473,16 @@ END:VCALENDAR`;
           variant: "outline",
         });
         break;
+    }
+
+    // Admin: remove player entirely
+    if (isAdmin) {
+      actions.push({
+        icon: Trash2,
+        label: t("matchDetail.removePlayer"),
+        onPress: () => handleRemovePlayer(player.id),
+        variant: "danger-outline",
+      });
     }
 
     return actions;
@@ -849,6 +948,66 @@ END:VCALENDAR`;
           setSignupToCancel(null);
         }}
         onConfirm={confirmCancelSignup}
+        variant="destructive"
+      />
+
+      {/* Edit Player Name Dialog (admin, guest players) */}
+      <Dialog
+        open={showEditNameDialog}
+        onOpenChange={setShowEditNameDialog}
+        title={t("matchDetail.editName")}
+        showActions={false}
+      >
+        <YStack gap="$4" padding="$4">
+          <Input
+            label={t("matchDetail.playerName")}
+            value={editedName}
+            onChangeText={setEditedName}
+          />
+          <XStack gap="$2">
+            <Button
+              variant="outline"
+              flex={1}
+              onPress={() => setShowEditNameDialog(false)}
+            >
+              {t("shared.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              flex={1}
+              onPress={() => {
+                if (editingSignup && editedName.trim()) {
+                  editPlayerNameMutation.mutate({
+                    signupId: editingSignup.id,
+                    playerName: editedName.trim(),
+                  });
+                }
+              }}
+              disabled={
+                !editedName.trim() || editPlayerNameMutation.isPending
+              }
+            >
+              {editPlayerNameMutation.isPending
+                ? t("shared.saving")
+                : t("shared.save")}
+            </Button>
+          </XStack>
+        </YStack>
+      </Dialog>
+
+      {/* Remove Player Confirmation */}
+      <AlertDialog
+        open={showRemoveAlert}
+        onOpenChange={setShowRemoveAlert}
+        title={t("matchDetail.removePlayerTitle")}
+        description={t("matchDetail.removePlayerMessage")}
+        cancelText={t("shared.cancel")}
+        confirmText={t("matchDetail.removePlayer")}
+        onCancel={() => {
+          setShowRemoveAlert(false);
+          setSignupToRemove(null);
+        }}
+        onConfirm={confirmRemovePlayer}
         variant="destructive"
       />
 
