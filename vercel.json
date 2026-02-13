@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://football-api-staging.pepe-grillo-parlante.workers.dev/api/:path*"
+      "destination": "https://football-api.pepe-grillo-parlante.workers.dev/api/:path*"
     },
     {
       "source": "/(.*)",
