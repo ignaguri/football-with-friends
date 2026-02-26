@@ -26,7 +26,6 @@ import {
 } from "@repo/ui";
 import {
   BanknoteArrowDown,
-  Euro,
   X,
   Calendar,
   UserPlus,
@@ -87,6 +86,15 @@ function WhatsAppIcon({ size = 20 }: { size?: number }) {
     <Image
       source={require("../../../assets/whatsapp-logo.svg")}
       style={{ width: size, height: size, tintColor: "#25D366" }}
+    />
+  );
+}
+
+function PayPalIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Image
+      source={require("../../../assets/paypal-logo.svg")}
+      style={{ width: size, height: size }}
     />
   );
 }
@@ -429,7 +437,7 @@ END:VCALENDAR`;
         } else if (isOwn) {
           // Non-admin players get Pay and Notify options
           actions.push({
-            icon: Euro,
+            icon: PayPalIcon,
             label: t("matchDetail.pay"),
             onPress: handleOpenPayment,
             variant: "outline",
