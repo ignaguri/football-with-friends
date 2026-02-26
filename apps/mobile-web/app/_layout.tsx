@@ -26,21 +26,11 @@ import config from "../tamagui.config";
 import "../global.css"; // Global CSS to fix React Native Web background
 import "../assets/fonts/fonts.css"; // Montserrat font declarations for web
 
-// Auth always uses direct API URL for proper OAuth callback handling
+// Both auth and general API use EXPO_PUBLIC_API_URL directly so they always
+// hit the same backend environment (staging for preview, production for production).
+// This avoids a mismatch where auth tokens issued by one environment are sent to another.
 const getAuthApiUrl = () => process.env.EXPO_PUBLIC_API_URL;
-
-// General API can use Vercel proxy on deployed web (same-origin requests)
-// but must use direct API URL locally (no proxy from Expo dev server)
-const getGeneralApiUrl = () => {
-  if (Platform.OS === "web" && typeof window !== "undefined") {
-    const origin = window.location.origin;
-    // Only use same-origin proxy on deployed Vercel (not localhost)
-    if (!origin.includes("localhost")) {
-      return origin;
-    }
-  }
-  return process.env.EXPO_PUBLIC_API_URL;
-};
+const getGeneralApiUrl = () => process.env.EXPO_PUBLIC_API_URL;
 
 configureApiClient(getAuthApiUrl());
 configureGeneralApiClient(getGeneralApiUrl());
