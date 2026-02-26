@@ -146,6 +146,14 @@ export default function MatchDetailScreen() {
     enabled: !!matchId,
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => {
+      const res = await client.api.settings.$get();
+      return res.json();
+    },
+  });
+
   const signupMutation = useMutation({
     mutationFn: async () => {
       const res = await client.api.matches[":id"].signup.$post({
@@ -335,8 +343,7 @@ export default function MatchDetailScreen() {
   };
 
   const handleOpenPayment = () => {
-    // Open PayPal link from environment variable
-    const paypalUrl = process.env.EXPO_PUBLIC_PAYPAL_URL;
+    const paypalUrl = settings?.paypal_url;
     if (paypalUrl) {
       Linking.openURL(paypalUrl).catch(() => {
         Alert.alert("Error", t("matchDetail.paymentOpenError"));
@@ -348,7 +355,7 @@ export default function MatchDetailScreen() {
 
   const handleNotifyPaid = () => {
     // Open WhatsApp to notify organizer using wa.me link with phone number
-    const organizerPhone = process.env.EXPO_PUBLIC_ORGANIZER_WHATSAPP;
+    const organizerPhone = settings?.organizer_whatsapp;
     if (!organizerPhone) {
       Alert.alert("Error", t("matchDetail.noOrganizerPhone"));
       return;
