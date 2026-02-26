@@ -23,6 +23,7 @@ import {
   type PlayerRow,
   type PlayerAction,
   type PlayerStatusType,
+  useToastController,
 } from "@repo/ui";
 import {
   BanknoteArrowDown,
@@ -42,7 +43,6 @@ import {
   ScrollView,
   Share,
   Linking,
-  Alert,
   Image,
 } from "react-native";
 
@@ -106,6 +106,7 @@ export default function MatchDetailScreen() {
   const { t } = useTranslation();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const toast = useToastController();
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
@@ -173,7 +174,7 @@ export default function MatchDetailScreen() {
       setShowConfirmationModal(true);
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -201,7 +202,7 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -227,10 +228,10 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
       setShowGuestDialog(false);
       setGuestName("");
-      Alert.alert(t("matchDetail.guestAddSuccess"));
+      toast.show(t("matchDetail.guestAddSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -261,7 +262,7 @@ export default function MatchDetailScreen() {
       setEditedName("");
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -282,7 +283,7 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -346,10 +347,10 @@ export default function MatchDetailScreen() {
     const paypalUrl = settings?.paypal_url;
     if (paypalUrl) {
       Linking.openURL(paypalUrl).catch(() => {
-        Alert.alert("Error", t("matchDetail.paymentOpenError"));
+        toast.show(t("matchDetail.paymentOpenError"), { duration: 4000, customData: { variant: "error" } });
       });
     } else {
-      Alert.alert(t("matchDetail.noPaymentMethod"));
+      toast.show(t("matchDetail.noPaymentMethod"), { duration: 4000, customData: { variant: "error" } });
     }
   };
 
@@ -357,7 +358,7 @@ export default function MatchDetailScreen() {
     // Open WhatsApp to notify organizer using wa.me link with phone number
     const organizerPhone = settings?.organizer_whatsapp;
     if (!organizerPhone) {
-      Alert.alert("Error", t("matchDetail.noOrganizerPhone"));
+      toast.show(t("matchDetail.noOrganizerPhone"), { duration: 4000, customData: { variant: "error" } });
       return;
     }
     const message = t("notify.whatsappMessage", {
@@ -366,7 +367,7 @@ export default function MatchDetailScreen() {
     });
     const url = `https://wa.me/${organizerPhone}?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert("Error", t("matchDetail.whatsappError"));
+      toast.show(t("matchDetail.whatsappError"), { duration: 4000, customData: { variant: "error" } });
     });
   };
 
