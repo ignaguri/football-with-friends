@@ -34,9 +34,7 @@
   },
   "submit": {
     "production": {
-      "ios": {
-        "ascAppId": "TODO_fill_after_creating_app_store_connect_record"
-      },
+      "ios": {},
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "internal"
