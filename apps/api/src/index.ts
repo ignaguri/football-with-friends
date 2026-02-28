@@ -30,62 +30,54 @@ app.get("/health", (c) =>
   c.json({ status: "ok", timestamp: new Date().toISOString() })
 );
 
-// Custom OAuth callback interceptor for web - extracts session and passes token to frontend
-// This handles the cross-domain session token passing for localhost development
-app.get("/api/auth/callback/google", async (c) => {
-  console.log("[OAUTH-CALLBACK] 🔵 Intercepting Google OAuth callback");
-
-  // Let BetterAuth process the OAuth callback first
+// Reusable helper: intercept an OAuth callback, extract session token and append to redirect URL
+async function interceptOAuthCallback(c: any) {
   const response = await auth.handler(c.req.raw);
 
-  // If it's a redirect (successful OAuth)
   if (response.status === 302) {
     const redirectUrl = response.headers.get("location");
-    console.log("[OAUTH-CALLBACK] 🎯 Original redirect:", redirectUrl);
-
-    // Try to get the session that was just created
-    // We need to extract the session cookie from the response
     const setCookie = response.headers.get("set-cookie");
-    console.log("[OAUTH-CALLBACK] 🍪 Set-Cookie header:", setCookie);
 
-    // Parse session token from set-cookie header
     let sessionToken: string | null = null;
     if (setCookie) {
       const sessionCookieMatch = setCookie.match(/better-auth\.session_token=([^;]+)/);
       if (sessionCookieMatch) {
         sessionToken = sessionCookieMatch[1] ?? null;
-        console.log("[OAUTH-CALLBACK] ✅ Found session token in cookie");
       }
     }
 
     if (sessionToken && redirectUrl) {
-      // Add session token to redirect URL
-      // Handle relative URLs by using request origin as base
       let fullRedirectUrl: string;
       if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
         fullRedirectUrl = redirectUrl;
       } else {
-        // For relative URLs, use the Origin header or Referer to build full URL
         const origin = c.req.header("origin") || c.req.header("referer")?.replace(/\/[^/]*$/, "") || "http://localhost:8084";
         fullRedirectUrl = origin + (redirectUrl.startsWith("/") ? redirectUrl : "/" + redirectUrl);
       }
 
       const url = new URL(fullRedirectUrl);
       url.searchParams.set("session_token", sessionToken);
-      console.log("[OAUTH-CALLBACK] ➡️ Redirecting with token to:", url.toString());
-
       return c.redirect(url.toString());
-    } else {
-      console.warn("[OAUTH-CALLBACK] ⚠️ No session token found, using original redirect");
     }
   }
 
-  // Return the original response if not a redirect or no token found
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
     headers: response.headers,
   });
+}
+
+// Custom OAuth callback interceptors - extract session token and append to redirect URL
+// Handles cross-domain session token passing (Vercel frontend ↔ Cloudflare Workers API)
+app.get("/api/auth/callback/google", async (c) => {
+  console.log("[OAUTH-CALLBACK] 🔵 Intercepting Google OAuth callback");
+  return interceptOAuthCallback(c);
+});
+
+app.post("/api/auth/callback/apple", async (c) => {
+  console.log("[OAUTH-CALLBACK] 🍎 Intercepting Apple OAuth callback");
+  return interceptOAuthCallback(c);
 });
 
 // Better Auth routes - wrap to filter cookies and avoid expo client infinite refetch bug

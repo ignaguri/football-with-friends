@@ -289,6 +289,7 @@
     "signInFailed": "Sign in failed",
     "signUpFailed": "Sign up failed",
     "googleSignInFailed": "Google sign in failed",
+    "appleSignInFailed": "Apple sign in failed",
     "unexpectedError": "An unexpected error occurred",
     "serviceUnavailable": "Service temporarily unavailable. Please try again later.",
     "phoneAlreadyRegistered": "This phone number is already registered.",

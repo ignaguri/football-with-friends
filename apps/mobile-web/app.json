@@ -2,6 +2,7 @@
   "expo": {
     "name": "Football with Friends",
     "slug": "football-with-friends",
+    "owner": "pepegrillo",
     "version": "1.0.0",
     "scheme": "football-with-friends",
     "orientation": "portrait",
@@ -21,7 +22,15 @@
             "./assets/fonts/Montserrat-Bold.ttf"
           ]
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Football with Friends uses your photo library to update your profile picture.",
+          "cameraPermission": "Football with Friends uses your camera to take a profile photo."
+        }
+      ],
+      "expo-apple-authentication"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -30,18 +39,42 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.pepegrillo.football-with-friends"
+      "bundleIdentifier": "com.pepegrillo.football-with-friends",
+      "buildNumber": "2",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Football with Friends uses your photo library to update your profile picture.",
+        "NSCameraUsageDescription": "Football with Friends uses your camera to take a profile photo.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.pepegrillo.footballwithfriends",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fd683dbc-22ce-4809-b0be-8325693cd621"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/fd683dbc-22ce-4809-b0be-8325693cd621"
     }
   }
 }

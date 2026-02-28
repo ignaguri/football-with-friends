@@ -156,6 +156,17 @@ function createAuthInstance() {
         clientId: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
       },
+      // Apple Sign In — enabled when APPLE_CLIENT_ID and APPLE_CLIENT_SECRET are set.
+      // APPLE_CLIENT_ID: your Apple Services ID (e.g. com.pepegrillo.football-with-friends)
+      // APPLE_CLIENT_SECRET: JWT generated from your Apple .p8 private key
+      ...(env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET
+        ? {
+            apple: {
+              clientId: env.APPLE_CLIENT_ID,
+              clientSecret: env.APPLE_CLIENT_SECRET,
+            },
+          }
+        : {}),
     },
     plugins: [
       bearer(),

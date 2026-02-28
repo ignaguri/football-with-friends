@@ -10,6 +10,7 @@ import {
   colors,
 } from "@repo/ui";
 import { Mail } from "@tamagui/lucide-icons";
+import * as AppleAuthentication from "expo-apple-authentication";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -91,6 +92,42 @@ export default function AuthLandingScreen() {
       setIsGoogleLoading(false);
     }
     // Note: Don't reset loading state here - BetterAuth will redirect away
+  };
+
+  const handleAppleSignIn = async () => {
+    setServerError(null);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        throw new Error("No identity token received from Apple");
+      }
+
+      const result = await signIn.social({
+        provider: "apple",
+        idToken: {
+          token: credential.identityToken,
+        },
+      });
+
+      if (result.error) {
+        setServerError(result.error.message || t("auth.appleSignInFailed"));
+        return;
+      }
+
+      if (result.data?.user) {
+        router.replace("/(tabs)");
+      }
+    } catch (err: any) {
+      if (err?.code !== "ERR_REQUEST_CANCELED") {
+        setServerError(t("auth.appleSignInFailed"));
+      }
+    }
   };
 
   return (
@@ -247,6 +284,17 @@ export default function AuthLandingScreen() {
                 )}
               </XStack>
             </Button>
+          )}
+
+          {/* Apple Sign In - iOS native only */}
+          {Platform.OS === "ios" && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={8}
+              style={{ width: "100%", height: 50 }}
+              onPress={handleAppleSignIn}
+            />
           )}
 
           {/* Email Button - Secondary */}

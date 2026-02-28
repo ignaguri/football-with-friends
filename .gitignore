@@ -105,6 +105,9 @@ eas-metadata.json
 # Google OAuth credentials (downloaded from Cloud Console)
 client_secret*.json
 
+# Google Play service account key (used by EAS Submit)
+google-play-service-account.json
+
 # Misc
 .vscode/
 .idea/

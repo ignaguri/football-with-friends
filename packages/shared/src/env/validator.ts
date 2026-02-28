@@ -26,6 +26,10 @@ const BaseEnvSchema = z.object({
     .min(1, "NEXT_PUBLIC_GOOGLE_CLIENT_ID is required"),
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
 
+  // Apple Sign In (optional — required for iOS App Store submission)
+  APPLE_CLIENT_ID: z.string().optional(),
+  APPLE_CLIENT_SECRET: z.string().optional(),
+
   // App URL configuration
   NEXT_PUBLIC_BASE_URL: z
     .url("NEXT_PUBLIC_BASE_URL must be a valid URL")

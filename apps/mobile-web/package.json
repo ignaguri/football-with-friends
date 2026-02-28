@@ -27,6 +27,7 @@
     "@tamagui/portal": "1.144.3",
     "burnt": "^0.13.0",
     "expo": "~54.0.33",
+    "expo-apple-authentication": "^7.2.4",
     "expo-application": "^7.0.8",
     "expo-constants": "^18.0.13",
     "expo-crypto": "^15.0.8",
@@ -35,16 +36,13 @@
     "expo-image-manipulator": "^14.0.8",
     "expo-image-picker": "^17.0.10",
     "expo-linking": "^8.0.11",
-    "expo-local-authentication": "^17.0.8",
     "expo-localization": "^17.0.8",
-    "expo-location": "^19.0.8",
     "expo-network": "^8.0.8",
-    "expo-notifications": "^0.32.16",
     "expo-router": "~6.0.23",
     "expo-secure-store": "^15.0.8",
     "expo-sqlite": "^16.0.10",
     "expo-status-bar": "~3.0.9",
-    "expo-task-manager": "^14.0.9",
+    "expo-updates": "~29.0.16",
     "expo-web-browser": "^15.0.10",
     "hono": "^4.11.4",
     "i18next": "^25.7.4",
@@ -67,9 +65,11 @@
     "@repo/typescript-config": "workspace:*",
     "@tamagui/babel-plugin": "1.144.3",
     "@types/react": "19.1.17",
-    "sharp": "^0.34.5",
     "typescript": "~5.9.3",
     "workbox-cli": "^7.4.0"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.34.5"
   },
   "private": true
 }
