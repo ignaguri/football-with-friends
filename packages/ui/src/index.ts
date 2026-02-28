@@ -116,8 +116,11 @@ export {
   H6,
   Paragraph,
   Separator,
-  Image,
 } from "tamagui";
+
+// Use React Native's Image instead of Tamagui's — Tamagui v2's Image
+// doesn't map `source` to `src` on web, breaking require() assets.
+export { Image } from "react-native";
 
 // Toast utilities
 export { useToastController } from "@tamagui/toast";

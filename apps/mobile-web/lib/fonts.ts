@@ -40,15 +40,18 @@ export const createMontserratFont = (
       ? 'Montserrat, -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
       : 'Montserrat',
 
-    // Android requires 'face' property to map weights to font families
-    // On Android, each weight is a separate font family
-    face: {
-      300: { normal: 'Montserrat-Light' },
-      400: { normal: 'Montserrat-Regular' },
-      500: { normal: 'Montserrat-Medium' },
-      600: { normal: 'Montserrat-SemiBold' },
-      700: { normal: 'Montserrat-Bold' },
-    },
+    // Android requires 'face' property to map weights to font families.
+    // On web, Google Fonts handles weights via the single 'Montserrat' family name,
+    // so face must be omitted to avoid overriding font-family with native file names.
+    ...(isWeb ? {} : {
+      face: {
+        300: { normal: 'Montserrat-Light' },
+        400: { normal: 'Montserrat-Regular' },
+        500: { normal: 'Montserrat-Medium' },
+        600: { normal: 'Montserrat-SemiBold' },
+        700: { normal: 'Montserrat-Bold' },
+      },
+    }),
 
     size,
 
@@ -65,14 +68,6 @@ export const createMontserratFont = (
       3: '500', // Medium
       4: '600', // SemiBold
       5: '700', // Bold
-    },
-
-    letterSpacing: {
-      1: 0,
-      2: 0,
-      3: 0,
-      4: 0,
-      5: 0,
     },
 
     ...font,

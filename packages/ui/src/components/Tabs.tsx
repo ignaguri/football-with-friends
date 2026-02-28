@@ -15,18 +15,6 @@ const StyledTab = styled(TamaguiTabs.Tab, {
   backgroundColor: "transparent",
   justifyContent: "center",
   alignItems: "center",
-
-  variants: {
-    active: {
-      true: {
-        backgroundColor: "$background",
-        shadowColor: "$shadowColor",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-      },
-    },
-  } as const,
 });
 
 export interface TabItem {
@@ -53,7 +41,13 @@ export function Tabs({ value, onValueChange, tabs }: TabsProps) {
           <StyledTab
             key={tab.value}
             value={tab.value}
-            active={value === tab.value}
+            {...(value === tab.value && {
+              backgroundColor: "$background",
+              shadowColor: "$shadowColor",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+            })}
           >
             <SizableText
               fontSize="$4"

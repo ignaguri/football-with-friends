@@ -5,7 +5,7 @@ import {
   configureGeneralApiClient,
 } from "@repo/api-client";
 import { Toast } from "@repo/ui";
-import { PortalProvider } from "@tamagui/portal";
+import { PortalProvider } from "tamagui";
 import { Stack } from "expo-router";
 import Head from "expo-router/head";
 import { useEffect } from "react";
@@ -139,7 +139,7 @@ function AppContent() {
           <script src="https://accounts.google.com/gsi/client" async defer />
         </Head>
       )}
-      <TamaguiProvider key={themeName} config={config} defaultTheme={themeName}>
+      <TamaguiProvider key={themeName} config={config} defaultTheme={themeName} defaultFont="body">
         <PortalProvider shouldAddRootHost>
           <Theme name={themeName}>
             <Toast>

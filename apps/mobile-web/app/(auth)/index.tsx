@@ -143,7 +143,7 @@ export default function AuthLandingScreen() {
       >
         {/* Title */}
         <YStack gap="$5" alignItems="center" marginBottom="$4">
-          <Text fontSize="$10" fontWeight="bold" textAlign="center">
+          <Text fontSize="$10" fontWeight="bold" textAlign="center" lineHeight="$10">
             Football con los pibes
           </Text>
           <Text color="$gray11" textAlign="center">
