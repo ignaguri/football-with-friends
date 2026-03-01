@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Platform } from "react-native";
 import {
   Select as TamaguiSelect,
@@ -25,9 +25,11 @@ export interface CustomSelectProps extends Omit<SelectProps, "children"> {
   disabled?: boolean;
   searchable?: boolean;
   searchPlaceholder?: string;
+  /** Custom function to get the display label when a value is selected (shorter than full option label) */
+  getSelectedLabel?: (value: string) => string;
 }
 
-// Web-specific native select for reliability
+// Web-specific custom select with search support
 function WebSelect({
   label,
   error,
@@ -36,47 +38,198 @@ function WebSelect({
   value,
   onValueChange,
   disabled,
+  searchable = false,
+  searchPlaceholder = "Search...",
+  getSelectedLabel,
 }: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter options based on search query
+  const filteredOptions = searchable && searchQuery
+    ? options.filter((option) =>
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : options;
+
+  // Get display label for selected value
+  const selectedOption = options.find((opt) => opt.value === value);
+  const displayLabel = value
+    ? getSelectedLabel
+      ? getSelectedLabel(value)
+      : selectedOption?.label || placeholder
+    : placeholder;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSearchQuery("");
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  // Focus search input when opening
+  useEffect(() => {
+    if (isOpen && searchable && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [isOpen, searchable]);
+
+  const handleSelect = (optionValue: string) => {
+    onValueChange?.(optionValue);
+    setIsOpen(false);
+    setSearchQuery("");
+  };
+
+  // Theme-aware CSS variables (Tamagui provides these as CSS custom properties)
+  const cssVars = {
+    background: "var(--background)",
+    color: "var(--color)",
+    borderColor: "var(--gray7)",
+    placeholderColor: "var(--gray10)",
+    hoverBg: "var(--gray4)",
+    selectedBg: "var(--gray5)",
+    accentColor: "var(--blue10)",
+  };
+
   return (
-    <YStack gap="$2">
+    <YStack gap="$2" zIndex={isOpen ? 10000 : "auto"}>
       {label && (
         <Text fontSize="$3" fontWeight="600" color="$gray12">
           {label}
         </Text>
       )}
-      <YStack>
-        <select
-          value={value || ""}
-          onChange={(e) => onValueChange?.((e.target as HTMLSelectElement).value)}
+      <div ref={containerRef} style={{ position: "relative", zIndex: isOpen ? 10000 : "auto" }}>
+        {/* Trigger button */}
+        <button
+          type="button"
+          onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           style={{
             width: "100%",
             padding: "12px",
             fontSize: "16px",
+            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
             borderRadius: "8px",
-            border: error ? "1px solid #e54d2e" : "1px solid #888888",
-            backgroundColor: "var(--background, #fff)",
-            color: "var(--color, #000)",
+            border: error ? "1px solid var(--red8)" : `1px solid ${cssVars.borderColor}`,
+            backgroundColor: cssVars.background,
+            color: value ? cssVars.color : cssVars.placeholderColor,
             cursor: disabled ? "not-allowed" : "pointer",
             opacity: disabled ? 0.5 : 1,
-            appearance: "none",
-            backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 12px center",
-            backgroundSize: "16px",
-            paddingRight: "40px",
+            textAlign: "left",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          <option value="" disabled>
-            {placeholder}
-          </option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </YStack>
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {displayLabel}
+          </span>
+          <ChevronDown size={16} color={cssVars.color} style={{ flexShrink: 0, marginLeft: 8 }} />
+        </button>
+
+        {/* Dropdown */}
+        {isOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              marginTop: "4px",
+              backgroundColor: cssVars.background,
+              border: `1px solid ${cssVars.borderColor}`,
+              borderRadius: "8px",
+              boxShadow: "var(--shadow6)",
+              zIndex: 10000,
+              maxHeight: "300px",
+              display: "flex",
+              flexDirection: "column",
+              boxSizing: "border-box",
+              overflow: "hidden",
+            }}
+          >
+            {/* Search input */}
+            {searchable && (
+              <div style={{ padding: "8px", borderBottom: `1px solid ${cssVars.borderColor}`, boxSizing: "border-box" }}>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder={searchPlaceholder}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "8px",
+                    fontSize: "14px",
+                    border: `1px solid ${cssVars.borderColor}`,
+                    borderRadius: "4px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    backgroundColor: cssVars.background,
+                    color: cssVars.color,
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Options list */}
+            <div style={{ overflow: "auto", maxHeight: "250px" }}>
+              {filteredOptions.length === 0 ? (
+                <div style={{
+                  padding: "12px",
+                  color: cssVars.placeholderColor,
+                  textAlign: "center",
+                  fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                }}>
+                  No options found
+                </div>
+              ) : (
+                filteredOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={() => handleSelect(option.value)}
+                    style={{
+                      padding: "10px 12px",
+                      cursor: "pointer",
+                      backgroundColor: option.value === value ? cssVars.selectedBg : "transparent",
+                      color: cssVars.color,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                      fontSize: "14px",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLDivElement).style.backgroundColor = cssVars.hoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLDivElement).style.backgroundColor =
+                        option.value === value ? cssVars.selectedBg : "transparent";
+                    }}
+                  >
+                    <span>{option.label}</span>
+                    {option.value === value && <Check size={16} color={cssVars.accentColor} />}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
       {error && (
         <Text fontSize="$2" color="$red10">
           {error}
@@ -95,6 +248,7 @@ function NativeSelect({
   disabled,
   searchable = false,
   searchPlaceholder = "Search...",
+  getSelectedLabel,
   ...props
 }: CustomSelectProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,6 +261,11 @@ function NativeSelect({
       )
     : options;
 
+  // Create renderValue function if getSelectedLabel is provided
+  const renderValue = getSelectedLabel
+    ? (val: string) => getSelectedLabel(val)
+    : undefined;
+
   return (
     <YStack gap="$2">
       {label && (
@@ -114,7 +273,7 @@ function NativeSelect({
           {label}
         </Text>
       )}
-      <TamaguiSelect {...props}>
+      <TamaguiSelect {...props} renderValue={renderValue}>
         <TamaguiSelect.Trigger
           backgroundColor="$background"
           borderColor={error ? "$red8" : "$gray7"}
@@ -133,7 +292,7 @@ function NativeSelect({
             dismissOnSnapToBottom
             snapPointsMode="fit"
           >
-            <Sheet.Frame paddingTop={top} paddingLeft={left} paddingRight={right}>
+            <Sheet.Frame backgroundColor="$background" paddingTop={top} paddingLeft={left} paddingRight={right}>
               {searchable && (
                 <YStack paddingHorizontal="$4" paddingTop="$3" paddingBottom="$2">
                   <TamaguiInput
@@ -153,6 +312,7 @@ function NativeSelect({
             </Sheet.Frame>
             <Sheet.Overlay
               animation="lazy"
+              backgroundColor="rgba(0, 0, 0, 0.5)"
               enterStyle={{ opacity: 0 }}
               exitStyle={{ opacity: 0 }}
             />

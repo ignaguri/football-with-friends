@@ -5,12 +5,14 @@ export interface AlertDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   title: string;
-  description: string;
+  description?: string;
+  children?: React.ReactNode;
   cancelText?: string;
   confirmText?: string;
   onCancel?: () => void;
   onConfirm?: () => void;
   variant?: "default" | "destructive";
+  showCancel?: boolean;
 }
 
 export function AlertDialog({
@@ -18,11 +20,13 @@ export function AlertDialog({
   onOpenChange,
   title,
   description,
+  children,
   cancelText = "Cancel",
   confirmText = "Confirm",
   onCancel,
   onConfirm,
   variant = "default",
+  showCancel = true,
 }: AlertDialogProps) {
   const handleCancel = () => {
     onCancel?.();
@@ -41,6 +45,7 @@ export function AlertDialog({
           key="overlay"
           animation="quick"
           opacity={0.5}
+          backgroundColor="rgba(0, 0, 0, 0.5)"
           enterStyle={{ opacity: 0 }}
           exitStyle={{ opacity: 0 }}
         />
@@ -60,29 +65,46 @@ export function AlertDialog({
           ]}
           enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
           exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-          space="$4"
+          gap="$4"
           padding="$5"
           backgroundColor="$background"
           borderRadius="$6"
           width="90%"
           maxWidth={400}
         >
-          <YStack space="$3">
+          <YStack gap="$3">
             <TamaguiAlertDialog.Title fontSize="$6" fontWeight="bold">
               {title}
             </TamaguiAlertDialog.Title>
 
-            <TamaguiAlertDialog.Description fontSize="$4" color="$gray11">
-              {description}
-            </TamaguiAlertDialog.Description>
+            {description && (
+              <TamaguiAlertDialog.Description fontSize="$4" color="$gray11">
+                {description}
+              </TamaguiAlertDialog.Description>
+            )}
+
+            {children && (
+              <TamaguiAlertDialog.Description fontSize="$4" color="$gray11" asChild>
+                <div>{children}</div>
+              </TamaguiAlertDialog.Description>
+            )}
           </YStack>
 
-          <XStack gap="$3" justifyContent="flex-end" marginTop="$4">
-            <TamaguiAlertDialog.Cancel asChild>
-              <Button variant="outline" onPress={handleCancel}>
-                {cancelText}
-              </Button>
-            </TamaguiAlertDialog.Cancel>
+          <XStack
+            gap="$3"
+            justifyContent="flex-end"
+            marginTop="$6"
+            paddingTop="$4"
+            borderTopWidth={1}
+            borderTopColor="$gray5"
+          >
+            {showCancel && (
+              <TamaguiAlertDialog.Cancel asChild>
+                <Button variant="outline" onPress={handleCancel}>
+                  {cancelText}
+                </Button>
+              </TamaguiAlertDialog.Cancel>
+            )}
             <TamaguiAlertDialog.Action asChild>
               <Button
                 variant={variant === "destructive" ? "danger" : "primary"}

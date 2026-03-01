@@ -5,7 +5,11 @@ import type {
   Court,
   Match,
   Signup,
+  User,
   MatchInvitation,
+  MatchPlayerStats,
+  PlayerSummary,
+  PlayerRanking,
   CreateLocationData,
   UpdateLocationData,
   CreateCourtData,
@@ -16,6 +20,8 @@ import type {
   UpdateSignupData,
   CreateGuestSignupData,
   CreateInvitationData,
+  CreateMatchPlayerStatsData,
+  UpdateMatchPlayerStatsData,
   MatchFilters,
   SignupFilters,
   MatchDetails,
@@ -110,9 +116,9 @@ export interface CourtRepository {
 // Match Repository Interface
 export interface MatchRepository {
   /**
-   * Find all matches with optional filters
+   * Find all matches with optional filters and pagination
    */
-  findAll(filters?: MatchFilters): Promise<Match[]>;
+  findAll(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }>;
 
   /**
    * Find a match by ID
@@ -286,6 +292,80 @@ export interface MatchInvitationRepository {
   deleteExpired(olderThanDays: number): Promise<number>;
 }
 
+// Player Stats Repository Interface
+export interface PlayerStatsRepository {
+  /**
+   * Find stats for a specific match and user
+   */
+  findByMatchAndUser(
+    matchId: string,
+    userId: string,
+  ): Promise<MatchPlayerStats | null>;
+
+  /**
+   * Find all stats for a match
+   */
+  findByMatchId(matchId: string): Promise<MatchPlayerStats[]>;
+
+  /**
+   * Find all stats for a user
+   */
+  findByUserId(userId: string): Promise<MatchPlayerStats[]>;
+
+  /**
+   * Create or update stats (upsert)
+   */
+  upsert(data: CreateMatchPlayerStatsData): Promise<MatchPlayerStats>;
+
+  /**
+   * Update existing stats by ID
+   */
+  update(
+    id: string,
+    updates: UpdateMatchPlayerStatsData,
+  ): Promise<MatchPlayerStats>;
+
+  /**
+   * Delete stats
+   */
+  delete(id: string): Promise<void>;
+
+  /**
+   * Get aggregated stats for a user across all matches
+   */
+  getPlayerAggregateStats(userId: string): Promise<{
+    totalMatches: number;
+    totalGoals: number;
+    totalThirdTimeAttendances: number;
+    totalBeers: number;
+  }>;
+
+  /**
+   * Get all players with stats summaries
+   */
+  getAllPlayerSummaries(): Promise<PlayerSummary[]>;
+
+  /**
+   * Get user info by ID (from user table)
+   */
+  getUserById(userId: string): Promise<User | null>;
+
+  /**
+   * Get player rankings by total matches played
+   */
+  getRankingsByMatches(limit: number): Promise<PlayerRanking[]>;
+
+  /**
+   * Get player rankings by third time attendances
+   */
+  getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]>;
+
+  /**
+   * Get player rankings by total beers consumed
+   */
+  getRankingsByBeers(limit: number): Promise<PlayerRanking[]>;
+}
+
 // Repository factory interface for dependency injection
 export interface RepositoryFactory {
   locations: LocationRepository;
@@ -293,6 +373,7 @@ export interface RepositoryFactory {
   matches: MatchRepository;
   signups: SignupRepository;
   invitations: MatchInvitationRepository;
+  playerStats: PlayerStatsRepository;
 }
 
 // Database transaction interface

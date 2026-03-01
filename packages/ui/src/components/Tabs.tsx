@@ -1,4 +1,4 @@
-import { Tabs as TamaguiTabs, SizableText, styled, XStack } from "tamagui";
+import { Tabs as TamaguiTabs, SizableText, styled } from "tamagui";
 
 const StyledTabsList = styled(TamaguiTabs.List, {
   backgroundColor: "$gray3",

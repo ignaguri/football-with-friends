@@ -1,0 +1,10 @@
+# Copy this file to .dev.vars and fill in your values
+# These are used by wrangler dev for local development
+
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-turso-auth-token
+BETTER_AUTH_SECRET=your-32-character-secret-key-here
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+ALLOWED_ORIGINS=http://localhost:8081,http://localhost:3000
+TRUSTED_ORIGINS=http://localhost:8081,http://localhost:3000,football-with-friends:///

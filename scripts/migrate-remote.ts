@@ -4,9 +4,19 @@
 // Load environment variables first
 import { config } from "dotenv";
 
-// Load .env.prod, fallback to .env
+// Parse target (staging/preview) and command from argv
+const args = process.argv.slice(2);
+const isStaging = args[0] === "staging" || args[0] === "preview";
+const command = isStaging ? args[1] : args[0];
+const restArgs = isStaging ? args.slice(2) : args.slice(1);
+const hasYesFlag = restArgs.includes("--yes") || restArgs.includes("-y");
+
 config({ path: ".env.production" });
 config({ path: ".env" });
+if (isStaging) {
+  config({ path: ".env.preview", override: true });
+  console.log("📌 Target: staging (using .env.preview)");
+}
 
 async function main() {
   // Dynamic import after environment is loaded
@@ -14,7 +24,9 @@ async function main() {
     await import("@/lib/database/migrator");
   const { getTursoEnv } = await import("@/lib/env");
 
-  const command = process.argv[2];
+  // Reset env cache so staging/production env is picked up
+  const { resetEnvCache } = await import("@/lib/env");
+  resetEnvCache();
 
   // Validate environment for remote migrations
   try {
@@ -56,26 +68,27 @@ async function main() {
           console.log(`   - ${migration}`);
         });
 
-        // Confirmation prompt
-        console.log(`\n⚠️  This will modify the remote Turso database.`);
-        console.log(`   Make sure you have a backup if needed.`);
-        console.log(`   Continue? (y/N)`);
+        // Confirmation prompt (skip if --yes)
+        if (!hasYesFlag) {
+          console.log(`\n⚠️  This will modify the remote Turso database.`);
+          console.log(`   Make sure you have a backup if needed.`);
+          console.log(`   Continue? (y/N)`);
 
-        // Simple confirmation (in a real scenario, you might want to use readline)
-        const readline = await import("readline");
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
+          const readline = await import("readline");
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
 
-        const answer = await new Promise<string>((resolve) => {
-          rl.question("", resolve);
-        });
-        rl.close();
+          const answer = await new Promise<string>((resolve) => {
+            rl.question("", resolve);
+          });
+          rl.close();
 
-        if (answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
-          console.log("❌ Migration cancelled");
-          process.exit(0);
+          if (answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
+            console.log("❌ Migration cancelled");
+            process.exit(0);
+          }
         }
       } catch (error) {
         console.error("❌ Failed to check migration status:", error);
@@ -109,7 +122,7 @@ async function main() {
 
     case "down":
     case "rollback":
-      const steps = parseInt(process.argv[3]) || 1;
+      const steps = parseInt(restArgs[0] ?? "1", 10) || 1;
       console.log(
         `🔄 Rolling back ${steps} migration(s) on remote database...`,
       );
@@ -125,28 +138,30 @@ async function main() {
           process.exit(0);
         }
 
-        console.log(
-          `\n⚠️  This will rollback ${steps} migration(s) on the remote Turso database.`,
-        );
-        console.log(
-          `   This action cannot be undone without re-running migrations.`,
-        );
-        console.log(`   Continue? (y/N)`);
+        if (!hasYesFlag) {
+          console.log(
+            `\n⚠️  This will rollback ${steps} migration(s) on the remote Turso database.`,
+          );
+          console.log(
+            `   This action cannot be undone without re-running migrations.`,
+          );
+          console.log(`   Continue? (y/N)`);
 
-        const readline = await import("readline");
-        const rl = readline.createInterface({
-          input: process.stdin,
-          output: process.stdout,
-        });
+          const readline = await import("readline");
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+          });
 
-        const answer = await new Promise<string>((resolve) => {
-          rl.question("", resolve);
-        });
-        rl.close();
+          const answer = await new Promise<string>((resolve) => {
+            rl.question("", resolve);
+          });
+          rl.close();
 
-        if (answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
-          console.log("❌ Rollback cancelled");
-          process.exit(0);
+          if (answer.toLowerCase() !== "y" && answer.toLowerCase() !== "yes") {
+            console.log("❌ Rollback cancelled");
+            process.exit(0);
+          }
         }
       } catch (error) {
         console.error("❌ Failed to check migration status:", error);
@@ -231,17 +246,19 @@ async function main() {
 📋 Remote Database Migration CLI
 
 Usage:
-  pnpm migrate-remote up        # Run all pending migrations on remote database
-  pnpm migrate-remote down [n]  # Rollback n migrations on remote database (default: 1)
-  pnpm migrate-remote status    # Check remote migration status
-  pnpm migrate-remote dry-run   # Preview what migrations would be executed
+  pnpm migrate-remote up [--yes]           # Run pending migrations (production)
+  pnpm migrate-remote staging up [--yes]   # Run pending migrations on staging DB
+  pnpm migrate-remote down [n] [--yes]     # Rollback n migrations (default: 1)
+  pnpm migrate-remote status                # Check remote migration status
+  pnpm migrate-remote dry-run               # Preview what would be executed
+
+Staging: Use "staging" or "preview" as first arg to load .env.preview (Turso staging credentials).
 
 Examples:
   pnpm migrate-remote up
-  pnpm migrate-remote down
+  pnpm migrate-remote staging up --yes
   pnpm migrate-remote down 2
-  pnpm migrate-remote status
-  pnpm migrate-remote dry-run
+  pnpm migrate-remote staging status
 
 ⚠️  These commands modify the remote Turso database.
    Make sure you have proper backups before running migrations.

@@ -19,6 +19,7 @@ import type {
   LocationRepository,
   CourtRepository,
 } from "../repositories/interfaces";
+import { getDatabase } from "../database/connection";
 
 export class MatchService {
   constructor(
@@ -29,9 +30,9 @@ export class MatchService {
   ) {}
 
   /**
-   * Get all matches with optional filtering
+   * Get all matches with optional filtering and pagination
    */
-  async getAllMatches(filters?: MatchFilters): Promise<Match[]> {
+  async getAllMatches(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }> {
     return this.matchRepository.findAll(filters);
   }
 
@@ -146,12 +147,10 @@ export class MatchService {
       throw new Error("Match not found");
     }
 
-    // Check if match has signups
-    const signupCount = await this.signupRepository.getSignupCount(matchId);
-    if (signupCount > 0) {
-      // Optionally, you might want to prevent deletion or cascade delete
-      console.warn(`Deleting match ${matchId} with ${signupCount} signups`);
-    }
+    // Delete related records that lack ON DELETE CASCADE
+    const db = getDatabase();
+    await db.deleteFrom("match_player_stats").where("match_id", "=", matchId).execute();
+    await db.deleteFrom("match_votes").where("match_id", "=", matchId).execute();
 
     await this.matchRepository.delete(matchId);
   }
@@ -342,7 +341,7 @@ export class MatchService {
    */
   async updateSignup(
     signupId: string,
-    updates: { status?: string },
+    updates: { status?: string; playerName?: string },
     updatedBy: User,
   ): Promise<Signup> {
     const signup = await this.signupRepository.findById(signupId);
@@ -360,9 +359,46 @@ export class MatchService {
       throw new Error("Not authorized to update this signup");
     }
 
-    return this.signupRepository.update(signupId, {
-      status: updates.status as PlayerStatus,
+    // Store the old status to check for PAID -> CANCELLED transition
+    const oldStatus = signup.status;
+
+    // Update the signup
+    const updatedSignup = await this.signupRepository.update(signupId, {
+      ...(updates.status && { status: updates.status as PlayerStatus }),
+      ...(updates.playerName && { playerName: updates.playerName }),
     });
+
+    // Auto-promote substitute when PAID player cancels
+    if (oldStatus === "PAID" && updates.status === "CANCELLED") {
+      try {
+        // Find all signups for this match
+        const allSignups = await this.signupRepository.findByMatchId(signup.matchId);
+
+        // Find first substitute (ordered by signup date)
+        const substitutes = allSignups
+          .filter((s) => s.status === "SUBSTITUTE")
+          .sort((a, b) => new Date(a.signedUpAt).getTime() - new Date(b.signedUpAt).getTime());
+
+        if (substitutes.length > 0) {
+          const firstSubstitute = substitutes[0];
+          if (firstSubstitute) {
+            // Promote to PENDING
+            await this.signupRepository.update(firstSubstitute.id, {
+              status: "PENDING",
+            });
+
+            console.log(
+              `[AUTO-PROMOTE] Substitute ${firstSubstitute.id} (${firstSubstitute.playerName}) promoted to PENDING for match ${signup.matchId}`
+            );
+          }
+        }
+      } catch (error) {
+        // Log error but don't fail the main operation
+        console.error("[AUTO-PROMOTE] Error promoting substitute:", error);
+      }
+    }
+
+    return updatedSignup;
   }
 
   /**

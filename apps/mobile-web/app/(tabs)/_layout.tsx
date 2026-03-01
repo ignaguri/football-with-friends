@@ -1,19 +1,47 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Tabs } from "expo-router";
-import { useTranslation } from "react-i18next";
-import { Home, User, Calendar, BookOpen, Settings } from "@tamagui/lucide-icons";
-import { useTheme } from "tamagui";
 import { useSession } from "@repo/api-client";
+import {
+  Home,
+  Calendar,
+  Users,
+  Settings,
+  CircleUser,
+} from "@tamagui/lucide-icons";
+import { Tabs, Redirect, router } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { useTheme, YStack, Spinner } from "tamagui";
 
 export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
+
+  // Show loading spinner while checking authentication
+  if (isPending) {
+    return (
+      <YStack
+        flex={1}
+        justifyContent="center"
+        alignItems="center"
+        backgroundColor="$background"
+      >
+        <Spinner size="large" />
+      </YStack>
+    );
+  }
+
+  // Redirect to auth landing page if not authenticated
+  if (!session?.user) {
+    return <Redirect href="/(auth)" />;
+  }
 
   const isAdmin = session?.user?.role === "admin";
 
   return (
     <Tabs
+      sceneContainerStyle={{
+        backgroundColor: theme.background?.val,
+      }}
       screenOptions={{
         tabBarActiveTintColor: theme.blue10?.val,
         tabBarInactiveTintColor: theme.gray10?.val,
@@ -26,6 +54,9 @@ export default function TabsLayout() {
         },
         headerTintColor: theme.color?.val,
         headerShadowVisible: false,
+        sceneStyle: {
+          backgroundColor: theme.background?.val,
+        },
       }}
     >
       <Tabs.Screen
@@ -40,23 +71,40 @@ export default function TabsLayout() {
         name="matches"
         options={{
           title: t("nav.matches"),
-          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Calendar size={size} color={color} />
+          ),
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="social"
+        options={{
+          title: t("nav.social"),
+          tabBarIcon: ({ color, size }) => <Users size={size} color={color} />,
+          headerShown: false,
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.navigate("/(tabs)/social");
+          },
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: t("profile.myProfile"),
+          tabBarIcon: ({ color, size }) => (
+            <CircleUser size={size} color={color} />
+          ),
           headerShown: false,
         }}
       />
       <Tabs.Screen
         name="rules"
         options={{
-          title: t("rules.title"),
-          tabBarIcon: ({ color, size }) => <BookOpen size={size} color={color} />,
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: t("shared.userProfile"),
-          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          href: null, // Hidden - rules moved to match detail modal
           headerShown: false,
         }}
       />
@@ -64,7 +112,9 @@ export default function TabsLayout() {
         name="admin"
         options={{
           title: t("nav.admin"),
-          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <Settings size={size} color={color} />
+          ),
           headerShown: false,
           href: isAdmin ? undefined : null, // Hide tab if not admin
         }}

@@ -7,6 +7,7 @@ import type {
   MatchRepository,
   SignupRepository,
   MatchInvitationRepository,
+  PlayerStatsRepository,
 } from "./interfaces";
 
 import {
@@ -15,6 +16,7 @@ import {
   TursoMatchRepository,
   TursoSignupRepository,
   TursoMatchInvitationRepository,
+  TursoPlayerStatsRepository,
 } from "./turso-repositories";
 
 // Configuration type
@@ -27,6 +29,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
   public readonly matches: MatchRepository;
   public readonly signups: SignupRepository;
   public readonly invitations: MatchInvitationRepository;
+  public readonly playerStats: PlayerStatsRepository;
 
   constructor(provider: StorageProvider = "turso") {
     switch (provider) {
@@ -37,6 +40,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
         this.matches = new TursoMatchRepository();
         this.signups = new TursoSignupRepository();
         this.invitations = new TursoMatchInvitationRepository();
+        this.playerStats = new TursoPlayerStatsRepository();
         break;
 
       default:

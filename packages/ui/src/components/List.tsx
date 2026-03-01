@@ -1,5 +1,4 @@
 import { XStack, YStack, Text, type YStackProps } from "tamagui";
-import { Circle } from "@tamagui/lucide-icons";
 
 export interface ListItemProps {
   children: React.ReactNode;

@@ -10,13 +10,18 @@ import type {
   MatchRepository,
   SignupRepository,
   MatchInvitationRepository,
+  PlayerStatsRepository,
 } from "./interfaces";
 import type {
   Location,
   Court,
   Match,
   Signup,
+  User,
   MatchInvitation,
+  MatchPlayerStats,
+  PlayerSummary,
+  PlayerRanking,
   CreateLocationData,
   UpdateLocationData,
   CreateCourtData,
@@ -27,6 +32,8 @@ import type {
   UpdateSignupData,
   CreateGuestSignupData,
   CreateInvitationData,
+  CreateMatchPlayerStatsData,
+  UpdateMatchPlayerStatsData,
   MatchFilters,
   SignupFilters,
   MatchDetails,
@@ -392,9 +399,50 @@ export class TursoCourtRepository implements CourtRepository {
 export class TursoMatchRepository implements MatchRepository {
   private db = getDatabase();
 
-  async findAll(filters?: MatchFilters): Promise<Match[]> {
-    let query = this.db
-      .selectFrom("matches")
+  async findAll(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }> {
+    // Build the base query for filtering and counting
+    let baseQuery = this.db.selectFrom("matches");
+
+    if (filters?.status) {
+      baseQuery = baseQuery.where("matches.status", "=", filters.status);
+    }
+
+    if (filters?.type) {
+      const today = format(new Date(), "yyyy-MM-dd"); // YYYY-MM-DD
+      if (filters.type === "past") {
+        baseQuery = baseQuery.where((eb) =>
+          eb.or([
+            eb("matches.date", "<", today),
+            eb("matches.status", "=", "cancelled"),
+          ]),
+        );
+      } else if (filters.type === "upcoming") {
+        baseQuery = baseQuery
+          .where("matches.date", ">=", today)
+          .where("matches.status", "!=", "cancelled");
+      }
+    }
+
+    if (filters?.locationId) {
+      baseQuery = baseQuery.where("matches.location_id", "=", filters.locationId);
+    }
+
+    if (filters?.dateFrom) {
+      baseQuery = baseQuery.where("matches.date", ">=", filters.dateFrom);
+    }
+
+    if (filters?.dateTo) {
+      baseQuery = baseQuery.where("matches.date", "<=", filters.dateTo);
+    }
+
+    // Get total count
+    const countResult = await baseQuery
+      .select((eb) => eb.fn.count("matches.id").as("total"))
+      .executeTakeFirst();
+    const total = Number(countResult?.total || 0);
+
+    // Build the data query with joins
+    let dataQuery = baseQuery
       .leftJoin("courts", "matches.court_id", "courts.id")
       .leftJoin("locations", "matches.location_id", "locations.id")
       .select([
@@ -405,6 +453,7 @@ export class TursoMatchRepository implements MatchRepository {
         "matches.time",
         "matches.status",
         "matches.max_players",
+        "matches.max_substitutes",
         "matches.cost_per_player",
         "matches.same_day_cost",
         "matches.created_by_user_id",
@@ -427,40 +476,40 @@ export class TursoMatchRepository implements MatchRepository {
       .orderBy("matches.date", "asc")
       .orderBy("matches.time", "asc");
 
-    if (filters?.status) {
-      query = query.where("matches.status", "=", filters.status);
+    // Apply pagination
+    if (filters?.limit) {
+      dataQuery = dataQuery.limit(filters.limit);
     }
 
-    if (filters?.type) {
-      const today = format(new Date(), "yyyy-MM-dd"); // YYYY-MM-DD
-      if (filters.type === "past") {
-        query = query.where((eb) =>
-          eb.or([
-            eb("matches.date", "<", today),
-            eb("matches.status", "=", "cancelled"),
-          ]),
-        );
-      } else if (filters.type === "upcoming") {
-        query = query
-          .where("matches.date", ">=", today)
-          .where("matches.status", "!=", "cancelled");
+    if (filters?.offset) {
+      dataQuery = dataQuery.offset(filters.offset);
+    }
+
+    const rows = await dataQuery.execute();
+    const matches = rows.map(dbMatchWithCourtToMatch);
+
+    // If userId is provided, fetch user's signup status for each match
+    if (filters?.userId && matches.length > 0) {
+      const matchIds = matches.map((m) => m.id);
+      const userSignups = await this.db
+        .selectFrom("signups")
+        .select(["match_id", "status"])
+        .where("match_id", "in", matchIds)
+        .where("user_id", "=", filters.userId)
+        .execute();
+
+      // Create a map of matchId -> status
+      const signupMap = new Map(
+        userSignups.map((s) => [s.match_id, s.status as PlayerStatus])
+      );
+
+      // Attach user signup status to each match
+      for (const match of matches) {
+        (match as any).userSignupStatus = signupMap.get(match.id) || null;
       }
     }
 
-    if (filters?.locationId) {
-      query = query.where("matches.location_id", "=", filters.locationId);
-    }
-
-    if (filters?.dateFrom) {
-      query = query.where("matches.date", ">=", filters.dateFrom);
-    }
-
-    if (filters?.dateTo) {
-      query = query.where("matches.date", "<=", filters.dateTo);
-    }
-
-    const rows = await query.execute();
-    return rows.map(dbMatchWithCourtToMatch);
+    return { matches, total };
   }
 
   async findById(id: string): Promise<Match | null> {
@@ -1008,5 +1057,383 @@ export class TursoMatchInvitationRepository
       .executeTakeFirst();
 
     return Number(result.numDeletedRows || 0);
+  }
+}
+
+// Helper function to convert database row to MatchPlayerStats domain object
+function dbStatsToMatchPlayerStats(row: any): MatchPlayerStats {
+  return {
+    id: row.id,
+    matchId: row.match_id,
+    userId: row.user_id,
+    goals: row.goals,
+    thirdTimeAttended: Boolean(row.third_time_attended),
+    thirdTimeBeers: row.third_time_beers,
+    confirmed: Boolean(row.confirmed),
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+// Turso Player Stats Repository
+export class TursoPlayerStatsRepository implements PlayerStatsRepository {
+  private db = getDatabase();
+
+  async findByMatchAndUser(
+    matchId: string,
+    userId: string,
+  ): Promise<MatchPlayerStats | null> {
+    const row = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("match_id", "=", matchId)
+      .where("user_id", "=", userId)
+      .executeTakeFirst();
+
+    return row ? dbStatsToMatchPlayerStats(row) : null;
+  }
+
+  async findByMatchId(matchId: string): Promise<MatchPlayerStats[]> {
+    const rows = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("match_id", "=", matchId)
+      .execute();
+
+    return rows.map(dbStatsToMatchPlayerStats);
+  }
+
+  async findByUserId(userId: string): Promise<MatchPlayerStats[]> {
+    const rows = await this.db
+      .selectFrom("match_player_stats")
+      .innerJoin("matches", "matches.id", "match_player_stats.match_id")
+      .select([
+        "match_player_stats.id",
+        "match_player_stats.match_id",
+        "match_player_stats.user_id",
+        "match_player_stats.goals",
+        "match_player_stats.third_time_attended",
+        "match_player_stats.third_time_beers",
+        "match_player_stats.confirmed",
+        "match_player_stats.created_at",
+        "match_player_stats.updated_at",
+        "matches.id as match_id",
+        "matches.date as match_date",
+        "matches.time as match_time",
+        "matches.location_id as match_location_id",
+        "matches.court_id as match_court_id",
+        "matches.status as match_status",
+        "matches.max_players as match_max_players",
+        "matches.max_substitutes as match_max_substitutes",
+        "matches.cost_per_player as match_cost_per_player",
+        "matches.same_day_cost as match_same_day_cost",
+        "matches.created_by_user_id as match_created_by_user_id",
+        "matches.created_at as match_created_at",
+        "matches.updated_at as match_updated_at",
+      ])
+      .where("match_player_stats.user_id", "=", userId)
+      .orderBy("matches.date", "desc")
+      .execute();
+
+    return rows.map((row: any) => ({
+      ...dbStatsToMatchPlayerStats(row),
+      match: {
+        id: row.match_id,
+        date: row.match_date,
+        time: row.match_time,
+        locationId: row.match_location_id,
+        courtId: row.match_court_id || undefined,
+        status: row.match_status,
+        maxPlayers: row.match_max_players,
+        maxSubstitutes: row.match_max_substitutes || 0,
+        costPerPlayer: row.match_cost_per_player,
+        sameDayCost: row.match_same_day_cost,
+        createdByUserId: row.match_created_by_user_id,
+        createdAt: new Date(row.match_created_at),
+        updatedAt: new Date(row.match_updated_at),
+      },
+    }));
+  }
+
+  async upsert(data: CreateMatchPlayerStatsData): Promise<MatchPlayerStats> {
+    const existing = await this.findByMatchAndUser(data.matchId, data.userId);
+
+    if (existing) {
+      return this.update(existing.id, {
+        goals: data.goals,
+        thirdTimeAttended: data.thirdTimeAttended,
+        thirdTimeBeers: data.thirdTimeBeers,
+      });
+    }
+
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    const newStats = {
+      id,
+      match_id: data.matchId,
+      user_id: data.userId,
+      goals: data.goals ?? 0,
+      third_time_attended: data.thirdTimeAttended ? 1 : 0,
+      third_time_beers: data.thirdTimeBeers ?? 0,
+      confirmed: 0,
+      created_at: now,
+      updated_at: now,
+    };
+
+    await this.db.insertInto("match_player_stats").values(newStats).execute();
+
+    return dbStatsToMatchPlayerStats(newStats);
+  }
+
+  async update(
+    id: string,
+    updates: UpdateMatchPlayerStatsData,
+  ): Promise<MatchPlayerStats> {
+    const now = new Date().toISOString();
+    const updateData: Record<string, any> = { updated_at: now };
+
+    if (updates.goals !== undefined) updateData.goals = updates.goals;
+    if (updates.thirdTimeAttended !== undefined)
+      updateData.third_time_attended = updates.thirdTimeAttended ? 1 : 0;
+    if (updates.thirdTimeBeers !== undefined)
+      updateData.third_time_beers = updates.thirdTimeBeers;
+    if (updates.confirmed !== undefined)
+      updateData.confirmed = updates.confirmed ? 1 : 0;
+
+    await this.db
+      .updateTable("match_player_stats")
+      .set(updateData)
+      .where("id", "=", id)
+      .execute();
+
+    const updated = await this.db
+      .selectFrom("match_player_stats")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+
+    if (!updated) {
+      throw new Error("Player stats not found after update");
+    }
+
+    return dbStatsToMatchPlayerStats(updated);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db
+      .deleteFrom("match_player_stats")
+      .where("id", "=", id)
+      .execute();
+  }
+
+  async getPlayerAggregateStats(userId: string): Promise<{
+    totalMatches: number;
+    totalGoals: number;
+    totalThirdTimeAttendances: number;
+    totalBeers: number;
+  }> {
+    // Count distinct matches where user participated (non-cancelled signups)
+    const matchCountResult = await this.db
+      .selectFrom("signups")
+      .select(sql`COUNT(DISTINCT match_id)`.as("total_matches"))
+      .where("user_id", "=", userId)
+      .where("status", "!=", "CANCELLED")
+      .executeTakeFirst();
+
+    // Sum stats from match_player_stats
+    const statsResult = await this.db
+      .selectFrom("match_player_stats")
+      .select([
+        sql`COALESCE(SUM(goals), 0)`.as("total_goals"),
+        sql`COALESCE(SUM(third_time_attended), 0)`.as(
+          "total_third_time_attendances",
+        ),
+        sql`COALESCE(SUM(third_time_beers), 0)`.as("total_beers"),
+      ])
+      .where("user_id", "=", userId)
+      .executeTakeFirst();
+
+    return {
+      totalMatches: Number(matchCountResult?.total_matches || 0),
+      totalGoals: Number(statsResult?.total_goals || 0),
+      totalThirdTimeAttendances: Number(
+        statsResult?.total_third_time_attendances || 0,
+      ),
+      totalBeers: Number(statsResult?.total_beers || 0),
+    };
+  }
+
+  async getAllPlayerSummaries(): Promise<PlayerSummary[]> {
+    // Get all users who have at least one non-cancelled signup
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      total_matches: number;
+      total_goals: number;
+      total_third_times: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COUNT(DISTINCT s.match_id) as total_matches,
+        COALESCE(SUM(mps.goals), 0) as total_goals,
+        COALESCE(SUM(mps.third_time_attended), 0) as total_third_times
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      GROUP BY u.id
+      ORDER BY total_matches DESC, u.name ASC
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      totalMatches: Number(row.total_matches),
+      totalGoals: Number(row.total_goals),
+      totalThirdTimes: Number(row.total_third_times),
+    }));
+  }
+
+  async getUserById(userId: string): Promise<User | null> {
+    const row = await this.db
+      .selectFrom("user")
+      .selectAll()
+      .where("id", "=", userId)
+      .executeTakeFirst();
+
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      name: row.name || row.email,
+      email: row.email,
+      image: row.image || undefined,
+      role: (row.role as "user" | "admin") || "user",
+      nationality: row.nationality || undefined,
+      createdAt: new Date(row.createdAt),
+      updatedAt: new Date(row.updatedAt),
+    };
+  }
+
+  async getRankingsByMatches(limit: number): Promise<PlayerRanking[]> {
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      value: number;
+      rank: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COUNT(DISTINCT s.match_id) as value,
+        ROW_NUMBER() OVER (ORDER BY COUNT(DISTINCT s.match_id) DESC, u.name ASC) as rank
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      GROUP BY u.id
+      ORDER BY rank ASC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      rank: Number(row.rank),
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      value: Number(row.value),
+    }));
+  }
+
+  async getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]> {
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      value: number;
+      rank: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COALESCE(SUM(mps.third_time_attended), 0) as value,
+        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_attended), 0) DESC, u.name ASC) as rank
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      GROUP BY u.id
+      HAVING value > 0
+      ORDER BY rank ASC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      rank: Number(row.rank),
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      value: Number(row.value),
+    }));
+  }
+
+  async getRankingsByBeers(limit: number): Promise<PlayerRanking[]> {
+    const rows = await sql<{
+      user_id: string;
+      user_name: string;
+      user_email: string;
+      nationality: string | null;
+      profile_picture: string | null;
+      value: number;
+      rank: number;
+    }>`
+      SELECT
+        u.id as user_id,
+        u.name as user_name,
+        u.email as user_email,
+        u.nationality,
+        u.profilePicture as profile_picture,
+        COALESCE(SUM(mps.third_time_beers), 0) as value,
+        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_beers), 0) DESC, u.name ASC) as rank
+      FROM user u
+      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      GROUP BY u.id
+      HAVING value > 0
+      ORDER BY rank ASC
+      LIMIT ${limit}
+    `.execute(this.db);
+
+    return rows.rows.map((row) => ({
+      rank: Number(row.rank),
+      userId: row.user_id,
+      userName: row.user_name || row.user_email,
+      userEmail: row.user_email,
+      nationality: row.nationality || undefined,
+      profilePicture: row.profile_picture || undefined,
+      value: Number(row.value),
+    }));
   }
 }

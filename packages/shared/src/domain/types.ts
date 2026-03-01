@@ -126,8 +126,96 @@ export interface User {
   image?: string;
   role: "user" | "admin";
   nationality?: string; // ISO 3166-1 alpha-2 country code (e.g., "US", "AR", "DE")
+  username?: string | null;
+  displayUsername?: string | null;
+  primaryAuthMethod?: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Player stats for a specific match
+export interface MatchPlayerStats {
+  id: string;
+  matchId: string;
+  userId: string;
+  goals: number;
+  thirdTimeAttended: boolean;
+  thirdTimeBeers: number;
+  confirmed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields
+  user?: User;
+  match?: Match;
+}
+
+// Aggregated player statistics across all matches
+export interface PlayerProfile {
+  user: User;
+  totalMatchesPlayed: number;
+  totalGoals: number;
+  totalThirdTimeAttendances: number;
+  totalBeers: number;
+  matchStats: MatchPlayerStats[];
+}
+
+// Player summary for the players list
+export interface PlayerSummary {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  nationality?: string;
+  profilePicture?: string;
+  totalMatches: number;
+  totalGoals: number;
+  totalThirdTimes: number;
+}
+
+// Ranking types for player leaderboards
+
+export type RankingCriteria =
+  | "matches"
+  | "third_times"
+  | "beers"
+  | "total_votes";
+
+export interface PlayerRanking {
+  rank: number;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  nationality?: string;
+  profilePicture?: string;
+  value: number;
+}
+
+export interface PlayerVotingStats {
+  userId: string;
+  totalVotesReceived: number;
+  criteriaBreakdown: Array<{
+    criteriaId: string;
+    criteriaCode: string;
+    criteriaName: string;
+    timesVoted: number;
+    rank?: number;
+  }>;
+}
+
+export interface VotingLeaderboard {
+  criteria: Array<{
+    criteriaId: string;
+    criteriaCode: string;
+    criteriaName: string;
+    criteriaDescription: string;
+    topPlayers: Array<{
+      userId: string;
+      userName: string;
+      nationality?: string;
+      profilePicture?: string;
+      voteCount: number;
+    }>;
+  }>;
 }
 
 // Data transfer objects (DTOs) for creating/updating entities
@@ -196,6 +284,21 @@ export interface CreateInvitationData {
   invitedByUserId: string;
 }
 
+export interface CreateMatchPlayerStatsData {
+  matchId: string;
+  userId: string;
+  goals?: number;
+  thirdTimeAttended?: boolean;
+  thirdTimeBeers?: number;
+}
+
+export interface UpdateMatchPlayerStatsData {
+  goals?: number;
+  thirdTimeAttended?: boolean;
+  thirdTimeBeers?: number;
+  confirmed?: boolean;
+}
+
 // Filter and query types
 
 export interface MatchFilters {
@@ -212,6 +315,97 @@ export interface SignupFilters {
   userId?: string;
   status?: PlayerStatus;
   signupType?: SignupType;
+}
+
+// Player self-service types
+
+export interface FinishedMatchForUser {
+  matchId: string;
+  date: string;
+  time: string;
+  locationName: string;
+  courtName?: string;
+  wasSignedUp: boolean;
+  existingStats: {
+    goals: number;
+    thirdTimeAttended: boolean;
+    thirdTimeBeers: number;
+  } | null;
+}
+
+// Voting criteria types
+export interface VotingCriteria {
+  id: string;
+  code: string;
+  nameEn: string;
+  nameEs: string;
+  descriptionEn?: string;
+  descriptionEs?: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Match vote for a specific player
+export interface MatchVote {
+  id: string;
+  matchId: string;
+  voterUserId: string;
+  criteriaId: string;
+  votedForUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields
+  criteria?: VotingCriteria;
+  votedForUser?: User;
+  voterUser?: User;
+}
+
+// Vote submission data
+export interface CreateVoteData {
+  matchId: string;
+  voterUserId: string;
+  criteriaId: string;
+  votedForUserId: string;
+}
+
+// Localized voting criteria (for API responses)
+export interface LocalizedVotingCriteria {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+// User's votes for a match
+export interface UserMatchVotes {
+  matchId: string;
+  voterUserId: string;
+  votes: {
+    criteriaId: string;
+    votedForUserId: string;
+  }[];
+}
+
+// Vote results for a criteria
+export interface CriteriaVoteResult {
+  criteriaId: string;
+  criteriaCode: string;
+  criteriaName: string;
+  votedForUserId: string;
+  votedForUserName: string;
+  voteCount: number;
+}
+
+// Match voting results
+export interface MatchVotingResults {
+  matchId: string;
+  totalVoters: number;
+  results: CriteriaVoteResult[];
 }
 
 // Rich domain objects for API responses

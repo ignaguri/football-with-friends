@@ -29,5 +29,11 @@ export function Container({ variant = "default", ...props }: ContainerProps) {
     },
   };
 
-  return <YStack {...variantStyles[variant]} {...props} />;
+  return (
+    <YStack
+      backgroundColor="$background"
+      {...variantStyles[variant]}
+      {...props}
+    />
+  );
 }

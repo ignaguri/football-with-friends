@@ -1,4 +1,4 @@
-import { Dialog as TamaguiDialog, DialogProps, XStack, YStack } from "tamagui";
+import { Dialog as TamaguiDialog, DialogProps, XStack } from "tamagui";
 import { X } from "@tamagui/lucide-icons";
 import { Button } from "./Button";
 
@@ -12,6 +12,7 @@ export interface CustomDialogProps extends DialogProps {
   confirmText?: string;
   cancelText?: string;
   showActions?: boolean;
+  showClose?: boolean;
 }
 
 export function Dialog({
@@ -24,6 +25,7 @@ export function Dialog({
   confirmText = "Confirm",
   cancelText = "Cancel",
   showActions = true,
+  showClose = true,
   ...props
 }: CustomDialogProps) {
   return (
@@ -37,6 +39,7 @@ export function Dialog({
           key="overlay"
           animation="quick"
           opacity={0.5}
+          backgroundColor="rgba(0, 0, 0, 0.5)"
           enterStyle={{ opacity: 0 }}
           exitStyle={{ opacity: 0 }}
         />
@@ -56,7 +59,7 @@ export function Dialog({
           ]}
           enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
           exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-          space="$4"
+          gap="$4"
           padding="$5"
           backgroundColor="$background"
           borderRadius="$6"
@@ -68,15 +71,17 @@ export function Dialog({
               <TamaguiDialog.Title fontSize="$6" fontWeight="bold">
                 {title}
               </TamaguiDialog.Title>
-              <TamaguiDialog.Close asChild>
-                <Button
-                  variant="ghost"
-                  size="$3"
-                  circular
-                  icon={X}
-                  padding="$2"
-                />
-              </TamaguiDialog.Close>
+              {showClose && (
+                <TamaguiDialog.Close asChild>
+                  <Button
+                    variant="ghost"
+                    size="$3"
+                    circular
+                    icon={X}
+                    padding="$2"
+                  />
+                </TamaguiDialog.Close>
+              )}
             </XStack>
           )}
 

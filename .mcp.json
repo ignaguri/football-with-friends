@@ -4,10 +4,10 @@
             "type": "stdio",
             "command": "npx",
             "args": [
-              "-y",
-              "@upstash/context7-mcp@latest"
+                "-y",
+                "@upstash/context7-mcp@latest"
             ]
-          },
+        },
         "sentry": {
             "type": "http",
             "url": "https://mcp.sentry.dev/mcp/prostcounter/football-with-friends"
@@ -24,6 +24,10 @@
                 "mcp"
             ]
         },
+        "figma": {
+            "type": "http",
+            "url": "https://mcp.figma.com/mcp"
+          },
         "chrome-devtools": {
             "command": "npx",
             "args": [
@@ -40,6 +44,27 @@
             "env": {
                 "IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR": "~/Temp/football-with-friends/tmp"
             }
+        },
+        "cloudflare-observability": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://observability.mcp.cloudflare.com/mcp"
+            ]
+        },
+        "cloudflare-bindings": {
+            "command": "npx",
+            "args": [
+                "mcp-remote",
+                "https://bindings.mcp.cloudflare.com/mcp"
+            ]
+        },
+        "gcloud": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@google-cloud/gcloud-mcp"
+            ]
         }
     }
 }

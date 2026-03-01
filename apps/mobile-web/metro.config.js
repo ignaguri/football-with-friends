@@ -30,4 +30,7 @@ config.resolver.unstable_enableSymlinks = true;
 // https://github.com/expo/expo/issues/23180
 config.resolver.sourceExts.push('mjs');
 
+// 6. Add font asset extensions for Montserrat fonts
+config.resolver.assetExts.push('ttf', 'woff2');
+
 module.exports = config;

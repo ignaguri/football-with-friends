@@ -26,6 +26,35 @@ function ToastContent() {
 
   if (!currentToast || currentToast.isHandledNatively) return null;
 
+  // Get variant from custom data (default to "default")
+  const variant = (currentToast.customData as any)?.variant || "default";
+
+  // Define colors based on variant
+  const getColors = () => {
+    switch (variant) {
+      case "success":
+        return {
+          bg: "$green3",
+          border: "$green8",
+          text: "$green12",
+        };
+      case "error":
+        return {
+          bg: "$red3",
+          border: "$red8",
+          text: "$red12",
+        };
+      default:
+        return {
+          bg: "$gray3",
+          border: "$gray8",
+          text: "$gray12",
+        };
+    }
+  };
+
+  const colors = getColors();
+
   return (
     <TamaguiToast
       key={currentToast.id}
@@ -37,18 +66,18 @@ function ToastContent() {
       scale={1}
       animation="quick"
       viewportName={currentToast.viewportName}
-      backgroundColor="$background"
-      borderColor="$gray7"
+      backgroundColor={colors.bg}
+      borderColor={colors.border}
       borderWidth={1}
       borderRadius="$4"
       padding="$3"
     >
       <YStack>
-        <TamaguiToast.Title fontSize="$4" fontWeight="600">
+        <TamaguiToast.Title fontSize="$4" fontWeight="600" color={colors.text}>
           {currentToast.title}
         </TamaguiToast.Title>
         {!!currentToast.message && (
-          <TamaguiToast.Description fontSize="$3" color="$gray11">
+          <TamaguiToast.Description fontSize="$3" color={colors.text}>
             {currentToast.message}
           </TamaguiToast.Description>
         )}

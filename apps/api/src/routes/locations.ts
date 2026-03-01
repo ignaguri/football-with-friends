@@ -5,19 +5,20 @@ import { getRepositoryFactory } from "@repo/shared/repositories";
 import { auth } from "../auth";
 
 const app = new Hono();
-const repositoryFactory = getRepositoryFactory();
-const locationRepository = repositoryFactory.locations;
+
+// Lazy repository loading for Cloudflare Workers compatibility
+const getLocationRepository = () => getRepositoryFactory().locations;
 
 // Get all locations
 app.get("/", async (c) => {
-  const locations = await locationRepository.findAll();
+  const locations = await getLocationRepository().findAll();
   return c.json(locations);
 });
 
 // Get single location by ID
 app.get("/:id", async (c) => {
   const id = c.req.param("id");
-  const location = await locationRepository.findById(id);
+  const location = await getLocationRepository().findById(id);
   if (!location) {
     return c.json({ error: "Location not found" }, 404);
   }
@@ -49,7 +50,7 @@ app.post(
     const locationData = c.req.valid("json");
 
     try {
-      const location = await locationRepository.create(locationData);
+      const location = await getLocationRepository().create(locationData);
       return c.json({ location }, 201);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create location";
@@ -84,7 +85,7 @@ app.patch(
     const updates = c.req.valid("json");
 
     try {
-      const location = await locationRepository.update(locationId, updates);
+      const location = await getLocationRepository().update(locationId, updates);
       return c.json({ location });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update location";
@@ -108,7 +109,7 @@ app.delete("/:id", async (c) => {
   const locationId = c.req.param("id");
 
   try {
-    await locationRepository.delete(locationId);
+    await getLocationRepository().delete(locationId);
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete location";

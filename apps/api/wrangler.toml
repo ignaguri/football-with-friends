@@ -1,0 +1,52 @@
+# Cloudflare Workers configuration for Hono API
+name = "football-api"
+main = "src/worker.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Minify for smaller bundle size
+minify = true
+
+# Observability (Workers Logs)
+[observability.logs]
+enabled = true
+invocation_logs = true
+
+# Environment variables (set via wrangler secret or dashboard)
+# TURSO_DATABASE_URL - Turso database URL
+# TURSO_AUTH_TOKEN - Turso auth token
+# BETTER_AUTH_SECRET - Auth encryption key
+# GOOGLE_CLIENT_ID - Google OAuth client ID
+# GOOGLE_CLIENT_SECRET - Google OAuth client secret
+
+[vars]
+NODE_ENV = "production"
+STORAGE_PROVIDER = "turso"
+DEFAULT_TIMEZONE = "Europe/Berlin"
+BETTER_AUTH_BASE_URL = "https://football-api.pepe-grillo-parlante.workers.dev"
+ALLOWED_ORIGINS = "http://localhost:8081,http://localhost:8084,http://localhost:8085,http://localhost:19006,http://localhost:3000,http://localhost:3001,https://football-with-friends.vercel.app"
+
+# R2 bucket for profile pictures
+[[r2_buckets]]
+binding = "PROFILE_PICTURES"
+bucket_name = "football-profile-pictures"
+
+# Cron trigger for match status updates (every 6 hours)
+[triggers]
+crons = ["0 */6 * * *"]
+
+# Development environment
+[env.development]
+vars = { NODE_ENV = "development" }
+
+# Preview/Staging environment
+[env.preview]
+name = "football-api-staging"
+vars = { NODE_ENV = "production", STORAGE_PROVIDER = "turso", DEFAULT_TIMEZONE = "Europe/Berlin", BETTER_AUTH_BASE_URL = "https://football-api-staging.pepe-grillo-parlante.workers.dev", ALLOWED_ORIGINS = "http://localhost:8081,http://localhost:8084,http://localhost:8085,http://localhost:19006,http://localhost:3000,http://localhost:3001,https://football-with-friends.vercel.app" }
+
+[[env.preview.r2_buckets]]
+binding = "PROFILE_PICTURES"
+bucket_name = "football-profile-pictures-staging"
+
+[env.preview.triggers]
+crons = ["0 */6 * * *"]

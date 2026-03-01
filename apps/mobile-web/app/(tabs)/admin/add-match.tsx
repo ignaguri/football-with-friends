@@ -1,4 +1,10 @@
-import { useState, useEffect } from "react";
+import {
+  useSession,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+} from "@repo/api-client";
 import {
   Text,
   YStack,
@@ -11,10 +17,10 @@ import {
   useToastController,
   ScrollView,
 } from "@repo/ui";
-import { useSession, useQuery, useMutation, useQueryClient, client } from "@repo/api-client";
-import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
 import { format } from "date-fns";
+import { router } from "expo-router";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Location {
   id: string;
@@ -49,11 +55,13 @@ export default function AddMatchScreen() {
   const [locationId, setLocationId] = useState("");
   const [courtId, setCourtId] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("10");
-  const [maxSubstitutes, setMaxSubstitutes] = useState("2");
-  const [costPerPlayer, setCostPerPlayer] = useState("");
-  const [sameDayCost, setSameDayCost] = useState("");
+  const [costPerPlayerOverride, setCostPerPlayerOverride] = useState<
+    string | null
+  >(null);
+  const [sameDayCostOverride, setSameDayCostOverride] = useState<string | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const isAdmin = session?.user?.role === "admin";
 
@@ -66,21 +74,10 @@ export default function AddMatchScreen() {
     },
   });
 
-  // Pre-fill costs from settings (only once when settings load)
-  useEffect(() => {
-    if (settings && !settingsLoaded) {
-      if (settings.default_cost_per_player) {
-        setCostPerPlayer(settings.default_cost_per_player);
-      }
-      if (settings.same_day_extra_cost) {
-        setSameDayCost(settings.same_day_extra_cost);
-      }
-      if (settings.default_max_substitutes) {
-        setMaxSubstitutes(settings.default_max_substitutes);
-      }
-      setSettingsLoaded(true);
-    }
-  }, [settings, settingsLoaded]);
+  const costPerPlayer =
+    costPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
+  const sameDayCost =
+    sameDayCostOverride ?? settings?.same_day_extra_cost ?? "";
 
   // Fetch locations
   const { data: locations = [], isLoading: isLoadingLocations } = useQuery({
@@ -103,11 +100,6 @@ export default function AddMatchScreen() {
     enabled: !!locationId,
   });
 
-  // Reset court when location changes
-  useEffect(() => {
-    setCourtId("");
-  }, [locationId]);
-
   // Create match mutation
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -124,7 +116,6 @@ export default function AddMatchScreen() {
           locationId,
           courtId: courtId || undefined,
           maxPlayers: parseInt(maxPlayers) || 10,
-          maxSubstitutes: parseInt(maxSubstitutes) || 2,
           costPerPlayer: costPerPlayer || undefined,
           sameDayCost: sameDayCost || undefined,
         },
@@ -174,9 +165,17 @@ export default function AddMatchScreen() {
   // Loading state
   if (isSessionPending) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4" backgroundColor="$background">
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
         <Spinner size="large" />
-        <Text marginTop="$2" color="$gray11">{t("shared.loading")}</Text>
+        <Text marginTop="$2" color="$gray11">
+          {t("shared.loading")}
+        </Text>
       </YStack>
     );
   }
@@ -184,9 +183,15 @@ export default function AddMatchScreen() {
   // Auth check
   if (!session?.user) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4" backgroundColor="$background">
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
         <Text color="$gray11">{t("addMatch.mustSignIn")}</Text>
-        <Button marginTop="$4" onPress={() => router.push("/(auth)/sign-in")}>
+        <Button marginTop="$4" onPress={() => router.push("/(auth)")}>
           {t("shared.signIn")}
         </Button>
       </YStack>
@@ -196,7 +201,13 @@ export default function AddMatchScreen() {
   // Admin check
   if (!isAdmin) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding="$4" backgroundColor="$background">
+      <YStack
+        flex={1}
+        alignItems="center"
+        justifyContent="center"
+        padding="$4"
+        backgroundColor="$background"
+      >
         <Text color="$red10">{t("addMatch.unauthorized")}</Text>
       </YStack>
     );
@@ -216,103 +227,101 @@ export default function AddMatchScreen() {
   ];
 
   return (
-    <ScrollView backgroundColor="$background">
-      <YStack padding="$4" gap="$4" paddingBottom="$8">
-        {/* Date Picker */}
-        <DatePicker
-          value={date}
-          onChange={setDate}
-          label={t("shared.date")}
-          placeholder={t("addMatch.selectDate")}
-          disabled={createMutation.isPending}
-        />
-
-        {/* Time Picker */}
-        <TimePicker
-          value={time}
-          onChange={setTime}
-          label={t("shared.time")}
-          placeholder={t("addMatch.selectTime")}
-          disabled={createMutation.isPending}
-        />
-
-        {/* Location Select */}
-        <Select
-          value={locationId}
-          onValueChange={setLocationId}
-          label={t("addMatch.location")}
-          placeholder={t("addMatch.selectLocation")}
-          options={locationOptions}
-          disabled={createMutation.isPending || isLoadingLocations}
-        />
-
-        {/* Court Select */}
-        {locationId && (
-          <Select
-            value={courtId}
-            onValueChange={setCourtId}
-            label={t("addMatch.court")}
-            placeholder={t("addMatch.selectCourt")}
-            options={courtOptions}
-            disabled={createMutation.isPending || isLoadingCourts}
+    <YStack flex={1} backgroundColor="$background">
+      <ScrollView style={{ flex: 1 }}>
+        <YStack padding="$4" gap="$4" paddingBottom="$8">
+          {/* Date Picker */}
+          <DatePicker
+            value={date}
+            onChange={setDate}
+            label={t("shared.date")}
+            placeholder={t("addMatch.selectDate")}
+            disabled={createMutation.isPending}
           />
-        )}
 
-        {/* Max Players */}
-        <Input
-          value={maxPlayers}
-          onChangeText={setMaxPlayers}
-          label={t("addMatch.maxPlayers")}
-          keyboardType="number-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Time Picker */}
+          <TimePicker
+            value={time}
+            onChange={setTime}
+            label={t("shared.time")}
+            placeholder={t("addMatch.selectTime")}
+            disabled={createMutation.isPending}
+          />
 
-        {/* Max Substitutes */}
-        <Input
-          value={maxSubstitutes}
-          onChangeText={setMaxSubstitutes}
-          label={t("addMatch.maxSubstitutes")}
-          keyboardType="number-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Location Select */}
+          <Select
+            value={locationId}
+            onValueChange={(id) => {
+              setLocationId(id);
+              setCourtId("");
+            }}
+            label={t("addMatch.location")}
+            placeholder={t("addMatch.selectLocation")}
+            options={locationOptions}
+            disabled={createMutation.isPending || isLoadingLocations}
+          />
 
-        {/* Cost Per Player */}
-        <Input
-          value={costPerPlayer}
-          onChangeText={setCostPerPlayer}
-          label={t("addMatch.costPerPlayer")}
-          placeholder={t("addMatch.costPlaceholder")}
-          keyboardType="decimal-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Court Select */}
+          {!!locationId && (
+            <Select
+              value={courtId}
+              onValueChange={setCourtId}
+              label={t("addMatch.court")}
+              placeholder={t("addMatch.selectCourt")}
+              options={courtOptions}
+              disabled={createMutation.isPending || isLoadingCourts}
+            />
+          )}
 
-        {/* Same Day Extra Cost */}
-        <Input
-          value={sameDayCost}
-          onChangeText={setSameDayCost}
-          label={t("addMatch.sameDayCost")}
-          placeholder={t("addMatch.costPlaceholder")}
-          keyboardType="decimal-pad"
-          disabled={createMutation.isPending}
-        />
+          {/* Max Players */}
+          <Input
+            value={maxPlayers}
+            onChangeText={setMaxPlayers}
+            label={t("addMatch.maxPlayers")}
+            keyboardType="number-pad"
+            disabled={createMutation.isPending}
+          />
 
-        {/* Error Message */}
-        {error && (
-          <Text color="$red10" textAlign="center">
-            {error}
-          </Text>
-        )}
+          {/* Cost Per Player */}
+          <Input
+            value={costPerPlayer}
+            onChangeText={setCostPerPlayerOverride}
+            label={t("addMatch.costPerPlayer")}
+            placeholder={t("addMatch.costPlaceholder")}
+            keyboardType="decimal-pad"
+            disabled={createMutation.isPending}
+          />
 
-        {/* Submit Button */}
-        <Button
-          variant="primary"
-          size="$5"
-          onPress={handleSubmit}
-          disabled={createMutation.isPending}
-        >
-          {createMutation.isPending ? t("addMatch.adding") : t("addMatch.add")}
-        </Button>
-      </YStack>
-    </ScrollView>
+          {/* Same Day Extra Cost */}
+          <Input
+            value={sameDayCost}
+            onChangeText={setSameDayCostOverride}
+            label={t("addMatch.sameDayCost")}
+            placeholder={t("addMatch.costPlaceholder")}
+            keyboardType="decimal-pad"
+            disabled={createMutation.isPending}
+          />
+
+          {/* Error Message */}
+          {error && (
+            <Text color="$red10" textAlign="center">
+              {error}
+            </Text>
+          )}
+
+          {/* Submit Button */}
+          <Button
+            variant="primary"
+            size="$5"
+            onPress={handleSubmit}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending
+              ? t("addMatch.adding")
+              : t("addMatch.add")}
+          </Button>
+        </YStack>
+      </ScrollView>
+    </YStack>
   );
 }

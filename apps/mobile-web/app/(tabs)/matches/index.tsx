@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useInfiniteQuery, client, useSession } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -7,69 +7,53 @@ import {
   XStack,
   Spinner,
   Tabs,
-  StatusBadge,
-  type MatchStatusType,
+  Button,
+  colors,
 } from "@repo/ui";
-import { useQuery, client } from "@repo/api-client";
+import { Plus, BookOpen } from "@tamagui/lucide-icons";
+import { router, Stack } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { router } from "expo-router";
-import { RefreshControl, ScrollView } from "react-native";
+import { RefreshControl, ScrollView, Pressable } from "react-native";
+import { useTheme } from "tamagui";
+import { formatMatchDateTime } from "../../../lib/date-utils";
 
 type MatchType = "upcoming" | "past";
 
 export default function MatchesListScreen() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
+  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<MatchType>("upcoming");
 
   const {
-    data: matches,
+    data,
     isLoading,
     error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch,
     isRefetching,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: ["matches", activeTab],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
       const res = await client.api.matches.$get({
-        query: { type: activeTab },
+        query: {
+          type: activeTab,
+          limit: "5",
+          offset: pageParam.toString(),
+        },
       });
       return res.json();
     },
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? (lastPage.page + 1) * 5 : undefined,
+    initialPageParam: 0,
   });
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const getMatchStatus = (status: string): MatchStatusType | null => {
-    switch (status) {
-      case "cancelled":
-        return "cancelled";
-      case "completed":
-      case "played":
-        return "played";
-      case "upcoming":
-        return "upcoming";
-      default:
-        return null;
-    }
-  };
-
-  const getStatusLabel = (status: MatchStatusType): string => {
-    switch (status) {
-      case "cancelled":
-        return t("status.cancelled");
-      case "played":
-        return t("status.played");
-      case "upcoming":
-        return t("status.upcoming");
-    }
-  };
+  // Flatten paginated data
+  const matches = data?.pages.flatMap((page) => page.matches) ?? [];
 
   const tabs = [
     { value: "upcoming", label: t("matches.upcoming") },
@@ -77,110 +61,162 @@ export default function MatchesListScreen() {
   ];
 
   return (
-    <Container variant="padded">
-      {/* Tab Selector */}
-      <YStack marginBottom="$4">
-        <Tabs
-          value={activeTab}
-          onValueChange={(value) => setActiveTab(value as MatchType)}
-          tabs={tabs}
-        />
-      </YStack>
+    <>
+      <Stack.Screen
+        options={{
+          title: "",
+          headerShown: true,
+          headerRight: () => (
+            <Button
+              variant="ghost"
+              size="$3"
+              onPress={() => router.push("/(tabs)/rules")}
+              paddingHorizontal="$3"
+            >
+              <XStack gap="$2" alignItems="center">
+                <BookOpen size={20} />
+                <Text fontSize="$4">{t("rules.title")}</Text>
+              </XStack>
+            </Button>
+          ),
+        }}
+      />
+      <Container variant="padded">
+        {/* Tab Selector */}
+        <YStack marginBottom="$4">
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as MatchType)}
+            tabs={tabs}
+          />
+        </YStack>
 
-      <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-      >
-        <YStack gap="$3" paddingBottom="$4">
-          {isLoading && (
-            <YStack alignItems="center" padding="$6">
-              <Spinner size="large" />
-              <Text marginTop="$2" color="$gray11">
-                {t("shared.loading")}
-              </Text>
-            </YStack>
-          )}
-
-          {error && (
-            <Card variant="outlined" backgroundColor="$red2">
-              <YStack padding="$3">
-                <Text color="$red11">{t("matches.error")}</Text>
-              </YStack>
-            </Card>
-          )}
-
-          {!isLoading && !error && matches && matches.length === 0 && (
-            <Card variant="outlined">
-              <YStack padding="$4" alignItems="center">
-                <Text fontSize="$5" color="$gray11">
-                  {t("matches.none")}
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+        >
+          <YStack gap="$3" paddingBottom="$4">
+            {isLoading && (
+              <YStack alignItems="center" padding="$6">
+                <Spinner size="large" />
+                <Text marginTop="$2" color="$gray11">
+                  {t("shared.loading")}
                 </Text>
               </YStack>
-            </Card>
-          )}
+            )}
 
-          {!isLoading &&
-            !error &&
-            matches &&
-            matches.map((match) => (
-              <Card
-                key={match.id}
-                variant="elevated"
-                pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
-              >
-                <YStack padding="$3" gap="$2">
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$6" fontWeight="600">
-                      {formatDate(match.date)}
-                    </Text>
-                    {getMatchStatus(match.status) && (
-                      <StatusBadge
-                        status={getMatchStatus(match.status)!}
-                        type="match"
-                        label={getStatusLabel(getMatchStatus(match.status)!)}
-                      />
-                    )}
-                  </XStack>
-
-                  <XStack gap="$4">
-                    <YStack>
-                      <Text fontSize="$3" color="$gray10">
-                        {t("shared.time")}
-                      </Text>
-                      <Text fontSize="$4">{match.time}</Text>
-                    </YStack>
-
-                    <YStack>
-                      <Text fontSize="$3" color="$gray10">
-                        {t("addMatch.maxPlayers")}
-                      </Text>
-                      <Text fontSize="$4">{match.max_players}</Text>
-                    </YStack>
-
-                    {match.cost_per_player && (
-                      <YStack>
-                        <Text fontSize="$3" color="$gray10">
-                          {t("stats.cost")}
-                        </Text>
-                        <Text fontSize="$4">{match.cost_per_player}</Text>
-                      </YStack>
-                    )}
-                  </XStack>
-
-                  {match.location_name && (
-                    <Text fontSize="$3" color="$gray11">
-                      {match.location_name}
-                      {match.court_name && ` - ${match.court_name}`}
-                    </Text>
-                  )}
+            {error && (
+              <Card variant="outlined" backgroundColor="$red2">
+                <YStack padding="$3">
+                  <Text color="$red11">{t("matches.error")}</Text>
                 </YStack>
               </Card>
-            ))}
-        </YStack>
-      </ScrollView>
-    </Container>
+            )}
+
+            {!isLoading && !error && matches && matches.length === 0 && (
+              <Card variant="outlined">
+                <YStack padding="$4" alignItems="center">
+                  <Text fontSize="$5" color="$gray11">
+                    {t("matches.none")}
+                  </Text>
+                </YStack>
+              </Card>
+            )}
+
+            {!isLoading &&
+              !error &&
+              matches &&
+              matches.map((match) => (
+                <Pressable
+                  key={match.id}
+                  onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
+                  style={{ width: "100%" }}
+                >
+                  <YStack
+                    backgroundColor={colors.navyBlue}
+                    borderRadius={16}
+                    padding="$4"
+                    gap="$1"
+                    pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                    borderWidth={2}
+                    borderColor="rgba(0, 0, 0, 0.6)"
+                    $platform-web={{
+                      // @ts-ignore - boxShadow is web-only
+                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <Text color="white" fontSize="$5" fontWeight="500">
+                        {formatMatchDateTime(match.date, match.time)}
+                      </Text>
+                      {(match as any).userSignupStatus &&
+                        (match as any).userSignupStatus !== "CANCELLED" && (
+                          <Text
+                            fontSize="$2"
+                            fontWeight="600"
+                            color="white"
+                            backgroundColor="rgba(255, 255, 255, 0.2)"
+                            paddingHorizontal="$2"
+                            paddingVertical="$1"
+                            borderRadius="$2"
+                          >
+                            {activeTab === "upcoming"
+                              ? t("matches.youJoined")
+                              : t("matches.youPlayed")}
+                          </Text>
+                        )}
+                    </XStack>
+                    {match.location?.name && (
+                      <Text color="white" fontSize="$4" opacity={0.9}>
+                        {match.location.name}
+                      </Text>
+                    )}
+                  </YStack>
+                </Pressable>
+              ))}
+
+            {/* Load More Button */}
+            {!isLoading && !error && hasNextPage && (
+              <Button
+                variant="outline"
+                onPress={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                marginTop="$4"
+              >
+                {isFetchingNextPage ? (
+                  <Spinner size="small" />
+                ) : (
+                  t("shared.loadMore")
+                )}
+              </Button>
+            )}
+          </YStack>
+        </ScrollView>
+
+        {/* Admin FAB */}
+        {session?.user?.role === "admin" && (
+          <Button
+            position="absolute"
+            bottom="$6"
+            right="$4"
+            width={56}
+            height={56}
+            borderRadius="$12"
+            backgroundColor="$blue10"
+            onPress={() => router.push("/(tabs)/admin/add-match")}
+            pressStyle={{ scale: 0.95 }}
+            elevation={4}
+            padding="$0"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Plus size={28} color="white" />
+          </Button>
+        )}
+      </Container>
+    </>
   );
 }

@@ -1,5 +1,11 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useState } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  client,
+  useSession,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -17,25 +23,30 @@ import {
   type PlayerRow,
   type PlayerAction,
   type PlayerStatusType,
+  useToastController,
 } from "@repo/ui";
 import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  client,
-  useSession,
-} from "@repo/api-client";
-import { useTranslation } from "react-i18next";
-import { useLocalSearchParams, router } from "expo-router";
-import { RefreshControl, ScrollView, Share, Linking, Alert } from "react-native";
-import {
-  CreditCard,
-  MessageCircle,
+  BanknoteArrowDown,
   X,
   Calendar,
   UserPlus,
   RotateCcw,
+  Share2,
+  Pencil,
+  Trash2,
 } from "@tamagui/lucide-icons";
+import { useLocalSearchParams, router } from "expo-router";
+import { useState } from "react";
+import { useTranslation, Trans } from "react-i18next";
+import {
+  RefreshControl,
+  ScrollView,
+  Share,
+  Linking,
+  Image,
+} from "react-native";
+
+import { formatFullDate } from "../../../lib/date-utils";
 
 interface Signup {
   id: string;
@@ -69,19 +80,51 @@ interface MatchDetails {
   userSignup?: Signup;
 }
 
+// WhatsApp icon component using the existing SVG
+function WhatsAppIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Image
+      source={require("../../../assets/whatsapp-logo.svg")}
+      style={{ width: size, height: size, tintColor: "#25D366" }}
+      pointerEvents="none"
+    />
+  );
+}
+
+function PayPalIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Image
+      source={require("../../../assets/paypal-logo.svg")}
+      style={{ width: size, height: size }}
+      pointerEvents="none"
+    />
+  );
+}
+
 export default function MatchDetailScreen() {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const { t } = useTranslation();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const toast = useToastController();
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [showCancelAlert, setShowCancelAlert] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
   const [signupToCancel, setSignupToCancel] = useState<{
     id: string;
     status: PlayerStatusType;
   } | null>(null);
+  const [showEditNameDialog, setShowEditNameDialog] = useState(false);
+  const [editingSignup, setEditingSignup] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [editedName, setEditedName] = useState("");
+  const [showRemoveAlert, setShowRemoveAlert] = useState(false);
+  const [signupToRemove, setSignupToRemove] = useState<string | null>(null);
 
   const userId = session?.user?.id;
   const isAdmin = session?.user?.role === "admin";
@@ -104,6 +147,14 @@ export default function MatchDetailScreen() {
     enabled: !!matchId,
   });
 
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => {
+      const res = await client.api.settings.$get();
+      return res.json();
+    },
+  });
+
   const signupMutation = useMutation({
     mutationFn: async () => {
       const res = await client.api.matches[":id"].signup.$post({
@@ -111,17 +162,19 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as { error?: string }).error || "Failed to sign up");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to sign up",
+        );
       }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
       setShowJoinModal(false);
-      Alert.alert(t("matchDetail.signupSuccess"));
+      setShowConfirmationModal(true);
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -139,7 +192,9 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as { error?: string }).error || "Failed to update");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to update",
+        );
       }
       return res.json();
     },
@@ -147,7 +202,7 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
@@ -163,7 +218,9 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error((data as { error?: string }).error || "Failed to add guest");
+        throw new Error(
+          (data as { error?: string }).error || "Failed to add guest",
+        );
       }
       return res.json();
     },
@@ -171,24 +228,69 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
       setShowGuestDialog(false);
       setGuestName("");
-      Alert.alert(t("matchDetail.guestAddSuccess"));
+      toast.show(t("matchDetail.guestAddSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
     onError: (err: Error) => {
-      Alert.alert("Error", err.message);
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
     },
   });
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  const editPlayerNameMutation = useMutation({
+    mutationFn: async ({
+      signupId,
+      playerName,
+    }: {
+      signupId: string;
+      playerName: string;
+    }) => {
+      const res = await client.api.matches[":id"].signup[":signupId"].$patch({
+        param: { id: matchId!, signupId },
+        json: { playerName },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(
+          (data as { error?: string }).error || "Failed to update name",
+        );
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+      setShowEditNameDialog(false);
+      setEditingSignup(null);
+      setEditedName("");
+    },
+    onError: (err: Error) => {
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+    },
+  });
 
-  const handleCancelSignup = (signupId: string, currentStatus: PlayerStatusType) => {
+  const removePlayerMutation = useMutation({
+    mutationFn: async (signupId: string) => {
+      const res = await client.api.matches[":id"].signup[":signupId"].$delete({
+        param: { id: matchId!, signupId },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(
+          (data as { error?: string }).error || "Failed to remove player",
+        );
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
+    },
+    onError: (err: Error) => {
+      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+    },
+  });
+
+  const handleCancelSignup = (
+    signupId: string,
+    currentStatus: PlayerStatusType,
+  ) => {
     setSignupToCancel({ id: signupId, status: currentStatus });
     setShowCancelAlert(true);
   };
@@ -219,32 +321,53 @@ export default function MatchDetailScreen() {
     updateSignupMutation.mutate({ signupId, status: "PENDING" });
   };
 
+  const handleMarkAsPaid = (signupId: string) => {
+    updateSignupMutation.mutate({ signupId, status: "PAID" });
+  };
+
+  const handleEditPlayerName = (signupId: string, currentName: string) => {
+    setEditingSignup({ id: signupId, name: currentName });
+    setEditedName(currentName);
+    setShowEditNameDialog(true);
+  };
+
+  const handleRemovePlayer = (signupId: string) => {
+    setSignupToRemove(signupId);
+    setShowRemoveAlert(true);
+  };
+
+  const confirmRemovePlayer = () => {
+    if (!signupToRemove) return;
+    removePlayerMutation.mutate(signupToRemove);
+    setShowRemoveAlert(false);
+    setSignupToRemove(null);
+  };
+
   const handleOpenPayment = () => {
-    // Open PayPal link from environment variable
-    const paypalUrl = process.env.EXPO_PUBLIC_PAYPAL_URL;
+    const paypalUrl = settings?.paypal_url;
     if (paypalUrl) {
       Linking.openURL(paypalUrl).catch(() => {
-        Alert.alert("Error", t("matchDetail.paymentOpenError"));
+        toast.show(t("matchDetail.paymentOpenError"), { duration: 4000, customData: { variant: "error" } });
       });
     } else {
-      Alert.alert(t("matchDetail.noPaymentMethod"));
+      toast.show(t("matchDetail.noPaymentMethod"), { duration: 4000, customData: { variant: "error" } });
     }
   };
 
   const handleNotifyPaid = () => {
     // Open WhatsApp to notify organizer using wa.me link with phone number
-    const organizerPhone = process.env.EXPO_PUBLIC_ORGANIZER_WHATSAPP;
+    const organizerPhone = settings?.organizer_whatsapp;
     if (!organizerPhone) {
-      Alert.alert("Error", t("matchDetail.noOrganizerPhone"));
+      toast.show(t("matchDetail.noOrganizerPhone"), { duration: 4000, customData: { variant: "error" } });
       return;
     }
     const message = t("notify.whatsappMessage", {
-      date: formatDate(match?.date || ""),
+      date: formatFullDate(match?.date || ""),
       name: session?.user?.name || "",
     });
     const url = `https://wa.me/${organizerPhone}?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert("Error", t("matchDetail.whatsappError"));
+      toast.show(t("matchDetail.whatsappError"), { duration: 4000, customData: { variant: "error" } });
     });
   };
 
@@ -256,6 +379,15 @@ export default function MatchDetailScreen() {
     Share.share({
       message: icsContent,
       title: t("shared.addToCalendar"),
+    });
+  };
+
+  const handleShareMatch = () => {
+    if (!match) return;
+    const message = `${t("shared.footballMatch")} - ${formatFullDate(match.date)} ${t("shared.at")} ${match.time}\n${match.location?.name || ""}\n\n${t("shared.joinUs")}!`;
+    Share.share({
+      message,
+      title: t("shared.share"),
     });
   };
 
@@ -282,6 +414,9 @@ END:VCALENDAR`;
   };
 
   const getPlayerActions = (player: Signup): PlayerAction[] => {
+    // No actions for played matches
+    if (isPlayed) return [];
+
     const isOwn = player.userId === userId;
     const canAct = isAdmin || isOwn;
 
@@ -289,51 +424,56 @@ END:VCALENDAR`;
 
     const actions: PlayerAction[] = [];
 
+    // Admin: edit guest player name
+    if (isAdmin && player.signupType === "guest") {
+      actions.push({
+        icon: Pencil,
+        label: t("matchDetail.editName"),
+        onPress: () => handleEditPlayerName(player.id, player.playerName),
+        variant: "outline",
+      });
+    }
+
     switch (player.status) {
       case "PENDING":
-        // Pay, Notify I paid, Cancel
-        actions.push({
-          icon: CreditCard,
-          label: t("matchDetail.pay"),
-          onPress: handleOpenPayment,
-          variant: "outline",
-        });
-        actions.push({
-          icon: MessageCircle,
-          label: t("notify.trigger"),
-          onPress: handleNotifyPaid,
-          variant: "outline",
-        });
+        if (isAdmin) {
+          // Admin can directly mark as paid (including themselves)
+          actions.push({
+            icon: BanknoteArrowDown,
+            label: t("matchDetail.markPaid"),
+            onPress: () => handleMarkAsPaid(player.id),
+            variant: "outline",
+          });
+        } else if (isOwn) {
+          // Non-admin players get Pay and Notify options
+          actions.push({
+            icon: PayPalIcon,
+            label: t("matchDetail.pay"),
+            onPress: handleOpenPayment,
+            variant: "outline",
+          });
+          actions.push({
+            icon: WhatsAppIcon,
+            label: t("notify.trigger"),
+            onPress: handleNotifyPaid,
+            variant: "outline",
+          });
+        }
         actions.push({
           icon: X,
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
-          variant: "danger",
+          variant: "danger-outline",
         });
         break;
 
       case "PAID":
-        // Cancel, Add to calendar, Invite friend
         actions.push({
           icon: X,
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
-          variant: "danger",
+          variant: "danger-outline",
         });
-        actions.push({
-          icon: Calendar,
-          label: t("shared.addToCalendar"),
-          onPress: handleAddToCalendar,
-          variant: "outline",
-        });
-        if (isOwn) {
-          actions.push({
-            icon: UserPlus,
-            label: t("actions.signUpGuest"),
-            onPress: () => setShowGuestDialog(true),
-            variant: "outline",
-          });
-        }
         break;
 
       case "CANCELLED":
@@ -345,22 +485,22 @@ END:VCALENDAR`;
           variant: "primary",
         });
         actions.push({
-          icon: MessageCircle,
+          icon: WhatsAppIcon,
           label: t("notify.cantPlay"),
           onPress: handleNotifyPaid,
           variant: "outline",
         });
         break;
+    }
 
-      case "SUBSTITUTE":
-        // Show actions similar to PENDING, but indicate they're on waitlist
-        actions.push({
-          icon: X,
-          label: t("actions.cancel"),
-          onPress: () => handleCancelSignup(player.id, player.status),
-          variant: "danger",
-        });
-        break;
+    // Admin: remove player entirely
+    if (isAdmin) {
+      actions.push({
+        icon: Trash2,
+        label: t("matchDetail.removePlayer"),
+        onPress: () => handleRemovePlayer(player.id),
+        variant: "danger-outline",
+      });
     }
 
     return actions;
@@ -381,26 +521,27 @@ END:VCALENDAR`;
     }));
   };
 
-  const paidCount = match?.signups?.filter((s) => s.status === "PAID").length || 0;
-  const pendingCount =
-    match?.signups?.filter((s) => s.status === "PENDING").length || 0;
-  const substituteCount =
-    match?.signups?.filter((s) => s.status === "SUBSTITUTE").length || 0;
-  const activeCount = paidCount + pendingCount;
   const isCancelled = match?.status === "cancelled";
+  const isPlayed = match?.status === "completed" || match?.status === "played";
   const isParticipating = match?.isUserSignedUp;
-  const isUserSubstitute = match?.userSignup?.status === "SUBSTITUTE";
+
+  // Check if user was a participant (PAID or PENDING, not CANCELLED)
+  const userWasParticipant =
+    match?.userSignup?.status === "PAID" ||
+    match?.userSignup?.status === "PENDING";
 
   // Check if match is today for same-day cost
-  const isMatchToday = match ? (() => {
-    const today = new Date();
-    const matchDate = new Date(match.date);
-    return (
-      today.getFullYear() === matchDate.getFullYear() &&
-      today.getMonth() === matchDate.getMonth() &&
-      today.getDate() === matchDate.getDate()
-    );
-  })() : false;
+  const isMatchToday = match
+    ? (() => {
+        const today = new Date();
+        const matchDate = new Date(match.date);
+        return (
+          today.getFullYear() === matchDate.getFullYear() &&
+          today.getMonth() === matchDate.getMonth() &&
+          today.getDate() === matchDate.getDate()
+        );
+      })()
+    : false;
 
   // Calculate total cost for same-day matches
   const baseCost = parseFloat(match?.costPerPlayer || "0");
@@ -443,6 +584,7 @@ END:VCALENDAR`;
     <Container variant="padded">
       <ScrollView
         style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
@@ -451,17 +593,68 @@ END:VCALENDAR`;
           {/* Match Header Card */}
           <Card variant="elevated">
             <YStack padding="$3" gap="$2">
-              {isCancelled && (
-                <StatusBadge
-                  status="cancelled"
-                  type="match"
-                  label={t("matchDetail.matchCancelled")}
-                />
-              )}
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack flex={1}>
+                  {isCancelled && (
+                    <StatusBadge
+                      status="cancelled"
+                      type="match"
+                      label={t("matchDetail.matchCancelled")}
+                    />
+                  )}
 
-              <Text fontSize="$7" fontWeight="bold">
-                {formatDate(match.date)}
-              </Text>
+                  <Text fontSize="$7" fontWeight="bold">
+                    {formatFullDate(match.date)}
+                  </Text>
+                </YStack>
+
+                {/* Action buttons */}
+                <XStack gap="$2">
+                  {/* Edit Button (admin only, non-cancelled) */}
+                  {isAdmin &&
+                    match.status !== "cancelled" &&
+                    match.status !== "completed" && (
+                      <Button
+                        variant="outline"
+                        size="$3"
+                        circular
+                        onPress={() =>
+                          router.push({
+                            pathname: "/(tabs)/admin/edit-match",
+                            params: { matchId: match.id },
+                          })
+                        }
+                        padding="$2"
+                      >
+                        <Pencil size={20} />
+                      </Button>
+                    )}
+
+                  {/* Add to Calendar Button */}
+                  {(isParticipating || match.userSignup?.status === "PAID") && (
+                    <Button
+                      variant="outline"
+                      size="$3"
+                      circular
+                      onPress={handleAddToCalendar}
+                      padding="$2"
+                    >
+                      <Calendar size={20} />
+                    </Button>
+                  )}
+
+                  {/* Share Button */}
+                  <Button
+                    variant="outline"
+                    size="$3"
+                    circular
+                    onPress={handleShareMatch}
+                    padding="$2"
+                  >
+                    <Share2 size={20} />
+                  </Button>
+                </XStack>
+              </XStack>
 
               <XStack gap="$4" flexWrap="wrap">
                 <YStack>
@@ -478,10 +671,7 @@ END:VCALENDAR`;
                     <Text fontSize="$3" color="$gray10">
                       {t("stats.location")}
                     </Text>
-                    <Text fontSize="$5">
-                      {match.location.name}
-                      {match.court && ` - ${match.court.name}`}
-                    </Text>
+                    <Text fontSize="$5">{match.location.name}</Text>
                   </YStack>
                 )}
               </XStack>
@@ -492,49 +682,42 @@ END:VCALENDAR`;
           <Card variant="outlined">
             <XStack padding="$3" justifyContent="space-around">
               <YStack alignItems="center">
-                <Text fontSize="$7" fontWeight="bold" color="$green10">
-                  {activeCount}
+                <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                  {t("stats.availableSpots")}
                 </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {t("players.title")}
+                <Text
+                  fontSize="$7"
+                  fontWeight="bold"
+                  color={match.availableSpots > 0 ? "$green10" : "$color"}
+                >
+                  {match.availableSpots}
                 </Text>
               </YStack>
 
               <YStack alignItems="center">
-                <Text fontSize="$7" fontWeight="bold">
-                  {match.availableSpots}
+                <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                  {t("stats.cost")}
                 </Text>
-                <Text fontSize="$3" color="$gray10">
-                  {t("stats.availableSpots")}
+                <Text fontSize="$7" fontWeight="bold">
+                  {match.costPerPlayer
+                    ? `€${match.costPerPlayer}`
+                    : t("stats.free")}
                 </Text>
               </YStack>
 
-              {match.maxSubstitutes !== undefined && match.maxSubstitutes > 0 && (
-                <YStack alignItems="center">
-                  <Text fontSize="$7" fontWeight="bold" color="$blue10">
-                    {match.availableSubstituteSpots ?? match.maxSubstitutes}
-                  </Text>
-                  <Text fontSize="$3" color="$gray10">
-                    {t("stats.substitutes")}
-                  </Text>
-                </YStack>
-              )}
-
-              {match.costPerPlayer && (
-                <YStack alignItems="center">
-                  <Text fontSize="$7" fontWeight="bold">
-                    {match.costPerPlayer}
-                  </Text>
-                  <Text fontSize="$3" color="$gray10">
-                    {t("stats.cost")}
-                  </Text>
-                </YStack>
-              )}
+              <YStack alignItems="center">
+                <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                  {t("stats.court")}
+                </Text>
+                <Text fontSize="$7" fontWeight="bold">
+                  {match.court?.name || "-"}
+                </Text>
+              </YStack>
             </XStack>
           </Card>
 
-          {/* View A: Not Participating - Show CTA */}
-          {!isParticipating && !isCancelled && userId && (
+          {/* View A: Not Participating - Show CTA (only for upcoming matches) */}
+          {!isParticipating && !isCancelled && !isPlayed && userId && (
             <Card variant="outlined">
               <YStack padding="$3" gap="$2" alignItems="center">
                 {match.availableSpots > 0 ? (
@@ -550,22 +733,6 @@ END:VCALENDAR`;
                       {t("actions.wantToPlay")}
                     </Button>
                   </>
-                ) : match.maxSubstitutes && match.maxSubstitutes > 0 && substituteCount < match.maxSubstitutes ? (
-                  <>
-                    <Text fontSize="$5" fontWeight="600" color="$orange10">
-                      {t("actions.matchFull")}
-                    </Text>
-                    <Text fontSize="$3" color="$gray11" textAlign="center">
-                      {t("matchDetail.substituteList")} ({match.maxSubstitutes - substituteCount} {t("stats.availableSpots").toLowerCase()})
-                    </Text>
-                    <Button
-                      variant="outline"
-                      size="$4"
-                      onPress={() => setShowJoinModal(true)}
-                    >
-                      {t("actions.wantToPlay")}
-                    </Button>
-                  </>
                 ) : (
                   <Text fontSize="$5" fontWeight="600" color="$red10">
                     {t("matchDetail.matchCompletelyFull")}
@@ -575,26 +742,23 @@ END:VCALENDAR`;
             </Card>
           )}
 
-          {/* View: User is on Substitute List */}
-          {isUserSubstitute && (
-            <Card variant="outlined" backgroundColor="$blue2">
-              <YStack padding="$3" gap="$2" alignItems="center">
-                <StatusBadge
-                  status="SUBSTITUTE"
-                  type="player"
-                  label={t("matchDetail.youAreSubstitute")}
-                />
-                <Text fontSize="$3" color="$gray11" textAlign="center">
-                  {t("matchDetail.substitutePosition", {
-                    position: match?.signups?.filter((s) => s.status === "SUBSTITUTE").findIndex((s) => s.id === match.userSignup?.id) + 1
-                  })}
-                </Text>
-              </YStack>
-            </Card>
+          {/* Vote CTA for played matches where user participated */}
+          {isPlayed && userWasParticipant && (
+            <Button
+              variant="primary"
+              onPress={() =>
+                router.push({
+                  pathname: "/stats-voting",
+                  params: { matchId: match.id },
+                })
+              }
+            >
+              {t("voting.voteForMatch")}
+            </Button>
           )}
 
-          {/* View B: Participating - Show Players Table */}
-          {isParticipating && (
+          {/* View B: Participating or Played Match - Show Players Table */}
+          {(isParticipating || isPlayed) && (
             <Card variant="elevated">
               <YStack gap="$2">
                 <XStack
@@ -606,17 +770,19 @@ END:VCALENDAR`;
                   <Text fontSize="$6" fontWeight="bold">
                     {t("players.title")} ({match.signups?.length || 0})
                   </Text>
-                  {match.userSignup?.status === "PAID" && (
-                    <Button
-                      variant="outline"
-                      size="$3"
-                      onPress={() => setShowGuestDialog(true)}
-                      disabled={match.availableSpots === 0}
-                    >
-                      <UserPlus size={16} />
-                      <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
-                    </Button>
-                  )}
+                  {!isPlayed &&
+                    (match.userSignup?.status === "PAID" ||
+                      match.userSignup?.status === "PENDING") && (
+                      <Button
+                        variant="outline"
+                        size="$3"
+                        onPress={() => setShowGuestDialog(true)}
+                        disabled={match.availableSpots === 0}
+                      >
+                        <UserPlus size={16} />
+                        <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
+                      </Button>
+                    )}
                 </XStack>
 
                 <PlayersTable
@@ -638,7 +804,7 @@ END:VCALENDAR`;
                 </Text>
                 <Button
                   variant="primary"
-                  onPress={() => router.push("/(auth)/sign-in")}
+                  onPress={() => router.push("/(auth)")}
                 >
                   {t("shared.signIn")}
                 </Button>
@@ -647,7 +813,7 @@ END:VCALENDAR`;
           )}
 
           {/* Rules Button */}
-          <Button variant="outline" onPress={() => router.push("/(tabs)/rules")}>
+          <Button variant="outline" onPress={() => setShowRulesModal(true)}>
             {t("matchDetail.viewRules")}
           </Button>
         </YStack>
@@ -658,13 +824,16 @@ END:VCALENDAR`;
         open={showJoinModal}
         onOpenChange={setShowJoinModal}
         title={t("actions.wantToPlay")}
+        showClose={false}
         onConfirm={() => {
           if (!signupMutation.isPending) {
             signupMutation.mutate();
           }
         }}
         onCancel={() => setShowJoinModal(false)}
-        confirmText={signupMutation.isPending ? t("actions.joining") : t("actions.join")}
+        confirmText={
+          signupMutation.isPending ? t("actions.joining") : t("actions.join")
+        }
         cancelText={t("shared.cancel")}
       >
         {/* Payment Information */}
@@ -674,26 +843,48 @@ END:VCALENDAR`;
           </Text>
           {match.costPerPlayer && (
             <XStack justifyContent="space-between">
-              <Text color="$gray11">{t("stats.cost")}</Text>
-              <Text fontWeight="500">{match.costPerPlayer}</Text>
+              <Text color="$gray11" fontSize="$3">
+                {t("stats.cost")}
+              </Text>
+              <Text fontWeight="500" fontSize="$3">
+                {match.costPerPlayer}€
+              </Text>
             </XStack>
           )}
-          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && (
-            <XStack justifyContent="space-between">
-              <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
-              <Text fontWeight="500" color="$orange10">+{match.sameDayCost}</Text>
-            </XStack>
-          )}
-          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && match.costPerPlayer && (
-            <XStack justifyContent="space-between" paddingTop="$1" borderTopWidth={1} borderColor="$gray6">
-              <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
-              <Text fontWeight="700" fontSize="$5">{totalCost}</Text>
-            </XStack>
-          )}
+          {isMatchToday &&
+            match.sameDayCost &&
+            parseFloat(match.sameDayCost) > 0 && (
+              <XStack justifyContent="space-between">
+                <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
+                <Text fontWeight="500" color="$orange10">
+                  +{match.sameDayCost}€
+                </Text>
+              </XStack>
+            )}
+          {isMatchToday &&
+            match.sameDayCost &&
+            parseFloat(match.sameDayCost) > 0 &&
+            match.costPerPlayer && (
+              <XStack
+                justifyContent="space-between"
+                paddingTop="$1"
+                borderTopWidth={1}
+                borderColor="$gray6"
+              >
+                <Text fontWeight="600">{t("matchDetail.totalCost")}</Text>
+                <Text fontWeight="700" fontSize="$5">
+                  {totalCost}€
+                </Text>
+              </XStack>
+            )}
           {process.env.EXPO_PUBLIC_PAYPAL_URL && (
             <XStack justifyContent="space-between">
-              <Text color="$gray11">{t("matchDetail.paymentMethod")}</Text>
-              <Text fontWeight="500" color="$blue10">PayPal</Text>
+              <Text color="$gray11" fontSize="$3">
+                {t("matchDetail.paymentMethod")}
+              </Text>
+              <Text fontWeight="500" color="$blue10" fontSize="$3">
+                PayPal
+              </Text>
             </XStack>
           )}
         </YStack>
@@ -716,6 +907,7 @@ END:VCALENDAR`;
         open={showGuestDialog}
         onOpenChange={setShowGuestDialog}
         title={t("guest.title")}
+        showActions={false}
       >
         <YStack gap="$4" padding="$4">
           <Input
@@ -748,6 +940,19 @@ END:VCALENDAR`;
         </YStack>
       </Dialog>
 
+      {/* Confirmation Modal after Joining */}
+      <AlertDialog
+        open={showConfirmationModal}
+        onOpenChange={setShowConfirmationModal}
+        title={t("matchDetail.confirmation")}
+        confirmText={t("matchDetail.acceptConditions")}
+        onConfirm={() => setShowConfirmationModal(false)}
+        variant="default"
+        showCancel={false}
+      >
+        <Trans i18nKey="matchDetail.confirmationMessage" />
+      </AlertDialog>
+
       {/* Cancel Confirmation Alert */}
       <AlertDialog
         open={showCancelAlert}
@@ -763,6 +968,119 @@ END:VCALENDAR`;
         onConfirm={confirmCancelSignup}
         variant="destructive"
       />
+
+      {/* Edit Player Name Dialog (admin, guest players) */}
+      <Dialog
+        open={showEditNameDialog}
+        onOpenChange={setShowEditNameDialog}
+        title={t("matchDetail.editName")}
+        showActions={false}
+      >
+        <YStack gap="$4" padding="$4">
+          <Input
+            label={t("matchDetail.playerName")}
+            value={editedName}
+            onChangeText={setEditedName}
+          />
+          <XStack gap="$2">
+            <Button
+              variant="outline"
+              flex={1}
+              onPress={() => setShowEditNameDialog(false)}
+            >
+              {t("shared.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              flex={1}
+              onPress={() => {
+                if (editingSignup && editedName.trim()) {
+                  editPlayerNameMutation.mutate({
+                    signupId: editingSignup.id,
+                    playerName: editedName.trim(),
+                  });
+                }
+              }}
+              disabled={
+                !editedName.trim() || editPlayerNameMutation.isPending
+              }
+            >
+              {editPlayerNameMutation.isPending
+                ? t("shared.saving")
+                : t("shared.save")}
+            </Button>
+          </XStack>
+        </YStack>
+      </Dialog>
+
+      {/* Remove Player Confirmation */}
+      <AlertDialog
+        open={showRemoveAlert}
+        onOpenChange={setShowRemoveAlert}
+        title={t("matchDetail.removePlayerTitle")}
+        description={t("matchDetail.removePlayerMessage")}
+        cancelText={t("shared.cancel")}
+        confirmText={t("matchDetail.removePlayer")}
+        onCancel={() => {
+          setShowRemoveAlert(false);
+          setSignupToRemove(null);
+        }}
+        onConfirm={confirmRemovePlayer}
+        variant="destructive"
+      />
+
+      {/* Rules Modal */}
+      <Dialog
+        open={showRulesModal}
+        onOpenChange={setShowRulesModal}
+        title={t("rules.title")}
+      >
+        <ScrollView style={{ maxHeight: 400 }}>
+          <YStack gap="$4" padding="$4">
+            <YStack gap="$2">
+              <Text fontSize="$5" fontWeight="600">
+                {t("rules.generalTitle")}
+              </Text>
+              <List ordered bulletColor="$blue10">
+                {(() => {
+                  const generalRules = t("rules.general", {
+                    returnObjects: true,
+                  }) as string[];
+                  return (
+                    Array.isArray(generalRules) &&
+                    generalRules.map((rule, index) => (
+                      <List.Item key={index}>{rule}</List.Item>
+                    ))
+                  );
+                })()}
+              </List>
+            </YStack>
+
+            <YStack gap="$2">
+              <Text fontSize="$5" fontWeight="600">
+                {t("rules.matchTitle")}
+              </Text>
+              <List ordered bulletColor="$green10">
+                {(() => {
+                  const matchRules = t("rules.match", {
+                    returnObjects: true,
+                  }) as string[];
+                  return (
+                    Array.isArray(matchRules) &&
+                    matchRules.map((rule, index) => (
+                      <List.Item key={index}>{rule}</List.Item>
+                    ))
+                  );
+                })()}
+              </List>
+            </YStack>
+
+            <Button variant="outline" onPress={() => setShowRulesModal(false)}>
+              {t("shared.close")}
+            </Button>
+          </YStack>
+        </ScrollView>
+      </Dialog>
     </Container>
   );
 }

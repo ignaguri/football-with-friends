@@ -5,8 +5,9 @@ import { getServiceFactory } from "@repo/shared/services";
 import { auth } from "../auth";
 
 const app = new Hono();
-const serviceFactory = getServiceFactory();
-const courtService = serviceFactory.courtService;
+
+// Lazy service loading for Cloudflare Workers compatibility
+const getCourtService = () => getServiceFactory().courtService;
 
 // Get all courts
 app.get(
@@ -20,8 +21,8 @@ app.get(
   async (c) => {
     const { locationId } = c.req.valid("query");
     const courts = locationId
-      ? await courtService.getCourtsByLocationId(locationId)
-      : await courtService.getAllCourts();
+      ? await getCourtService().getCourtsByLocationId(locationId)
+      : await getCourtService().getAllCourts();
     return c.json(courts);
   }
 );
@@ -29,7 +30,7 @@ app.get(
 // Get single court by ID
 app.get("/:id", async (c) => {
   const id = c.req.param("id");
-  const court = await courtService.getCourtById(id);
+  const court = await getCourtService().getCourtById(id);
   if (!court) {
     return c.json({ error: "Court not found" }, 404);
   }
@@ -62,7 +63,7 @@ app.post(
     const courtData = c.req.valid("json");
 
     try {
-      const court = await courtService.createCourt(courtData);
+      const court = await getCourtService().createCourt(courtData);
       return c.json({ court }, 201);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create court";
@@ -97,7 +98,7 @@ app.patch(
     const updates = c.req.valid("json");
 
     try {
-      const court = await courtService.updateCourt(courtId, updates);
+      const court = await getCourtService().updateCourt(courtId, updates);
       return c.json({ court });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update court";
@@ -121,7 +122,7 @@ app.delete("/:id", async (c) => {
   const courtId = c.req.param("id");
 
   try {
-    await courtService.deleteCourt(courtId);
+    await getCourtService().deleteCourt(courtId);
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete court";

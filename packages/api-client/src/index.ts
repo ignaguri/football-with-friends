@@ -1,5 +1,5 @@
 // Export the Hono RPC client
-export { api, client } from "./client";
+export { api, client, configureGeneralApiClient } from "./client";
 
 // Export React Query hooks
 export {
@@ -23,8 +23,15 @@ export {
   signOut,
   useSession,
   getSession,
+  configureApiClient,
+  getConfiguredApiUrl,
+  storeBearerToken,
+  clearBearerToken,
+  getBearerToken,
+  signUpWithPhone,
+  signInWithPhone,
 } from "./auth";
-export type { Session, User } from "./auth";
+export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

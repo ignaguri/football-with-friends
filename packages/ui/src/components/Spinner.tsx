@@ -10,7 +10,7 @@ export function Spinner({
   ...props
 }: CustomSpinnerProps) {
   return (
-    <YStack space="$3" alignItems="center">
+    <YStack gap="$3" alignItems="center">
       <TamaguiSpinner size={size} color="$blue10" {...props} />
       {label && (
         <Text fontSize="$3" color="$gray11">
