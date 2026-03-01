@@ -1,60 +1,41 @@
 import { getDatabase } from "@repo/shared/database";
-import { format, subHours } from "date-fns";
-import { fromZonedTime } from "date-fns-tz";
 
 /**
  * Update match statuses from "upcoming" to "completed"
  * Runs every 6 hours via Cloudflare Cron Triggers
  *
- * Transition logic:
- * - Find all matches with status = "upcoming"
- * - Check if match.date < today - 2 hours (in Europe/Berlin timezone)
- * - Update those matches to status = "completed"
+ * Uses a single UPDATE query and native Date to stay within
+ * CF Workers CPU limits (no date-fns imports).
  */
 export async function updateMatchStatuses() {
   const db = getDatabase();
-  const timezone = "Europe/Berlin";
-  const now = new Date();
 
-  // Calculate cutoff: 2 hours ago in Berlin time
-  const cutoffTime = subHours(now, 2);
-  const cutoffDate = format(fromZonedTime(cutoffTime, timezone), "yyyy-MM-dd");
+  // Get today's date in Europe/Berlin timezone using native Intl
+  const berlinDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date()); // returns "YYYY-MM-DD"
 
-  console.log(
-    `[CRON] Checking for matches to complete. Cutoff date: ${cutoffDate}`
-  );
+  console.log(`[CRON] Updating upcoming matches before ${berlinDate}`);
 
   try {
-    // Find matches to complete
-    const matchesToComplete = await db
-      .selectFrom("matches")
-      .selectAll()
-      .where("status", "=", "upcoming")
-      .where("date", "<", cutoffDate)
-      .execute();
-
-    if (matchesToComplete.length === 0) {
-      console.log("[CRON] No matches to update");
-      return { updated: 0 };
-    }
-
-    // Update in batch
-    const matchIds = matchesToComplete.map((m) => m.id);
+    // Single UPDATE query - no need to SELECT first
     const result = await db
       .updateTable("matches")
       .set({
         status: "completed",
         updated_at: new Date().toISOString(),
       })
-      .where("id", "in", matchIds)
+      .where("status", "=", "upcoming")
+      .where("date", "<", berlinDate)
       .execute();
 
-    console.log(
-      `[CRON] Updated ${matchesToComplete.length} matches to completed`,
-      matchIds
-    );
+    const updated = Number(result[0]?.numUpdatedRows ?? 0);
+    console.log(`[CRON] Updated ${updated} matches to completed`);
 
-    return { updated: matchesToComplete.length };
+    return { updated };
   } catch (error) {
     console.error("[CRON] Error updating match statuses:", error);
     throw error;
