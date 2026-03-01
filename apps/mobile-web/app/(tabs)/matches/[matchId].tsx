@@ -47,6 +47,7 @@ import {
 } from "react-native";
 
 import { formatFullDate } from "../../../lib/date-utils";
+import { generateICS as generateICSFromUtils } from "../../../lib/calendar-utils";
 
 interface Signup {
   id: string;
@@ -373,8 +374,14 @@ export default function MatchDetailScreen() {
 
   const handleAddToCalendar = () => {
     if (!match) return;
-    // Generate ICS file content
-    const icsContent = generateICS(match);
+    // Generate ICS file content using timezone-aware utility
+    const icsContent = generateICSFromUtils({
+      date: match.date,
+      time: match.time,
+      location: match.location?.name
+        ? `${match.location.name}${match.court ? ` - ${match.court.name}` : ""}`
+        : undefined,
+    });
     // For now, share via native share
     Share.share({
       message: icsContent,
@@ -389,28 +396,6 @@ export default function MatchDetailScreen() {
       message,
       title: t("shared.share"),
     });
-  };
-
-  const generateICS = (matchData: MatchDetails): string => {
-    const date = new Date(matchData.date);
-    const [hours, minutes] = matchData.time.split(":");
-    date.setHours(parseInt(hours), parseInt(minutes));
-
-    const endDate = new Date(date);
-    endDate.setHours(endDate.getHours() + 2);
-
-    const formatICSDate = (d: Date) =>
-      d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-
-    return `BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-DTSTART:${formatICSDate(date)}
-DTEND:${formatICSDate(endDate)}
-SUMMARY:Football Match
-LOCATION:${matchData.location?.name || ""}${matchData.court ? ` - ${matchData.court.name}` : ""}
-END:VEVENT
-END:VCALENDAR`;
   };
 
   const getPlayerActions = (player: Signup): PlayerAction[] => {
@@ -534,7 +519,7 @@ END:VCALENDAR`;
   const isMatchToday = match
     ? (() => {
         const today = new Date();
-        const matchDate = new Date(match.date);
+        const matchDate = new Date(match.date + "T12:00:00");
         return (
           today.getFullYear() === matchDate.getFullYear() &&
           today.getMonth() === matchDate.getMonth() &&
@@ -758,7 +743,7 @@ END:VCALENDAR`;
           )}
 
           {/* View B: Participating or Played Match - Show Players Table */}
-          {(isParticipating || isPlayed) && (
+          {(isParticipating || isPlayed || isAdmin) && (
             <Card variant="elevated">
               <YStack gap="$2">
                 <XStack
