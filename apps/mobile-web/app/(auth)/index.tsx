@@ -184,7 +184,7 @@ export default function AuthLandingScreen() {
           {/* Google Button - Web uses GIS (ID token flow), Native uses redirect flow */}
           {Platform.OS === "web" ? (
             <GoogleSignInWeb
-              clientId={process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || ""}
+              clientId={(process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "").trim()}
               onSuccess={() => {
                 console.log("[AUTH] Google sign-in successful, navigating to tabs");
                 // Use window.location.href instead of router.replace to force a full page reload
