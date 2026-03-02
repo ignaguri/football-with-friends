@@ -10,6 +10,16 @@ function capitalizeFirst(str: string): string {
 }
 
 /**
+ * Parse a YYYY-MM-DD string without UTC shifting.
+ * Date-only ISO strings (e.g. "2026-03-03") are parsed as UTC midnight,
+ * which shifts to the previous day in UTC+ timezones like Europe/Berlin.
+ * Appending T12:00:00 forces local-time parsing at noon, safe for any offset.
+ */
+function parseDate(dateString: string): Date {
+  return new Date(dateString + "T12:00:00");
+}
+
+/**
  * Get the appropriate date-fns locale based on current app language
  */
 export function getLocale() {
@@ -27,7 +37,7 @@ export function formatLocalizedDate(
   date: string | Date,
   formatStr: string,
 ): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
+  const dateObj = typeof date === "string" ? parseDate(date) : date;
   const locale = getLocale();
   return format(dateObj, formatStr, { locale });
 }
@@ -43,7 +53,7 @@ export function formatMatchDateTime(
   dateString: string,
   timeString: string,
 ): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const locale = getLocale();
 
   const datePart = format(date, "dd.MM.yy");
@@ -58,7 +68,7 @@ export function formatMatchDateTime(
  * @returns Formatted date like "Tuesday, February 3rd, 2026" or "Martes, 3 de febrero de 2026"
  */
 export function formatFullDate(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const locale = getLocale();
   const currentLang = i18n.language;
 
@@ -79,7 +89,7 @@ export function formatFullDate(dateString: string): string {
  * @returns Formatted date like "03.02.26"
  */
 export function formatCompactDate(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   return format(date, "dd.MM.yy");
 }
 
@@ -89,7 +99,7 @@ export function formatCompactDate(dateString: string): string {
  * @returns Day of week in current locale (e.g., "Tuesday" or "Martes")
  */
 export function getDayOfWeek(dateString: string): string {
-  const date = new Date(dateString);
+  const date = parseDate(dateString);
   const locale = getLocale();
   return capitalizeFirst(format(date, "EEEE", { locale }));
 }
