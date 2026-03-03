@@ -5,7 +5,7 @@ export function getPlayerDisplayParts(player: {
   displayUsername?: string | null;
 }): { primary: string; secondary?: string } {
   const nickname = player.displayUsername || player.username || null;
-  if (nickname) return { primary: nickname, secondary: player.name };
+  if (nickname && nickname !== player.name) return { primary: nickname, secondary: player.name };
   return { primary: player.name };
 }
 
