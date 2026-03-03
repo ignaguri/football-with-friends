@@ -3,6 +3,7 @@ import { XStack, YStack, Text } from "tamagui";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
 import { getCountryFlag } from "../utils/country-flags";
+import { getPlayerDisplayParts } from "@repo/shared/utils";
 
 export interface PlayerAction {
   icon: ComponentType<{ size?: number }>;
@@ -20,6 +21,8 @@ export interface PlayerRow {
   addedByName?: string;
   isCurrentUser?: boolean;
   actions?: PlayerAction[];
+  username?: string | null;
+  displayUsername?: string | null;
 }
 
 export interface PlayersTableProps {
@@ -42,13 +45,6 @@ export function PlayersTable({
       </Text>
     );
   }
-
-  const getPlayerDisplayName = (player: PlayerRow) => {
-    if (player.isGuest && player.addedByName) {
-      return `${player.name} (${player.addedByName})`;
-    }
-    return player.name;
-  };
 
   const canShowActions = (player: PlayerRow) => {
     return isAdmin || player.isCurrentUser;
@@ -84,9 +80,21 @@ export function PlayersTable({
           {player.nationality && (
             <Text fontSize="$5">{getCountryFlag(player.nationality)}</Text>
           )}
-          <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
-            {getPlayerDisplayName(player)}
-          </Text>
+          {player.isGuest ? (
+            <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
+              {player.addedByName ? `${player.name} (${player.addedByName})` : player.name}
+            </Text>
+          ) : (() => {
+            const { primary, secondary } = getPlayerDisplayParts(player);
+            return (
+              <YStack>
+                <Text fontWeight={player.isCurrentUser ? "600" : "500"}>{primary}</Text>
+                {secondary && (
+                  <Text fontSize="$2" color="$gray10" fontWeight="400">({secondary})</Text>
+                )}
+              </YStack>
+            );
+          })()}
         </XStack>
         {player.isGuest && (
           <Text fontSize="$2" color="$gray10">

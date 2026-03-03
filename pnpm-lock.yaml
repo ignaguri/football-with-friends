@@ -576,6 +576,9 @@ importers:
       '@react-native-community/datetimepicker':
         specifier: ^8.6.0
         version: 8.6.0(expo@54.0.33)(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@repo/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@tamagui/lucide-icons':
         specifier: 1.144.3
         version: 1.144.3(react-dom@19.1.0(react@19.1.0))(react-native-svg@15.15.2(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.83.1(@babel/core@7.29.0)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
