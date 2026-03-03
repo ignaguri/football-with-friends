@@ -153,6 +153,7 @@ export default function PlayersStatsScreen() {
                   <PlayerStatsCard
                     key={player.userId}
                     name={player.userName}
+                    userNickname={player.userNickname}
                     email={player.userEmail}
                     nationality={player.nationality}
                     profilePicture={player.profilePicture}

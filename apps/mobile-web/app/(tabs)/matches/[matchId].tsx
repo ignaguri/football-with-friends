@@ -60,6 +60,9 @@ interface Signup {
   guestOwnerId?: string;
   addedByUserId: string;
   addedByName?: string;
+  playerNationality?: string;
+  playerUsername?: string | null;
+  playerDisplayUsername?: string | null;
 }
 
 interface MatchDetails {
