@@ -62,7 +62,9 @@ export function PlayersTable({
   const pendingPlayers = players.filter((p) => p.status === "PENDING");
   const cancelledPlayers = players.filter((p) => p.status === "CANCELLED");
 
-  const renderPlayerRow = (player: PlayerRow) => (
+  const renderPlayerRow = (player: PlayerRow) => {
+    const { primary, secondary } = getPlayerDisplayParts(player);
+    return (
     <XStack
       key={player.id}
       justifyContent="space-between"
@@ -84,17 +86,14 @@ export function PlayersTable({
             <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
               {player.addedByName ? `${player.name} (${player.addedByName})` : player.name}
             </Text>
-          ) : (() => {
-            const { primary, secondary } = getPlayerDisplayParts(player);
-            return (
-              <YStack>
-                <Text fontWeight={player.isCurrentUser ? "600" : "500"}>{primary}</Text>
-                {secondary && (
-                  <Text fontSize="$2" color="$gray10" fontWeight="400">({secondary})</Text>
-                )}
-              </YStack>
-            );
-          })()}
+          ) : (
+            <YStack>
+              <Text fontWeight={player.isCurrentUser ? "600" : "500"}>{primary}</Text>
+              {secondary && (
+                <Text fontSize="$2" color="$gray10" fontWeight="400">({secondary})</Text>
+              )}
+            </YStack>
+          )}
         </XStack>
         {player.isGuest && (
           <Text fontSize="$2" color="$gray10">
@@ -132,6 +131,7 @@ export function PlayersTable({
       </XStack>
     </XStack>
   );
+  };
 
   return (
     <YStack>
