@@ -497,6 +497,8 @@ export default function MatchDetailScreen() {
     return match.signups.map((signup) => ({
       id: signup.id,
       name: signup.playerName,
+      username: signup.playerUsername ?? null,
+      displayUsername: signup.playerDisplayUsername ?? null,
       status: signup.status,
       nationality: signup.playerNationality,
       isGuest: signup.signupType === "guest",
