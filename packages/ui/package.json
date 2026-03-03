@@ -14,11 +14,12 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "^8.6.0",
-    "@tamagui/lucide-icons": "2.0.0-rc.20",
-    "@tamagui/toast": "2.0.0-rc.20",
+    "expo-image": "~55.0.5",
+    "@tamagui/lucide-icons": "2.0.0-rc.22",
+    "@tamagui/toast": "2.0.0-rc.22",
     "date-fns": "^4.1.0",
     "react-dom": "19.2.0",
-    "tamagui": "2.0.0-rc.20"
+    "tamagui": "2.0.0-rc.22"
   },
   "peerDependencies": {
     "react": "^19.0.0",

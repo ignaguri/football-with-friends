@@ -118,9 +118,10 @@ export {
   Separator,
 } from "tamagui";
 
-// Use React Native's Image instead of Tamagui's — Tamagui v2's Image
-// doesn't map `source` to `src` on web, breaking require() assets.
-export { Image } from "react-native";
+// Use expo-image instead of Tamagui's — Tamagui v2's Image doesn't map
+// `source` to `src` on web. expo-image supports SVG on iOS via SDWebImage,
+// handles require() assets on all platforms, and renders via <img> on web.
+export { Image } from "expo-image";
 
 // Toast utilities
 export { useToastController } from "@tamagui/toast";

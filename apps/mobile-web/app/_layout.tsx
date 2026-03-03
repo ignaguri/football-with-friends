@@ -16,6 +16,20 @@ import { TamaguiProvider, Theme, YStack } from "tamagui";
 // This prevents "View config getter callback for component `RNSVGPath` must be a function" errors
 import "react-native-svg";
 
+// Tamagui v2 native setup — must be imported at app entry point before any Tamagui imports
+// setup-zeego: native context/dropdown menus (zeego not installed, gracefully no-ops)
+// setup-burnt: native toast notifications (burnt is installed)
+// setup-gesture-handler: gesture-based components like Sheet
+// setup-worklets: animation worklets (react-native-worklets is installed)
+// setup-safe-area: safe area token support
+import "@tamagui/native/setup-zeego";
+import "@tamagui/native/setup-burnt";
+import "@tamagui/native/setup-gesture-handler";
+import "@tamagui/native/setup-worklets";
+import "@tamagui/native/setup-safe-area";
+
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+
 import { PWAInstallPrompt } from "../components/pwa-install-prompt";
 import { ErrorBoundary } from "../lib/error-boundary";
 import "../lib/i18n"; // Initialize i18n
@@ -163,8 +177,10 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

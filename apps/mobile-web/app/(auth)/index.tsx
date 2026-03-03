@@ -11,8 +11,9 @@ import {
 } from "@repo/ui";
 import { Mail } from "@tamagui/lucide-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as Device from "expo-device";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 import { useTheme } from "tamagui";
@@ -24,6 +25,13 @@ export default function AuthLandingScreen() {
   const theme = useTheme();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    // Only check on physical devices — simulators return true but render the button invisibly
+    if (!Device.isDevice) return;
+    AppleAuthentication.isAvailableAsync().then(setIsAppleAvailable).catch(() => {});
+  }, []);
 
   // Detect dark mode for Google button styling
   const isDark =
@@ -286,8 +294,8 @@ export default function AuthLandingScreen() {
             </Button>
           )}
 
-          {/* Apple Sign In - iOS native only */}
-          {Platform.OS === "ios" && (
+          {/* Apple Sign In - only when available (real device with Face ID/Touch ID) */}
+          {isAppleAvailable && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
               buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
