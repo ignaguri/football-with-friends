@@ -116,3 +116,4 @@ google-play-service-account.json
 *~
 .history/
 apps/api/.dev.vars
+.worktrees/
