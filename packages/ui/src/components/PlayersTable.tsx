@@ -3,7 +3,7 @@ import { XStack, YStack, Text } from "tamagui";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
 import { getCountryFlag } from "../utils/country-flags";
-import { getPlayerDisplayParts } from "@repo/shared/utils";
+import { getPlayerDisplayParts } from "../utils/display-name";
 
 export interface PlayerAction {
   icon: ComponentType<{ size?: number }>;
