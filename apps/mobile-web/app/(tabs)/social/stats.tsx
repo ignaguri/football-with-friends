@@ -74,7 +74,8 @@ export default function PlayersStatsScreen() {
   });
 
   const filteredPlayers = players?.filter((player) =>
-    player.userName.toLowerCase().includes(search.toLowerCase()),
+    player.userName.toLowerCase().includes(search.toLowerCase()) ||
+    (player.userNickname?.toLowerCase().includes(search.toLowerCase()) ?? false),
   );
 
   const tabs = [
@@ -152,7 +153,7 @@ export default function PlayersStatsScreen() {
                   <PlayerStatsCard
                     key={player.userId}
                     name={player.userName}
-                    email={player.userEmail}
+                    userNickname={player.userNickname}
                     nationality={player.nationality}
                     profilePicture={player.profilePicture}
                     totalMatches={player.totalMatches}
@@ -233,6 +234,7 @@ export default function PlayersStatsScreen() {
                         rankings={rankings.slice(0, 3).map((r) => ({
                           rank: r.rank,
                           userName: r.userName,
+                          userNickname: r.userNickname,
                           nationality: r.nationality,
                           profilePicture: r.profilePicture,
                           value: r.value,
@@ -251,6 +253,7 @@ export default function PlayersStatsScreen() {
                         key={ranking.userId}
                         rank={ranking.rank}
                         userName={ranking.userName}
+                        userNickname={ranking.userNickname}
                         nationality={ranking.nationality}
                         profilePicture={ranking.profilePicture}
                         value={ranking.value}
@@ -325,6 +328,7 @@ export default function PlayersStatsScreen() {
                   criteriaDescription={award.criteriaDescription}
                   topPlayers={award.topPlayers.map((player) => ({
                     userName: player.userName,
+                    userNickname: player.userNickname,
                     nationality: player.nationality,
                     profilePicture: player.profilePicture,
                     voteCount: player.voteCount,

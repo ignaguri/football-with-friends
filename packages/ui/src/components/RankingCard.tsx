@@ -6,6 +6,7 @@ import { getCountryFlag } from "../utils/country-flags";
 export interface RankingCardProps {
   rank: number;
   userName: string;
+  userNickname?: string | null;
   nationality?: string;
   profilePicture?: string;
   value: number;
@@ -33,6 +34,7 @@ function getRankBackground(rank: number): string {
 export function RankingCard({
   rank,
   userName,
+  userNickname,
   nationality,
   profilePicture,
   value,
@@ -85,12 +87,17 @@ export function RankingCard({
                 {getCountryFlag(nationality)}
               </Text>
             )}
-            <Text
-              fontSize={isPodium && rank <= 3 ? "$6" : "$5"}
-              fontWeight={isPodium && rank <= 3 ? "700" : "600"}
-            >
-              {userName}
-            </Text>
+            <YStack>
+              <Text
+                fontSize={isPodium && rank <= 3 ? "$6" : "$5"}
+                fontWeight={isPodium && rank <= 3 ? "700" : "600"}
+              >
+                {userNickname ?? userName}
+              </Text>
+              {userNickname && userNickname !== userName && (
+                <Text fontSize="$2" color="$gray10" fontWeight="400">({userName})</Text>
+              )}
+            </YStack>
           </XStack>
           <Text fontSize="$3" color="$gray11">
             {value} {valueLabel}

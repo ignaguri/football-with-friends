@@ -60,6 +60,9 @@ interface Signup {
   guestOwnerId?: string;
   addedByUserId: string;
   addedByName?: string;
+  playerNationality?: string;
+  playerUsername?: string | null;
+  playerDisplayUsername?: string | null;
 }
 
 interface MatchDetails {
@@ -498,6 +501,8 @@ export default function MatchDetailScreen() {
     return match.signups.map((signup) => ({
       id: signup.id,
       name: signup.playerName,
+      username: signup.playerUsername ?? null,
+      displayUsername: signup.playerDisplayUsername ?? null,
       status: signup.status,
       nationality: signup.playerNationality,
       isGuest: signup.signupType === "guest",

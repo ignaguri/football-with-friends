@@ -102,6 +102,8 @@ export interface Signup {
   addedByUser?: User;
   guestOwnerEmail?: string; // populated from join
   playerNationality?: string; // populated from join with user table
+  playerUsername?: string | null; // from join with user table
+  playerDisplayUsername?: string | null; // from join with user table
 }
 
 export interface MatchInvitation {
@@ -164,6 +166,7 @@ export interface PlayerProfile {
 export interface PlayerSummary {
   userId: string;
   userName: string;
+  userNickname?: string | null;
   userEmail: string;
   nationality?: string;
   profilePicture?: string;
@@ -184,6 +187,7 @@ export interface PlayerRanking {
   rank: number;
   userId: string;
   userName: string;
+  userNickname?: string | null;
   userEmail: string;
   nationality?: string;
   profilePicture?: string;
@@ -211,6 +215,7 @@ export interface VotingLeaderboard {
     topPlayers: Array<{
       userId: string;
       userName: string;
+      userNickname?: string | null;
       nationality?: string;
       profilePicture?: string;
       voteCount: number;
