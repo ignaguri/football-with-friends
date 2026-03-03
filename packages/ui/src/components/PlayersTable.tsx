@@ -68,7 +68,7 @@ export function PlayersTable({
     <XStack
       key={player.id}
       justifyContent="space-between"
-      alignItems="flex-start"
+      alignItems="center"
       paddingVertical="$2.5"
       paddingHorizontal="$3"
       borderBottomWidth={1}
