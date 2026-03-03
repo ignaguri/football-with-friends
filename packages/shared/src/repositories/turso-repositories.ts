@@ -1300,17 +1300,22 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       ORDER BY total_matches DESC, u.name ASC
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userNickname: row.display_username || row.username || null,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      totalMatches: Number(row.total_matches),
-      totalGoals: Number(row.total_goals),
-      totalThirdTimes: Number(row.total_third_times),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        totalMatches: Number(row.total_matches),
+        totalGoals: Number(row.total_goals),
+        totalThirdTimes: Number(row.total_third_times),
+      };
+    });
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -1363,16 +1368,21 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       LIMIT ${limit}
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userNickname: row.display_username || row.username || null,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.value),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.value),
+      };
+    });
   }
 
   async getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]> {
@@ -1406,16 +1416,21 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       LIMIT ${limit}
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userNickname: row.display_username || row.username || null,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.value),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.value),
+      };
+    });
   }
 
   async getRankingsByBeers(limit: number): Promise<PlayerRanking[]> {
@@ -1449,15 +1464,20 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       LIMIT ${limit}
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userNickname: row.display_username || row.username || null,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.value),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.value),
+      };
+    });
   }
 }

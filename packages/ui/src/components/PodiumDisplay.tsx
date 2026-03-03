@@ -100,7 +100,7 @@ function PodiumSpot({
           >
             {userNickname ?? userName}
           </Text>
-          {userNickname && (
+          {userNickname && userNickname !== userName && (
             <Text fontSize="$2" color="$gray10" numberOfLines={1} textAlign="center">
               ({userName})
             </Text>

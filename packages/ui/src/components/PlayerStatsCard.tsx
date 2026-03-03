@@ -7,7 +7,6 @@ import { getCountryFlag } from "../utils/country-flags";
 export interface PlayerStatsCardProps {
   name: string;
   userNickname?: string | null;
-  email?: string;
   nationality?: string;
   profilePicture?: string;
   totalMatches: number;
@@ -20,7 +19,6 @@ export interface PlayerStatsCardProps {
 export function PlayerStatsCard({
   name,
   userNickname,
-  email,
   nationality,
   profilePicture,
   totalMatches,
@@ -51,16 +49,11 @@ export function PlayerStatsCard({
               <Text fontSize="$5" fontWeight="600">
                 {userNickname ?? name}
               </Text>
-              {userNickname && (
+              {userNickname && userNickname !== name && (
                 <Text fontSize="$2" color="$gray10" fontWeight="400">({name})</Text>
               )}
             </YStack>
           </XStack>
-          {email && (
-            <Text fontSize="$2" color="$gray10">
-              {email}
-            </Text>
-          )}
         </YStack>
       </XStack>
       <XStack marginTop="$3" gap="$2" flexWrap="wrap">

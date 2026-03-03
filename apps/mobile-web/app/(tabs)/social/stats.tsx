@@ -154,7 +154,6 @@ export default function PlayersStatsScreen() {
                     key={player.userId}
                     name={player.userName}
                     userNickname={player.userNickname}
-                    email={player.userEmail}
                     nationality={player.nationality}
                     profilePicture={player.profilePicture}
                     totalMatches={player.totalMatches}

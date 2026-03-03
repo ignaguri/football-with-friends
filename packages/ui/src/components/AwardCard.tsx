@@ -114,7 +114,7 @@ export function AwardCard({
                       <Text fontSize="$4" fontWeight="600" numberOfLines={1}>
                         {player.userNickname ?? player.userName}
                       </Text>
-                      {player.userNickname && (
+                      {player.userNickname && player.userNickname !== player.userName && (
                         <Text fontSize="$2" color="$gray10" numberOfLines={1}>
                           ({player.userName})
                         </Text>

@@ -558,10 +558,13 @@ export class VotingRepository {
         });
       }
 
+      const awardUserName = row.user_name || "Unknown";
+      const awardRawNick = row.display_username || row.username || null;
+      const awardNickname = awardRawNick && !awardRawNick.includes("@") && awardRawNick !== awardUserName ? awardRawNick : null;
       criteriaMap.get(row.criteria_id)!.topPlayers.push({
         userId: row.voted_for_user_id,
-        userName: row.user_name || "Unknown",
-        userNickname: row.display_username || row.username || null,
+        userName: awardUserName,
+        userNickname: awardNickname,
         nationality: row.nationality || undefined,
         profilePicture: row.profile_picture || undefined,
         voteCount: Number(row.vote_count),
@@ -607,16 +610,21 @@ export class VotingRepository {
       LIMIT ${limit}
     `.execute(db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userNickname: row.display_username || row.username || null,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.total_votes),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.total_votes),
+      };
+    });
   }
 }
 

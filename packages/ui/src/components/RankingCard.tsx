@@ -94,7 +94,7 @@ export function RankingCard({
               >
                 {userNickname ?? userName}
               </Text>
-              {userNickname && (
+              {userNickname && userNickname !== userName && (
                 <Text fontSize="$2" color="$gray10" fontWeight="400">({userName})</Text>
               )}
             </YStack>
