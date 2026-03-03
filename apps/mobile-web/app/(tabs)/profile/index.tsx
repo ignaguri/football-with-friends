@@ -349,7 +349,7 @@ export default function ProfileScreen() {
   }
 
   const user = session.user as any;
-  const displayName = user.displayUsername || user.username || user.name;
+  const displayName = user.name || user.displayUsername || user.username;
 
   // Determine auth method to disable editing the auth identifier
   // primaryAuthMethod is set when the user signs up: "phone", "email", or "google"
