@@ -583,6 +583,8 @@ export class VotingRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       total_votes: number;
@@ -592,6 +594,8 @@ export class VotingRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COUNT(mv.id) as total_votes,
@@ -607,6 +611,7 @@ export class VotingRepository {
       rank: Number(row.rank),
       userId: row.user_id,
       userName: row.user_name || row.user_email,
+      userNickname: row.display_username || row.username || null,
       userEmail: row.user_email,
       nationality: row.nationality || undefined,
       profilePicture: row.profile_picture || undefined,
