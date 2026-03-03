@@ -68,7 +68,7 @@ export function PlayersTable({
     <XStack
       key={player.id}
       justifyContent="space-between"
-      alignItems="center"
+      alignItems="flex-start"
       paddingVertical="$2.5"
       paddingHorizontal="$3"
       borderBottomWidth={1}
@@ -102,7 +102,7 @@ export function PlayersTable({
         )}
       </YStack>
 
-      <XStack gap="$2" alignItems="center">
+      <YStack gap="$1" alignItems="flex-end">
         <StatusBadge
           status={player.status}
           type="player"
@@ -128,7 +128,7 @@ export function PlayersTable({
             })}
           </XStack>
         )}
-      </XStack>
+      </YStack>
     </XStack>
   );
   };
