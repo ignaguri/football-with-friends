@@ -510,6 +510,8 @@ export class VotingRepository {
       sort_order: number;
       voted_for_user_id: string;
       user_name: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       vote_count: number;
@@ -524,6 +526,8 @@ export class VotingRepository {
           vc.sort_order,
           mv.voted_for_user_id,
           u.name as user_name,
+          u.username,
+          u.displayUsername as display_username,
           u.nationality,
           u.profilePicture as profile_picture,
           COUNT(*) as vote_count,
@@ -532,7 +536,7 @@ export class VotingRepository {
         INNER JOIN match_votes mv ON vc.id = mv.criteria_id
         INNER JOIN user u ON mv.voted_for_user_id = u.id
         WHERE vc.is_active = 1
-        GROUP BY vc.id, vc.code, criteria_name, criteria_description, vc.sort_order, mv.voted_for_user_id, u.name, u.nationality, u.profilePicture
+        GROUP BY vc.id, vc.code, criteria_name, criteria_description, vc.sort_order, mv.voted_for_user_id, u.name, u.username, u.displayUsername, u.nationality, u.profilePicture
       )
       SELECT *
       FROM ranked_votes
@@ -557,6 +561,7 @@ export class VotingRepository {
       criteriaMap.get(row.criteria_id)!.topPlayers.push({
         userId: row.voted_for_user_id,
         userName: row.user_name || "Unknown",
+        userNickname: row.display_username || row.username || null,
         nationality: row.nationality || undefined,
         profilePicture: row.profile_picture || undefined,
         voteCount: Number(row.vote_count),

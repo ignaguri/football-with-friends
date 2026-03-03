@@ -581,6 +581,8 @@ export class TursoMatchRepository implements MatchRepository {
         "signups.updated_at",
         "guest_owner.email as guest_owner_email",
         "player_user.nationality as player_nationality",
+        "player_user.username as player_username",
+        "player_user.displayUsername as player_display_username",
       ])
       .where("match_id", "=", id)
       .orderBy("signed_up_at", "asc")
@@ -590,6 +592,8 @@ export class TursoMatchRepository implements MatchRepository {
       ...dbSignupToSignup(row),
       guestOwnerEmail: row.guest_owner_email || undefined,
       playerNationality: row.player_nationality || undefined,
+      playerUsername: row.player_username || null,
+      playerDisplayUsername: row.player_display_username || null,
     }));
 
     // Calculate available spots (based on paid players only)
@@ -1270,6 +1274,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       total_matches: number;
@@ -1280,6 +1286,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COUNT(DISTINCT s.match_id) as total_matches,
@@ -1295,6 +1303,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return rows.rows.map((row) => ({
       userId: row.user_id,
       userName: row.user_name || row.user_email,
+      userNickname: row.display_username || row.username || null,
       userEmail: row.user_email,
       nationality: row.nationality || undefined,
       profilePicture: row.profile_picture || undefined,
@@ -1330,6 +1339,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       value: number;
@@ -1339,6 +1350,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COUNT(DISTINCT s.match_id) as value,
@@ -1354,6 +1367,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       rank: Number(row.rank),
       userId: row.user_id,
       userName: row.user_name || row.user_email,
+      userNickname: row.display_username || row.username || null,
       userEmail: row.user_email,
       nationality: row.nationality || undefined,
       profilePicture: row.profile_picture || undefined,
@@ -1366,6 +1380,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       value: number;
@@ -1375,6 +1391,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COALESCE(SUM(mps.third_time_attended), 0) as value,
@@ -1392,6 +1410,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       rank: Number(row.rank),
       userId: row.user_id,
       userName: row.user_name || row.user_email,
+      userNickname: row.display_username || row.username || null,
       userEmail: row.user_email,
       nationality: row.nationality || undefined,
       profilePicture: row.profile_picture || undefined,
@@ -1404,6 +1423,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       value: number;
@@ -1413,6 +1434,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COALESCE(SUM(mps.third_time_beers), 0) as value,
@@ -1430,6 +1453,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       rank: Number(row.rank),
       userId: row.user_id,
       userName: row.user_name || row.user_email,
+      userNickname: row.display_username || row.username || null,
       userEmail: row.user_email,
       nationality: row.nationality || undefined,
       profilePicture: row.profile_picture || undefined,

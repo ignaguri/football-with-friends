@@ -215,6 +215,7 @@ export interface VotingLeaderboard {
     topPlayers: Array<{
       userId: string;
       userName: string;
+      userNickname?: string | null;
       nationality?: string;
       profilePicture?: string;
       voteCount: number;
