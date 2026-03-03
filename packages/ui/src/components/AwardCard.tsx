@@ -10,6 +10,7 @@ export interface AwardCardProps {
   criteriaDescription: string;
   topPlayers: Array<{
     userName: string;
+    userNickname?: string | null;
     nationality?: string;
     profilePicture?: string;
     voteCount: number;
@@ -109,9 +110,16 @@ export function AwardCard({
                     {player.nationality && (
                       <Text fontSize="$4">{getCountryFlag(player.nationality)}</Text>
                     )}
-                    <Text fontSize="$4" fontWeight="600" numberOfLines={1}>
-                      {player.userName}
-                    </Text>
+                    <YStack>
+                      <Text fontSize="$4" fontWeight="600" numberOfLines={1}>
+                        {player.userNickname ?? player.userName}
+                      </Text>
+                      {player.userNickname && (
+                        <Text fontSize="$2" color="$gray10" numberOfLines={1}>
+                          ({player.userName})
+                        </Text>
+                      )}
+                    </YStack>
                   </XStack>
                   <Text fontSize="$2" color="$gray11">
                     {player.voteCount} {player.voteCount === 1 ? "vote" : "votes"}
