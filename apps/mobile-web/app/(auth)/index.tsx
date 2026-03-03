@@ -160,7 +160,7 @@ export default function AuthLandingScreen() {
         </YStack>
 
         {/* Auth Options */}
-        <YStack gap="$3" width="100%">
+        <YStack gap="$3" alignSelf="stretch" alignItems="stretch">
           {/* Phone Button - Primary */}
           <Button
             onPress={() => router.push("/(auth)/phone-signin")}
@@ -310,7 +310,6 @@ export default function AuthLandingScreen() {
             onPress={() => router.push("/(auth)/email-signin")}
             variant="outline"
             size="$5"
-            width="100%"
             fontWeight="400"
           >
             <XStack gap="$3" alignItems="center" justifyContent="center">

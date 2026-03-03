@@ -139,49 +139,53 @@ export default function OrganizerScreen() {
   return (
     <Container variant="padded">
       <YStack flex={1} gap="$4">
-        {/* Tab Selector */}
-        <XStack gap="$2">
-          <Button
-            flex={1}
-            size="$3"
-            variant={activeTab === "matches" ? "primary" : "outline"}
-            onPress={() => setActiveTab("matches")}
-          >
-            {t("organizer.tabs.matches")}
-          </Button>
-          <Button
-            flex={1}
-            size="$3"
-            variant={activeTab === "locations" ? "primary" : "outline"}
-            onPress={() => setActiveTab("locations")}
-          >
-            {t("organizer.tabs.locations")}
-          </Button>
-          <Button
-            flex={1}
-            size="$3"
-            variant={activeTab === "courts" ? "primary" : "outline"}
-            onPress={() => setActiveTab("courts")}
-          >
-            {t("organizer.tabs.courts")}
-          </Button>
-          <Button
-            flex={1}
-            size="$3"
-            variant={activeTab === "voting" ? "primary" : "outline"}
-            onPress={() => setActiveTab("voting")}
-          >
-            {t("voting.title")}
-          </Button>
-          <Button
-            flex={1}
-            size="$3"
-            variant={activeTab === "settings" ? "primary" : "outline"}
-            onPress={() => setActiveTab("settings")}
-          >
-            {t("settings.title")}
-          </Button>
-        </XStack>
+        {/* Tab Selector - 2 rows to avoid truncation on mobile */}
+        <YStack gap="$2">
+          <XStack gap="$2">
+            <Button
+              flex={1}
+              size="$3"
+              variant={activeTab === "matches" ? "primary" : "outline"}
+              onPress={() => setActiveTab("matches")}
+            >
+              {t("organizer.tabs.matches")}
+            </Button>
+            <Button
+              flex={1}
+              size="$3"
+              variant={activeTab === "locations" ? "primary" : "outline"}
+              onPress={() => setActiveTab("locations")}
+            >
+              {t("organizer.tabs.locations")}
+            </Button>
+            <Button
+              flex={1}
+              size="$3"
+              variant={activeTab === "courts" ? "primary" : "outline"}
+              onPress={() => setActiveTab("courts")}
+            >
+              {t("organizer.tabs.courts")}
+            </Button>
+          </XStack>
+          <XStack gap="$2">
+            <Button
+              flex={1}
+              size="$3"
+              variant={activeTab === "voting" ? "primary" : "outline"}
+              onPress={() => setActiveTab("voting")}
+            >
+              {t("voting.title")}
+            </Button>
+            <Button
+              flex={1}
+              size="$3"
+              variant={activeTab === "settings" ? "primary" : "outline"}
+              onPress={() => setActiveTab("settings")}
+            >
+              {t("settings.title")}
+            </Button>
+          </XStack>
+        </YStack>
 
         {/* Tab Content */}
         {activeTab === "matches" && <MatchesTab />}
@@ -365,50 +369,65 @@ function MatchesTab() {
                   </Text>
                 )}
 
-                <XStack gap="$2" marginTop="$2" flexWrap="wrap">
-                  <Button
-                    flex={1}
-                    size="$3"
-                    variant="outline"
-                    onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
-                  >
-                    {t("organizer.viewMatch")}
-                  </Button>
-                  {match.status !== "cancelled" && (
+                <YStack gap="$2" marginTop="$2">
+                  <XStack gap="$2">
                     <Button
                       flex={1}
                       size="$3"
                       variant="outline"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/(tabs)/admin/edit-match",
-                          params: { matchId: match.id },
-                        })
-                      }
+                      onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
                     >
-                      {t("organizer.edit")}
+                      {t("organizer.viewMatch")}
                     </Button>
-                  )}
+                    {match.status !== "cancelled" ? (
+                      <Button
+                        flex={1}
+                        size="$3"
+                        variant="outline"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/(tabs)/admin/edit-match",
+                            params: { matchId: match.id },
+                          })
+                        }
+                      >
+                        {t("organizer.edit")}
+                      </Button>
+                    ) : (
+                      <Button
+                        flex={1}
+                        size="$3"
+                        variant="danger"
+                        onPress={() => handleDelete(match)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        {t("organizer.delete")}
+                      </Button>
+                    )}
+                  </XStack>
                   {match.status !== "cancelled" && (
-                    <Button
-                      flex={1}
-                      size="$3"
-                      variant="outline"
-                      onPress={() => handleCancel(match)}
-                      disabled={cancelMutation.isPending}
-                    >
-                      {t("organizer.cancelMatch")}
-                    </Button>
+                    <XStack gap="$2">
+                      <Button
+                        flex={1}
+                        size="$3"
+                        variant="outline"
+                        onPress={() => handleCancel(match)}
+                        disabled={cancelMutation.isPending}
+                      >
+                        {t("organizer.cancelMatch")}
+                      </Button>
+                      <Button
+                        flex={1}
+                        size="$3"
+                        variant="danger"
+                        onPress={() => handleDelete(match)}
+                        disabled={deleteMutation.isPending}
+                      >
+                        {t("organizer.delete")}
+                      </Button>
+                    </XStack>
                   )}
-                  <Button
-                    size="$3"
-                    variant="danger"
-                    onPress={() => handleDelete(match)}
-                    disabled={deleteMutation.isPending}
-                  >
-                    {t("organizer.delete")}
-                  </Button>
-                </XStack>
+                </YStack>
               </YStack>
             </Card>
           ))
