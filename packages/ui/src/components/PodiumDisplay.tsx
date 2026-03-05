@@ -7,6 +7,7 @@ export interface PodiumDisplayProps {
   rankings: Array<{
     rank: number;
     userName: string;
+    userNickname?: string | null;
     nationality?: string;
     profilePicture?: string;
     value: number;
@@ -37,6 +38,7 @@ const PODIUM_BG = {
 interface PodiumSpotProps {
   rank: number;
   userName: string;
+  userNickname?: string | null;
   nationality?: string;
   profilePicture?: string;
   value: number;
@@ -46,6 +48,7 @@ interface PodiumSpotProps {
 function PodiumSpot({
   rank,
   userName,
+  userNickname,
   nationality,
   profilePicture,
   value,
@@ -88,14 +91,21 @@ function PodiumSpot({
             {getCountryFlag(nationality)}
           </Text>
         )}
-        <Text
-          fontSize={rank === 1 ? "$5" : "$4"}
-          fontWeight={rank === 1 ? "700" : "600"}
-          textAlign="center"
-          numberOfLines={1}
-        >
-          {userName}
-        </Text>
+        <YStack alignItems="center">
+          <Text
+            fontSize={rank === 1 ? "$5" : "$4"}
+            fontWeight={rank === 1 ? "700" : "600"}
+            textAlign="center"
+            numberOfLines={1}
+          >
+            {userNickname ?? userName}
+          </Text>
+          {userNickname && userNickname !== userName && (
+            <Text fontSize="$2" color="$gray10" numberOfLines={1} textAlign="center">
+              ({userName})
+            </Text>
+          )}
+        </YStack>
       </XStack>
 
       {/* Value */}
@@ -154,6 +164,7 @@ export function PodiumDisplay({ rankings, valueLabel }: PodiumDisplayProps) {
         <PodiumSpot
           rank={2}
           userName={second.userName}
+          userNickname={second.userNickname}
           nationality={second.nationality}
           profilePicture={second.profilePicture}
           value={second.value}
@@ -166,6 +177,7 @@ export function PodiumDisplay({ rankings, valueLabel }: PodiumDisplayProps) {
         <PodiumSpot
           rank={1}
           userName={first.userName}
+          userNickname={first.userNickname}
           nationality={first.nationality}
           profilePicture={first.profilePicture}
           value={first.value}
@@ -178,6 +190,7 @@ export function PodiumDisplay({ rankings, valueLabel }: PodiumDisplayProps) {
         <PodiumSpot
           rank={3}
           userName={third.userName}
+          userNickname={third.userNickname}
           nationality={third.nationality}
           profilePicture={third.profilePicture}
           value={third.value}

@@ -581,6 +581,8 @@ export class TursoMatchRepository implements MatchRepository {
         "signups.updated_at",
         "guest_owner.email as guest_owner_email",
         "player_user.nationality as player_nationality",
+        "player_user.username as player_username",
+        "player_user.displayUsername as player_display_username",
       ])
       .where("match_id", "=", id)
       .orderBy("signed_up_at", "asc")
@@ -590,6 +592,8 @@ export class TursoMatchRepository implements MatchRepository {
       ...dbSignupToSignup(row),
       guestOwnerEmail: row.guest_owner_email || undefined,
       playerNationality: row.player_nationality || undefined,
+      playerUsername: row.player_username || null,
+      playerDisplayUsername: row.player_display_username || null,
     }));
 
     // Calculate available spots (based on paid players only)
@@ -1270,6 +1274,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       total_matches: number;
@@ -1280,6 +1286,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COUNT(DISTINCT s.match_id) as total_matches,
@@ -1292,16 +1300,22 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       ORDER BY total_matches DESC, u.name ASC
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      totalMatches: Number(row.total_matches),
-      totalGoals: Number(row.total_goals),
-      totalThirdTimes: Number(row.total_third_times),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        totalMatches: Number(row.total_matches),
+        totalGoals: Number(row.total_goals),
+        totalThirdTimes: Number(row.total_third_times),
+      };
+    });
   }
 
   async getUserById(userId: string): Promise<User | null> {
@@ -1330,6 +1344,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       value: number;
@@ -1339,6 +1355,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COUNT(DISTINCT s.match_id) as value,
@@ -1350,15 +1368,21 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       LIMIT ${limit}
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.value),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.value),
+      };
+    });
   }
 
   async getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]> {
@@ -1366,6 +1390,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       value: number;
@@ -1375,6 +1401,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COALESCE(SUM(mps.third_time_attended), 0) as value,
@@ -1388,15 +1416,21 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       LIMIT ${limit}
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.value),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.value),
+      };
+    });
   }
 
   async getRankingsByBeers(limit: number): Promise<PlayerRanking[]> {
@@ -1404,6 +1438,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       user_id: string;
       user_name: string;
       user_email: string;
+      username: string | null;
+      display_username: string | null;
       nationality: string | null;
       profile_picture: string | null;
       value: number;
@@ -1413,6 +1449,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.id as user_id,
         u.name as user_name,
         u.email as user_email,
+        u.username,
+        u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
         COALESCE(SUM(mps.third_time_beers), 0) as value,
@@ -1426,14 +1464,20 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       LIMIT ${limit}
     `.execute(this.db);
 
-    return rows.rows.map((row) => ({
-      rank: Number(row.rank),
-      userId: row.user_id,
-      userName: row.user_name || row.user_email,
-      userEmail: row.user_email,
-      nationality: row.nationality || undefined,
-      profilePicture: row.profile_picture || undefined,
-      value: Number(row.value),
-    }));
+    return rows.rows.map((row) => {
+      const userName = row.user_name || row.user_email;
+      const rawNick = row.display_username || row.username || null;
+      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      return {
+        rank: Number(row.rank),
+        userId: row.user_id,
+        userName,
+        userNickname,
+        userEmail: row.user_email,
+        nationality: row.nationality || undefined,
+        profilePicture: row.profile_picture || undefined,
+        value: Number(row.value),
+      };
+    });
   }
 }

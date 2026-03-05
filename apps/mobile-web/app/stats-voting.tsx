@@ -19,6 +19,7 @@ import {
   type SelectOption,
   type SelectionItem,
 } from "@repo/ui";
+import { getPlayerDisplayLabel } from "@repo/shared/utils";
 import { ChevronLeft, Minus, Plus, Check } from "@tamagui/lucide-icons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState, useMemo } from "react";
@@ -224,12 +225,11 @@ export default function StatsVotingScreen() {
       .filter((p: any) => !p.isCancelled && p.userId !== userId && !p.isGuest)
       .map((player: any) => ({
         value: player.userId,
-        label:
-          player.displayUsername ||
-          player.username ||
-          player.name ||
-          player.guestName ||
-          "Unknown",
+        label: getPlayerDisplayLabel({
+          name: player.name,
+          username: player.username,
+          displayUsername: player.displayUsername,
+        }),
       }));
   }, [matchPlayersData, userId]);
 
