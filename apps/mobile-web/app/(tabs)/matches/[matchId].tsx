@@ -43,8 +43,9 @@ import {
   ScrollView,
   Share,
   Linking,
-  Image,
+
 } from "react-native";
+import { Image } from "expo-image";
 
 import { formatFullDate } from "../../../lib/date-utils";
 import { generateICS as generateICSFromUtils } from "../../../lib/calendar-utils";
@@ -90,7 +91,6 @@ function WhatsAppIcon({ size = 20 }: { size?: number }) {
     <Image
       source={require("../../../assets/whatsapp-logo.svg")}
       style={{ width: size, height: size }}
-      tintColor="#25D366"
       pointerEvents="none"
     />
   );

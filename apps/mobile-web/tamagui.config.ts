@@ -20,6 +20,7 @@ const config = createTamagui({
   settings: {
     ...defaultConfig.settings,
     ...webSettings,
+    onlyAllowShorthands: false,
   },
 })
 

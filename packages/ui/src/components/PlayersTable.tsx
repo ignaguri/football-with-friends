@@ -1,5 +1,6 @@
-import { ComponentType } from "react";
+import { ComponentType, Fragment } from "react";
 import { XStack, YStack, Text } from "tamagui";
+import { View } from "react-native";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
 import { getCountryFlag } from "../utils/country-flags";
@@ -69,10 +70,8 @@ export function PlayersTable({
       key={player.id}
       justifyContent="space-between"
       alignItems="center"
-      paddingVertical="$2.5"
+      paddingVertical="$2"
       paddingHorizontal="$3"
-      borderBottomWidth={1}
-      borderBottomColor="$borderColor"
       opacity={player.status === "CANCELLED" ? 0.6 : 1}
       backgroundColor={player.isCurrentUser ? "$blue2" : "transparent"}
       borderRadius={player.isCurrentUser ? "$2" : 0}
@@ -102,7 +101,7 @@ export function PlayersTable({
         )}
       </YStack>
 
-      <YStack gap="$1" alignItems="flex-end">
+      <View style={{ alignItems: 'flex-end' }}>
         <StatusBadge
           status={player.status}
           type="player"
@@ -110,36 +109,54 @@ export function PlayersTable({
         />
 
         {canShowActions(player) && player.actions && player.actions.length > 0 && (
-          <XStack gap="$1">
-            {player.actions.map((action, idx) => {
-              const IconComponent = action.icon;
-              return (
-                <Button
-                  key={idx}
-                  variant={action.variant || "ghost"}
-                  size="$2"
-                  circular
-                  onPress={action.onPress}
-                  aria-label={action.label}
-                >
-                  <IconComponent size={16} />
-                </Button>
-              );
-            })}
-          </XStack>
+          <>
+            <View style={{ height: 4 }} />
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {player.actions.map((action, idx) => {
+                const IconComponent = action.icon;
+                return (
+                  <Button
+                    key={idx}
+                    variant={action.variant || "ghost"}
+                    size="$2"
+                    circular
+                    width={28}
+                    height={28}
+                    onPress={action.onPress}
+                    aria-label={action.label}
+                  >
+                    <IconComponent size={16} />
+                  </Button>
+                );
+              })}
+            </View>
+          </>
         )}
-      </YStack>
+      </View>
     </XStack>
   );
   };
 
+  const RowSeparator = () => (
+    <View style={{ height: 1, backgroundColor: '#d4d4d4', marginHorizontal: 12, marginVertical: 6 }} />
+  );
+
+  const renderWithSeparators = (list: PlayerRow[]) =>
+    list.map((player, i) => (
+      <Fragment key={player.id}>
+        {i > 0 && <RowSeparator />}
+        {renderPlayerRow(player)}
+      </Fragment>
+    ));
+
   return (
     <YStack>
       {/* Paid players first */}
-      {paidPlayers.map(renderPlayerRow)}
+      {renderWithSeparators(paidPlayers)}
 
       {/* Pending players second */}
-      {pendingPlayers.map(renderPlayerRow)}
+      {pendingPlayers.length > 0 && paidPlayers.length > 0 && <RowSeparator />}
+      {renderWithSeparators(pendingPlayers)}
 
       {/* Cancelled players last (with visual separation) */}
       {cancelledPlayers.length > 0 && (
@@ -156,7 +173,7 @@ export function PlayersTable({
               </Text>
             </XStack>
           )}
-          {cancelledPlayers.map(renderPlayerRow)}
+          {renderWithSeparators(cancelledPlayers)}
         </>
       )}
     </YStack>
