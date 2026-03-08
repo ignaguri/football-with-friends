@@ -171,7 +171,7 @@ export default function PhoneSignUpScreen() {
                   disabled={isLoading}
                   variant="primary"
                 >
-                  {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
+                  {isLoading ? <Spinner size="small" color="white" /> : t("auth.signUp")}
                 </Button>
               </YStack>
             </YStack>

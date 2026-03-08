@@ -31,6 +31,8 @@ export interface PlayersTableProps {
   isAdmin?: boolean;
   emptyMessage?: string;
   statusLabels?: Record<PlayerStatusType, string>;
+  guestLabel?: string;
+  cancelledLabel?: string;
 }
 
 export function PlayersTable({
@@ -38,6 +40,8 @@ export function PlayersTable({
   isAdmin = false,
   emptyMessage = "No players signed up yet",
   statusLabels,
+  guestLabel = "Guest",
+  cancelledLabel = "Cancelled",
 }: PlayersTableProps) {
   if (players.length === 0) {
     return (
@@ -96,7 +100,7 @@ export function PlayersTable({
         </XStack>
         {player.isGuest && (
           <Text fontSize="$2" color="$gray10">
-            Guest
+            {guestLabel}
           </Text>
         )}
       </YStack>
@@ -169,7 +173,7 @@ export function PlayersTable({
               marginTop="$2"
             >
               <Text fontSize="$2" color="$gray10" fontWeight="500">
-                Cancelled
+                {cancelledLabel}
               </Text>
             </XStack>
           )}

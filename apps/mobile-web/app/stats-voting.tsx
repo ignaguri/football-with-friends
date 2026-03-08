@@ -207,7 +207,7 @@ export default function StatsVotingScreen() {
       .filter((m: Match) => m.status === "completed" || m.status === "played")
       .map((match: Match) => ({
         value: match.id,
-        label: `${formatDate(match.date)} / ${match.time} / ${match.location?.name || "Unknown"}${match.court?.name ? ` - ${match.court.name}` : ""}`,
+        label: `${formatDate(match.date)} / ${match.time} / ${match.location?.name || t("shared.unknown")}${match.court?.name ? ` - ${match.court.name}` : ""}`,
       }));
   }, [matchesData]);
 

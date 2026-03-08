@@ -173,7 +173,7 @@ export default function HomeScreen() {
             </Button>
 
             <Button variant="outline" onPress={dismissPermanently}>
-              I already read the rules
+              {t("rules.alreadyRead")}
             </Button>
           </YStack>
         </YStack>

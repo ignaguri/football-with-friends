@@ -781,6 +781,8 @@ export default function MatchDetailScreen() {
                   isAdmin={isAdmin}
                   emptyMessage={t("players.noPlayers")}
                   statusLabels={statusLabels}
+                  guestLabel={t("players.guest")}
+                  cancelledLabel={t("players.cancelledSection")}
                 />
               </YStack>
             </Card>

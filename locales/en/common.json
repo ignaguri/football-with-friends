@@ -138,6 +138,7 @@
     "cantPlay": "I can't play"
   },
   "rules": {
+    "alreadyRead": "I already read the rules",
     "title": "Rules & Info",
     "description": "Fútbol con los pibes – Rules, and summary stats.",
     "generalTitle": "General Rules",
@@ -354,7 +355,13 @@
     "cancelSuccess": "Cancelled {name}'s spot.",
     "cancelError": "Could not cancel player's spot."
   },
+  "pwa": {
+    "installTitle": "Install Football with Friends",
+    "installDescription": "Install our app for quick access and offline support",
+    "install": "Install"
+  },
   "shared": {
+    "unknown": "Unknown",
     "loading": "Loading...",
     "loadMore": "Load More",
     "home": "Home",
@@ -552,14 +559,20 @@
       "beers": "Beers Consumed"
     },
     "rank": "#{{rank}}",
-    "noData": "No ranking data available"
+    "noData": "No ranking data available",
+    "noRankings": "No rankings available yet"
   },
   "awards": {
     "title": "Match Awards",
     "topPlayers": "Top Players",
     "votesCount": "{{count}} votes",
     "votesCount_one": "{{count}} vote",
-    "noVotes": "No votes yet"
+    "noVotes": "No votes yet",
+    "noAwardsYet": "No awards received yet",
+    "playMoreMatches": "Play more matches to earn awards!",
+    "totalVotes": "{{count}} Total Votes",
+    "totalVotes_one": "{{count}} Total Vote",
+    "rankOverall": "overall"
   },
   "voting": {
     "title": "Match Voting",

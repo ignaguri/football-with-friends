@@ -333,6 +333,8 @@ export default function PlayersStatsScreen() {
                     profilePicture: player.profilePicture,
                     voteCount: player.voteCount,
                   }))}
+                  noVotesLabel={t("awards.noVotes")}
+                  formatVotes={(count) => t("awards.votesCount", { count })}
                 />
               ))}
           </YStack>
