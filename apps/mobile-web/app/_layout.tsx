@@ -1,4 +1,19 @@
 // @ts-nocheck - Tamagui's type system with custom config causes recursive type resolution issues
+
+// Tamagui v2 native setup — must run before any Tamagui imports
+// setup-burnt: native toast notifications
+// setup-gesture-handler: gesture-based components like Sheet
+// setup-worklets: animation worklets
+// setup-safe-area: safe area token support
+// Note: setup-zeego omitted — zeego not installed
+import "@tamagui/native/setup-burnt";
+import "@tamagui/native/setup-gesture-handler";
+import "@tamagui/native/setup-worklets";
+import "@tamagui/native/setup-safe-area";
+
+// Import react-native-svg to ensure it's loaded before any SVG components are used
+import "react-native-svg";
+
 import {
   APIProvider,
   configureApiClient,
@@ -11,21 +26,6 @@ import Head from "expo-router/head";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { TamaguiProvider, Theme, YStack } from "tamagui";
-
-// Import react-native-svg to ensure it's loaded and registered before any SVG components are used
-// This prevents "View config getter callback for component `RNSVGPath` must be a function" errors
-import "react-native-svg";
-
-// Tamagui v2 native setup — must be imported at app entry point before any Tamagui imports
-// setup-burnt: native toast notifications (burnt is installed)
-// setup-gesture-handler: gesture-based components like Sheet
-// setup-worklets: animation worklets (react-native-worklets is installed)
-// setup-safe-area: safe area token support
-// Note: setup-zeego omitted — zeego not installed, Metro can't resolve zeego/* at bundle time
-import "@tamagui/native/setup-burnt";
-import "@tamagui/native/setup-gesture-handler";
-import "@tamagui/native/setup-worklets";
-import "@tamagui/native/setup-safe-area";
 
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
