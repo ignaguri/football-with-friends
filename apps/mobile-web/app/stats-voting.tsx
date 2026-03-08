@@ -47,13 +47,6 @@ interface VotingCriteria {
   description: string | null;
 }
 
-interface MatchPlayer {
-  id: string;
-  name: string;
-  username?: string;
-  displayUsername?: string;
-}
-
 interface UserVotes {
   hasVoted: boolean;
   votes: Array<{
