@@ -5,6 +5,7 @@ import {
   useQueryClient,
   client,
 } from "@repo/api-client";
+import { MATCH_STATUSES, type MatchStatus } from "@repo/shared/domain";
 import {
   Text,
   YStack,
@@ -58,9 +59,6 @@ const getApiErrorMessage = (error: Error): string => {
   }
   return error.message;
 };
-
-const MATCH_STATUSES = ["upcoming", "completed", "cancelled"] as const;
-type MatchStatus = (typeof MATCH_STATUSES)[number];
 
 export default function EditMatchScreen() {
   const { t } = useTranslation();
