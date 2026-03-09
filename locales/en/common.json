@@ -340,7 +340,8 @@
     "costCourt": "Cost (Court)",
     "costShirts": "Cost (Shirts)",
     "save": "Save",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "matchStatus": "Match Status"
   },
   "playerDrawer": {
     "title": "Players for {title}",
@@ -409,6 +410,7 @@
     "active": "Active",
     "played": "Played",
     "upcoming": "Upcoming",
+    "completed": "Completed",
     "substitute": "Substitute"
   },
   "settings": {
