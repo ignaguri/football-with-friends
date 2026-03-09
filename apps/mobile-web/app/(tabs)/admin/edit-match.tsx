@@ -59,6 +59,9 @@ const getApiErrorMessage = (error: Error): string => {
   return error.message;
 };
 
+const MATCH_STATUSES = ["upcoming", "completed", "cancelled"] as const;
+type MatchStatus = (typeof MATCH_STATUSES)[number];
+
 export default function EditMatchScreen() {
   const { t } = useTranslation();
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
@@ -73,7 +76,7 @@ export default function EditMatchScreen() {
   const [maxPlayers, setMaxPlayers] = useState("10");
   const [costPerPlayer, setCostPerPlayer] = useState("");
   const [sameDayCost, setSameDayCost] = useState("");
-  const [status, setStatus] = useState<"upcoming" | "completed" | "cancelled">("upcoming");
+  const [status, setStatus] = useState<MatchStatus>("upcoming");
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
@@ -121,7 +124,7 @@ export default function EditMatchScreen() {
     setMaxPlayers(String(match.maxPlayers || 10));
     setCostPerPlayer(match.costPerPlayer || "");
     setSameDayCost(match.sameDayCost || "");
-    setStatus((match.status as "upcoming" | "completed" | "cancelled") || "upcoming");
+    setStatus((match.status as MatchStatus) || "upcoming");
     setInitialized(true);
   }
 
@@ -241,11 +244,10 @@ export default function EditMatchScreen() {
     );
   }
 
-  const statusOptions = [
-    { value: "upcoming", label: t("status.upcoming") },
-    { value: "completed", label: t("status.completed") },
-    { value: "cancelled", label: t("status.cancelled") },
-  ];
+  const statusOptions = MATCH_STATUSES.map((s) => ({
+    value: s,
+    label: t(`status.${s}`),
+  }));
 
   const locationOptions = locations.map((loc) => ({
     value: loc.id,
@@ -338,9 +340,7 @@ export default function EditMatchScreen() {
           {/* Match Status */}
           <Select
             value={status}
-            onValueChange={(val) =>
-              setStatus(val as "upcoming" | "completed" | "cancelled")
-            }
+            onValueChange={(val) => setStatus(val as MatchStatus)}
             label={t("editMatch.matchStatus")}
             options={statusOptions}
             disabled={updateMutation.isPending}
