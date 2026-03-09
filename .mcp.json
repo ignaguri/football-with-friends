@@ -32,6 +32,13 @@
       "command": "npx",
       "args": [
         "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "chrome-devtools-isolated": {
+      "command": "npx",
+      "args": [
+        "-y",
         "chrome-devtools-mcp@latest",
         "--isolated"
       ]
