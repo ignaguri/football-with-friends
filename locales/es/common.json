@@ -341,7 +341,8 @@
     "costCourt": "Costo (cancha)",
     "costShirts": "Costo (pecheras)",
     "save": "Guardar",
-    "saving": "Guardando..."
+    "saving": "Guardando...",
+    "matchStatus": "Estado del partido"
   },
   "playerDrawer": {
     "title": "Jugadores para {title}",
@@ -412,6 +413,7 @@
     "active": "Activo",
     "played": "Jugado",
     "upcoming": "Próximo",
+    "completed": "Completado",
     "substitute": "Suplente"
   },
   "settings": {
