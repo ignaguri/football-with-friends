@@ -122,7 +122,10 @@ export default function EditMatchScreen() {
     setMaxPlayers(String(match.maxPlayers || 10));
     setCostPerPlayer(match.costPerPlayer || "");
     setSameDayCost(match.sameDayCost || "");
-    setStatus((match.status as MatchStatus) || "upcoming");
+    const validStatus = MATCH_STATUSES.includes(match.status as MatchStatus)
+      ? (match.status as MatchStatus)
+      : "upcoming";
+    setStatus(validStatus);
     setInitialized(true);
   }
 
