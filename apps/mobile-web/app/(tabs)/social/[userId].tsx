@@ -355,7 +355,10 @@ export default function PlayerDetailScreen() {
                   {t("playerStats.awardsSection")}
                 </H2>
                 <VotingStatsSection
-                  stats={votingStats.criteriaBreakdown}
+                  stats={votingStats.criteriaBreakdown.map((stat: any) => ({
+                    ...stat,
+                    criteriaName: t(`voting.criteria.${stat.criteriaCode}`, { defaultValue: stat.criteriaName }),
+                  }))}
                   totalVotes={votingStats.totalVotesReceived}
                   emptyTitle={t("awards.noAwardsYet")}
                   emptyDescription={t("awards.playMoreMatches")}
