@@ -73,6 +73,7 @@ export default function EditMatchScreen() {
   const [maxPlayers, setMaxPlayers] = useState("10");
   const [costPerPlayer, setCostPerPlayer] = useState("");
   const [sameDayCost, setSameDayCost] = useState("");
+  const [status, setStatus] = useState<"upcoming" | "completed" | "cancelled">("upcoming");
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
@@ -120,6 +121,7 @@ export default function EditMatchScreen() {
     setMaxPlayers(String(match.maxPlayers || 10));
     setCostPerPlayer(match.costPerPlayer || "");
     setSameDayCost(match.sameDayCost || "");
+    setStatus((match.status as "upcoming" | "completed" | "cancelled") || "upcoming");
     setInitialized(true);
   }
 
@@ -139,6 +141,7 @@ export default function EditMatchScreen() {
           maxPlayers: parseInt(maxPlayers) || 10,
           costPerPlayer: costPerPlayer || undefined,
           sameDayCost: sameDayCost || undefined,
+          status,
         },
       });
 
@@ -238,6 +241,12 @@ export default function EditMatchScreen() {
     );
   }
 
+  const statusOptions = [
+    { value: "upcoming", label: t("status.upcoming") },
+    { value: "completed", label: t("status.completed") },
+    { value: "cancelled", label: t("status.cancelled") },
+  ];
+
   const locationOptions = locations.map((loc) => ({
     value: loc.id,
     label: loc.name + (loc.address ? ` - ${loc.address}` : ""),
@@ -323,6 +332,17 @@ export default function EditMatchScreen() {
             label={t("addMatch.sameDayCost")}
             placeholder={t("addMatch.costPlaceholder")}
             keyboardType="decimal-pad"
+            disabled={updateMutation.isPending}
+          />
+
+          {/* Match Status */}
+          <Select
+            value={status}
+            onValueChange={(val) =>
+              setStatus(val as "upcoming" | "completed" | "cancelled")
+            }
+            label={t("editMatch.matchStatus")}
+            options={statusOptions}
             disabled={updateMutation.isPending}
           />
 
