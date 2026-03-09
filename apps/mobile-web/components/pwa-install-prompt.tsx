@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { AnimatePresence, Button, XStack, YStack, Text } from "tamagui";
 import { X } from "@tamagui/lucide-icons";
+import { useTranslation } from "react-i18next";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,6 +10,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallPrompt() {
+  const { t } = useTranslation();
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
@@ -113,10 +115,10 @@ export function PWAInstallPrompt() {
           >
             <YStack flex={1} gap="$1">
               <Text fontSize="$5" fontWeight="600" color="$color">
-                Install Football with Friends
+                {t("pwa.installTitle")}
               </Text>
               <Text fontSize="$3" color="$color11">
-                Install our app for quick access and offline support
+                {t("pwa.installDescription")}
               </Text>
             </YStack>
 
@@ -135,7 +137,7 @@ export function PWAInstallPrompt() {
                 onPress={handleInstall}
                 fontWeight="600"
               >
-                Install
+                {t("pwa.install")}
               </Button>
             </XStack>
           </XStack>

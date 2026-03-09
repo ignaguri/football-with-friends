@@ -57,7 +57,7 @@ interface PlayerProfile {
 
 export default function PlayerDetailScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
 
@@ -185,9 +185,11 @@ export default function PlayerDetailScreen() {
     }
   };
 
+  const language = i18n.language === "es" ? "es" : "en";
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString(language === "es" ? "es-ES" : "en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
@@ -353,8 +355,16 @@ export default function PlayerDetailScreen() {
                   {t("playerStats.awardsSection")}
                 </H2>
                 <VotingStatsSection
-                  stats={votingStats.criteriaBreakdown}
+                  stats={votingStats.criteriaBreakdown.map((stat: any) => ({
+                    ...stat,
+                    criteriaName: t(`voting.criteria.${stat.criteriaCode}`, { defaultValue: stat.criteriaName }),
+                  }))}
                   totalVotes={votingStats.totalVotesReceived}
+                  emptyTitle={t("awards.noAwardsYet")}
+                  emptyDescription={t("awards.playMoreMatches")}
+                  formatVotes={(count) => t("awards.votesCount", { count })}
+                  formatTotalVotes={(count) => t("awards.totalVotes", { count })}
+                  overallLabel={t("awards.rankOverall")}
                 />
               </YStack>
             </Card>

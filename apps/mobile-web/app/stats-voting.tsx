@@ -18,8 +18,8 @@ import {
   ExclusiveMultiSelect,
   type SelectOption,
   type SelectionItem,
+  getPlayerDisplayLabel,
 } from "@repo/ui";
-import { getPlayerDisplayLabel } from "@repo/shared/utils";
 import { ChevronLeft, Minus, Plus, Check } from "@tamagui/lucide-icons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState, useMemo } from "react";
@@ -45,13 +45,6 @@ interface VotingCriteria {
   code: string;
   name: string;
   description: string | null;
-}
-
-interface MatchPlayer {
-  id: string;
-  name: string;
-  username?: string;
-  displayUsername?: string;
 }
 
 interface UserVotes {
@@ -214,7 +207,7 @@ export default function StatsVotingScreen() {
       .filter((m: Match) => m.status === "completed" || m.status === "played")
       .map((match: Match) => ({
         value: match.id,
-        label: `${formatDate(match.date)} / ${match.time} / ${match.location?.name || "Unknown"}${match.court?.name ? ` - ${match.court.name}` : ""}`,
+        label: `${formatDate(match.date)} / ${match.time} / ${match.location?.name || t("shared.unknown")}${match.court?.name ? ` - ${match.court.name}` : ""}`,
       }));
   }, [matchesData]);
 

@@ -26,7 +26,7 @@ function getDatabaseConfig() {
 
 // Lazy initialization for auth - required for Cloudflare Workers compatibility
 // where environment variables are set per-request via middleware
-let _auth: ReturnType<typeof betterAuth> | null = null;
+let _auth: ReturnType<typeof createAuthInstance> | null = null;
 
 function createAuthInstance() {
   const env = getEnv();
@@ -266,8 +266,8 @@ export function resetAuth() {
 
 // For backwards compatibility with existing code that imports `auth` directly
 // This uses a Proxy to lazily access the auth instance
-export const auth = new Proxy({} as ReturnType<typeof betterAuth>, {
+export const auth = new Proxy({} as ReturnType<typeof createAuthInstance>, {
   get(_target, prop) {
-    return getAuth()[prop as keyof ReturnType<typeof betterAuth>];
+    return getAuth()[prop as keyof ReturnType<typeof createAuthInstance>];
   },
 });

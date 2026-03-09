@@ -323,9 +323,9 @@ export default function PlayersStatsScreen() {
               leaderboard.criteria.map((award) => (
                 <AwardCard
                   key={award.criteriaId}
-                  criteriaName={award.criteriaName}
+                  criteriaName={t(`voting.criteria.${award.criteriaCode}`, { defaultValue: award.criteriaName })}
                   criteriaCode={award.criteriaCode}
-                  criteriaDescription={award.criteriaDescription}
+                  criteriaDescription={t(`voting.criteria.${award.criteriaCode}_desc`, { defaultValue: award.criteriaDescription })}
                   topPlayers={award.topPlayers.map((player) => ({
                     userName: player.userName,
                     userNickname: player.userNickname,
@@ -333,6 +333,8 @@ export default function PlayersStatsScreen() {
                     profilePicture: player.profilePicture,
                     voteCount: player.voteCount,
                   }))}
+                  noVotesLabel={t("awards.noVotes")}
+                  formatVotes={(count) => t("awards.votesCount", { count })}
                 />
               ))}
           </YStack>

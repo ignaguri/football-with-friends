@@ -11,8 +11,9 @@ import {
 } from "@repo/ui";
 import { Mail } from "@tamagui/lucide-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
+import * as Device from "expo-device";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 import { useTheme } from "tamagui";
@@ -24,6 +25,13 @@ export default function AuthLandingScreen() {
   const theme = useTheme();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+
+  useEffect(() => {
+    // Only check on physical devices — simulators return true but render the button invisibly
+    if (!Device.isDevice) return;
+    AppleAuthentication.isAvailableAsync().then(setIsAppleAvailable).catch(() => {});
+  }, []);
 
   // Detect dark mode for Google button styling
   const isDark =
@@ -143,7 +151,7 @@ export default function AuthLandingScreen() {
       >
         {/* Title */}
         <YStack gap="$5" alignItems="center" marginBottom="$4">
-          <Text fontSize="$10" fontWeight="bold" textAlign="center">
+          <Text fontSize="$10" fontWeight="bold" textAlign="center" lineHeight="$10">
             Football con los pibes
           </Text>
           <Text color="$gray11" textAlign="center">
@@ -152,7 +160,7 @@ export default function AuthLandingScreen() {
         </YStack>
 
         {/* Auth Options */}
-        <YStack gap="$3" width="100%">
+        <YStack gap="$3" alignSelf="stretch" alignItems="stretch">
           {/* Phone Button - Primary */}
           <Button
             onPress={() => router.push("/(auth)/phone-signin")}
@@ -286,8 +294,8 @@ export default function AuthLandingScreen() {
             </Button>
           )}
 
-          {/* Apple Sign In - iOS native only */}
-          {Platform.OS === "ios" && (
+          {/* Apple Sign In - only when available (real device with Face ID/Touch ID) */}
+          {isAppleAvailable && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
               buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
@@ -302,7 +310,6 @@ export default function AuthLandingScreen() {
             onPress={() => router.push("/(auth)/email-signin")}
             variant="outline"
             size="$5"
-            width="100%"
             fontWeight="400"
           >
             <XStack gap="$3" alignItems="center" justifyContent="center">

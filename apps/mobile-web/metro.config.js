@@ -23,14 +23,7 @@ config.resolver.extraNodeModules = {
   "@repo/ui": path.resolve(workspaceRoot, "packages/ui"),
 };
 
-// 4. Handle symlinks properly (important for pnpm)
-config.resolver.unstable_enableSymlinks = true;
-
-// 5. Expo 49 issue: default metro config needs to include "mjs"
-// https://github.com/expo/expo/issues/23180
-config.resolver.sourceExts.push('mjs');
-
-// 6. Add font asset extensions for Montserrat fonts
+// 4. Add font asset extensions for Montserrat fonts
 config.resolver.assetExts.push('ttf', 'woff2');
 
 module.exports = config;

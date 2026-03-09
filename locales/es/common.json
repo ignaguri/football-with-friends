@@ -139,6 +139,7 @@
     "cantPlay": "No puedo jugar"
   },
   "rules": {
+    "alreadyRead": "Ya leí las reglas",
     "title": "Reglas e Información",
     "description": "Fútbol con los pibes – Reglas y estadísticas.",
     "generalTitle": "Reglas generales",
@@ -357,7 +358,13 @@
     "cancelSuccess": "Lugar de {name} cancelado.",
     "cancelError": "No se pudo cancelar el lugar del jugador."
   },
+  "pwa": {
+    "installTitle": "Instalar Fútbol con los pibes",
+    "installDescription": "Instalá la app para acceso rápido y soporte offline",
+    "install": "Instalar"
+  },
   "shared": {
+    "unknown": "Desconocido",
     "loading": "Cargando...",
     "loadMore": "Cargar más",
     "home": "Inicio",
@@ -555,14 +562,20 @@
       "beers": "Cervezas Consumidas"
     },
     "rank": "#{{rank}}",
-    "noData": "No hay datos de ranking"
+    "noData": "No hay datos de ranking",
+    "noRankings": "Aún no hay rankings disponibles"
   },
   "awards": {
     "title": "Premios del Partido",
     "topPlayers": "Top Jugadores",
     "votesCount": "{{count}} votos",
     "votesCount_one": "{{count}} voto",
-    "noVotes": "Sin votos aún"
+    "noVotes": "Sin votos aún",
+    "noAwardsYet": "Aún no hay premios",
+    "playMoreMatches": "¡Jugá más partidos para ganar premios!",
+    "totalVotes": "{{count}} Votos Totales",
+    "totalVotes_one": "{{count}} Voto Total",
+    "rankOverall": "general"
   },
   "voting": {
     "title": "Votación del Partido",

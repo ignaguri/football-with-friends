@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input as TamaguiInput, InputProps, YStack, XStack, Text } from "tamagui";
 import { Eye, EyeOff } from "@tamagui/lucide-icons";
-import { Pressable } from "react-native";
+import { Platform, Pressable } from "react-native";
 
 export interface CustomInputProps extends InputProps {
   label?: string;
@@ -54,6 +54,8 @@ export function Input({
             outlineWidth: 0,
           }}
           secureTextEntry={shouldHideText}
+          // Tamagui v2 doesn't map secureTextEntry to type="password" on web
+          {...(Platform.OS === "web" && shouldHideText ? { type: "password" } : {})}
           flex={1}
           {...props}
         />

@@ -10,18 +10,31 @@ export interface VotingStatsSectionProps {
     rank?: number;
   }>;
   totalVotes: number;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  formatVotes?: (count: number) => string;
+  formatTotalVotes?: (count: number) => string;
+  overallLabel?: string;
 }
 
-export function VotingStatsSection({ stats, totalVotes }: VotingStatsSectionProps) {
+export function VotingStatsSection({
+  stats,
+  totalVotes,
+  emptyTitle = "No awards received yet",
+  emptyDescription = "Play more matches to earn awards!",
+  formatVotes,
+  formatTotalVotes,
+  overallLabel = "overall",
+}: VotingStatsSectionProps) {
   if (stats.length === 0) {
     return (
       <YStack padding="$3" alignItems="center" gap="$2">
         <Award size={32} color="$gray9" />
         <Text fontSize="$4" color="$gray11" textAlign="center">
-          No awards received yet
+          {emptyTitle}
         </Text>
         <Text fontSize="$3" color="$gray10" textAlign="center">
-          Play more matches to earn awards!
+          {emptyDescription}
         </Text>
       </YStack>
     );
@@ -43,7 +56,7 @@ export function VotingStatsSection({ stats, totalVotes }: VotingStatsSectionProp
       >
         <Trophy size={20} color="$green10" />
         <Text fontSize="$5" fontWeight="700" color="$green11">
-          {totalVotes} Total {totalVotes === 1 ? "Vote" : "Votes"}
+          {formatTotalVotes ? formatTotalVotes(totalVotes) : `${totalVotes} Total ${totalVotes === 1 ? "Vote" : "Votes"}`}
         </Text>
       </XStack>
 
@@ -83,7 +96,7 @@ export function VotingStatsSection({ stats, totalVotes }: VotingStatsSectionProp
               {/* Vote count and rank */}
               <YStack gap="$1" alignItems="flex-end">
                 <Badge variant={isTopRank ? "success" : "info"}>
-                  {stat.timesVoted} {stat.timesVoted === 1 ? "vote" : "votes"}
+                  {formatVotes ? formatVotes(stat.timesVoted) : `${stat.timesVoted} ${stat.timesVoted === 1 ? "vote" : "votes"}`}
                 </Badge>
                 {isTopRank && stat.rank && (
                   <XStack gap="$1" alignItems="center">
@@ -98,7 +111,7 @@ export function VotingStatsSection({ stats, totalVotes }: VotingStatsSectionProp
                       }
                     />
                     <Text fontSize="$2" color="$gray11" fontWeight="600">
-                      #{stat.rank} overall
+                      #{stat.rank} {overallLabel}
                     </Text>
                   </XStack>
                 )}

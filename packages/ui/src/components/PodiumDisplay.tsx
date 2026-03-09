@@ -13,6 +13,7 @@ export interface PodiumDisplayProps {
     value: number;
   }>;
   valueLabel: string;
+  emptyLabel?: string;
 }
 
 // Podium heights for visual hierarchy
@@ -134,7 +135,7 @@ function PodiumSpot({
   );
 }
 
-export function PodiumDisplay({ rankings, valueLabel }: PodiumDisplayProps) {
+export function PodiumDisplay({ rankings, valueLabel, emptyLabel = "No rankings available yet" }: PodiumDisplayProps) {
   // Extract top 3
   const first = rankings.find((r) => r.rank === 1);
   const second = rankings.find((r) => r.rank === 2);
@@ -144,7 +145,7 @@ export function PodiumDisplay({ rankings, valueLabel }: PodiumDisplayProps) {
     return (
       <YStack padding="$4" alignItems="center">
         <Text color="$gray11" textAlign="center">
-          No rankings available yet
+          {emptyLabel}
         </Text>
       </YStack>
     );

@@ -139,7 +139,7 @@ export default function EmailSignInScreen() {
                   disabled={isLoading}
                   variant="primary"
                 >
-                  {isLoading ? <Spinner size="small" /> : t("auth.signIn")}
+                  {isLoading ? <Spinner size="small" color="white" /> : t("auth.signIn")}
                 </Button>
               </YStack>
             </YStack>

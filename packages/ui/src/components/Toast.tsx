@@ -64,6 +64,7 @@ function ToastContent() {
       y={0}
       opacity={1}
       scale={1}
+      // @ts-expect-error Tamagui RC: animation types need config augmentation
       animation="quick"
       viewportName={currentToast.viewportName}
       backgroundColor={colors.bg}

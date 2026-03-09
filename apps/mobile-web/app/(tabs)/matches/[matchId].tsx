@@ -43,8 +43,9 @@ import {
   ScrollView,
   Share,
   Linking,
-  Image,
+
 } from "react-native";
+import { Image } from "expo-image";
 
 import { formatFullDate } from "../../../lib/date-utils";
 import { generateICS as generateICSFromUtils } from "../../../lib/calendar-utils";
@@ -89,7 +90,7 @@ function WhatsAppIcon({ size = 20 }: { size?: number }) {
   return (
     <Image
       source={require("../../../assets/whatsapp-logo.svg")}
-      style={{ width: size, height: size, tintColor: "#25D366" }}
+      style={{ width: size, height: size }}
       pointerEvents="none"
     />
   );
@@ -780,6 +781,8 @@ export default function MatchDetailScreen() {
                   isAdmin={isAdmin}
                   emptyMessage={t("players.noPlayers")}
                   statusLabels={statusLabels}
+                  guestLabel={t("players.guest")}
+                  cancelledLabel={t("players.cancelledSection")}
                 />
               </YStack>
             </Card>

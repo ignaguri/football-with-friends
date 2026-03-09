@@ -311,6 +311,7 @@ function NativeSelect({
               </Sheet.ScrollView>
             </Sheet.Frame>
             <Sheet.Overlay
+              // @ts-expect-error Tamagui RC: animation types need config augmentation
               animation="lazy"
               backgroundColor="rgba(0, 0, 0, 0.5)"
               enterStyle={{ opacity: 0 }}

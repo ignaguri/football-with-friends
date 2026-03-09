@@ -16,6 +16,8 @@ export interface AwardCardProps {
     voteCount: number;
   }>;
   onPress?: () => void;
+  noVotesLabel?: string;
+  formatVotes?: (count: number) => string;
 }
 
 // Medal colors for top 3
@@ -28,6 +30,8 @@ export function AwardCard({
   criteriaDescription,
   topPlayers,
   onPress,
+  noVotesLabel = "No votes yet",
+  formatVotes,
 }: AwardCardProps) {
   return (
     <Card
@@ -59,7 +63,7 @@ export function AwardCard({
       {topPlayers.length === 0 ? (
         <YStack padding="$3" alignItems="center">
           <Text fontSize="$3" color="$gray11" textAlign="center">
-            No votes yet
+            {noVotesLabel}
           </Text>
         </YStack>
       ) : (
@@ -122,7 +126,7 @@ export function AwardCard({
                     </YStack>
                   </XStack>
                   <Text fontSize="$2" color="$gray11">
-                    {player.voteCount} {player.voteCount === 1 ? "vote" : "votes"}
+                    {formatVotes ? formatVotes(player.voteCount) : `${player.voteCount} ${player.voteCount === 1 ? "vote" : "votes"}`}
                   </Text>
                 </YStack>
               </XStack>

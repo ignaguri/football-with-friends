@@ -1,20 +1,33 @@
 // @ts-nocheck - Tamagui's type system with custom config causes recursive type resolution issues
+
+// Tamagui v2 native setup — must run before any Tamagui imports
+// setup-burnt: native toast notifications
+// setup-gesture-handler: gesture-based components like Sheet
+// setup-worklets: animation worklets
+// setup-safe-area: safe area token support
+// Note: setup-zeego omitted — zeego not installed
+import "@tamagui/native/setup-burnt";
+import "@tamagui/native/setup-gesture-handler";
+import "@tamagui/native/setup-worklets";
+import "@tamagui/native/setup-safe-area";
+
+// Import react-native-svg to ensure it's loaded before any SVG components are used
+import "react-native-svg";
+
 import {
   APIProvider,
   configureApiClient,
   configureGeneralApiClient,
 } from "@repo/api-client";
 import { Toast } from "@repo/ui";
-import { PortalProvider } from "@tamagui/portal";
+import { PortalProvider } from "tamagui";
 import { Stack } from "expo-router";
 import Head from "expo-router/head";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { TamaguiProvider, Theme, YStack } from "tamagui";
 
-// Import react-native-svg to ensure it's loaded and registered before any SVG components are used
-// This prevents "View config getter callback for component `RNSVGPath` must be a function" errors
-import "react-native-svg";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PWAInstallPrompt } from "../components/pwa-install-prompt";
 import { ErrorBoundary } from "../lib/error-boundary";
@@ -139,7 +152,7 @@ function AppContent() {
           <script src="https://accounts.google.com/gsi/client" async defer />
         </Head>
       )}
-      <TamaguiProvider key={themeName} config={config} defaultTheme={themeName}>
+      <TamaguiProvider key={themeName} config={config} defaultTheme={themeName} defaultFont="body">
         <PortalProvider shouldAddRootHost>
           <Theme name={themeName}>
             <Toast>
@@ -163,8 +176,10 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

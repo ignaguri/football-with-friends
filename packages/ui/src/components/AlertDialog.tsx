@@ -43,6 +43,7 @@ export function AlertDialog({
       <TamaguiAlertDialog.Portal>
         <TamaguiAlertDialog.Overlay
           key="overlay"
+          // @ts-expect-error Tamagui RC: animation types need config augmentation
           animation="quick"
           opacity={0.5}
           backgroundColor="rgba(0, 0, 0, 0.5)"
@@ -55,6 +56,7 @@ export function AlertDialog({
           elevate
           key="content"
           animateOnly={["transform", "opacity"]}
+          // @ts-expect-error Tamagui RC: animation types need config augmentation
           animation={[
             "quick",
             {

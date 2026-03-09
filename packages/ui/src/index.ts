@@ -116,8 +116,12 @@ export {
   H6,
   Paragraph,
   Separator,
-  Image,
 } from "tamagui";
+
+// Use expo-image instead of Tamagui's — Tamagui v2's Image doesn't map
+// `source` to `src` on web. expo-image supports SVG on iOS via SDWebImage,
+// handles require() assets on all platforms, and renders via <img> on web.
+export { Image } from "expo-image";
 
 // Toast utilities
 export { useToastController } from "@tamagui/toast";
@@ -139,3 +143,6 @@ export type { Country, CountryWithDialCode } from "./utils/country-flags";
 // Colors
 export { colors } from "./colors";
 export type { ColorKey } from "./colors";
+
+// Display name utilities
+export { getPlayerDisplayParts, getPlayerDisplayLabel } from "./utils/display-name";
