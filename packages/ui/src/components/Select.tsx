@@ -320,6 +320,7 @@ function NativeSelect({
           </Sheet>
         </Adapt>
 
+        {/* @ts-expect-error Tamagui RC: zIndex prop not in Content type but works at runtime */}
         <TamaguiSelect.Content zIndex={200000}>
           <TamaguiSelect.ScrollUpButton
             alignItems="center"
