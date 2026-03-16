@@ -181,8 +181,8 @@ function WebExclusiveSelect({
         paddingRight: "40px",
       }}
     >
-      <option value="" disabled={!value}>
-        {value ? selectedLabel : placeholder}
+      <option value="">
+        {value ? `— ${placeholder} —` : placeholder}
       </option>
       {options.map((option) => (
         <option key={option.value} value={option.value}>
