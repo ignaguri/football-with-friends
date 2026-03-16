@@ -203,8 +203,19 @@ export default function StatsVotingScreen() {
     },
   });
 
+  // Extract current user's stats from match stats data
+  const getMyStats = (data: any) => {
+    if (!data || !userId) return null;
+    const stats = Array.isArray(data) ? data : data?.stats || [];
+    return (
+      stats.find(
+        (s: any) => s.userId === userId || s.user_id === userId,
+      ) || null
+    );
+  };
+
   // Pre-populate vote selections when user votes are loaded
-  useMemo(() => {
+  useEffect(() => {
     if (userVotesData?.votes?.length) {
       const selections: Record<string, string> = {};
       userVotesData.votes.forEach((vote) => {
@@ -216,22 +227,15 @@ export default function StatsVotingScreen() {
 
   // Pre-populate 3rd time stats from existing data
   useEffect(() => {
-    if (matchStatsData && userId) {
-      const stats = Array.isArray(matchStatsData)
-        ? matchStatsData
-        : (matchStatsData as any)?.stats || [];
-      const myStats = stats.find(
-        (s: any) => s.userId === userId || s.user_id === userId,
-      );
-      if (myStats) {
-        const attended =
-          myStats.thirdTimeAttended ?? myStats.third_time_attended;
-        if (attended !== undefined && attended !== null) {
-          setAttendedThirdTime(Boolean(attended));
-          const beers =
-            myStats.thirdTimeBeers ?? myStats.third_time_beers ?? 0;
-          setBeersCount(Number(beers));
-        }
+    const myStats = getMyStats(matchStatsData);
+    if (myStats) {
+      const attended =
+        myStats.thirdTimeAttended ?? myStats.third_time_attended;
+      if (attended !== undefined && attended !== null) {
+        setAttendedThirdTime(Boolean(attended));
+        const beers =
+          myStats.thirdTimeBeers ?? myStats.third_time_beers ?? 0;
+        setBeersCount(Number(beers));
       }
     }
   }, [matchStatsData, userId]);
@@ -280,19 +284,13 @@ export default function StatsVotingScreen() {
   };
 
   const hasVoted = userVotesData?.hasVoted || false;
+  const hasSubmittedStats = !!getMyStats(matchStatsData);
 
-  // Check if user already submitted stats
-  const hasSubmittedStats = useMemo(() => {
-    if (!matchStatsData || !userId) return false;
-    const stats = Array.isArray(matchStatsData)
-      ? matchStatsData
-      : (matchStatsData as any)?.stats || [];
-    return stats.some(
-      (s: any) => s.userId === userId || s.user_id === userId,
-    );
-  }, [matchStatsData, userId]);
-
-  const isLocked = hasVoted || hasSubmittedStats;
+  // Lock form only when both applicable parts are done:
+  // - If user has voted, votes are locked
+  // - If user has submitted stats, stats are locked
+  // - Full lock (hide submit) only when both are done (or one wasn't attempted)
+  const isLocked = hasVoted && hasSubmittedStats;
 
   const handleSubmitVotes = async () => {
     const votes = Object.entries(voteSelections)
@@ -439,8 +437,8 @@ export default function StatsVotingScreen() {
                           attendedThirdTime === true ? "primary" : "outline"
                         }
                         onPress={() => setAttendedThirdTime(true)}
-                        disabled={isLocked}
-                        opacity={isLocked ? 0.5 : 1}
+                        disabled={hasSubmittedStats}
+                        opacity={hasSubmittedStats ? 0.5 : 1}
                       >
                         {t("voting.yes")}
                       </Button>
@@ -450,8 +448,8 @@ export default function StatsVotingScreen() {
                           attendedThirdTime === false ? "primary" : "outline"
                         }
                         onPress={() => setAttendedThirdTime(false)}
-                        disabled={isLocked}
-                        opacity={isLocked ? 0.5 : 1}
+                        disabled={hasSubmittedStats}
+                        opacity={hasSubmittedStats ? 0.5 : 1}
                       >
                         {t("voting.no")}
                       </Button>
@@ -466,7 +464,7 @@ export default function StatsVotingScreen() {
                           circular
                           icon={Minus}
                           variant="outline"
-                          disabled={beersCount <= 0 || isLocked}
+                          disabled={beersCount <= 0 || hasSubmittedStats}
                           onPress={() =>
                             setBeersCount(Math.max(0, beersCount - 1))
                           }
@@ -484,7 +482,7 @@ export default function StatsVotingScreen() {
                           circular
                           icon={Plus}
                           variant="outline"
-                          disabled={isLocked}
+                          disabled={hasSubmittedStats}
                           onPress={() => setBeersCount(beersCount + 1)}
                         />
                       </XStack>
@@ -516,7 +514,7 @@ export default function StatsVotingScreen() {
                       selections={voteSelections}
                       onSelectionChange={handleSelectionChange}
                       placeholder={t("voting.selectPlayer")}
-                      disabled={isLocked}
+                      disabled={hasVoted}
                     />
                   )}
 
