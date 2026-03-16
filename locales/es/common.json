@@ -595,8 +595,8 @@
     "votesSubmitted": "¡Votos enviados exitosamente!",
     "votesFailed": "Error al enviar los votos",
     "alreadyVoted": "Ya votaste para este partido",
-    "clearVotes": "Borrar mis votos",
-    "votesCleared": "Votos borrados exitosamente",
+    "confirmTitle": "Confirmar Envío",
+    "confirmSubmit": "Los votos y estadísticas son definitivos y no se pueden cambiar. ¿Estás seguro?",
     "results": "Resultados de la Votación",
     "noVotesYet": "Aún no hay votos para este partido",
     "criteria": {

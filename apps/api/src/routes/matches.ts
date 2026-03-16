@@ -93,7 +93,7 @@ app.get("/:matchId/players", async (c) => {
 
   // Format players from signups
   const players = match.signups
-    .filter((signup) => signup.status !== "CANCELLED")
+    .filter((signup) => signup.status === "PAID")
     .map((signup) => ({
       id: signup.id,
       signupId: signup.id,

@@ -592,8 +592,8 @@
     "votesSubmitted": "Votes submitted successfully!",
     "votesFailed": "Failed to submit votes",
     "alreadyVoted": "You have already voted for this match",
-    "clearVotes": "Clear my votes",
-    "votesCleared": "Votes cleared successfully",
+    "confirmTitle": "Confirm Submission",
+    "confirmSubmit": "Votes and stats are final and cannot be changed. Are you sure?",
     "results": "Voting Results",
     "noVotesYet": "No votes yet for this match",
     "criteria": {

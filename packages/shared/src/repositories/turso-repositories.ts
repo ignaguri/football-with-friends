@@ -1242,7 +1242,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       .selectFrom("signups")
       .select(sql`COUNT(DISTINCT match_id)`.as("total_matches"))
       .where("user_id", "=", userId)
-      .where("status", "!=", "CANCELLED")
+      .where("status", "=", "PAID")
       .executeTakeFirst();
 
     // Sum stats from match_player_stats
@@ -1294,7 +1294,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.goals), 0) as total_goals,
         COALESCE(SUM(mps.third_time_attended), 0) as total_third_times
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
       LEFT JOIN match_player_stats mps ON u.id = mps.user_id
       GROUP BY u.id
       ORDER BY total_matches DESC, u.name ASC
@@ -1362,7 +1362,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COUNT(DISTINCT s.match_id) as value,
         ROW_NUMBER() OVER (ORDER BY COUNT(DISTINCT s.match_id) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
       GROUP BY u.id
       ORDER BY rank ASC
       LIMIT ${limit}
@@ -1408,7 +1408,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.third_time_attended), 0) as value,
         ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_attended), 0) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
       LEFT JOIN match_player_stats mps ON u.id = mps.user_id
       GROUP BY u.id
       HAVING value > 0
@@ -1456,7 +1456,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.third_time_beers), 0) as value,
         ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_beers), 0) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status != 'CANCELLED'
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
       LEFT JOIN match_player_stats mps ON u.id = mps.user_id
       GROUP BY u.id
       HAVING value > 0

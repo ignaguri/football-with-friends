@@ -20,11 +20,11 @@ import {
   type SelectionItem,
   getPlayerDisplayLabel,
 } from "@repo/ui";
-import { ChevronLeft, Minus, Plus, Check } from "@tamagui/lucide-icons";
+import { ChevronLeft, Minus, Plus, Check, Lock } from "@tamagui/lucide-icons";
 import { Stack, router, useLocalSearchParams } from "expo-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, Pressable } from "react-native";
+import { ScrollView, Pressable, Platform, Alert } from "react-native";
 import { useTheme } from "tamagui";
 
 interface Match {
@@ -140,6 +140,18 @@ export default function StatsVotingScreen() {
     enabled: !!selectedMatchId && !!userId,
   });
 
+  // Fetch existing player stats for this match (to pre-populate 3rd time data)
+  const { data: matchStatsData } = useQuery({
+    queryKey: ["match-player-stats", selectedMatchId],
+    queryFn: async () => {
+      const res = await client.api.matches[":id"]["player-stats"].$get({
+        param: { id: selectedMatchId },
+      });
+      return res.json();
+    },
+    enabled: !!selectedMatchId && !!userId,
+  });
+
   // Submit votes mutation
   const submitVotesMutation = useMutation({
     mutationFn: async (
@@ -159,37 +171,39 @@ export default function StatsVotingScreen() {
       queryClient.invalidateQueries({
         queryKey: ["user-votes", selectedMatchId],
       });
-      setSubmitSuccess(true);
-      setSubmitError(null);
-      setTimeout(() => setSubmitSuccess(false), 3000);
-    },
-    onError: (error: Error) => {
-      setSubmitError(error.message);
-      setSubmitSuccess(false);
     },
   });
 
-  // Clear votes mutation
-  const clearVotesMutation = useMutation({
-    mutationFn: async () => {
-      const res = await client.api.voting.matches[":matchId"].$delete({
-        param: { matchId: selectedMatchId },
+  // Submit player stats mutation (3rd time + beers)
+  const submitStatsMutation = useMutation({
+    mutationFn: async (data: {
+      thirdTimeAttended: boolean;
+      thirdTimeBeers: number;
+    }) => {
+      const res = await client.api.matches[":id"]["player-stats"].$post({
+        param: { id: selectedMatchId },
+        json: {
+          userId: userId!,
+          thirdTimeAttended: data.thirdTimeAttended,
+          thirdTimeBeers: data.thirdTimeBeers,
+        },
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error((error as any).error || "Failed to clear votes");
+        throw new Error(
+          (error as any).error || "Failed to submit player stats",
+        );
       }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["user-votes", selectedMatchId],
+        queryKey: ["match-player-stats", selectedMatchId],
       });
-      setVoteSelections({});
     },
   });
 
-  // Pre-populate selections when user votes are loaded
+  // Pre-populate vote selections when user votes are loaded
   useMemo(() => {
     if (userVotesData?.votes?.length) {
       const selections: Record<string, string> = {};
@@ -199,6 +213,28 @@ export default function StatsVotingScreen() {
       setVoteSelections(selections);
     }
   }, [userVotesData]);
+
+  // Pre-populate 3rd time stats from existing data
+  useEffect(() => {
+    if (matchStatsData && userId) {
+      const stats = Array.isArray(matchStatsData)
+        ? matchStatsData
+        : (matchStatsData as any)?.stats || [];
+      const myStats = stats.find(
+        (s: any) => s.userId === userId || s.user_id === userId,
+      );
+      if (myStats) {
+        const attended =
+          myStats.thirdTimeAttended ?? myStats.third_time_attended;
+        if (attended !== undefined && attended !== null) {
+          setAttendedThirdTime(Boolean(attended));
+          const beers =
+            myStats.thirdTimeBeers ?? myStats.third_time_beers ?? 0;
+          setBeersCount(Number(beers));
+        }
+      }
+    }
+  }, [matchStatsData, userId]);
 
   // Format matches for dropdown
   const matchOptions: SelectOption[] = useMemo(() => {
@@ -243,6 +279,21 @@ export default function StatsVotingScreen() {
     }));
   };
 
+  const hasVoted = userVotesData?.hasVoted || false;
+
+  // Check if user already submitted stats
+  const hasSubmittedStats = useMemo(() => {
+    if (!matchStatsData || !userId) return false;
+    const stats = Array.isArray(matchStatsData)
+      ? matchStatsData
+      : (matchStatsData as any)?.stats || [];
+    return stats.some(
+      (s: any) => s.userId === userId || s.user_id === userId,
+    );
+  }, [matchStatsData, userId]);
+
+  const isLocked = hasVoted || hasSubmittedStats;
+
   const handleSubmitVotes = async () => {
     const votes = Object.entries(voteSelections)
       .filter(([, value]) => value !== undefined)
@@ -251,22 +302,53 @@ export default function StatsVotingScreen() {
         votedForUserId: votedForUserId!,
       }));
 
-    if (votes.length === 0) {
+    if (votes.length === 0 && attendedThirdTime === null) {
       setSubmitError(t("voting.selectPlayer"));
       return;
     }
 
-    setIsSubmitting(true);
-    setSubmitError(null);
+    // Confirmation dialog
+    const doSubmit = async () => {
+      setIsSubmitting(true);
+      setSubmitError(null);
 
-    try {
-      await submitVotesMutation.mutateAsync(votes);
-    } finally {
-      setIsSubmitting(false);
+      try {
+        // Submit 3rd time stats if answered
+        if (attendedThirdTime !== null) {
+          await submitStatsMutation.mutateAsync({
+            thirdTimeAttended: attendedThirdTime,
+            thirdTimeBeers: attendedThirdTime ? beersCount : 0,
+          });
+        }
+
+        // Submit votes if any
+        if (votes.length > 0) {
+          await submitVotesMutation.mutateAsync(votes);
+        }
+
+        setSubmitSuccess(true);
+        setSubmitError(null);
+        setTimeout(() => setSubmitSuccess(false), 3000);
+      } catch (error: any) {
+        setSubmitError(error.message || t("voting.votesFailed"));
+        setSubmitSuccess(false);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(t("voting.confirmSubmit"));
+      if (confirmed) {
+        await doSubmit();
+      }
+    } else {
+      Alert.alert(t("voting.confirmTitle"), t("voting.confirmSubmit"), [
+        { text: t("voting.no"), style: "cancel" },
+        { text: t("voting.yes"), onPress: doSubmit },
+      ]);
     }
   };
-
-  const hasVoted = userVotesData?.hasVoted || false;
 
   if (!session?.user) {
     return (
@@ -314,6 +396,8 @@ export default function StatsVotingScreen() {
                     onValueChange={(value) => {
                       setSelectedMatchId(value);
                       setVoteSelections({});
+                      setAttendedThirdTime(null);
+                      setBeersCount(0);
                       setSubmitSuccess(false);
                       setSubmitError(null);
                     }}
@@ -322,7 +406,24 @@ export default function StatsVotingScreen() {
               </YStack>
             </Card>
 
-            {/* 3rd Time Stats - Hidden for now, can be expanded */}
+            {/* Already voted banner */}
+            {!!selectedMatchId && isLocked && (
+              <XStack
+                backgroundColor="$green3"
+                padding="$3"
+                borderRadius="$3"
+                alignItems="center"
+                justifyContent="center"
+                gap="$2"
+              >
+                <Lock size={16} color="$green10" />
+                <Text color="$green10" fontWeight="600">
+                  {t("voting.alreadyVoted")}
+                </Text>
+              </XStack>
+            )}
+
+            {/* 3rd Time Stats */}
             {!!selectedMatchId && (
               <Card variant="outlined" padding="$4">
                 <YStack gap="$3">
@@ -338,6 +439,8 @@ export default function StatsVotingScreen() {
                           attendedThirdTime === true ? "primary" : "outline"
                         }
                         onPress={() => setAttendedThirdTime(true)}
+                        disabled={isLocked}
+                        opacity={isLocked ? 0.5 : 1}
                       >
                         {t("voting.yes")}
                       </Button>
@@ -347,6 +450,8 @@ export default function StatsVotingScreen() {
                           attendedThirdTime === false ? "primary" : "outline"
                         }
                         onPress={() => setAttendedThirdTime(false)}
+                        disabled={isLocked}
+                        opacity={isLocked ? 0.5 : 1}
                       >
                         {t("voting.no")}
                       </Button>
@@ -361,7 +466,7 @@ export default function StatsVotingScreen() {
                           circular
                           icon={Minus}
                           variant="outline"
-                          disabled={beersCount <= 0}
+                          disabled={beersCount <= 0 || isLocked}
                           onPress={() =>
                             setBeersCount(Math.max(0, beersCount - 1))
                           }
@@ -379,6 +484,7 @@ export default function StatsVotingScreen() {
                           circular
                           icon={Plus}
                           variant="outline"
+                          disabled={isLocked}
                           onPress={() => setBeersCount(beersCount + 1)}
                         />
                       </XStack>
@@ -392,25 +498,9 @@ export default function StatsVotingScreen() {
             {!!selectedMatchId && (
               <Card variant="elevated" padding="$4">
                 <YStack gap="$4">
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontSize="$5" fontWeight="600">
-                      {t("voting.matchAwards")}
-                    </Text>
-                    {hasVoted && (
-                      <Button
-                        size="$2"
-                        variant="outline"
-                        onPress={() => clearVotesMutation.mutate()}
-                        disabled={clearVotesMutation.isPending}
-                      >
-                        {clearVotesMutation.isPending ? (
-                          <Spinner size="small" />
-                        ) : (
-                          t("voting.clearVotes")
-                        )}
-                      </Button>
-                    )}
-                  </XStack>
+                  <Text fontSize="$5" fontWeight="600">
+                    {t("voting.matchAwards")}
+                  </Text>
                   {isLoadingCriteria || isLoadingPlayers ? (
                     <YStack alignItems="center" padding="$4">
                       <Spinner size="large" />
@@ -426,6 +516,7 @@ export default function StatsVotingScreen() {
                       selections={voteSelections}
                       onSelectionChange={handleSelectionChange}
                       placeholder={t("voting.selectPlayer")}
+                      disabled={isLocked}
                     />
                   )}
 
@@ -451,25 +542,28 @@ export default function StatsVotingScreen() {
                     </XStack>
                   )}
 
-                  <Button
-                    variant="primary"
-                    onPress={handleSubmitVotes}
-                    disabled={
-                      isSubmitting ||
-                      Object.keys(voteSelections).filter(
-                        (k) => voteSelections[k],
-                      ).length === 0
-                    }
-                  >
-                    {isSubmitting ? (
-                      <XStack alignItems="center" gap="$2">
-                        <Spinner size="small" color="white" />
-                        <Text color="white">{t("voting.submitting")}</Text>
-                      </XStack>
-                    ) : (
-                      t("voting.submitVotes")
-                    )}
-                  </Button>
+                  {!isLocked && (
+                    <Button
+                      variant="primary"
+                      onPress={handleSubmitVotes}
+                      disabled={
+                        isSubmitting ||
+                        (Object.keys(voteSelections).filter(
+                          (k) => voteSelections[k],
+                        ).length === 0 &&
+                          attendedThirdTime === null)
+                      }
+                    >
+                      {isSubmitting ? (
+                        <XStack alignItems="center" gap="$2">
+                          <Spinner size="small" color="white" />
+                          <Text color="white">{t("voting.submitting")}</Text>
+                        </XStack>
+                      ) : (
+                        t("voting.submitVotes")
+                      )}
+                    </Button>
+                  )}
                 </YStack>
               </Card>
             )}
