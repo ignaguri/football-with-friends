@@ -5,6 +5,7 @@ import {
   useQueryClient,
   client,
 } from "@repo/api-client";
+import { MATCH_STATUSES, type MatchStatus } from "@repo/shared/domain";
 import {
   Text,
   YStack,
@@ -73,6 +74,7 @@ export default function EditMatchScreen() {
   const [maxPlayers, setMaxPlayers] = useState("10");
   const [costPerPlayer, setCostPerPlayer] = useState("");
   const [sameDayCost, setSameDayCost] = useState("");
+  const [status, setStatus] = useState<MatchStatus>("upcoming");
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
@@ -120,6 +122,10 @@ export default function EditMatchScreen() {
     setMaxPlayers(String(match.maxPlayers || 10));
     setCostPerPlayer(match.costPerPlayer || "");
     setSameDayCost(match.sameDayCost || "");
+    const validStatus = MATCH_STATUSES.includes(match.status as MatchStatus)
+      ? (match.status as MatchStatus)
+      : "upcoming";
+    setStatus(validStatus);
     setInitialized(true);
   }
 
@@ -139,6 +145,7 @@ export default function EditMatchScreen() {
           maxPlayers: parseInt(maxPlayers) || 10,
           costPerPlayer: costPerPlayer || undefined,
           sameDayCost: sameDayCost || undefined,
+          status,
         },
       });
 
@@ -238,6 +245,11 @@ export default function EditMatchScreen() {
     );
   }
 
+  const statusOptions = MATCH_STATUSES.map((s) => ({
+    value: s,
+    label: t(`status.${s}`),
+  }));
+
   const locationOptions = locations.map((loc) => ({
     value: loc.id,
     label: loc.name + (loc.address ? ` - ${loc.address}` : ""),
@@ -323,6 +335,15 @@ export default function EditMatchScreen() {
             label={t("addMatch.sameDayCost")}
             placeholder={t("addMatch.costPlaceholder")}
             keyboardType="decimal-pad"
+            disabled={updateMutation.isPending}
+          />
+
+          {/* Match Status */}
+          <Select
+            value={status}
+            onValueChange={(val) => setStatus(val as MatchStatus)}
+            label={t("editMatch.matchStatus")}
+            options={statusOptions}
             disabled={updateMutation.isPending}
           />
 
