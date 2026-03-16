@@ -14,22 +14,22 @@
     "cf:tail": "wrangler tail"
   },
   "dependencies": {
-    "@better-auth/expo": "^1.5.4",
+    "@better-auth/expo": "^1.5.5",
     "@hono/zod-validator": "^0.7.6",
-    "@orpc/server": "^1.13.6",
+    "@orpc/server": "^1.13.7",
     "@repo/shared": "workspace:*",
     "@vercel/blob": "^2.3.1",
-    "better-auth": "^1.5.4",
-    "hono": "^4.12.5",
+    "better-auth": "^1.5.5",
+    "hono": "^4.12.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260307.1",
+    "@cloudflare/workers-types": "^4.20260316.1",
     "@repo/typescript-config": "workspace:*",
     "@types/bun": "^1.3.10",
     "typescript": "^5.9.3",
-    "wrangler": "^4.71.0"
+    "wrangler": "^4.74.0"
   }
 }

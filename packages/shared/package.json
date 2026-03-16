@@ -20,12 +20,12 @@
     "@libsql/kysely-libsql": "^0.4.1",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
-    "kysely": "^0.28.10",
+    "kysely": "^0.28.12",
     "libsql": "^0.5.22",
-    "nanoid": "^5.1.6",
+    "nanoid": "^5.1.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
