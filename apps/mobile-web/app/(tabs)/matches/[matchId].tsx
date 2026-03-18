@@ -39,16 +39,20 @@ import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
 import {
+  Platform,
   RefreshControl,
   ScrollView,
   Share,
   Linking,
-
 } from "react-native";
 import { Image } from "expo-image";
 
 import { formatFullDate } from "../../../lib/date-utils";
-import { generateICS as generateICSFromUtils } from "../../../lib/calendar-utils";
+import {
+  generateICS as generateICSFromUtils,
+  getGoogleCalendarUrl,
+  openGoogleCalendar,
+} from "../../../lib/calendar-utils";
 
 interface Signup {
   id: string;
@@ -378,19 +382,30 @@ export default function MatchDetailScreen() {
 
   const handleAddToCalendar = () => {
     if (!match) return;
-    // Generate ICS file content using timezone-aware utility
-    const icsContent = generateICSFromUtils({
-      date: match.date,
-      time: match.time,
-      location: match.location?.name
-        ? `${match.location.name}${match.court ? ` - ${match.court.name}` : ""}`
-        : undefined,
-    });
-    // For now, share via native share
-    Share.share({
-      message: icsContent,
-      title: t("shared.addToCalendar"),
-    });
+    const location = match.location?.name
+      ? `${match.location.name}${match.court ? ` - ${match.court.name}` : ""}`
+      : undefined;
+
+    if (Platform.OS === "web") {
+      // On web, open Google Calendar directly (best cross-browser experience)
+      const url = getGoogleCalendarUrl({
+        date: match.date,
+        time: match.time,
+        location,
+      });
+      openGoogleCalendar(url);
+    } else {
+      // On native, use share sheet with ICS content
+      const icsContent = generateICSFromUtils({
+        date: match.date,
+        time: match.time,
+        location,
+      });
+      Share.share({
+        message: icsContent,
+        title: t("shared.addToCalendar"),
+      });
+    }
   };
 
   const handleShareMatch = () => {
