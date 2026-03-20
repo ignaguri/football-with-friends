@@ -73,16 +73,6 @@
         "-y",
         "@google-cloud/gcloud-mcp"
       ]
-    },
-    "memelord": {
-      "command": "node",
-      "args": [
-        "/Users/ignacioguri/.volta/tools/image/packages/memelord/bin/memelord",
-        "serve"
-      ],
-      "env": {
-        "MEMELORD_DIR": "/Users/ignacioguri/Documents/Repos/football-with-friends/.memelord"
-      }
     }
   }
 }
