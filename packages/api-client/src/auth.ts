@@ -298,6 +298,56 @@ export async function signInWithPhone(data: PhoneSignInData) {
   return result.data;
 }
 
+/**
+ * Check if a user needs to reset their password (old scrypt hash that
+ * can't be verified on CF Workers).
+ */
+export async function needsPasswordReset(identifier: {
+  phoneNumber?: string;
+  email?: string;
+}): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `${getApiUrl()}/api/phone-auth/needs-password-reset`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(identifier),
+      }
+    );
+    if (!response.ok) return false;
+    const result = await response.json();
+    return result.needsReset === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Reset password for users with old scrypt hashes.
+ * Requires the current (old) password as proof of identity.
+ */
+export async function resetPasswordForMigration(data: {
+  phoneNumber?: string;
+  email?: string;
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/reset-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(result.error || "Failed to reset password");
+  }
+}
+
 // Export types
 export type Session = typeof authClient.$Infer.Session;
 export type User = Session["user"];

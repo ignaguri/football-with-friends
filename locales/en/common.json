@@ -294,7 +294,14 @@
     "unexpectedError": "An unexpected error occurred",
     "serviceUnavailable": "Service temporarily unavailable. Please try again later.",
     "phoneAlreadyRegistered": "This phone number is already registered.",
-    "invalidPhone": "Please enter a valid phone number."
+    "invalidPhone": "Please enter a valid phone number.",
+    "passwordResetRequired": "Your password needs to be updated due to a security upgrade. Please create a new one below.",
+    "createNewPassword": "Create New Password",
+    "confirmNewPassword": "Confirm New Password",
+    "resetMyPassword": "Update Password",
+    "passwordResetSuccess": "Password updated! Signing you in...",
+    "passwordResetFailed": "Failed to update password. Please try again.",
+    "passwordMismatch": "Passwords do not match"
   },
   "addMatch": {
     "title": "Add Match",
