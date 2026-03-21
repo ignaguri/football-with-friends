@@ -141,11 +141,13 @@ app.post("/needs-password-reset", zValidator("json", needsResetSchema), async (c
 /**
  * Reset password for users with old scrypt hashes.
  * Only works if the user's current hash is in the old format.
- * No current password required (it can't be verified anyway).
+ * Requires the old password as proof of identity (even though we can't
+ * verify it on CF Workers, it prevents blind account takeover).
  */
 const resetPasswordSchema = z.object({
   phoneNumber: z.string().optional(),
   email: z.string().email().optional(),
+  currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 }).refine((data) => data.phoneNumber || data.email, {
   message: "Either phoneNumber or email is required",
@@ -157,7 +159,7 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
   try {
     const db = getDatabase();
 
-    // Find user
+    // Find user — generic error to avoid account enumeration
     let query = db.selectFrom("user").select("id");
     if (phoneNumber) {
       query = query.where("phoneNumber", "=", phoneNumber);
@@ -167,7 +169,7 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
 
     const user = await query.executeTakeFirst();
     if (!user) {
-      return c.json({ error: "User not found" }, 404);
+      return c.json({ error: "Unable to reset password" }, 400);
     }
 
     // Get credential account
@@ -179,7 +181,7 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
       .executeTakeFirst();
 
     if (!account?.password) {
-      return c.json({ error: "No password account found" }, 400);
+      return c.json({ error: "Unable to reset password" }, 400);
     }
 
     // Only allow reset if the hash is in the old scrypt format
@@ -200,7 +202,7 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
     return c.json({ success: true });
   } catch (error) {
     console.error("reset-password error:", error);
-    return c.json({ error: "Failed to reset password" }, 500);
+    return c.json({ error: "Unable to reset password" }, 500);
   }
 });
 

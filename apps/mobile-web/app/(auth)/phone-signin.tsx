@@ -87,20 +87,20 @@ export default function PhoneSignInScreen() {
     setServerError(null);
 
     try {
-      await resetPasswordForMigration({ phoneNumber, newPassword });
+      // Pass the original password as proof of identity
+      const currentPassword = phoneForm.getValues("password");
+      await resetPasswordForMigration({ phoneNumber, currentPassword, newPassword });
       setResetSuccess(true);
 
-      // Auto sign-in with the new password after a brief delay
-      setTimeout(async () => {
-        try {
-          await signInWithPhone({ phoneNumber, password: newPassword });
-          router.replace("/(tabs)");
-        } catch {
-          setResetSuccess(false);
-          setShowPasswordReset(false);
-          setServerError(t("auth.signInFailed"));
-        }
-      }, 1000);
+      // Auto sign-in with the new password
+      try {
+        await signInWithPhone({ phoneNumber, password: newPassword });
+        router.replace("/(tabs)");
+      } catch {
+        setResetSuccess(false);
+        setShowPasswordReset(false);
+        setServerError(t("auth.signInFailed"));
+      }
     } catch (err: any) {
       setServerError(err.message || t("auth.passwordResetFailed"));
     } finally {

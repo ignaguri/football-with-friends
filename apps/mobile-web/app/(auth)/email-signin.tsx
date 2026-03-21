@@ -4,7 +4,6 @@ import {
   signIn,
   needsPasswordReset,
   resetPasswordForMigration,
-  signInWithPhone,
 } from "@repo/api-client";
 import {
   Container,
@@ -90,21 +89,20 @@ export default function EmailSignInScreen() {
     setServerError(null);
 
     try {
-      await resetPasswordForMigration({ email, newPassword });
+      const currentPassword = emailForm.getValues("password");
+      await resetPasswordForMigration({ email, currentPassword, newPassword });
       setResetSuccess(true);
 
-      // Auto sign-in with the new password after a brief delay
-      setTimeout(async () => {
-        try {
-          const result = await signIn.email({ email, password: newPassword });
-          if (result.error) throw new Error(result.error.message);
-          router.replace("/(tabs)");
-        } catch {
-          setResetSuccess(false);
-          setShowPasswordReset(false);
-          setServerError(t("auth.signInFailed"));
-        }
-      }, 1000);
+      // Auto sign-in with the new password
+      try {
+        const result = await signIn.email({ email, password: newPassword });
+        if (result.error) throw new Error(result.error.message);
+        router.replace("/(tabs)");
+      } catch {
+        setResetSuccess(false);
+        setShowPasswordReset(false);
+        setServerError(t("auth.signInFailed"));
+      }
     } catch (err: any) {
       setServerError(err.message || t("auth.passwordResetFailed"));
     } finally {

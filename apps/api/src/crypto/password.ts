@@ -5,8 +5,7 @@
  * Cloudflare Workers' CPU time limit (10ms free, 50ms paid).
  *
  * This module uses PBKDF2 via the Web Crypto API (native to CF Workers)
- * for new hashes, and logs a warning for old scrypt hashes that can't be
- * verified within CPU limits.
+ * for new hashes. Old scrypt hashes return false — users must reset.
  *
  * Hash format:
  *   New:  "pbkdf2:<iterations>:<salt_hex>:<key_hex>"
@@ -19,13 +18,20 @@ const PBKDF2_KEY_LENGTH = 32; // 256 bits
 const PBKDF2_HASH = "SHA-256";
 const SALT_LENGTH = 16; // 128-bit salt
 
+const HEX_REGEX = /^[0-9a-fA-F]*$/;
+const MIN_ITERATIONS = 10_000;
+const MAX_ITERATIONS = 1_000_000;
+
 function hexEncode(bytes: Uint8Array): string {
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
-function hexDecode(hex: string): Uint8Array {
+function hexDecode(hex: string): Uint8Array | null {
+  if (hex.length % 2 !== 0 || !HEX_REGEX.test(hex)) {
+    return null;
+  }
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {
     bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
@@ -99,20 +105,18 @@ export async function verifyPassword({
     if (parts.length !== 4) return false;
 
     const iterations = parseInt(parts[1]!, 10);
+    if (!Number.isFinite(iterations) || iterations < MIN_ITERATIONS || iterations > MAX_ITERATIONS) {
+      return false;
+    }
+
     const salt = hexDecode(parts[2]!);
     const expectedKey = hexDecode(parts[3]!);
+    if (!salt || !expectedKey) return false;
 
     const derivedKey = await pbkdf2DeriveKey(password, salt, iterations);
     return constantTimeEqual(derivedKey, expectedKey);
   }
 
-  // Old BetterAuth scrypt format: "<salt_hex>:<key_hex>"
-  // These hashes use scrypt N=16384, r=16 which EXCEEDS CF Workers CPU limits.
-  // They cannot be verified here — users must reset their password.
-  console.warn(
-    `[auth] Old scrypt password hash detected (no "pbkdf2:" prefix). ` +
-      `This hash cannot be verified on Cloudflare Workers due to CPU limits. ` +
-      `User needs to reset their password.`
-  );
+  // Old BetterAuth scrypt format — cannot be verified on CF Workers
   return false;
 }

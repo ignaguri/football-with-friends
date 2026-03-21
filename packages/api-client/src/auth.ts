@@ -325,11 +325,12 @@ export async function needsPasswordReset(identifier: {
 
 /**
  * Reset password for users with old scrypt hashes.
- * No current password required (it can't be verified anyway).
+ * Requires the current (old) password as proof of identity.
  */
 export async function resetPasswordForMigration(data: {
   phoneNumber?: string;
   email?: string;
+  currentPassword: string;
   newPassword: string;
 }): Promise<void> {
   const response = await fetch(

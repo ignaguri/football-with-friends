@@ -1,22 +1,20 @@
 #!/usr/bin/env tsx
 /**
- * Password Re-hash Migration Script
+ * Password Hash Audit Script
  *
- * Re-hashes existing BetterAuth scrypt passwords (N=16384, r=16) to PBKDF2
- * so they can be verified within Cloudflare Workers CPU limits.
+ * Audits existing BetterAuth password hashes to find legacy scrypt hashes
+ * (N=16384, r=16) that cannot be verified within Cloudflare Workers CPU limits.
  *
- * This script runs LOCALLY (not on CF Workers) where there are no CPU limits.
- * It reads each password hash, verifies it's in the old scrypt format, and
- * CANNOT re-hash without the plaintext password.
+ * This script is READ-ONLY — it does NOT modify any passwords or data.
+ * It cannot re-hash without plaintext passwords. Its purpose is to count
+ * and report affected users so you can plan the migration.
  *
- * Instead, it converts old scrypt hashes to PBKDF2 by:
- * 1. Identifying accounts with old-format hashes (no "pbkdf2:" prefix)
- * 2. Marking them for password reset (sets a flag)
- * 3. Users will be prompted to reset their password on next login
+ * Affected users will be prompted to reset their password on next login
+ * via the in-app password reset flow.
  *
  * Usage:
- *   pnpm tsx scripts/rehash-passwords.ts [staging]
- *   pnpm tsx scripts/rehash-passwords.ts --check   # dry run, just count
+ *   npx tsx scripts/rehash-passwords.ts [staging]
+ *   npx tsx scripts/rehash-passwords.ts --check   # dry run, just count
  */
 
 import { config } from "dotenv";
