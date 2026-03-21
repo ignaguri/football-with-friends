@@ -16,8 +16,8 @@ const phoneRegex = /^\+[1-9]\d{6,14}$/;
 
 const updateProfileSchema = z.object({
   userId: z.string().min(1),
-  username: z.string().optional(),
-  displayUsername: z.string().optional(),
+  username: z.string().optional().nullable(),
+  displayUsername: z.string().optional().nullable(),
   nationality: z
     .string()
     .regex(/^[A-Z]{2}$/, "Invalid country code")
@@ -33,7 +33,7 @@ const updateProfileSchema = z.object({
     .email("Invalid email format")
     .optional()
     .nullable(),
-  name: z.string().optional(),
+  name: z.string().optional().nullable(),
 });
 
 const changePasswordSchema = z.object({
