@@ -31,9 +31,9 @@ ALLOWED_ORIGINS = "http://localhost:8081,http://localhost:8084,http://localhost:
 binding = "PROFILE_PICTURES"
 bucket_name = "football-profile-pictures"
 
-# Cron trigger for match status updates (every 6 hours)
+# Cron trigger for match status updates (every 30 minutes)
 [triggers]
-crons = ["0 */6 * * *"]
+crons = ["*/30 * * * *"]
 
 # Development environment
 [env.development]
@@ -49,4 +49,4 @@ binding = "PROFILE_PICTURES"
 bucket_name = "football-profile-pictures-staging"
 
 [env.preview.triggers]
-crons = ["0 */6 * * *"]
+crons = ["*/30 * * * *"]
