@@ -312,6 +312,9 @@ importers:
       '@repo/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@sentry/cloudflare':
+        specifier: ^10.45.0
+        version: 10.45.0(@cloudflare/workers-types@4.20260316.1)
       '@vercel/blob':
         specifier: ^2.3.1
         version: 2.3.1
@@ -4006,8 +4009,21 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
+  '@sentry/cloudflare@10.45.0':
+    resolution: {integrity: sha512-4rXUCSnBu9MITm7Uj27tYxEhmHczamdMLfeipBjvgeFBJ3LUJBKqrfolCOL5d3q9in/CopgyhMxY7pgUwlCJ8w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.x
+    peerDependenciesMeta:
+      '@cloudflare/workers-types':
+        optional: true
+
   '@sentry/core@10.43.0':
     resolution: {integrity: sha512-l0SszQAPiQGWl/ferw8GP3ALyHXiGiRKJaOvNmhGO+PrTQyZTZ6OYyPnGijAFRg58dE1V3RCH/zw5d2xSUIiNg==}
+    engines: {node: '>=18'}
+
+  '@sentry/core@10.45.0':
+    resolution: {integrity: sha512-s69UXxvefeQxuZ5nY7/THtTrIEvJxNVCp3ns4kwoCw1qMpgpvn/296WCKVmM7MiwnaAdzEKnAvLAwaxZc2nM7Q==}
     engines: {node: '>=18'}
 
   '@sentry/nextjs@10.43.0':
@@ -4473,6 +4489,7 @@ packages:
 
   '@tamagui/lucide-icons@2.0.0-rc.26':
     resolution: {integrity: sha512-c/qs5FDMSQR7vWDfi2Ea3ocXAzTllK13ie3cvhKDBwt2RvvhvN9SXTvLFDzPRa4dcZ+C4ChAZ7N6L75Kto749g==}
+    deprecated: This package has been renamed to @tamagui/lucide-icons-2. Please update your imports.
     peerDependencies:
       react: 19.2.4
       react-native-svg: '>=12'
@@ -13848,7 +13865,16 @@ snapshots:
       - encoding
       - supports-color
 
+  '@sentry/cloudflare@10.45.0(@cloudflare/workers-types@4.20260316.1)':
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      '@sentry/core': 10.45.0
+    optionalDependencies:
+      '@cloudflare/workers-types': 4.20260316.1
+
   '@sentry/core@10.43.0': {}
+
+  '@sentry/core@10.45.0': {}
 
   '@sentry/nextjs@10.43.0(@opentelemetry/context-async-hooks@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/core@2.6.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.6.0(@opentelemetry/api@1.9.0))(next@16.1.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(webpack@5.105.0(esbuild@0.27.4))':
     dependencies:

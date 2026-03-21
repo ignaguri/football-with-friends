@@ -2,6 +2,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import * as Sentry from "@sentry/cloudflare";
 
 // Import shared route registrations
 import { registerApiRoutes } from "./api-routes";
@@ -30,6 +31,8 @@ export type Bindings = {
   NODE_ENV?: string;
   DEFAULT_TIMEZONE?: string;
   STORAGE_PROVIDER?: string;
+  // Monitoring
+  SENTRY_DSN?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -209,22 +212,34 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
 // API routes
 registerApiRoutes(app);
 
-// Export for Cloudflare Workers with scheduled event handler
-export default {
-  fetch: app.fetch,
-  async scheduled(event: any, env: Bindings, ctx: any) {
-    console.log("[CRON] Running scheduled match status update");
+// Helper to inject env vars for cron (no Hono middleware in scheduled events)
+function injectCronEnv(env: Bindings) {
+  // @ts-ignore - process.env may not exist in CF Workers but we polyfill it
+  globalThis.process = globalThis.process || { env: {} };
+  Object.assign(process.env, {
+    TURSO_DATABASE_URL: env.TURSO_DATABASE_URL,
+    TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN,
+    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+    DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
+    STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
+    NODE_ENV: env.NODE_ENV || "production",
+  });
+}
 
-    // Set up environment variables for the cron job
-    // @ts-ignore - process.env may not exist in CF Workers but we polyfill it
-    globalThis.process = globalThis.process || { env: {} };
-    Object.assign(process.env, {
-      TURSO_DATABASE_URL: env.TURSO_DATABASE_URL,
-      TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN,
-      DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
-      STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
-    });
-
-    ctx.waitUntil(updateMatchStatuses());
-  },
-};
+// Export for Cloudflare Workers with Sentry error monitoring
+export default Sentry.withSentry(
+  (env: Bindings) => ({
+    dsn: env.SENTRY_DSN,
+    tracesSampleRate: 0.1,
+  }),
+  {
+    fetch: app.fetch,
+    async scheduled(event: any, env: Bindings, ctx: any) {
+      console.log("[CRON] Running scheduled match status update");
+      injectCronEnv(env);
+      ctx.waitUntil(updateMatchStatuses());
+    },
+  } as any,
+);

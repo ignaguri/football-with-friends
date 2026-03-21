@@ -1,6 +1,11 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "@repo/api-client";
+import {
+  signIn,
+  needsPasswordReset,
+  resetPasswordForMigration,
+  signInWithPhone,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -25,6 +30,10 @@ export default function EmailSignInScreen() {
   const { t } = useTranslation();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const emailForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -45,7 +54,14 @@ export default function EmailSignInScreen() {
       });
 
       if (result.error) {
-        setServerError(result.error.message || t("auth.signInFailed"));
+        // Check if user needs password reset (old scrypt hash)
+        const needs = await needsPasswordReset({ email: data.email });
+        if (needs) {
+          setShowPasswordReset(true);
+          setServerError(null);
+        } else {
+          setServerError(result.error.message || t("auth.signInFailed"));
+        }
         return;
       }
 
@@ -53,6 +69,44 @@ export default function EmailSignInScreen() {
     } catch (err) {
       setServerError(t("auth.unexpectedError"));
       console.error("Sign in error:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    const email = emailForm.getValues("email");
+
+    if (newPassword.length < 8) {
+      setServerError(t("auth.passwordTooShort"));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setServerError(t("auth.passwordMismatch"));
+      return;
+    }
+
+    setIsLoading(true);
+    setServerError(null);
+
+    try {
+      await resetPasswordForMigration({ email, newPassword });
+      setResetSuccess(true);
+
+      // Auto sign-in with the new password after a brief delay
+      setTimeout(async () => {
+        try {
+          const result = await signIn.email({ email, password: newPassword });
+          if (result.error) throw new Error(result.error.message);
+          router.replace("/(tabs)");
+        } catch {
+          setResetSuccess(false);
+          setShowPasswordReset(false);
+          setServerError(t("auth.signInFailed"));
+        }
+      }, 1000);
+    } catch (err: any) {
+      setServerError(err.message || t("auth.passwordResetFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -82,50 +136,94 @@ export default function EmailSignInScreen() {
 
           <Card variant="elevated" padding="$4">
             <YStack gap="$4">
-              <Controller
-                control={emailForm.control}
-                name="email"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={t("auth.email")}
-                    placeholder={t("auth.emailPlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    error={
-                      emailForm.formState.errors.email
-                        ? t(
-                            emailForm.formState.errors.email
-                              .message as string,
-                          )
-                        : undefined
-                    }
+              {!showPasswordReset ? (
+                <>
+                  <Controller
+                    control={emailForm.control}
+                    name="email"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        label={t("auth.email")}
+                        placeholder={t("auth.emailPlaceholder")}
+                        value={value}
+                        onChangeText={onChange}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        error={
+                          emailForm.formState.errors.email
+                            ? t(
+                                emailForm.formState.errors.email
+                                  .message as string,
+                              )
+                            : undefined
+                        }
+                      />
+                    )}
                   />
-                )}
-              />
 
-              <Controller
-                control={emailForm.control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <Input
-                    label={t("auth.password")}
-                    placeholder={t("auth.passwordPlaceholder")}
-                    value={value}
-                    onChangeText={onChange}
-                    secureTextEntry
-                    error={
-                      emailForm.formState.errors.password
-                        ? t(
-                            emailForm.formState.errors.password
-                              .message as string,
-                          )
-                        : undefined
-                    }
+                  <Controller
+                    control={emailForm.control}
+                    name="password"
+                    render={({ field: { onChange, value } }) => (
+                      <Input
+                        label={t("auth.password")}
+                        placeholder={t("auth.passwordPlaceholder")}
+                        value={value}
+                        onChangeText={onChange}
+                        secureTextEntry
+                        error={
+                          emailForm.formState.errors.password
+                            ? t(
+                                emailForm.formState.errors.password
+                                  .message as string,
+                              )
+                            : undefined
+                        }
+                      />
+                    )}
                   />
-                )}
-              />
+                </>
+              ) : (
+                <>
+                  {resetSuccess ? (
+                    <Text
+                      color="$green10"
+                      fontSize="$3"
+                      textAlign="center"
+                      paddingVertical="$2"
+                    >
+                      {t("auth.passwordResetSuccess")}
+                    </Text>
+                  ) : (
+                    <>
+                      <Text
+                        color="$orange10"
+                        fontSize="$3"
+                        textAlign="center"
+                        paddingVertical="$2"
+                      >
+                        {t("auth.passwordResetRequired")}
+                      </Text>
+
+                      <Input
+                        label={t("auth.createNewPassword")}
+                        placeholder={t("auth.createNewPassword")}
+                        value={newPassword}
+                        onChangeText={setNewPassword}
+                        secureTextEntry
+                      />
+
+                      <Input
+                        label={t("auth.confirmNewPassword")}
+                        placeholder={t("auth.confirmNewPassword")}
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        secureTextEntry
+                      />
+                    </>
+                  )}
+                </>
+              )}
 
               {serverError && (
                 <Text color="$red10" fontSize="$3" textAlign="center">
@@ -134,13 +232,27 @@ export default function EmailSignInScreen() {
               )}
 
               <YStack paddingTop="$4">
-                <Button
-                  onPress={emailForm.handleSubmit(onSubmit)}
-                  disabled={isLoading}
-                  variant="primary"
-                >
-                  {isLoading ? <Spinner size="small" color="white" /> : t("auth.signIn")}
-                </Button>
+                {!showPasswordReset ? (
+                  <Button
+                    onPress={emailForm.handleSubmit(onSubmit)}
+                    disabled={isLoading}
+                    variant="primary"
+                  >
+                    {isLoading ? <Spinner size="small" color="white" /> : t("auth.signIn")}
+                  </Button>
+                ) : !resetSuccess ? (
+                  <Button
+                    onPress={handlePasswordReset}
+                    disabled={isLoading}
+                    variant="primary"
+                  >
+                    {isLoading ? (
+                      <Spinner size="small" color="white" />
+                    ) : (
+                      t("auth.resetMyPassword")
+                    )}
+                  </Button>
+                ) : null}
               </YStack>
             </YStack>
           </Card>

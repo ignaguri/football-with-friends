@@ -295,7 +295,14 @@
     "unexpectedError": "Ocurrió un error inesperado",
     "serviceUnavailable": "Servicio temporalmente no disponible. Por favor, inténtalo más tarde.",
     "phoneAlreadyRegistered": "Este número de teléfono ya está registrado.",
-    "invalidPhone": "Por favor, ingresa un número de teléfono válido."
+    "invalidPhone": "Por favor, ingresa un número de teléfono válido.",
+    "passwordResetRequired": "Tu contraseña necesita ser actualizada por una mejora de seguridad. Por favor, creá una nueva a continuación.",
+    "createNewPassword": "Nueva Contraseña",
+    "confirmNewPassword": "Confirmar Nueva Contraseña",
+    "resetMyPassword": "Actualizar Contraseña",
+    "passwordResetSuccess": "¡Contraseña actualizada! Iniciando sesión...",
+    "passwordResetFailed": "Error al actualizar la contraseña. Por favor, intentá de nuevo.",
+    "passwordMismatch": "Las contraseñas no coinciden"
   },
   "addMatch": {
     "title": "Crear partido",

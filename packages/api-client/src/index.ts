@@ -30,6 +30,8 @@ export {
   getBearerToken,
   signUpWithPhone,
   signInWithPhone,
+  needsPasswordReset,
+  resetPasswordForMigration,
 } from "./auth";
 export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 

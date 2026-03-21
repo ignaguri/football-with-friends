@@ -3,6 +3,7 @@ import { getEnv, getTursoEnv, getLocalDbEnv } from "@repo/shared/env";
 import { betterAuth } from "better-auth";
 import { admin, username, oAuthProxy, bearer, phoneNumber, oneTap } from "better-auth/plugins";
 import { expo } from "@better-auth/expo";
+import { hashPassword, verifyPassword } from "./crypto/password";
 
 // Get database configuration for authentication
 function getDatabaseConfig() {
@@ -98,10 +99,16 @@ function createAuthInstance() {
       type: "sqlite",
     },
     // Enable email/password authentication
+    // Custom PBKDF2 password hashing for Cloudflare Workers compatibility.
+    // BetterAuth's default scrypt (N=16384, r=16) exceeds CF Workers CPU limits.
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,
       minPasswordLength: 8,
+      password: {
+        hash: hashPassword,
+        verify: verifyPassword,
+      },
     },
     // Disable account linking - one auth method per account
     accountLinking: {
