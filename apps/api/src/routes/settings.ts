@@ -3,10 +3,9 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getDatabase } from "@repo/shared/database";
 import { DEFAULT_SETTINGS, type AppSettings, type SettingKey } from "@repo/shared/domain";
+import type { AppVariables } from "../middleware/security";
 
-type SessionUser = { id: string; email: string; name: string; role: string };
-
-const app = new Hono<{ Variables: { user: SessionUser } }>();
+const app = new Hono<{ Variables: AppVariables }>();
 
 // Get all settings
 app.get("/", async (c) => {
@@ -48,7 +47,7 @@ app.patch(
     })
   ),
   async (c) => {
-    const user = c.get("user") as { id: string; name: string; email: string; role: string };
+    const user = c.get("user")!;
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can update settings" }, 403);
     }

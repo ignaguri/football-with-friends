@@ -13,6 +13,9 @@ import { auth } from "./auth";
 // Import cron jobs
 import { updateMatchStatuses } from "./cron/update-match-statuses";
 
+// Import shared security middleware
+import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
+
 // Cloudflare Workers environment bindings
 export type Bindings = {
   // Turso database
@@ -37,9 +40,7 @@ export type Bindings = {
   SENTRY_DSN?: string;
 };
 
-type SessionUser = { id: string; email: string; name: string; role: string };
-
-const app = new Hono<{ Bindings: Bindings; Variables: { user: SessionUser } }>();
+const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();
 
 // Middleware to inject environment variables into process.env
 // This allows the shared package to work with Cloudflare Workers
@@ -89,7 +90,7 @@ app.use("*", async (c, next) => {
       // Allow listed origins
       if (allowedOrigins.includes(origin)) return origin;
 
-      // Allow all Vercel preview deployments
+      // Allow project-specific Vercel preview deployments
       if (/^https:\/\/football-with-friends(-[a-z0-9-]+)?(-ignacio-guris-projects)?\.vercel\.app$/.test(origin)) return origin;
 
       // Allow native app deep links
@@ -105,86 +106,12 @@ app.use("*", async (c, next) => {
   return corsMiddleware(c, next);
 });
 
-// Rate limiting for auth endpoints (per-isolate, resets on cold start)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+// Rate limiting for auth endpoints
+app.use("/api/auth/*", rateLimitMiddleware());
+app.use("/api/phone-auth/*", rateLimitMiddleware("phone"));
 
-app.use("/api/auth/*", async (c, next) => {
-  const ip = c.req.header("cf-connecting-ip") || c.req.header("x-forwarded-for") || "unknown";
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-
-  if (entry && entry.resetAt > now && entry.count >= 10) {
-    return c.json({ error: "Too many requests" }, 429);
-  }
-
-  if (!entry || entry.resetAt <= now) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
-  } else {
-    entry.count++;
-  }
-
-  // Cleanup old entries periodically to avoid memory leak
-  if (rateLimitMap.size > 10_000) {
-    for (const [key, val] of rateLimitMap) {
-      if (val.resetAt <= now) rateLimitMap.delete(key);
-    }
-  }
-
-  return next();
-});
-
-app.use("/api/phone-auth/*", async (c, next) => {
-  const ip = c.req.header("cf-connecting-ip") || c.req.header("x-forwarded-for") || "unknown";
-  const now = Date.now();
-  const key = `phone:${ip}`;
-  const entry = rateLimitMap.get(key);
-
-  if (entry && entry.resetAt > now && entry.count >= 10) {
-    return c.json({ error: "Too many requests" }, 429);
-  }
-
-  if (!entry || entry.resetAt <= now) {
-    rateLimitMap.set(key, { count: 1, resetAt: now + 60_000 });
-  } else {
-    entry.count++;
-  }
-
-  return next();
-});
-
-// Global auth middleware — secure by default
-// Only explicitly allowlisted routes are public; everything else requires a valid session.
-const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
-  { path: /^\/api\/auth\// },                                      // BetterAuth
-  { path: /^\/api\/phone-auth\// },                                 // Phone auth
-  { path: /^\/api\/matches\/[^/]+\/preview$/, method: "GET" },      // OG metadata preview
-  { path: /^\/api\/profile\/picture\//, method: "GET" },            // Served images
-  { path: /^\/health$/ },                                           // Health check
-  { path: /^\/api\/cron\//, method: "POST" },                       // Cron (has own secret check)
-];
-
-app.use("/api/*", async (c, next) => {
-  const { method } = c.req;
-  const path = new URL(c.req.url).pathname;
-
-  const isPublic = PUBLIC_ROUTES.some(
-    (r) => r.path.test(path) && (!r.method || r.method === method)
-  );
-  if (isPublic) return next();
-
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session?.user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  c.set("user", {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name || "",
-    role: ((session.user as any).role as string) || "user",
-  });
-  return next();
-});
+// Global auth middleware
+app.use("/api/*", authMiddleware);
 
 // Health check
 app.get("/health", (c) =>

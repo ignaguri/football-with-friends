@@ -2,25 +2,13 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
-import type { User } from "@repo/shared/domain";
+import { type AppVariables, sessionUserToUser } from "../middleware/security";
 
-type SessionUser = { id: string; email: string; name: string; role: string };
-
-const app = new Hono<{ Variables: { user: SessionUser } }>();
+const app = new Hono<{ Variables: AppVariables }>();
 
 // Lazy service loading for Cloudflare Workers compatibility
 const getMatchService = () => getServiceFactory().matchService;
 const getPlayerStatsService = () => getServiceFactory().playerStatsService;
-
-// Helper to convert session user to full User type
-function sessionUserToUser(sessionUser: { id: string; name: string; email: string; role?: string }): User {
-  return {
-    ...sessionUser,
-    role: (sessionUser.role as "user" | "admin") || "user",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-}
 
 // Get all matches (with pagination)
 app.get(
@@ -65,16 +53,20 @@ app.get(
 // Public preview for OG metadata — returns minimal match info only
 app.get("/:id/preview", async (c) => {
   const id = c.req.param("id");
-  const match = await getMatchService().getMatchDetails(id);
-  if (!match) {
-    return c.json({ error: "Match not found" }, 404);
+  try {
+    const match = await getMatchService().getMatchDetails(id);
+    if (!match) {
+      return c.json({ error: "Match not found" }, 404);
+    }
+    return c.json({
+      date: match.date,
+      time: match.time,
+      maxPlayers: match.maxPlayers,
+      location: match.location ? { name: match.location.name } : null,
+    });
+  } catch {
+    return c.json({ error: "Failed to load match preview" }, 500);
   }
-  return c.json({
-    date: match.date,
-    time: match.time,
-    maxPlayers: match.maxPlayers,
-    location: match.location ? { name: match.location.name } : null,
-  });
 });
 
 // Get single match by ID
@@ -135,7 +127,7 @@ app.post(
     })
   ),
   async (c) => {
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can create matches" }, 403);
@@ -174,7 +166,7 @@ app.patch(
     })
   ),
   async (c) => {
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can update matches" }, 403);
@@ -204,7 +196,7 @@ app.patch(
 
 // Delete a match (admin only)
 app.delete("/:id", async (c) => {
-  const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+  const sessionUser = c.get("user")!;
   const user = sessionUserToUser(sessionUser);
   if (user.role !== "admin") {
     return c.json({ error: "Only administrators can delete matches" }, 403);
@@ -224,7 +216,7 @@ app.delete("/:id", async (c) => {
 // Sign up for a match
 app.post("/:id/signup", async (c) => {
   const matchId = c.req.param("id");
-  const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+  const sessionUser = c.get("user")!;
   const user = sessionUserToUser(sessionUser);
 
   try {
@@ -251,7 +243,7 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const guestData = c.req.valid("json");
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -289,7 +281,7 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const playerData = c.req.valid("json");
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -319,7 +311,7 @@ app.patch(
   async (c) => {
     const signupId = c.req.param("signupId");
     const updates = c.req.valid("json");
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -335,7 +327,7 @@ app.patch(
 // Admin: Remove a player from a match (hard delete)
 app.delete("/:id/signup/:signupId", async (c) => {
   const signupId = c.req.param("signupId");
-  const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+  const sessionUser = c.get("user")!;
   const user = sessionUserToUser(sessionUser);
 
   try {
@@ -376,7 +368,7 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const data = c.req.valid("json");
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -411,7 +403,7 @@ app.patch(
     const matchId = c.req.param("id");
     const targetUserId = c.req.param("userId");
     const updates = c.req.valid("json");
-    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const sessionUser = c.get("user")!;
     const user = sessionUserToUser(sessionUser);
 
     try {
