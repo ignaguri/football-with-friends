@@ -105,7 +105,6 @@ export default function ProfileScreen() {
     try {
       const res = await client.api.profile["update-profile"].$post({
         json: {
-          userId: session.user.id,
           username: username || null,
           nationality: nationality || null,
           phoneNumber: phoneNumber || null,
@@ -261,8 +260,6 @@ export default function ProfileScreen() {
           name: "profile.jpg",
         } as any);
       }
-      formData.append("userId", session.user.id);
-
       const apiUrl = getConfiguredApiUrl();
       const uploadRes = await fetch(`${apiUrl}/api/profile/upload-picture`, {
         method: "POST",

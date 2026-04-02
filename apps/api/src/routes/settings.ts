@@ -1,11 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { auth } from "../auth";
 import { getDatabase } from "@repo/shared/database";
 import { DEFAULT_SETTINGS, type AppSettings, type SettingKey } from "@repo/shared/domain";
 
-const app = new Hono();
+type SessionUser = { id: string; email: string; name: string; role: string };
+
+const app = new Hono<{ Variables: { user: SessionUser } }>();
 
 // Get all settings
 app.get("/", async (c) => {
@@ -47,12 +48,7 @@ app.patch(
     })
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const user = session.user as { id: string; name: string; email: string; role?: string };
+    const user = c.get("user") as { id: string; name: string; email: string; role: string };
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can update settings" }, 403);
     }

@@ -5,7 +5,9 @@ import { logger } from "hono/logger";
 import { auth } from "./auth";
 import { registerApiRoutes } from "./api-routes";
 
-const app = new Hono();
+type SessionUser = { id: string; email: string; name: string; role: string };
+
+const app = new Hono<{ Variables: { user: SessionUser } }>();
 
 // Middleware
 app.use("*", logger());
@@ -24,6 +26,75 @@ app.use(
     exposeHeaders: ["set-auth-token"],
   })
 );
+
+// Rate limiting for auth endpoints (per-process, resets on restart)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(key: string, now: number): boolean {
+  const entry = rateLimitMap.get(key);
+  if (entry && entry.resetAt > now && entry.count >= 10) return true;
+  if (!entry || entry.resetAt <= now) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + 60_000 });
+  } else {
+    entry.count++;
+  }
+  if (rateLimitMap.size > 10_000) {
+    for (const [k, v] of rateLimitMap) {
+      if (v.resetAt <= now) rateLimitMap.delete(k);
+    }
+  }
+  return false;
+}
+
+app.use("/api/auth/*", async (c, next) => {
+  const ip = c.req.header("x-forwarded-for") || "unknown";
+  if (checkRateLimit(ip, Date.now())) {
+    return c.json({ error: "Too many requests" }, 429);
+  }
+  return next();
+});
+
+app.use("/api/phone-auth/*", async (c, next) => {
+  const ip = c.req.header("x-forwarded-for") || "unknown";
+  if (checkRateLimit(`phone:${ip}`, Date.now())) {
+    return c.json({ error: "Too many requests" }, 429);
+  }
+  return next();
+});
+
+// Global auth middleware — secure by default
+// Only explicitly allowlisted routes are public; everything else requires a valid session.
+const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
+  { path: /^\/api\/auth\// },                                      // BetterAuth
+  { path: /^\/api\/phone-auth\// },                                 // Phone auth
+  { path: /^\/api\/matches\/[^/]+\/preview$/, method: "GET" },      // OG metadata preview
+  { path: /^\/api\/profile\/picture\//, method: "GET" },            // Served images
+  { path: /^\/health$/ },                                           // Health check
+  { path: /^\/api\/cron\//, method: "POST" },                       // Cron (has own secret check)
+];
+
+app.use("/api/*", async (c, next) => {
+  const { method } = c.req;
+  const path = new URL(c.req.url).pathname;
+
+  const isPublic = PUBLIC_ROUTES.some(
+    (r) => r.path.test(path) && (!r.method || r.method === method)
+  );
+  if (isPublic) return next();
+
+  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+  if (!session?.user) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  c.set("user", {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name || "",
+    role: ((session.user as any).role as string) || "user",
+  });
+  return next();
+});
 
 // Health check
 app.get("/health", (c) =>

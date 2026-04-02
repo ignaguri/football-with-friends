@@ -3,9 +3,10 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
 import type { User } from "@repo/shared/domain";
-import { auth } from "../auth";
 
-const app = new Hono();
+type SessionUser = { id: string; email: string; name: string; role: string };
+
+const app = new Hono<{ Variables: { user: SessionUser } }>();
 
 // Lazy service loading for Cloudflare Workers compatibility
 const getMatchService = () => getServiceFactory().matchService;
@@ -35,9 +36,8 @@ app.get(
   async (c) => {
     const { type, limit, offset } = c.req.valid("query");
 
-    // Get session to include user signup status
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    const userId = session?.user?.id;
+    // Get user from global auth middleware
+    const userId = c.get("user")?.id;
 
     const status = type === "past"
       ? "completed"
@@ -62,18 +62,27 @@ app.get(
   }
 );
 
+// Public preview for OG metadata — returns minimal match info only
+app.get("/:id/preview", async (c) => {
+  const id = c.req.param("id");
+  const match = await getMatchService().getMatchDetails(id);
+  if (!match) {
+    return c.json({ error: "Match not found" }, 404);
+  }
+  return c.json({
+    date: match.date,
+    time: match.time,
+    maxPlayers: match.maxPlayers,
+    location: match.location ? { name: match.location.name } : null,
+  });
+});
+
 // Get single match by ID
 app.get(
   "/:id",
-  zValidator(
-    "query",
-    z.object({
-      userId: z.string().optional(),
-    })
-  ),
   async (c) => {
     const id = c.req.param("id");
-    const { userId } = c.req.valid("query");
+    const userId = c.get("user")?.id;
     const match = await getMatchService().getMatchDetails(id, userId);
     if (!match) {
       return c.json({ error: "Match not found" }, 404);
@@ -126,13 +135,8 @@ app.post(
     })
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
-  const user = sessionUserToUser(sessionUser);
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can create matches" }, 403);
     }
@@ -170,13 +174,8 @@ app.patch(
     })
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
-    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
-  const user = sessionUserToUser(sessionUser);
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can update matches" }, 403);
     }
@@ -205,12 +204,7 @@ app.patch(
 
 // Delete a match (admin only)
 app.delete("/:id", async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session?.user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
-  const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
   const user = sessionUserToUser(sessionUser);
   if (user.role !== "admin") {
     return c.json({ error: "Only administrators can delete matches" }, 403);
@@ -229,13 +223,8 @@ app.delete("/:id", async (c) => {
 
 // Sign up for a match
 app.post("/:id/signup", async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session?.user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
   const matchId = c.req.param("id");
-  const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
   const user = sessionUserToUser(sessionUser);
 
   try {
@@ -260,15 +249,10 @@ app.post(
     })
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
     const matchId = c.req.param("id");
     const guestData = c.req.valid("json");
-    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
-  const user = sessionUserToUser(sessionUser);
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const user = sessionUserToUser(sessionUser);
 
     try {
       const signup = await getMatchService().addGuestPlayer(
@@ -303,15 +287,10 @@ app.post(
     })
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
     const matchId = c.req.param("id");
     const playerData = c.req.valid("json");
-    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
-  const user = sessionUserToUser(sessionUser);
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const user = sessionUserToUser(sessionUser);
 
     try {
       const signup = await getMatchService().addPlayerByAdmin(
@@ -338,15 +317,10 @@ app.patch(
     })
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
     const signupId = c.req.param("signupId");
     const updates = c.req.valid("json");
-    const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
-  const user = sessionUserToUser(sessionUser);
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
+    const user = sessionUserToUser(sessionUser);
 
     try {
       const signup = await getMatchService().updateSignup(signupId, updates, user);
@@ -360,13 +334,8 @@ app.patch(
 
 // Admin: Remove a player from a match (hard delete)
 app.delete("/:id/signup/:signupId", async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session?.user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
   const signupId = c.req.param("signupId");
-  const sessionUser = session.user as { id: string; name: string; email: string; role?: string };
+  const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
   const user = sessionUserToUser(sessionUser);
 
   try {
@@ -380,11 +349,6 @@ app.delete("/:id/signup/:signupId", async (c) => {
 
 // Get all player stats for a match
 app.get("/:id/player-stats", async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session?.user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
   const matchId = c.req.param("id");
 
   try {
@@ -410,19 +374,9 @@ app.post(
     }),
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
     const matchId = c.req.param("id");
     const data = c.req.valid("json");
-    const sessionUser = session.user as {
-      id: string;
-      name: string;
-      email: string;
-      role?: string;
-    };
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -454,20 +408,10 @@ app.patch(
     }),
   ),
   async (c) => {
-    const session = await auth.api.getSession({ headers: c.req.raw.headers });
-    if (!session?.user) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-
     const matchId = c.req.param("id");
     const targetUserId = c.req.param("userId");
     const updates = c.req.valid("json");
-    const sessionUser = session.user as {
-      id: string;
-      name: string;
-      email: string;
-      role?: string;
-    };
+    const sessionUser = c.get("user") as { id: string; name: string; email: string; role: string };
     const user = sessionUserToUser(sessionUser);
 
     try {

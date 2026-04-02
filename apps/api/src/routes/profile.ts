@@ -15,7 +15,6 @@ import {
 const phoneRegex = /^\+[1-9]\d{6,14}$/;
 
 const updateProfileSchema = z.object({
-  userId: z.string().min(1),
   username: z.string().optional().nullable(),
   displayUsername: z.string().optional().nullable(),
   nationality: z
@@ -46,16 +45,18 @@ type Bindings = {
   PROFILE_PICTURES?: R2Bucket;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+type SessionUser = { id: string; email: string; name: string; role: string };
+
+const app = new Hono<{ Bindings: Bindings; Variables: { user: SessionUser } }>();
 
 // Upload profile picture to R2
 app.post("/upload-picture", async (c) => {
+  const userId = (c.get("user") as any)?.id;
   const body = await c.req.parseBody();
   const file = body.file as File;
-  const userId = body.userId as string;
 
-  if (!file || !userId) {
-    return c.json({ error: "Missing file or userId" }, 400);
+  if (!file) {
+    return c.json({ error: "Missing file" }, 400);
   }
 
   // Validate file type
@@ -159,7 +160,8 @@ app.post(
   zValidator("json", updateProfileSchema),
   async (c) => {
     const data = c.req.valid("json");
-    const { userId, username, displayUsername, nationality, phoneNumber, email, name } =
+    const userId = (c.get("user") as any).id;
+    const { username, displayUsername, nationality, phoneNumber, email, name } =
       data;
 
     // Validate username format if provided
@@ -256,11 +258,8 @@ app.post(
 
 // Legacy endpoint - keep for backwards compatibility
 app.post("/update-username", async (c) => {
-  const { userId, username, displayUsername, nationality } = await c.req.json();
-
-  if (!userId) {
-    return c.json({ error: "Missing userId" }, 400);
-  }
+  const userId = (c.get("user") as any).id;
+  const { username, displayUsername, nationality } = await c.req.json();
 
   // Validate username format if provided
   if (username) {
@@ -493,6 +492,14 @@ app.get("/:userId", async (c) => {
 
     if (!user) {
       return c.json({ error: "User not found" }, 404);
+    }
+
+    // Strip sensitive fields unless requester is the owner or admin
+    const requestingUser = c.get("user") as any;
+    const isOwnerOrAdmin = requestingUser?.id === userId || requestingUser?.role === "admin";
+    if (!isOwnerOrAdmin) {
+      delete (user as any).phoneNumber;
+      delete (user as any).email;
     }
 
     return c.json(user);
