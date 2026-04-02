@@ -410,7 +410,11 @@ export default function MatchDetailScreen() {
 
   const handleShareMatch = () => {
     if (!match) return;
-    const message = `${t("shared.footballMatch")} - ${formatFullDate(match.date)} ${t("shared.at")} ${match.time}\n${match.location?.name || ""}\n\n${t("shared.joinUs")}!`;
+    const matchUrl =
+      Platform.OS === "web" && typeof window !== "undefined"
+        ? window.location.href
+        : `https://footballwithfriends.vercel.app/matches/${matchId}`;
+    const message = `${t("shared.footballMatch")} - ${formatFullDate(match.date)} ${t("shared.at")} ${match.time}\n${match.location?.name || ""}\n\n${t("shared.joinUs")}!\n${matchUrl}`;
     Share.share({
       message,
       title: t("shared.share"),
@@ -777,13 +781,13 @@ export default function MatchDetailScreen() {
                     {t("players.title")} ({match.signups?.length || 0})
                   </Text>
                   {!isPlayed &&
+                    match.availableSpots > 0 &&
                     (match.userSignup?.status === "PAID" ||
                       match.userSignup?.status === "PENDING") && (
                       <Button
                         variant="outline"
                         size="$3"
                         onPress={() => setShowGuestDialog(true)}
-                        disabled={match.availableSpots === 0}
                       >
                         <UserPlus size={16} />
                         <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
