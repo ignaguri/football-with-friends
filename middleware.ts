@@ -5,7 +5,7 @@ export const config = {
 };
 
 const BOT_UA =
-  /WhatsApp|TelegramBot|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot|Googlebot|bingbot|yandex|DuckDuckBot/i;
+  /WhatsApp|TelegramBot|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot/i;
 
 function escapeHtml(str: string): string {
   return str
@@ -76,13 +76,22 @@ export default async function middleware(request: Request) {
   const ua = request.headers.get("user-agent") || "";
   if (!BOT_UA.test(ua)) return next();
 
-  const matchId = new URL(request.url).pathname
+  const rawMatchId = new URL(request.url).pathname
     .split("/matches/")[1]
     ?.split(/[/?#]/)[0];
-  if (!matchId) return next();
+  if (!rawMatchId) return next();
+
+  let matchId: string;
+  try {
+    matchId = decodeURIComponent(rawMatchId);
+  } catch {
+    return next();
+  }
 
   try {
-    const res = await fetch(`${apiBase}/api/matches/${matchId}`);
+    const res = await fetch(
+      `${apiBase}/api/matches/${encodeURIComponent(matchId)}`
+    );
     if (!res.ok) return next();
     const match = (await res.json()) as MatchResponse;
     return new Response(buildOgHtml(match, request.url), {

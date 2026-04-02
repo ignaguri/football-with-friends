@@ -410,10 +410,13 @@ export default function MatchDetailScreen() {
 
   const handleShareMatch = () => {
     if (!match) return;
+    const baseUrl =
+      (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_WEB_BASE_URL) ||
+      "https://footballwithfriends.vercel.app";
     const matchUrl =
       Platform.OS === "web" && typeof window !== "undefined"
         ? window.location.href
-        : `https://footballwithfriends.vercel.app/matches/${matchId}`;
+        : `${baseUrl}/matches/${encodeURIComponent(String(matchId))}`;
     const message = `${t("shared.footballMatch")} - ${formatFullDate(match.date)} ${t("shared.at")} ${match.time}\n${match.location?.name || ""}\n\n${t("shared.joinUs")}!\n${matchUrl}`;
     Share.share({
       message,
