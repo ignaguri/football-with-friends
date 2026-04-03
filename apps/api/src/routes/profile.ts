@@ -10,7 +10,7 @@ import {
   getFromR2,
   type R2Bucket,
 } from "../lib/r2";
-import type { AppVariables } from "../middleware/security";
+import { type AppVariables, requireUser } from "../middleware/security";
 
 // Phone number validation (international format)
 const phoneRegex = /^\+[1-9]\d{6,14}$/;
@@ -50,7 +50,7 @@ const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();
 
 // Upload profile picture to R2
 app.post("/upload-picture", async (c) => {
-  const userId = c.get("user")!.id;
+  const userId = requireUser(c).id;
   const body = await c.req.parseBody();
   const file = body.file as File;
 
@@ -157,7 +157,7 @@ app.post(
   zValidator("json", updateProfileSchema),
   async (c) => {
     const data = c.req.valid("json");
-    const userId = c.get("user")!.id;
+    const userId = requireUser(c).id;
     const { username, displayUsername, nationality, phoneNumber, email, name } =
       data;
 
@@ -255,7 +255,7 @@ app.post(
 
 // Legacy endpoint - keep for backwards compatibility
 app.post("/update-username", async (c) => {
-  const userId = c.get("user")!.id;
+  const userId = requireUser(c).id;
   const { username, displayUsername, nationality } = await c.req.json();
 
   // Validate username format if provided
@@ -329,7 +329,7 @@ app.post(
   zValidator("json", changePasswordSchema),
   async (c) => {
     const { currentPassword, newPassword } = c.req.valid("json");
-    const userId = c.get("user")!.id;
+    const userId = requireUser(c).id;
 
     try {
       // Check if user has a credential account (password-based)
@@ -390,7 +390,7 @@ app.post(
   zValidator("json", setPasswordSchema),
   async (c) => {
     const { newPassword } = c.req.valid("json");
-    const userId = c.get("user")!.id;
+    const userId = requireUser(c).id;
 
     try {
       // Check if user already has a credential account (password-based)
@@ -469,8 +469,8 @@ app.get("/:userId", async (c) => {
     }
 
     // Strip sensitive fields unless requester is the owner or admin
-    const requestingUser = c.get("user");
-    const isOwnerOrAdmin = requestingUser?.id === userId || requestingUser?.role === "admin";
+    const requestingUser = requireUser(c);
+    const isOwnerOrAdmin = requestingUser.id === userId || requestingUser.role === "admin";
     if (!isOwnerOrAdmin) {
       const { phoneNumber: _, email: __, ...safeUser } = user;
       return c.json(safeUser);

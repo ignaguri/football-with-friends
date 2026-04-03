@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
-import { type AppVariables, sessionUserToUser } from "../middleware/security";
+import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -25,7 +25,7 @@ app.get(
     const { type, limit, offset } = c.req.valid("query");
 
     // Get user from global auth middleware
-    const userId = c.get("user")?.id;
+    const userId = requireUser(c).id;
 
     const status = type === "past"
       ? "completed"
@@ -74,7 +74,7 @@ app.get(
   "/:id",
   async (c) => {
     const id = c.req.param("id");
-    const userId = c.get("user")?.id;
+    const userId = requireUser(c).id;
     const match = await getMatchService().getMatchDetails(id, userId);
     if (!match) {
       return c.json({ error: "Match not found" }, 404);
@@ -127,7 +127,7 @@ app.post(
     })
   ),
   async (c) => {
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can create matches" }, 403);
@@ -166,7 +166,7 @@ app.patch(
     })
   ),
   async (c) => {
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     if (user.role !== "admin") {
       return c.json({ error: "Only administrators can update matches" }, 403);
@@ -196,7 +196,7 @@ app.patch(
 
 // Delete a match (admin only)
 app.delete("/:id", async (c) => {
-  const sessionUser = c.get("user")!;
+  const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
   if (user.role !== "admin") {
     return c.json({ error: "Only administrators can delete matches" }, 403);
@@ -216,7 +216,7 @@ app.delete("/:id", async (c) => {
 // Sign up for a match
 app.post("/:id/signup", async (c) => {
   const matchId = c.req.param("id");
-  const sessionUser = c.get("user")!;
+  const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
 
   try {
@@ -243,7 +243,7 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const guestData = c.req.valid("json");
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -281,7 +281,7 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const playerData = c.req.valid("json");
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -311,7 +311,7 @@ app.patch(
   async (c) => {
     const signupId = c.req.param("signupId");
     const updates = c.req.valid("json");
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -327,7 +327,7 @@ app.patch(
 // Admin: Remove a player from a match (hard delete)
 app.delete("/:id/signup/:signupId", async (c) => {
   const signupId = c.req.param("signupId");
-  const sessionUser = c.get("user")!;
+  const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
 
   try {
@@ -368,7 +368,7 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const data = c.req.valid("json");
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
 
     try {
@@ -403,7 +403,7 @@ app.patch(
     const matchId = c.req.param("id");
     const targetUserId = c.req.param("userId");
     const updates = c.req.valid("json");
-    const sessionUser = c.get("user")!;
+    const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
 
     try {
