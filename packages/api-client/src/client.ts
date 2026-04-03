@@ -9,6 +9,9 @@ const LOCALHOST_API = "http://localhost:3001";
 // Configured API URL (set via configureGeneralApiClient)
 let _configuredApiUrl: string | null = null;
 
+// Configured language for Accept-Language header (default matches i18n fallbackLng)
+let _language: string = "es";
+
 /**
  * Configure the general API client with the API URL.
  * Call this early in your app initialization (e.g., in _layout.tsx).
@@ -18,6 +21,14 @@ export function configureGeneralApiClient(apiUrl: string | undefined) {
   if (apiUrl && apiUrl.length > 0 && !apiUrl.includes("${")) {
     _configuredApiUrl = apiUrl.trim();
   }
+}
+
+/**
+ * Configure the language for API requests.
+ * Sets the Accept-Language header on all outgoing requests.
+ */
+export function configureLanguage(lang: string) {
+  _language = lang;
 }
 
 // Custom fetch that dynamically resolves API URL at request time
@@ -52,6 +63,13 @@ function createDynamicFetch() {
     const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
     const fetchInit: RequestInit = { ...init, credentials: "include" };
+
+    // Set Accept-Language header for localized API responses
+    {
+      const headers = new Headers(fetchInit.headers);
+      headers.set("Accept-Language", _language);
+      fetchInit.headers = headers;
+    }
 
     // Web: inject Bearer token for authenticated API requests
     // The auth client stores tokens in AsyncStorage; cookies are not available
