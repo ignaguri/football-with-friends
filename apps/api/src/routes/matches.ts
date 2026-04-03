@@ -35,6 +35,7 @@ app.get(
 
     const result = await getMatchService().getAllMatches({
       status,
+      sortDirection: type === "past" ? "desc" : "asc",
       limit,
       offset,
       userId, // Pass userId to get user's signup status

@@ -472,9 +472,12 @@ export class TursoMatchRepository implements MatchRepository {
         "locations.court_count as location_court_count",
         "locations.created_at as location_created_at",
         "locations.updated_at as location_updated_at",
-      ])
-      .orderBy("matches.date", "asc")
-      .orderBy("matches.time", "asc");
+      ]);
+
+    const sortDir = filters?.sortDirection ?? "asc";
+    dataQuery = dataQuery
+      .orderBy("matches.date", sortDir)
+      .orderBy("matches.time", sortDir);
 
     // Apply pagination
     if (filters?.limit) {

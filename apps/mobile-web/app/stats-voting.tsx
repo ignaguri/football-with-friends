@@ -47,8 +47,11 @@ interface VotingCriteria {
   description: string | null;
 }
 
+// UserMatchVotes from @repo/shared/domain — re-declared here because
+// this file uses @ts-nocheck and can't rely on cross-package type resolution.
 interface UserVotes {
-  hasVoted: boolean;
+  matchId: string;
+  voterUserId: string;
   votes: Array<{
     criteriaId: string;
     votedForUserId: string;
@@ -283,7 +286,7 @@ export default function StatsVotingScreen() {
     }));
   };
 
-  const hasVoted = userVotesData?.hasVoted || false;
+  const hasVoted = (userVotesData?.votes?.length ?? 0) > 0;
   const hasSubmittedStats = !!getMyStats(matchStatsData);
 
   // Lock form only when both applicable parts are done:
@@ -405,7 +408,7 @@ export default function StatsVotingScreen() {
             </Card>
 
             {/* Already voted banner */}
-            {!!selectedMatchId && isLocked && (
+            {!!selectedMatchId && hasVoted && (
               <XStack
                 backgroundColor="$green3"
                 padding="$3"

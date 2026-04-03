@@ -313,6 +313,7 @@ export interface MatchFilters {
   locationId?: string;
   dateFrom?: string;
   dateTo?: string;
+  sortDirection?: "asc" | "desc";
 }
 
 export interface SignupFilters {
