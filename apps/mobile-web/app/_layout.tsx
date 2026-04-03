@@ -18,6 +18,7 @@ import {
   APIProvider,
   configureApiClient,
   configureGeneralApiClient,
+  configureLanguage,
 } from "@repo/api-client";
 import { Toast } from "@repo/ui";
 import { PortalProvider } from "tamagui";
@@ -31,7 +32,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { PWAInstallPrompt } from "../components/pwa-install-prompt";
 import { ErrorBoundary } from "../lib/error-boundary";
-import "../lib/i18n"; // Initialize i18n
+import i18n from "../lib/i18n"; // Initialize i18n
 import { unregisterServiceWorker } from "../lib/register-service-worker";
 import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
@@ -96,6 +97,14 @@ function AppContent() {
     if (Platform.OS === "web") {
       unregisterServiceWorker().catch(console.error);
     }
+  }, []);
+
+  // Sync i18n language to API client Accept-Language header
+  useEffect(() => {
+    configureLanguage(i18n.language);
+    const onLanguageChanged = (lng: string) => configureLanguage(lng);
+    i18n.on("languageChanged", onLanguageChanged);
+    return () => { i18n.off("languageChanged", onLanguageChanged); };
   }, []);
 
   return (

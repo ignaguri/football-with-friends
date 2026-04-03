@@ -1,5 +1,5 @@
 // Export the Hono RPC client
-export { api, client, configureGeneralApiClient } from "./client";
+export { api, client, configureGeneralApiClient, configureLanguage } from "./client";
 
 // Export React Query hooks
 export {
