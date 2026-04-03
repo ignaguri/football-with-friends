@@ -408,7 +408,7 @@ export default function StatsVotingScreen() {
             </Card>
 
             {/* Already voted banner */}
-            {!!selectedMatchId && isLocked && (
+            {!!selectedMatchId && hasVoted && (
               <XStack
                 backgroundColor="$green3"
                 padding="$3"
