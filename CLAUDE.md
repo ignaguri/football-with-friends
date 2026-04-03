@@ -57,11 +57,6 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
   - Works across mobile, web, and native platforms
   - Date pickers, forms, and common UI elements
 
-#### Legacy (`app/`)
-- **LEGACY**: Original Next.js 15 web app (deprecated)
-- All new development happens in `apps/` and `packages/`
-- Kept for reference but not actively maintained
-
 ### Key Technologies
 - **Frontend**: Expo, React 19, React Native, TypeScript, Tamagui
 - **Backend**: Hono (with built-in RPC), Bun runtime
