@@ -10,12 +10,12 @@ import {
   getFromR2,
   type R2Bucket,
 } from "../lib/r2";
+import { type AppVariables, requireUser } from "../middleware/security";
 
 // Phone number validation (international format)
 const phoneRegex = /^\+[1-9]\d{6,14}$/;
 
 const updateProfileSchema = z.object({
-  userId: z.string().min(1),
   username: z.string().optional().nullable(),
   displayUsername: z.string().optional().nullable(),
   nationality: z
@@ -46,16 +46,16 @@ type Bindings = {
   PROFILE_PICTURES?: R2Bucket;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();
 
 // Upload profile picture to R2
 app.post("/upload-picture", async (c) => {
+  const userId = requireUser(c).id;
   const body = await c.req.parseBody();
   const file = body.file as File;
-  const userId = body.userId as string;
 
-  if (!file || !userId) {
-    return c.json({ error: "Missing file or userId" }, 400);
+  if (!file) {
+    return c.json({ error: "Missing file" }, 400);
   }
 
   // Validate file type
@@ -78,11 +78,9 @@ app.post("/upload-picture", async (c) => {
 
     if (!bucket) {
       // Fallback: store the image URL directly if R2 is not configured
-      // This could be a base64 data URL or external URL for development
       console.warn("R2 bucket not configured, using fallback storage");
 
       const db = getDatabase();
-      // For development, we can use a placeholder or allow external URLs
       await db
         .updateTable("user")
         .set({ profilePicture: `https://ui-avatars.com/api/?name=${encodeURIComponent(userId)}&size=200` })
@@ -159,7 +157,8 @@ app.post(
   zValidator("json", updateProfileSchema),
   async (c) => {
     const data = c.req.valid("json");
-    const { userId, username, displayUsername, nationality, phoneNumber, email, name } =
+    const userId = requireUser(c).id;
+    const { username, displayUsername, nationality, phoneNumber, email, name } =
       data;
 
     // Validate username format if provided
@@ -256,11 +255,8 @@ app.post(
 
 // Legacy endpoint - keep for backwards compatibility
 app.post("/update-username", async (c) => {
-  const { userId, username, displayUsername, nationality } = await c.req.json();
-
-  if (!userId) {
-    return c.json({ error: "Missing userId" }, 400);
-  }
+  const userId = requireUser(c).id;
+  const { username, displayUsername, nationality } = await c.req.json();
 
   // Validate username format if provided
   if (username) {
@@ -327,29 +323,21 @@ app.post("/update-username", async (c) => {
   }
 });
 
-// Change password
+// Change password — requires auth.api for BetterAuth's password change flow
 app.post(
   "/change-password",
   zValidator("json", changePasswordSchema),
   async (c) => {
     const { currentPassword, newPassword } = c.req.valid("json");
+    const userId = requireUser(c).id;
 
     try {
-      // Get the current session to identify the user
-      const session = await auth.api.getSession({
-        headers: c.req.raw.headers,
-      });
-
-      if (!session?.user) {
-        return c.json({ error: "Not authenticated" }, 401);
-      }
-
       // Check if user has a credential account (password-based)
       const db = getDatabase();
       const credentialAccount = await db
         .selectFrom("account")
         .select("id")
-        .where("userId", "=", session.user.id)
+        .where("userId", "=", userId)
         .where("providerId", "=", "credential")
         .executeTakeFirst();
 
@@ -359,7 +347,7 @@ app.post(
         }, 400);
       }
 
-      // Use better-auth's change password endpoint
+      // BetterAuth's changePassword needs raw headers for session validation
       const result = await auth.api.changePassword({
         body: {
           currentPassword,
@@ -402,41 +390,26 @@ app.post(
   zValidator("json", setPasswordSchema),
   async (c) => {
     const { newPassword } = c.req.valid("json");
+    const userId = requireUser(c).id;
 
     try {
-      // Get the current session to identify the user
-      const session = await auth.api.getSession({
-        headers: c.req.raw.headers,
-      });
-
-      if (!session?.user) {
-        return c.json({ error: "Not authenticated" }, 401);
-      }
-
       // Check if user already has a credential account (password-based)
       const db = getDatabase();
       const credentialAccount = await db
         .selectFrom("account")
         .select("id")
-        .where("userId", "=", session.user.id)
+        .where("userId", "=", userId)
         .where("providerId", "=", "credential")
         .executeTakeFirst();
 
       if (credentialAccount) {
-        // User already has a password - they need to use change-password
-        // But since the user requested to skip current password verification,
-        // we'll use a workaround: delete the old credential and create a new one
-        // This is effectively a password reset for authenticated users
-
-        // For now, return a specific error - the user can decide if they want
-        // to implement the workaround or require current password
         return c.json({
           error: "You already have a password set. Please use the Change Password feature with your current password.",
           hasExistingPassword: true
         }, 400);
       }
 
-      // Use better-auth's set password endpoint for OAuth-only users
+      // BetterAuth's setPassword needs raw headers for session validation
       const result = await auth.api.setPassword({
         body: {
           newPassword,
@@ -493,6 +466,14 @@ app.get("/:userId", async (c) => {
 
     if (!user) {
       return c.json({ error: "User not found" }, 404);
+    }
+
+    // Strip sensitive fields unless requester is the owner or admin
+    const requestingUser = requireUser(c);
+    const isOwnerOrAdmin = requestingUser.id === userId || requestingUser.role === "admin";
+    if (!isOwnerOrAdmin) {
+      const { phoneNumber: _, email: __, ...safeUser } = user;
+      return c.json(safeUser);
     }
 
     return c.json(user);

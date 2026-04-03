@@ -30,19 +30,15 @@ interface MatchResponse {
   date: string;
   time: string;
   maxPlayers: number;
-  location?: { name: string };
-  signups?: unknown[];
+  location?: { name: string } | null;
 }
 
 function buildOgHtml(match: MatchResponse, pageUrl: string): string {
   const locationName = escapeHtml(match.location?.name || "TBD");
   const date = escapeHtml(formatDate(match.date));
   const time = escapeHtml(match.time);
-  const playerCount = match.signups?.length || 0;
-  const maxPlayers = match.maxPlayers;
-
   const title = `Football Match - ${date}`;
-  const description = `${time}hs | ${locationName} | ${playerCount}/${maxPlayers} players signed up`;
+  const description = `${time}hs | ${locationName} | ${match.maxPlayers} players`;
   const safeUrl = escapeHtml(pageUrl);
   const ogImage = escapeHtml(new URL("/icons/icon-512x512.png", pageUrl).toString());
 
@@ -90,7 +86,7 @@ export default async function middleware(request: Request) {
 
   try {
     const res = await fetch(
-      `${apiBase}/api/matches/${encodeURIComponent(matchId)}`
+      `${apiBase}/api/matches/${encodeURIComponent(matchId)}/preview`
     );
     if (!res.ok) return next();
     const match = (await res.json()) as MatchResponse;

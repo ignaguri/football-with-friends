@@ -13,6 +13,9 @@ import { auth } from "./auth";
 // Import cron jobs
 import { updateMatchStatuses } from "./cron/update-match-statuses";
 
+// Import shared security middleware
+import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
+
 // Cloudflare Workers environment bindings
 export type Bindings = {
   // Turso database
@@ -31,11 +34,13 @@ export type Bindings = {
   NODE_ENV?: string;
   DEFAULT_TIMEZONE?: string;
   STORAGE_PROVIDER?: string;
+  // Cron
+  CRON_SECRET?: string;
   // Monitoring
   SENTRY_DSN?: string;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();
 
 // Middleware to inject environment variables into process.env
 // This allows the shared package to work with Cloudflare Workers
@@ -58,6 +63,7 @@ app.use("*", async (c, next) => {
     NODE_ENV: env.NODE_ENV || "production",
     DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
     STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
+    CRON_SECRET: env.CRON_SECRET,
   });
 
   return next();
@@ -84,8 +90,8 @@ app.use("*", async (c, next) => {
       // Allow listed origins
       if (allowedOrigins.includes(origin)) return origin;
 
-      // Allow all Vercel preview deployments
-      if (origin.endsWith(".vercel.app")) return origin;
+      // Allow project-specific Vercel preview deployments
+      if (/^https:\/\/football-with-friends(-[a-z0-9-]+)?(-ignacio-guris-projects)?\.vercel\.app$/.test(origin)) return origin;
 
       // Allow native app deep links
       if (origin.startsWith("football-with-friends://")) return origin;
@@ -99,6 +105,13 @@ app.use("*", async (c, next) => {
 
   return corsMiddleware(c, next);
 });
+
+// Rate limiting for auth endpoints
+app.use("/api/auth/*", rateLimitMiddleware());
+app.use("/api/phone-auth/*", rateLimitMiddleware("phone"));
+
+// Global auth middleware
+app.use("/api/*", authMiddleware);
 
 // Health check
 app.get("/health", (c) =>

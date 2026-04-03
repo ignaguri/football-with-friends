@@ -4,8 +4,9 @@ import { logger } from "hono/logger";
 
 import { auth } from "./auth";
 import { registerApiRoutes } from "./api-routes";
+import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
 
 // Middleware
 app.use("*", logger());
@@ -24,6 +25,13 @@ app.use(
     exposeHeaders: ["set-auth-token"],
   })
 );
+
+// Rate limiting for auth endpoints
+app.use("/api/auth/*", rateLimitMiddleware());
+app.use("/api/phone-auth/*", rateLimitMiddleware("phone"));
+
+// Global auth middleware
+app.use("/api/*", authMiddleware);
 
 // Health check
 app.get("/health", (c) =>
@@ -71,12 +79,12 @@ async function interceptOAuthCallback(c: any) {
 // Custom OAuth callback interceptors - extract session token and append to redirect URL
 // Handles cross-domain session token passing (Vercel frontend ↔ Cloudflare Workers API)
 app.get("/api/auth/callback/google", async (c) => {
-  console.log("[OAUTH-CALLBACK] 🔵 Intercepting Google OAuth callback");
+  console.log("[OAUTH-CALLBACK] Intercepting Google OAuth callback");
   return interceptOAuthCallback(c);
 });
 
 app.post("/api/auth/callback/apple", async (c) => {
-  console.log("[OAUTH-CALLBACK] 🍎 Intercepting Apple OAuth callback");
+  console.log("[OAUTH-CALLBACK] Intercepting Apple OAuth callback");
   return interceptOAuthCallback(c);
 });
 

@@ -7,9 +7,16 @@ const app = new Hono();
  * Manual trigger endpoint for testing cron jobs
  * POST /api/cron/update-matches
  *
- * TODO: Add authentication (admin only or secret token)
+ * Protected by CRON_SECRET bearer token
  */
 app.post("/update-matches", async (c) => {
+  // Verify cron secret
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = c.req.header("Authorization");
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
   try {
     const result = await updateMatchStatuses();
     return c.json({
