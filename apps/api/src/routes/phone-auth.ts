@@ -270,7 +270,6 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
         })
         .execute();
 
-      console.log("[AUTH] Password reset code generated");
     }
 
     // Always return success to prevent enumeration
@@ -374,7 +373,6 @@ app.post("/verify-reset", zValidator("json", verifyResetSchema), async (c) => {
     // Clean up verification entry
     await db.deleteFrom("verification").where("id", "=", verification.id).execute();
 
-    console.log("[AUTH] Password reset successful");
     return c.json({ success: true });
   } catch (error) {
     console.error("verify-reset error:", error);
