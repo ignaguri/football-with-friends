@@ -270,7 +270,7 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
         })
         .execute();
 
-      console.log(`[AUTH] Password reset code generated for ${identifier}`);
+      console.log("[AUTH] Password reset code generated");
     }
 
     // Always return success to prevent enumeration
@@ -288,7 +288,7 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
 const verifyResetSchema = z.object({
   phoneNumber: z.string().optional(),
   email: z.string().min(1).optional(),
-  code: z.string().length(6, "Code must be 6 digits"),
+  code: z.string().length(6, "Code must be 6 digits").regex(/^\d{6}$/, "Code must be numeric"),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 }).refine((data) => data.phoneNumber || data.email, {
   message: "Either phoneNumber or email is required",
@@ -374,7 +374,7 @@ app.post("/verify-reset", zValidator("json", verifyResetSchema), async (c) => {
     // Clean up verification entry
     await db.deleteFrom("verification").where("id", "=", verification.id).execute();
 
-    console.log(`[AUTH] Password reset successful for ${identifier}`);
+    console.log("[AUTH] Password reset successful");
     return c.json({ success: true });
   } catch (error) {
     console.error("verify-reset error:", error);

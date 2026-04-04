@@ -406,6 +406,7 @@ export async function resetPasswordWithCode(data: {
 export async function getAdminResetCodes(): Promise<
   Array<{ identifier: string; code: string; expiresAt: string }>
 > {
+  await _tokenLoadPromise;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };

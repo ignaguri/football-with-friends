@@ -29,7 +29,7 @@ export default function ForgotPasswordScreen() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const isPhone = identifier.startsWith("+") || /^\d/.test(identifier);
+  const isPhone = !identifier.includes("@");
 
   const handleRequestCode = async () => {
     if (!identifier.trim()) {
