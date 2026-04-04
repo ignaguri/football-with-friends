@@ -307,7 +307,6 @@
     "forgotPasswordDescription": "Enter your phone number or email to request a reset code.",
     "requestResetCode": "Request Reset Code",
     "contactOrganizerForCode": "A reset code has been generated. Contact the organizer via WhatsApp to get your code.",
-    "contactOrganizer": "Contact Organizer",
     "enterResetCode": "Reset Code",
     "resetCodePlaceholder": "6-digit code",
     "resetPassword": "Reset Password",

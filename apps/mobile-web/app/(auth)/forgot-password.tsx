@@ -4,23 +4,20 @@ import {
   resetPasswordWithCode,
   signInWithPhone,
   signIn,
-  getOrganizerContact,
 } from "@repo/api-client";
 import {
   Container,
   Card,
   Text,
   YStack,
-  XStack,
   Input,
   Button,
   Spinner,
-  Image,
 } from "@repo/ui";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
@@ -31,13 +28,6 @@ export default function ForgotPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [organizerWhatsapp, setOrganizerWhatsapp] = useState<string | null>(
-    null,
-  );
-
-  useEffect(() => {
-    getOrganizerContact().then(setOrganizerWhatsapp);
-  }, []);
 
   const isPhone = identifier.startsWith("+") || /^\d/.test(identifier);
 
@@ -117,14 +107,6 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  const openWhatsApp = () => {
-    if (!organizerWhatsapp) return;
-    const message = encodeURIComponent(
-      "Hi, I need my password reset code for Football con los pibes",
-    );
-    Linking.openURL(`https://wa.me/${organizerWhatsapp}?text=${message}`);
-  };
-
   return (
     <Container variant="padded">
       <ScrollView
@@ -164,30 +146,6 @@ export default function ForgotPasswordScreen() {
                 </>
               ) : (
                 <>
-                  {/* WhatsApp contact button */}
-                  {organizerWhatsapp && (
-                    <Button
-                      onPress={openWhatsApp}
-                      variant="outline"
-                      size="$4"
-                    >
-                      <XStack
-                        gap="$2"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        <Image
-                          source={require("../../assets/whatsapp-logo.svg")}
-                          style={{ width: 20, height: 20 }}
-                          tintColor="#25D366"
-                        />
-                        <Text fontSize="$4" fontFamily="$body">
-                          {t("auth.contactOrganizer")}
-                        </Text>
-                      </XStack>
-                    </Button>
-                  )}
-
                   <Input
                     label={t("auth.enterResetCode")}
                     placeholder={t("auth.resetCodePlaceholder")}

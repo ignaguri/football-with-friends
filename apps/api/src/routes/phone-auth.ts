@@ -423,23 +423,6 @@ app.get("/admin/reset-codes", async (c) => {
   }
 });
 
-/**
- * Public endpoint to get the organizer's WhatsApp number.
- * Used by the forgot-password screen (which is shown to unauthenticated users).
- */
-app.get("/organizer-contact", async (c) => {
-  try {
-    const db = getDatabase();
-    const settings = await db
-      .selectFrom("settings")
-      .select(["organizer_whatsapp"])
-      .executeTakeFirst();
-
-    return c.json({ whatsapp: settings?.organizer_whatsapp || null });
-  } catch {
-    return c.json({ whatsapp: null });
-  }
-});
 
 // Named export for worker.ts (Cloudflare Workers)
 export { app as phoneAuthRoute };

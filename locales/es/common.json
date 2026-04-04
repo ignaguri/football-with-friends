@@ -308,7 +308,6 @@
     "forgotPasswordDescription": "Ingresá tu teléfono o email para solicitar un código de restablecimiento.",
     "requestResetCode": "Solicitar código",
     "contactOrganizerForCode": "Se generó un código de restablecimiento. Contactá al organizador por WhatsApp para obtenerlo.",
-    "contactOrganizer": "Contactar organizador",
     "enterResetCode": "Código de restablecimiento",
     "resetCodePlaceholder": "Código de 6 dígitos",
     "resetPassword": "Restablecer contraseña",

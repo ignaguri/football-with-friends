@@ -444,21 +444,6 @@ export async function getAdminResetCodes(): Promise<
   return result.codes;
 }
 
-/**
- * Get the organizer's WhatsApp number (public endpoint, no auth required).
- */
-export async function getOrganizerContact(): Promise<string | null> {
-  try {
-    const response = await fetch(
-      `${getApiUrl()}/api/phone-auth/organizer-contact`
-    );
-    if (!response.ok) return null;
-    const result = await response.json();
-    return result.whatsapp || null;
-  } catch {
-    return null;
-  }
-}
 
 // Export types
 export type Session = typeof authClient.$Infer.Session;
