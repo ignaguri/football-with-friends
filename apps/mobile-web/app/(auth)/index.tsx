@@ -39,63 +39,60 @@ export default function AuthLandingScreen() {
     theme.background?.val?.startsWith("#1");
 
   const handleGoogleAuth = async () => {
-    console.log("[AUTH] 🔵 Google OAuth button clicked");
     setIsGoogleLoading(true);
     setServerError(null);
 
     try {
-      // For web, we need to pass the full URL since the OAuth callback comes from Google
-      const callbackURL =
-        typeof window !== "undefined"
-          ? `${getConfiguredApiUrl()}/api/auth/web-callback?redirect=${encodeURIComponent(
-              window.location.origin + "/",
-            )}`
-          : "/";
+      if (Platform.OS === "web") {
+        const callbackURL = `${getConfiguredApiUrl()}/api/auth/web-callback?redirect=${encodeURIComponent(
+          window.location.origin + "/",
+        )}`;
 
-      console.log("[AUTH] 🚀 Calling signIn.social with BetterAuth client");
-      console.log("[AUTH] 📍 Callback URL:", callbackURL);
-
-      // Use fetchOptions to get the redirect URL without auto-redirecting
-      // BetterAuth's default redirect uses window.location.href which doesn't work on Vercel
-      const result = await signIn.social({
-        provider: "google",
-        callbackURL,
-        fetchOptions: {
-          onSuccess: (ctx) => {
-            // Handle redirect manually using window.location.assign() which works on Vercel
-            const redirectUrl =
-              ctx.response.headers.get("location") || (ctx.data as any)?.url;
-            if (redirectUrl) {
-              console.log("[AUTH] ➡️ Manually redirecting to:", redirectUrl);
-              window.location.assign(redirectUrl);
-            }
+        const result = await signIn.social({
+          provider: "google",
+          callbackURL,
+          fetchOptions: {
+            onSuccess: (ctx) => {
+              const redirectUrl =
+                ctx.response.headers.get("location") || (ctx.data as any)?.url;
+              if (redirectUrl) {
+                window.location.assign(redirectUrl);
+              }
+            },
           },
-        },
-      });
+        });
 
-      console.log("[AUTH] 📥 signIn.social result:", result);
+        if (result.error) {
+          setServerError(result.error.message || t("auth.googleSignInFailed"));
+          setIsGoogleLoading(false);
+          return;
+        }
 
-      if (result.error) {
-        console.error("[AUTH] ❌ Google sign in error:", result.error);
-        setServerError(result.error.message || t("auth.googleSignInFailed"));
-        setIsGoogleLoading(false);
-        return;
-      }
+        if ((result.data as any)?.url) {
+          window.location.assign((result.data as any).url);
+          return;
+        }
 
-      // If we have a URL in the result, redirect manually
-      if ((result.data as any)?.url) {
-        console.log("[AUTH] ➡️ Redirecting via result.data.url");
-        window.location.assign((result.data as any).url);
-        return;
-      }
+        if (result.data?.user) {
+          router.replace("/(tabs)");
+        }
+      } else {
+        const result = await signIn.social({
+          provider: "google",
+          callbackURL: "/",
+        });
 
-      // If we get here without redirect, navigate to tabs
-      if (result.data?.user) {
-        console.log("[AUTH] ✅ Sign in successful, navigating to tabs");
-        router.replace("/(tabs)");
+        if (result.error) {
+          setServerError(result.error.message || t("auth.googleSignInFailed"));
+          setIsGoogleLoading(false);
+          return;
+        }
+
+        if (result.data?.user) {
+          router.replace("/(tabs)");
+        }
       }
     } catch (err) {
-      console.error("[AUTH] ❌ Google sign in error:", err);
       setServerError(t("auth.googleSignInFailed"));
       setIsGoogleLoading(false);
     }

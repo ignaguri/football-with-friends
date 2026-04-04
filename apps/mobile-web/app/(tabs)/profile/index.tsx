@@ -36,6 +36,7 @@ import {
   Platform,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
 import { useThemeContext } from "../../../lib/theme-context";
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   const { data: session, isPending, refetch: refetchSession } = useSession();
   const { t } = useTranslation();
   const { theme, toggleTheme } = useThemeContext();
+  const insets = useSafeAreaInsets();
   const [currentLanguage, setCurrentLanguage] = useState(getCurrentLanguage());
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -362,7 +364,7 @@ export default function ProfileScreen() {
           headerShown: false,
         }}
       />
-      <Container variant="padded">
+      <Container variant="padded" paddingTop={insets.top + 16}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}

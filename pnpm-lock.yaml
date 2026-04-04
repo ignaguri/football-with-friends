@@ -219,6 +219,9 @@ importers:
       expo-application:
         specifier: ^55.0.12
         version: 55.0.12(expo@55.0.11)
+      expo-build-properties:
+        specifier: ^55.0.11
+        version: 55.0.11(expo@55.0.11)
       expo-crypto:
         specifier: ^55.0.12
         version: 55.0.12(expo@55.0.11)
@@ -4700,6 +4703,11 @@ packages:
       expo: '*'
       react: 19.2.0
       react-native: '*'
+
+  expo-build-properties@55.0.11:
+    resolution: {integrity: sha512-r/CvGqWPxP2pEfR3WQfQjJqgVMQvVqF6rGMN0wAf3HXqzPpvEZt/jB3gDAHIeUpFl3IwpxwBaAgX0rDYoftw9Q==}
+    peerDependencies:
+      expo: '*'
 
   expo-constants@55.0.11:
     resolution: {integrity: sha512-efWOJr0oVDId0lhvXJwoWfzucwi1/upDDseuYAhK0m8v5Hg7ObDehMmKRMGL0dgABmlSnppNmmYIeTVe7e2yVg==}
@@ -13977,6 +13985,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  expo-build-properties@55.0.11(expo@55.0.11):
+    dependencies:
+      '@expo/schema-utils': 55.0.2
+      expo: 55.0.11(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@55.0.9)(expo-router@55.0.10)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
+      resolve-from: 5.0.0
+      semver: 7.7.4
 
   expo-constants@55.0.11(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(typescript@5.9.3):
     dependencies:

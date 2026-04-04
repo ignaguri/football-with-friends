@@ -301,7 +301,18 @@
     "resetMyPassword": "Update Password",
     "passwordResetSuccess": "Password updated! Signing you in...",
     "passwordResetFailed": "Failed to update password. Please try again.",
-    "passwordMismatch": "Passwords do not match"
+    "passwordMismatch": "Passwords do not match",
+    "forgotPassword": "Forgot Password?",
+    "forgotPasswordTitle": "Reset Password",
+    "forgotPasswordDescription": "Enter your phone number or email to request a reset code.",
+    "requestResetCode": "Request Reset Code",
+    "contactOrganizerForCode": "A reset code has been generated. Contact the organizer via WhatsApp to get your code.",
+    "enterResetCode": "Reset Code",
+    "resetCodePlaceholder": "6-digit code",
+    "resetPassword": "Reset Password",
+    "phoneOrEmail": "Phone or Email",
+    "invalidResetCode": "Invalid or expired reset code",
+    "enterIdentifier": "Please enter your phone number or email"
   },
   "addMatch": {
     "title": "Add Match",
@@ -641,7 +652,10 @@
     "descriptionSpanish": "Description (Spanish)",
     "sortOrder": "Sort Order",
     "activate": "Activate",
-    "deactivate": "Deactivate"
+    "deactivate": "Deactivate",
+    "resetCodes": "Password Reset Codes",
+    "noResetCodes": "No pending reset codes",
+    "expiresAt": "Expires"
   },
   "errors": {
     "matchAlreadyExists": "A match already exists on this date",

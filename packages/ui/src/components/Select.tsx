@@ -278,7 +278,9 @@ function NativeSelect({
           backgroundColor="$background"
           borderColor={error ? "$red8" : "$gray7"}
           borderWidth={1}
+          borderRadius="$3"
           padding="$3"
+          height={48}
           iconAfter={ChevronDown}
           opacity={disabled ? 0.5 : 1}
           disabled={disabled}

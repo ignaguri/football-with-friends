@@ -71,6 +71,14 @@ export function getBearerToken(): string | undefined {
   return _cachedBearerToken;
 }
 
+// Extract a human-readable error message from API responses.
+// Handles both string errors and Zod validation error objects.
+function extractApiError(result: any, fallback: string): string {
+  if (typeof result.error === "string") return result.error;
+  if (result.error?.message) return result.error.message;
+  return fallback;
+}
+
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
 
@@ -281,16 +289,13 @@ export async function signUpWithPhone(data: PhoneSignUpData) {
  * Uses native phoneNumber.verify() for session management (fixes infinite polling)
  */
 export async function signInWithPhone(data: PhoneSignInData) {
-  // sendOtp is a no-op on server, but required by the flow
   await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
 
-  // verify() with password as code - server validates against stored hash
   const result = await authClient.phoneNumber.verify({
     phoneNumber: data.phoneNumber,
     code: data.password,
   });
 
-  // verify() returns { status, token, user } on success
   if (result.error || !result.data?.token) {
     throw new Error("Invalid phone number or password");
   }
@@ -344,9 +349,84 @@ export async function resetPasswordForMigration(data: {
 
   if (!response.ok) {
     const result = await response.json();
-    throw new Error(result.error || "Failed to reset password");
+    throw new Error(extractApiError(result, "Failed to reset password"));
   }
 }
+
+/**
+ * Request a password reset code.
+ * The code is stored server-side; user must contact the admin via WhatsApp to get it.
+ */
+export async function requestPasswordReset(identifier: {
+  phoneNumber?: string;
+  email?: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/forgot-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(identifier),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(extractApiError(result, "Failed to request password reset"));
+  }
+}
+
+/**
+ * Verify reset code and set a new password.
+ */
+export async function resetPasswordWithCode(data: {
+  phoneNumber?: string;
+  email?: string;
+  code: string;
+  newPassword: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/verify-reset`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(extractApiError(result, "Failed to reset password"));
+  }
+}
+
+/**
+ * Admin: get pending password reset codes.
+ */
+export async function getAdminResetCodes(): Promise<
+  Array<{ identifier: string; code: string; expiresAt: string }>
+> {
+  await _tokenLoadPromise;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (_cachedBearerToken) {
+    headers["Authorization"] = `Bearer ${_cachedBearerToken}`;
+  }
+
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/admin/reset-codes`,
+    { headers }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch reset codes");
+  }
+
+  const result = await response.json();
+  return result.codes;
+}
+
 
 // Export types
 export type Session = typeof authClient.$Infer.Session;

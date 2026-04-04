@@ -152,6 +152,16 @@ export interface MatchPlayerStatsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+// BetterAuth verification table (used for password reset codes, OTPs, etc.)
+export interface VerificationTable {
+  id: string;
+  identifier: string;
+  value: string;
+  expiresAt: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -165,6 +175,7 @@ export interface Database {
   match_player_stats: MatchPlayerStatsTable;
   voting_criteria: VotingCriteriaTable;
   match_votes: MatchVotesTable;
+  verification: VerificationTable;
 }
 
 // SQLite system tables used by migrations and database introspection
