@@ -312,7 +312,6 @@
     "resetPassword": "Reset Password",
     "phoneOrEmail": "Phone or Email",
     "invalidResetCode": "Invalid or expired reset code",
-    "codeRequested": "Reset code requested!",
     "enterIdentifier": "Please enter your phone number or email"
   },
   "addMatch": {

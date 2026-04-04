@@ -71,6 +71,14 @@ export function getBearerToken(): string | undefined {
   return _cachedBearerToken;
 }
 
+// Extract a human-readable error message from API responses.
+// Handles both string errors and Zod validation error objects.
+function extractApiError(result: any, fallback: string): string {
+  if (typeof result.error === "string") return result.error;
+  if (result.error?.message) return result.error.message;
+  return fallback;
+}
+
 // Base URL for localhost development (will be replaced at runtime for deployed environments)
 const LOCALHOST_API = "http://localhost:3001";
 
@@ -156,9 +164,6 @@ function createDynamicFetch() {
       const apiBase = getApiUrl();
       const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
-      console.log(`[AUTH-FETCH] ${init?.method || 'GET'} ${finalUrl}`);
-      console.log(`[AUTH-FETCH] apiBase=${apiBase}, hasToken=${!!_cachedBearerToken}`);
-
       const fetchInit: RequestInit = { ...init, credentials: "include" };
 
       // Inject Bearer token header for authenticated requests (all platforms)
@@ -182,7 +187,6 @@ function createDynamicFetch() {
 
       // Capture set-auth-token from responses and clear token on sign-out (all platforms)
       return responsePromise.then((response) => {
-        console.log(`[AUTH-FETCH] Response: ${response.status} ${response.statusText} for ${finalUrl}`);
         const newToken = response.headers.get("set-auth-token");
         if (newToken) {
           // The set-auth-token value is "token.hash" (URL-encoded). Store just the
@@ -198,9 +202,6 @@ function createDynamicFetch() {
           storage.deleteItem(BEARER_TOKEN_KEY).catch(console.error);
         }
         return response;
-      }).catch((err: any) => {
-        console.error(`[AUTH-FETCH] ERROR for ${finalUrl}:`, err?.message || err);
-        throw err;
       });
     });
   }) as typeof fetch;
@@ -288,24 +289,14 @@ export async function signUpWithPhone(data: PhoneSignUpData) {
  * Uses native phoneNumber.verify() for session management (fixes infinite polling)
  */
 export async function signInWithPhone(data: PhoneSignInData) {
-  console.log(`[AUTH] signInWithPhone called for ${data.phoneNumber}`);
+  await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
 
-  // sendOtp is a no-op on server, but required by the flow
-  console.log(`[AUTH] Calling sendOtp...`);
-  const otpResult = await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
-  console.log(`[AUTH] sendOtp result:`, JSON.stringify(otpResult));
-
-  // verify() with password as code - server validates against stored hash
-  console.log(`[AUTH] Calling verify...`);
   const result = await authClient.phoneNumber.verify({
     phoneNumber: data.phoneNumber,
     code: data.password,
   });
-  console.log(`[AUTH] verify result:`, JSON.stringify(result));
 
-  // verify() returns { status, token, user } on success
   if (result.error || !result.data?.token) {
-    console.error(`[AUTH] signInWithPhone failed:`, result.error);
     throw new Error("Invalid phone number or password");
   }
 
@@ -358,10 +349,7 @@ export async function resetPasswordForMigration(data: {
 
   if (!response.ok) {
     const result = await response.json();
-    const msg = typeof result.error === "string"
-      ? result.error
-      : result.error?.message || "Failed to reset password";
-    throw new Error(msg);
+    throw new Error(extractApiError(result, "Failed to reset password"));
   }
 }
 
@@ -384,10 +372,7 @@ export async function requestPasswordReset(identifier: {
 
   if (!response.ok) {
     const result = await response.json();
-    const msg = typeof result.error === "string"
-      ? result.error
-      : result.error?.message || "Failed to request password reset";
-    throw new Error(msg);
+    throw new Error(extractApiError(result, "Failed to request password reset"));
   }
 }
 
@@ -411,10 +396,7 @@ export async function resetPasswordWithCode(data: {
 
   if (!response.ok) {
     const result = await response.json();
-    const msg = typeof result.error === "string"
-      ? result.error
-      : result.error?.message || "Failed to reset password";
-    throw new Error(msg);
+    throw new Error(extractApiError(result, "Failed to reset password"));
   }
 }
 

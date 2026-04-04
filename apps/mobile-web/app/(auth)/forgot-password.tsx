@@ -134,16 +134,14 @@ export default function ForgotPasswordScreen() {
           <Card variant="elevated" padding="$5" width="100%">
             <YStack gap="$4">
               {step === "request" ? (
-                <>
-                  <Input
-                    label={t("auth.phoneOrEmail")}
-                    placeholder="+49... / email@example.com"
-                    value={identifier}
-                    onChangeText={setIdentifier}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                  />
-                </>
+                <Input
+                  label={t("auth.phoneOrEmail")}
+                  placeholder="+49... / email@example.com"
+                  value={identifier}
+                  onChangeText={setIdentifier}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
               ) : (
                 <>
                   <Input

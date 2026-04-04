@@ -48,16 +48,12 @@ export default function EmailSignInScreen() {
     setServerError(null);
 
     try {
-      console.log(`[EMAIL-AUTH] Signing in with ${data.email}`);
       const result = await signIn.email({
         email: data.email,
         password: data.password,
       });
-      console.log(`[EMAIL-AUTH] Result:`, JSON.stringify(result));
 
       if (result.error) {
-        console.error(`[EMAIL-AUTH] Error:`, result.error);
-        // Check if user needs password reset (old scrypt hash)
         const needs = await needsPasswordReset({ email: data.email });
         if (needs) {
           setShowPasswordReset(true);
@@ -71,7 +67,6 @@ export default function EmailSignInScreen() {
       router.replace("/(tabs)");
     } catch (err) {
       setServerError(t("auth.unexpectedError"));
-      console.error("[EMAIL-AUTH] Exception:", err);
     } finally {
       setIsLoading(false);
     }

@@ -313,7 +313,6 @@
     "resetPassword": "Restablecer contraseña",
     "phoneOrEmail": "Teléfono o Email",
     "invalidResetCode": "Código inválido o expirado",
-    "codeRequested": "¡Código solicitado!",
     "enterIdentifier": "Ingresá tu teléfono o email"
   },
   "addMatch": {

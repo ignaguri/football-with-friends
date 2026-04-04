@@ -39,18 +39,14 @@ export default function AuthLandingScreen() {
     theme.background?.val?.startsWith("#1");
 
   const handleGoogleAuth = async () => {
-    console.log("[AUTH] 🔵 Google OAuth button clicked");
     setIsGoogleLoading(true);
     setServerError(null);
 
     try {
       if (Platform.OS === "web") {
-        // Web: use manual redirect flow since BetterAuth's default doesn't work on Vercel
         const callbackURL = `${getConfiguredApiUrl()}/api/auth/web-callback?redirect=${encodeURIComponent(
           window.location.origin + "/",
         )}`;
-
-        console.log("[AUTH] 📍 Web callback URL:", callbackURL);
 
         const result = await signIn.social({
           provider: "google",
@@ -67,7 +63,6 @@ export default function AuthLandingScreen() {
         });
 
         if (result.error) {
-          console.error("[AUTH] ❌ Google sign in error:", result.error);
           setServerError(result.error.message || t("auth.googleSignInFailed"));
           setIsGoogleLoading(false);
           return;
@@ -82,30 +77,22 @@ export default function AuthLandingScreen() {
           router.replace("/(tabs)");
         }
       } else {
-        // Native: expoClient plugin handles OAuth via system browser + deep link
-        console.log("[AUTH] 📱 Native Google OAuth via expoClient");
-
         const result = await signIn.social({
           provider: "google",
           callbackURL: "/",
         });
 
-        console.log("[AUTH] 📥 Native signIn.social result:", JSON.stringify(result));
-
         if (result.error) {
-          console.error("[AUTH] ❌ Google sign in error:", result.error);
           setServerError(result.error.message || t("auth.googleSignInFailed"));
           setIsGoogleLoading(false);
           return;
         }
 
         if (result.data?.user) {
-          console.log("[AUTH] ✅ Sign in successful, navigating to tabs");
           router.replace("/(tabs)");
         }
       }
     } catch (err) {
-      console.error("[AUTH] ❌ Google sign in error:", err);
       setServerError(t("auth.googleSignInFailed"));
       setIsGoogleLoading(false);
     }
@@ -168,8 +155,6 @@ export default function AuthLandingScreen() {
             {t("auth.signInToContinue")}
           </Text>
         </YStack>
-
-
 
         {/* Auth Options */}
         <YStack gap="$3" alignSelf="stretch" alignItems="stretch">

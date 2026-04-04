@@ -402,11 +402,10 @@ app.get("/admin/reset-codes", async (c) => {
       .selectFrom("verification")
       .select(["identifier", "value", "expiresAt"])
       .where("identifier", "like", "forgot:%")
+      .where("expiresAt", ">", Date.now())
       .execute();
 
-    const result = codes
-      .filter((v) => v.expiresAt > Date.now()) // Only non-expired
-      .map((v) => {
+    const result = codes.map((v) => {
         const [code] = v.value.split(":");
         const userIdentifier = v.identifier.replace("forgot:", "");
         return {
