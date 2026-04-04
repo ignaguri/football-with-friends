@@ -213,7 +213,7 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
  */
 const forgotPasswordSchema = z.object({
   phoneNumber: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().min(1).optional(),
 }).refine((data) => data.phoneNumber || data.email, {
   message: "Either phoneNumber or email is required",
 });
@@ -287,7 +287,7 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
  */
 const verifyResetSchema = z.object({
   phoneNumber: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().min(1).optional(),
   code: z.string().length(6, "Code must be 6 digits"),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 }).refine((data) => data.phoneNumber || data.email, {

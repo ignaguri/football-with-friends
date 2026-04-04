@@ -358,7 +358,10 @@ export async function resetPasswordForMigration(data: {
 
   if (!response.ok) {
     const result = await response.json();
-    throw new Error(result.error || "Failed to reset password");
+    const msg = typeof result.error === "string"
+      ? result.error
+      : result.error?.message || "Failed to reset password";
+    throw new Error(msg);
   }
 }
 
@@ -381,7 +384,10 @@ export async function requestPasswordReset(identifier: {
 
   if (!response.ok) {
     const result = await response.json();
-    throw new Error(result.error || "Failed to request password reset");
+    const msg = typeof result.error === "string"
+      ? result.error
+      : result.error?.message || "Failed to request password reset";
+    throw new Error(msg);
   }
 }
 
@@ -405,7 +411,10 @@ export async function resetPasswordWithCode(data: {
 
   if (!response.ok) {
     const result = await response.json();
-    throw new Error(result.error || "Failed to reset password");
+    const msg = typeof result.error === "string"
+      ? result.error
+      : result.error?.message || "Failed to reset password";
+    throw new Error(msg);
   }
 }
 
