@@ -208,9 +208,10 @@ function createDynamicFetch() {
 }
 
 // Create the Better Auth client with Expo plugin for React Native
-// Use localhost as base URL but override with custom fetch for dynamic resolution
+// baseURL must resolve to the real API URL (not localhost) because the expoClient
+// plugin uses it directly for the OAuth proxy URL, bypassing createDynamicFetch.
 export const authClient = createAuthClient({
-  baseURL: LOCALHOST_API,
+  baseURL: getApiUrl(),
   fetchOptions: {
     customFetchImpl: createDynamicFetch(),
   },
