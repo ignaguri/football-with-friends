@@ -32,6 +32,10 @@ export {
   signInWithPhone,
   needsPasswordReset,
   resetPasswordForMigration,
+  requestPasswordReset,
+  resetPasswordWithCode,
+  getAdminResetCodes,
+  getOrganizerContact,
 } from "./auth";
 export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 

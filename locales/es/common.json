@@ -302,7 +302,20 @@
     "resetMyPassword": "Actualizar Contraseña",
     "passwordResetSuccess": "¡Contraseña actualizada! Iniciando sesión...",
     "passwordResetFailed": "Error al actualizar la contraseña. Por favor, intentá de nuevo.",
-    "passwordMismatch": "Las contraseñas no coinciden"
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotPasswordTitle": "Restablecer contraseña",
+    "forgotPasswordDescription": "Ingresá tu teléfono o email para solicitar un código de restablecimiento.",
+    "requestResetCode": "Solicitar código",
+    "contactOrganizerForCode": "Se generó un código de restablecimiento. Contactá al organizador por WhatsApp para obtenerlo.",
+    "contactOrganizer": "Contactar organizador",
+    "enterResetCode": "Código de restablecimiento",
+    "resetCodePlaceholder": "Código de 6 dígitos",
+    "resetPassword": "Restablecer contraseña",
+    "phoneOrEmail": "Teléfono o Email",
+    "invalidResetCode": "Código inválido o expirado",
+    "codeRequested": "¡Código solicitado!",
+    "enterIdentifier": "Ingresá tu teléfono o email"
   },
   "addMatch": {
     "title": "Crear partido",
@@ -644,7 +657,10 @@
     "descriptionSpanish": "Descripción (Español)",
     "sortOrder": "Orden",
     "activate": "Activar",
-    "deactivate": "Desactivar"
+    "deactivate": "Desactivar",
+    "resetCodes": "Códigos de restablecimiento",
+    "noResetCodes": "Sin códigos pendientes",
+    "expiresAt": "Expira"
   },
   "errors": {
     "matchAlreadyExists": "Ya existe un partido en esta fecha",

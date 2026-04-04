@@ -19,7 +19,12 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://football-api-staging.pepe-grillo-parlante.workers.dev",
+        "EXPO_PUBLIC_ENV": "preview",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "114959048918-po7fdnktjj37nsflujuflfdd9vcsgut9.apps.googleusercontent.com"
+      }
     },
     "production": {
       "autoIncrement": true,
@@ -29,12 +34,19 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://football-api.pepe-grillo-parlante.workers.dev",
+        "EXPO_PUBLIC_ENV": "production",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "114959048918-po7fdnktjj37nsflujuflfdd9vcsgut9.apps.googleusercontent.com"
+      }
     }
   },
   "submit": {
     "production": {
-      "ios": {},
+      "ios": {
+        "ascAppId": "6759833737"
+      },
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "internal"

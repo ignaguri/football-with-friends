@@ -206,6 +206,241 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
   }
 });
 
+/**
+ * Forgot password: generate a 6-digit reset code and store it in the verification table.
+ * The code must be relayed to the user by the admin via WhatsApp.
+ * Always returns success to prevent user enumeration.
+ */
+const forgotPasswordSchema = z.object({
+  phoneNumber: z.string().optional(),
+  email: z.string().email().optional(),
+}).refine((data) => data.phoneNumber || data.email, {
+  message: "Either phoneNumber or email is required",
+});
+
+function generateResetCode(): string {
+  const digits = "0123456789";
+  let code = "";
+  const array = new Uint8Array(6);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < 6; i++) {
+    code += digits[array[i] % 10];
+  }
+  return code;
+}
+
+app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c) => {
+  const { phoneNumber, email } = c.req.valid("json");
+  const identifier = phoneNumber || email!;
+
+  try {
+    const db = getDatabase();
+
+    // Look up user (silent success if not found)
+    let query = db.selectFrom("user").select("id");
+    if (phoneNumber) {
+      query = query.where("phoneNumber", "=", phoneNumber);
+    } else if (email) {
+      query = query.where("email", "=", email);
+    }
+    const user = await query.executeTakeFirst();
+
+    if (user) {
+      const code = generateResetCode();
+      const now = Date.now();
+      const expiresAt = now + 15 * 60 * 1000; // 15 minutes
+      const verificationId = `forgot:${identifier}`;
+
+      // Delete any existing reset code for this identifier
+      await db
+        .deleteFrom("verification")
+        .where("identifier", "=", verificationId)
+        .execute();
+
+      // Insert new reset code
+      await db
+        .insertInto("verification")
+        .values({
+          id: crypto.randomUUID(),
+          identifier: verificationId,
+          value: `${code}:0`, // code:attempts
+          expiresAt,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .execute();
+
+      console.log(`[AUTH] Password reset code generated for ${identifier}`);
+    }
+
+    // Always return success to prevent enumeration
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("forgot-password error:", error);
+    return c.json({ success: true }); // Still return success
+  }
+});
+
+/**
+ * Verify reset code and set new password.
+ * Rate-limited to 3 attempts per code.
+ */
+const verifyResetSchema = z.object({
+  phoneNumber: z.string().optional(),
+  email: z.string().email().optional(),
+  code: z.string().length(6, "Code must be 6 digits"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+}).refine((data) => data.phoneNumber || data.email, {
+  message: "Either phoneNumber or email is required",
+});
+
+app.post("/verify-reset", zValidator("json", verifyResetSchema), async (c) => {
+  const { phoneNumber, email, code, newPassword } = c.req.valid("json");
+  const identifier = phoneNumber || email!;
+  const verificationId = `forgot:${identifier}`;
+
+  try {
+    const db = getDatabase();
+
+    // Find the verification entry
+    const verification = await db
+      .selectFrom("verification")
+      .select(["id", "value", "expiresAt"])
+      .where("identifier", "=", verificationId)
+      .executeTakeFirst();
+
+    if (!verification) {
+      return c.json({ error: "Invalid or expired reset code" }, 400);
+    }
+
+    // Check expiry
+    if (verification.expiresAt < Date.now()) {
+      await db.deleteFrom("verification").where("id", "=", verification.id).execute();
+      return c.json({ error: "Reset code has expired. Please request a new one." }, 400);
+    }
+
+    // Check attempts
+    const [storedCode, attemptsStr] = verification.value.split(":");
+    const attempts = parseInt(attemptsStr || "0");
+    if (attempts >= 3) {
+      await db.deleteFrom("verification").where("id", "=", verification.id).execute();
+      return c.json({ error: "Too many attempts. Please request a new code." }, 400);
+    }
+
+    // Verify code
+    if (code !== storedCode) {
+      // Increment attempts
+      await db
+        .updateTable("verification")
+        .set({ value: `${storedCode}:${attempts + 1}`, updatedAt: Date.now() })
+        .where("id", "=", verification.id)
+        .execute();
+      return c.json({ error: "Invalid reset code" }, 400);
+    }
+
+    // Find user
+    let userQuery = db.selectFrom("user").select("id");
+    if (phoneNumber) {
+      userQuery = userQuery.where("phoneNumber", "=", phoneNumber);
+    } else if (email) {
+      userQuery = userQuery.where("email", "=", email);
+    }
+    const user = await userQuery.executeTakeFirst();
+
+    if (!user) {
+      return c.json({ error: "Unable to reset password" }, 400);
+    }
+
+    // Get credential account
+    const account = await db
+      .selectFrom("account")
+      .select(["id"])
+      .where("userId", "=", user.id)
+      .where("providerId", "=", "credential")
+      .executeTakeFirst();
+
+    if (!account) {
+      return c.json({ error: "Unable to reset password" }, 400);
+    }
+
+    // Hash and update password
+    const newHash = await hashPassword(newPassword);
+    await db
+      .updateTable("account")
+      .set({ password: newHash })
+      .where("id", "=", account.id)
+      .execute();
+
+    // Clean up verification entry
+    await db.deleteFrom("verification").where("id", "=", verification.id).execute();
+
+    console.log(`[AUTH] Password reset successful for ${identifier}`);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("verify-reset error:", error);
+    return c.json({ error: "Unable to reset password" }, 500);
+  }
+});
+
+/**
+ * Admin-only: list pending password reset codes.
+ * Used by the admin to look up codes when users request resets via WhatsApp.
+ */
+app.get("/admin/reset-codes", async (c) => {
+  try {
+    // This route is under /api/phone-auth/ which is in the public allowlist,
+    // so the global auth middleware doesn't run. Manually verify the session.
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers,
+    });
+    if (!session?.user || (session.user as any).role !== "admin") {
+      return c.json({ error: "Forbidden" }, 403);
+    }
+
+    const db = getDatabase();
+    const codes = await db
+      .selectFrom("verification")
+      .select(["identifier", "value", "expiresAt"])
+      .where("identifier", "like", "forgot:%")
+      .execute();
+
+    const result = codes
+      .filter((v) => v.expiresAt > Date.now()) // Only non-expired
+      .map((v) => {
+        const [code] = v.value.split(":");
+        const userIdentifier = v.identifier.replace("forgot:", "");
+        return {
+          identifier: userIdentifier,
+          code,
+          expiresAt: new Date(v.expiresAt).toISOString(),
+        };
+      });
+
+    return c.json({ codes: result });
+  } catch (error) {
+    console.error("admin/reset-codes error:", error);
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+});
+
+/**
+ * Public endpoint to get the organizer's WhatsApp number.
+ * Used by the forgot-password screen (which is shown to unauthenticated users).
+ */
+app.get("/organizer-contact", async (c) => {
+  try {
+    const db = getDatabase();
+    const settings = await db
+      .selectFrom("settings")
+      .select(["organizer_whatsapp"])
+      .executeTakeFirst();
+
+    return c.json({ whatsapp: settings?.organizer_whatsapp || null });
+  } catch {
+    return c.json({ whatsapp: null });
+  }
+});
+
 // Named export for worker.ts (Cloudflare Workers)
 export { app as phoneAuthRoute };
 

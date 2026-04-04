@@ -10,12 +10,13 @@ import {
   Card,
   Text,
   YStack,
+  XStack,
   Input,
   Button,
   Spinner,
   PhoneInput,
 } from "@repo/ui";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -116,7 +117,7 @@ export default function PhoneSignInScreen() {
       >
         <YStack
           gap="$6"
-          justifyContent="center"
+          width="100%"
           maxWidth={400}
           marginHorizontal="auto"
           paddingVertical="$8"
@@ -130,7 +131,7 @@ export default function PhoneSignInScreen() {
             </Text>
           </YStack>
 
-          <Card variant="elevated" padding="$4">
+          <Card variant="elevated" padding="$5" width="100%">
             <YStack gap="$4">
               {!showPasswordReset ? (
                 <>
@@ -173,6 +174,16 @@ export default function PhoneSignInScreen() {
                       />
                     )}
                   />
+
+                  <Text
+                    color="$blue10"
+                    fontSize="$3"
+                    textAlign="right"
+                    cursor="pointer"
+                    onPress={() => router.push("/(auth)/forgot-password")}
+                  >
+                    {t("auth.forgotPassword")}
+                  </Text>
                 </>
               ) : (
                 <>
@@ -248,16 +259,17 @@ export default function PhoneSignInScreen() {
             </YStack>
           </Card>
 
-          <YStack gap="$2" alignItems="center">
-            <Text color="$gray11">
-              {t("auth.noAccount")}{" "}
-              <Link href="/(auth)/phone-signup" asChild>
-                <Text color="$blue10" fontWeight="600" cursor="pointer">
-                  {t("auth.signUpNow")}
-                </Text>
-              </Link>
+          <XStack gap="$1" justifyContent="center">
+            <Text color="$gray11">{t("auth.noAccount")}</Text>
+            <Text
+              color="$blue10"
+              fontWeight="600"
+              cursor="pointer"
+              onPress={() => router.push("/(auth)/phone-signup")}
+            >
+              {t("auth.signUpNow")}
             </Text>
-          </YStack>
+          </XStack>
         </YStack>
       </ScrollView>
     </Container>

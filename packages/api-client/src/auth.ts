@@ -156,6 +156,9 @@ function createDynamicFetch() {
       const apiBase = getApiUrl();
       const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
+      console.log(`[AUTH-FETCH] ${init?.method || 'GET'} ${finalUrl}`);
+      console.log(`[AUTH-FETCH] apiBase=${apiBase}, hasToken=${!!_cachedBearerToken}`);
+
       const fetchInit: RequestInit = { ...init, credentials: "include" };
 
       // Inject Bearer token header for authenticated requests (all platforms)
@@ -179,6 +182,7 @@ function createDynamicFetch() {
 
       // Capture set-auth-token from responses and clear token on sign-out (all platforms)
       return responsePromise.then((response) => {
+        console.log(`[AUTH-FETCH] Response: ${response.status} ${response.statusText} for ${finalUrl}`);
         const newToken = response.headers.get("set-auth-token");
         if (newToken) {
           // The set-auth-token value is "token.hash" (URL-encoded). Store just the
@@ -194,6 +198,9 @@ function createDynamicFetch() {
           storage.deleteItem(BEARER_TOKEN_KEY).catch(console.error);
         }
         return response;
+      }).catch((err: any) => {
+        console.error(`[AUTH-FETCH] ERROR for ${finalUrl}:`, err?.message || err);
+        throw err;
       });
     });
   }) as typeof fetch;
@@ -281,17 +288,24 @@ export async function signUpWithPhone(data: PhoneSignUpData) {
  * Uses native phoneNumber.verify() for session management (fixes infinite polling)
  */
 export async function signInWithPhone(data: PhoneSignInData) {
+  console.log(`[AUTH] signInWithPhone called for ${data.phoneNumber}`);
+
   // sendOtp is a no-op on server, but required by the flow
-  await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
+  console.log(`[AUTH] Calling sendOtp...`);
+  const otpResult = await authClient.phoneNumber.sendOtp({ phoneNumber: data.phoneNumber });
+  console.log(`[AUTH] sendOtp result:`, JSON.stringify(otpResult));
 
   // verify() with password as code - server validates against stored hash
+  console.log(`[AUTH] Calling verify...`);
   const result = await authClient.phoneNumber.verify({
     phoneNumber: data.phoneNumber,
     code: data.password,
   });
+  console.log(`[AUTH] verify result:`, JSON.stringify(result));
 
   // verify() returns { status, token, user } on success
   if (result.error || !result.data?.token) {
+    console.error(`[AUTH] signInWithPhone failed:`, result.error);
     throw new Error("Invalid phone number or password");
   }
 
@@ -345,6 +359,95 @@ export async function resetPasswordForMigration(data: {
   if (!response.ok) {
     const result = await response.json();
     throw new Error(result.error || "Failed to reset password");
+  }
+}
+
+/**
+ * Request a password reset code.
+ * The code is stored server-side; user must contact the admin via WhatsApp to get it.
+ */
+export async function requestPasswordReset(identifier: {
+  phoneNumber?: string;
+  email?: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/forgot-password`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(identifier),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(result.error || "Failed to request password reset");
+  }
+}
+
+/**
+ * Verify reset code and set a new password.
+ */
+export async function resetPasswordWithCode(data: {
+  phoneNumber?: string;
+  email?: string;
+  code: string;
+  newPassword: string;
+}): Promise<void> {
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/verify-reset`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(result.error || "Failed to reset password");
+  }
+}
+
+/**
+ * Admin: get pending password reset codes.
+ */
+export async function getAdminResetCodes(): Promise<
+  Array<{ identifier: string; code: string; expiresAt: string }>
+> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (_cachedBearerToken) {
+    headers["Authorization"] = `Bearer ${_cachedBearerToken}`;
+  }
+
+  const response = await fetch(
+    `${getApiUrl()}/api/phone-auth/admin/reset-codes`,
+    { headers }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch reset codes");
+  }
+
+  const result = await response.json();
+  return result.codes;
+}
+
+/**
+ * Get the organizer's WhatsApp number (public endpoint, no auth required).
+ */
+export async function getOrganizerContact(): Promise<string | null> {
+  try {
+    const response = await fetch(
+      `${getApiUrl()}/api/phone-auth/organizer-contact`
+    );
+    if (!response.ok) return null;
+    const result = await response.json();
+    return result.whatsapp || null;
+  } catch {
+    return null;
   }
 }
 

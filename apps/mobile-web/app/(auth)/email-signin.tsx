@@ -10,11 +10,12 @@ import {
   Card,
   Text,
   YStack,
+  XStack,
   Input,
   Button,
   Spinner,
 } from "@repo/ui";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -47,12 +48,15 @@ export default function EmailSignInScreen() {
     setServerError(null);
 
     try {
+      console.log(`[EMAIL-AUTH] Signing in with ${data.email}`);
       const result = await signIn.email({
         email: data.email,
         password: data.password,
       });
+      console.log(`[EMAIL-AUTH] Result:`, JSON.stringify(result));
 
       if (result.error) {
+        console.error(`[EMAIL-AUTH] Error:`, result.error);
         // Check if user needs password reset (old scrypt hash)
         const needs = await needsPasswordReset({ email: data.email });
         if (needs) {
@@ -67,7 +71,7 @@ export default function EmailSignInScreen() {
       router.replace("/(tabs)");
     } catch (err) {
       setServerError(t("auth.unexpectedError"));
-      console.error("Sign in error:", err);
+      console.error("[EMAIL-AUTH] Exception:", err);
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +122,7 @@ export default function EmailSignInScreen() {
       >
         <YStack
           gap="$6"
-          justifyContent="center"
+          width="100%"
           maxWidth={400}
           marginHorizontal="auto"
           paddingVertical="$8"
@@ -132,7 +136,7 @@ export default function EmailSignInScreen() {
             </Text>
           </YStack>
 
-          <Card variant="elevated" padding="$4">
+          <Card variant="elevated" padding="$5" width="100%">
             <YStack gap="$4">
               {!showPasswordReset ? (
                 <>
@@ -180,6 +184,16 @@ export default function EmailSignInScreen() {
                       />
                     )}
                   />
+
+                  <Text
+                    color="$blue10"
+                    fontSize="$3"
+                    textAlign="right"
+                    cursor="pointer"
+                    onPress={() => router.push("/(auth)/forgot-password")}
+                  >
+                    {t("auth.forgotPassword")}
+                  </Text>
                 </>
               ) : (
                 <>
@@ -255,16 +269,17 @@ export default function EmailSignInScreen() {
             </YStack>
           </Card>
 
-          <YStack gap="$2" alignItems="center">
-            <Text color="$gray11">
-              {t("auth.noAccount")}{" "}
-              <Link href="/(auth)/email-signup" asChild>
-                <Text color="$blue10" fontWeight="600" cursor="pointer">
-                  {t("auth.signUpNow")}
-                </Text>
-              </Link>
+          <XStack gap="$1" justifyContent="center">
+            <Text color="$gray11">{t("auth.noAccount")}</Text>
+            <Text
+              color="$blue10"
+              fontWeight="600"
+              cursor="pointer"
+              onPress={() => router.push("/(auth)/email-signup")}
+            >
+              {t("auth.signUpNow")}
             </Text>
-          </YStack>
+          </XStack>
         </YStack>
       </ScrollView>
     </Container>

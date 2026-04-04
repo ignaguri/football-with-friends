@@ -4,6 +4,7 @@ import {
   useMutation,
   useQueryClient,
   client,
+  getAdminResetCodes,
 } from "@repo/api-client";
 import {
   Container,
@@ -1304,8 +1305,65 @@ function SettingsTab() {
         >
           {updateMutation.isPending ? t("shared.loading") : t("shared.save")}
         </Button>
+
+        {/* Password Reset Codes */}
+        <ResetCodesSection />
       </YStack>
     </ScrollView>
+  );
+}
+
+function ResetCodesSection() {
+  const { t } = useTranslation();
+  const { data: codes, isLoading, refetch } = useQuery({
+    queryKey: ["admin-reset-codes"],
+    queryFn: getAdminResetCodes,
+    refetchInterval: 30000, // Auto-refresh every 30s
+  });
+
+  return (
+    <Card variant="elevated">
+      <YStack padding="$4" gap="$3">
+        <XStack justifyContent="space-between" alignItems="center">
+          <Text fontSize="$5" fontWeight="600">
+            {t("admin.resetCodes", { defaultValue: "Password Reset Codes" })}
+          </Text>
+          <Button size="$2" variant="outline" onPress={() => refetch()}>
+            {isLoading ? <Spinner size="small" /> : t("shared.refresh", { defaultValue: "Refresh" })}
+          </Button>
+        </XStack>
+
+        {!codes || codes.length === 0 ? (
+          <Text color="$gray11" fontSize="$3">
+            {t("admin.noResetCodes", { defaultValue: "No pending reset codes" })}
+          </Text>
+        ) : (
+          codes.map((item) => (
+            <Card key={item.identifier} variant="elevated" padding="$3">
+              <XStack justifyContent="space-between" alignItems="center">
+                <YStack gap="$1">
+                  <Text fontSize="$3" fontWeight="600">
+                    {item.identifier}
+                  </Text>
+                  <Text fontSize="$2" color="$gray11">
+                    {t("admin.expiresAt", { defaultValue: "Expires" })}:{" "}
+                    {new Date(item.expiresAt).toLocaleTimeString()}
+                  </Text>
+                </YStack>
+                <Text
+                  fontSize="$7"
+                  fontWeight="bold"
+                  fontFamily="$mono"
+                  letterSpacing={2}
+                >
+                  {item.code}
+                </Text>
+              </XStack>
+            </Card>
+          ))
+        )}
+      </YStack>
+    </Card>
   );
 }
 
