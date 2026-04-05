@@ -164,7 +164,12 @@ function createDynamicFetch() {
       const apiBase = getApiUrl();
       const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
-      const fetchInit: RequestInit = { ...init, credentials: "include" };
+      // Preserve credentials set by plugins (expoClient sets "omit" on native).
+      // Only default to "include" on web for cross-domain cookie auth.
+      const fetchInit: RequestInit = { ...init };
+      if (!init?.credentials) {
+        fetchInit.credentials = Platform.OS === "web" ? "include" : "omit";
+      }
 
       // Inject Bearer token header for authenticated requests (all platforms)
       if (_cachedBearerToken) {
@@ -207,10 +212,12 @@ function createDynamicFetch() {
   }) as typeof fetch;
 }
 
-// Create the Better Auth client with Expo plugin for React Native
-// Use localhost as base URL but override with custom fetch for dynamic resolution
+// Create the Better Auth client with Expo plugin for React Native.
+// baseURL uses getApiUrl() which resolves process.env.EXPO_PUBLIC_API_URL at build
+// time (Metro inlines it). The expoClient plugin reads baseURL directly for the
+// OAuth proxy URL, so it must point to the real API — not localhost.
 export const authClient = createAuthClient({
-  baseURL: LOCALHOST_API,
+  baseURL: getApiUrl(),
   fetchOptions: {
     customFetchImpl: createDynamicFetch(),
   },
@@ -218,9 +225,8 @@ export const authClient = createAuthClient({
     usernameClient(),
     phoneNumberClient(),
     expoClient({
-      scheme: "football-with-friends", // Deep link scheme from app.json
+      scheme: "football-with-friends",
       storagePrefix: "football_auth",
-      // Type assertion needed due to mismatch between async storage and expected sync type
       storage: storage as any,
     }),
   ],

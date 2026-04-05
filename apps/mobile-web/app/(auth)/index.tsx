@@ -1,4 +1,4 @@
-import { getConfiguredApiUrl, signIn } from "@repo/api-client";
+import { getConfiguredApiUrl, signIn, getSession } from "@repo/api-client";
 // @ts-nocheck - Tamagui type recursion workaround
 import {
   Container,
@@ -77,6 +77,10 @@ export default function AuthLandingScreen() {
           router.replace("/(tabs)");
         }
       } else {
+        // Native OAuth: expoClient opens system browser, handles callback via deep link.
+        // signIn.social() resolves after the browser flow — result.data is the initial
+        // redirect response (not user data). The session is established via cookies
+        // stored by the expoClient plugin during the deep link callback.
         const result = await signIn.social({
           provider: "google",
           callbackURL: "/",
@@ -88,12 +92,23 @@ export default function AuthLandingScreen() {
           return;
         }
 
+        // After the browser OAuth flow, the expoClient stores the session cookie
+        // and notifies $sessionSignal. Verify the session is established and navigate.
         if (result.data?.user) {
           router.replace("/(tabs)");
+        } else {
+          // The OAuth redirect flow doesn't return user data directly.
+          // Refetch session — expoClient should have stored cookies via deep link.
+          const session = await getSession();
+          if (session.data?.user) {
+            router.replace("/(tabs)");
+          } else {
+            setIsGoogleLoading(false);
+          }
         }
       }
-    } catch (err) {
-      setServerError(t("auth.googleSignInFailed"));
+    } catch (err: any) {
+      setServerError(err?.message || t("auth.googleSignInFailed"));
       setIsGoogleLoading(false);
     }
     // Note: Don't reset loading state here - BetterAuth will redirect away

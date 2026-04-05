@@ -51,7 +51,8 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.pepegrillo.football-with-friends",
-      "buildNumber": "7",
+      "usesAppleSignIn": true,
+      "buildNumber": "9",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Football with Friends uses your photo library to update your profile picture.",
         "NSCameraUsageDescription": "Football with Friends uses your camera to take a profile photo.",

@@ -45,8 +45,9 @@ function createAuthInstance() {
         "http://localhost:3001",
         // Vercel production
         "https://football-with-friends.vercel.app",
-        // Allow native app deep link callback
+        // Allow native app deep link callback (production + dev client schemes)
         "football-with-friends://",
+        "exp+football-with-friends://",
       ];
 
       // If no request, return static origins (used during initialization)
