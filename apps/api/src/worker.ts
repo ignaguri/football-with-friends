@@ -203,27 +203,13 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
   // Workaround: BetterAuth's expo server plugin should append ?cookie=<session-cookies>
   // to deep link redirects after OAuth callbacks, but the plugin's after hook doesn't see
   // the location header set by thrown redirects (ctx.context.responseHeaders vs response headers).
-  // We manually append the session token and cookie here.
+  // We manually append the cookie here so expoClient's built-in flow can extract it.
   if (path.includes("/callback/")) {
     const location = response.headers.get("location") || "";
     const setCookie = response.headers.get("set-cookie") || "";
-    if (location.startsWith("football-with-friends://") && setCookie) {
+    if (location.startsWith("football-with-friends://") && !location.includes("cookie=") && setCookie) {
       const redirectURL = new URL(location);
-
-      const rawToken = extractSessionToken(setCookie);
-      if (rawToken) {
-        try {
-          redirectURL.searchParams.set("session_token", decodeURIComponent(rawToken));
-        } catch {
-          redirectURL.searchParams.set("session_token", rawToken);
-        }
-      }
-
-      // Also append raw cookie for expoClient compatibility
-      if (!location.includes("cookie=")) {
-        redirectURL.searchParams.set("cookie", setCookie);
-      }
-
+      redirectURL.searchParams.set("cookie", setCookie);
       const newHeaders = new Headers(response.headers);
       newHeaders.set("location", redirectURL.toString());
       return new Response(response.body, {

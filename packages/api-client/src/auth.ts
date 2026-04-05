@@ -1,7 +1,7 @@
 // Auth client for Expo/React Native
 import { createAuthClient } from "better-auth/react";
 import { usernameClient, phoneNumberClient } from "better-auth/client/plugins";
-import { expoClient, getSetCookie } from "@better-auth/expo/client";
+import { expoClient } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
@@ -36,9 +36,7 @@ const storage = {
   },
 };
 
-// Storage keys
 const BEARER_TOKEN_KEY = "football_auth_bearer_token";
-const COOKIE_STORAGE_KEY = "football_auth_cookie";
 let _cachedBearerToken: string | undefined;
 
 /**
@@ -48,18 +46,19 @@ let _cachedBearerToken: string | undefined;
  */
 function cleanStaleCookieData() {
   if (Platform.OS === "web") return;
+  const key = "football_auth_cookie";
   try {
-    const data = storage.getItem(COOKIE_STORAGE_KEY);
+    const data = storage.getItem(key);
     if (!data) return;
     const parsed = JSON.parse(data);
     for (const v of Object.values(parsed)) {
       if (v === null || typeof v !== "object") {
-        storage.setItem(COOKIE_STORAGE_KEY, "{}");
+        storage.setItem(key, "{}");
         return;
       }
     }
   } catch {
-    try { storage.setItem(COOKIE_STORAGE_KEY, "{}"); } catch { /* ignore */ }
+    try { storage.setItem(key, "{}"); } catch { /* ignore */ }
   }
 }
 
@@ -273,91 +272,6 @@ export const {
   getSession,
   $Infer,
 } = authClient;
-
-/**
- * Native Google OAuth sign-in — bypasses expoClient's broken browser handling.
- * Mirrors the pattern from the working oktoberfest/Supabase implementation:
- * 1. POST to get Google auth URL
- * 2. Open browser manually via WebBrowser.openAuthSessionAsync
- * 3. Extract session cookie from the redirect URL
- * 4. Store cookie and notify session signal
- */
-export async function nativeGoogleSignIn(): Promise<{ error: Error | null }> {
-  if (Platform.OS === "web") {
-    return { error: new Error("Use web Google sign-in flow instead") };
-  }
-
-  try {
-    const Linking = require("expo-linking");
-    const WebBrowser = require("expo-web-browser");
-
-    const baseURL = getApiUrl();
-    const callbackURL = Linking.createURL("/");
-
-    // Step 1: Get Google auth URL from the API
-    const response = await fetch(`${baseURL}/api/auth/sign-in/social`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "expo-origin": Linking.createURL("", { scheme: "football-with-friends" }),
-        "x-skip-oauth-proxy": "true",
-      },
-      body: JSON.stringify({
-        provider: "google",
-        callbackURL,
-      }),
-      credentials: "omit",
-    });
-
-    const data = await response.json();
-    if (!data.url || !data.redirect) {
-      return { error: new Error(data.error?.message || "Failed to get Google auth URL") };
-    }
-
-    // Step 2: Build proxy URL and open browser manually
-    const proxyURL = `${baseURL}/api/auth/expo-authorization-proxy?authorizationURL=${encodeURIComponent(data.url)}`;
-    const result = await WebBrowser.openAuthSessionAsync(proxyURL, callbackURL, {
-      showInRecents: true,
-    });
-
-    if (result.type !== "success") {
-      if (result.type === "cancel") {
-        return { error: new Error("Authentication was cancelled") };
-      }
-      return { error: new Error("Authentication failed") };
-    }
-
-    // Step 3: Extract session data from redirect URL (appended by server workaround)
-    const redirectURL = new URL(result.url);
-
-    // Prefer bearer token (same proven pattern as phone auth)
-    const sessionToken = redirectURL.searchParams.get("session_token");
-    if (sessionToken) {
-      await storeBearerToken(sessionToken);
-      authClient.$store.notify("$sessionSignal");
-      return { error: null };
-    }
-
-    // Fallback: extract cookie for expoClient (now works with sync storage)
-    const cookie = redirectURL.searchParams.get("cookie");
-    if (cookie) {
-      const prevCookie = storage.getItem(COOKIE_STORAGE_KEY);
-      try {
-        const toSetCookie = getSetCookie(cookie, prevCookie ?? undefined);
-        storage.setItem(COOKIE_STORAGE_KEY, toSetCookie);
-      } catch {
-        storage.setItem(COOKIE_STORAGE_KEY, "{}");
-      }
-      authClient.$store.notify("$sessionSignal");
-    }
-
-    return { error: null };
-  } catch (err) {
-    return {
-      error: err instanceof Error ? err : new Error("Google sign-in failed"),
-    };
-  }
-}
 
 // Phone authentication helpers
 export interface PhoneSignUpData {

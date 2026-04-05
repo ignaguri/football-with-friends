@@ -1,4 +1,4 @@
-import { getConfiguredApiUrl, signIn, getSession, nativeGoogleSignIn } from "@repo/api-client";
+import { getConfiguredApiUrl, signIn, getSession } from "@repo/api-client";
 // @ts-nocheck - Tamagui type recursion workaround
 import {
   Container,
@@ -82,20 +82,22 @@ export default function AuthLandingScreen() {
           router.replace("/(tabs)");
         }
       } else {
-        // Native OAuth: manually handle the browser flow (same pattern as oktoberfest app).
-        // The expoClient plugin's internal browser handling is broken — its server-side
-        // after hook doesn't append ?cookie= to the deep link redirect.
-        const { error } = await nativeGoogleSignIn();
+        // Native OAuth: expoClient handles the browser flow, cookie extraction,
+        // and session signal notification. We just need to call signIn.social()
+        // and then check the session.
+        const result = await signIn.social({
+          provider: "google",
+          callbackURL: "/",
+        });
 
-        if (error) {
-          if (error.message !== "Authentication was cancelled") {
-            setServerError(error.message || t("auth.googleSignInFailed"));
-          }
+        if (result.error) {
+          setServerError(result.error.message || t("auth.googleSignInFailed"));
           setIsGoogleLoading(false);
           return;
         }
 
-        // Session cookie stored by nativeGoogleSignIn, verify and navigate
+        // expoClient's onSuccess hook stores the cookie and notifies $sessionSignal.
+        // Verify session was established and navigate.
         const session = await getSession();
         if (session.data?.user) {
           router.replace("/(tabs)");
