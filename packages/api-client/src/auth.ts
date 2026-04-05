@@ -18,27 +18,50 @@ const storage = {
       // so this is only called for bearer token loading which handles async separately.
       return null;
     }
-    return SecureStore.getItem(key); // sync (calls getValueWithKeySync)
+    return SecureStore.getItem(key);
   },
   setItem(key: string, value: string): void {
     if (Platform.OS === "web") {
-      AsyncStorage.setItem(key, value); // fire-and-forget on web
+      AsyncStorage.setItem(key, value);
       return;
     }
-    SecureStore.setItem(key, value); // sync (calls setValueWithKeySync)
+    SecureStore.setItem(key, value);
   },
   async deleteItem(key: string): Promise<void> {
     if (Platform.OS === "web") {
       await AsyncStorage.removeItem(key);
     } else {
-      await SecureStore.deleteItemAsync(key); // no sync version exists
+      await SecureStore.deleteItemAsync(key);
     }
   },
 };
 
-// Bearer token management (all platforms - uses SecureStore on native, AsyncStorage on web)
+// Storage keys
 const BEARER_TOKEN_KEY = "football_auth_bearer_token";
+const COOKIE_STORAGE_KEY = "football_auth_cookie";
 let _cachedBearerToken: string | undefined;
+
+/**
+ * Clear corrupted cookie data left by the old async storage adapter.
+ * The old adapter returned Promises from getItem, which got stringified
+ * and later crash getCookie() with "Cannot read property 'expires' of null".
+ */
+function cleanStaleCookieData() {
+  if (Platform.OS === "web") return;
+  try {
+    const data = storage.getItem(COOKIE_STORAGE_KEY);
+    if (!data) return;
+    const parsed = JSON.parse(data);
+    for (const v of Object.values(parsed)) {
+      if (v === null || typeof v !== "object") {
+        storage.setItem(COOKIE_STORAGE_KEY, "{}");
+        return;
+      }
+    }
+  } catch {
+    try { storage.setItem(COOKIE_STORAGE_KEY, "{}"); } catch { /* ignore */ }
+  }
+}
 
 // Promise that resolves when the initial bearer token load completes.
 // The custom fetch awaits this before the first request to avoid a race condition
@@ -53,25 +76,7 @@ const _tokenLoadPromise: Promise<void> = Promise.resolve().then(() => {
     // Ignore storage errors on init
   }
 
-  // Clean up stale/corrupted cookie data from previous async storage adapter.
-  // The old adapter stored Promise objects as strings, which causes getCookie()
-  // to crash with "Cannot read property 'expires' of null".
-  if (Platform.OS !== "web") {
-    try {
-      const cookieData = storage.getItem("football_auth_cookie");
-      if (cookieData) {
-        const parsed = JSON.parse(cookieData);
-        for (const v of Object.values(parsed)) {
-          if (v === null || typeof v !== "object") {
-            storage.setItem("football_auth_cookie", "{}");
-            break;
-          }
-        }
-      }
-    } catch {
-      try { storage.setItem("football_auth_cookie", "{}"); } catch { /* ignore */ }
-    }
-  }
+  cleanStaleCookieData();
 });
 
 /**
@@ -325,24 +330,6 @@ export async function nativeGoogleSignIn(): Promise<{ error: Error | null }> {
     // Step 3: Extract session data from redirect URL (appended by server workaround)
     const redirectURL = new URL(result.url);
 
-    // Clear any stale/corrupted cookie data from previous attempts
-    // (old async storage adapter stored Promise objects instead of strings)
-    try {
-      const stale = storage.getItem("football_auth_cookie");
-      if (stale) {
-        const parsed = JSON.parse(stale);
-        // Validate structure: every value should be an object with {value, expires}
-        for (const v of Object.values(parsed)) {
-          if (v === null || typeof v !== "object") {
-            storage.setItem("football_auth_cookie", "{}");
-            break;
-          }
-        }
-      }
-    } catch {
-      storage.setItem("football_auth_cookie", "{}");
-    }
-
     // Prefer bearer token (same proven pattern as phone auth)
     const sessionToken = redirectURL.searchParams.get("session_token");
     if (sessionToken) {
@@ -354,14 +341,12 @@ export async function nativeGoogleSignIn(): Promise<{ error: Error | null }> {
     // Fallback: extract cookie for expoClient (now works with sync storage)
     const cookie = redirectURL.searchParams.get("cookie");
     if (cookie) {
-      const cookieName = "football_auth_cookie";
-      const prevCookie = storage.getItem(cookieName);
+      const prevCookie = storage.getItem(COOKIE_STORAGE_KEY);
       try {
         const toSetCookie = getSetCookie(cookie, prevCookie ?? undefined);
-        storage.setItem(cookieName, toSetCookie);
+        storage.setItem(COOKIE_STORAGE_KEY, toSetCookie);
       } catch {
-        // If cookie parsing fails, store empty and rely on bearer token
-        storage.setItem(cookieName, "{}");
+        storage.setItem(COOKIE_STORAGE_KEY, "{}");
       }
       authClient.$store.notify("$sessionSignal");
     }
