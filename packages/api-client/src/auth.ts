@@ -207,9 +207,10 @@ function createDynamicFetch() {
   }) as typeof fetch;
 }
 
-// Create the Better Auth client with Expo plugin for React Native
-// baseURL must resolve to the real API URL (not localhost) because the expoClient
-// plugin uses it directly for the OAuth proxy URL, bypassing createDynamicFetch.
+// Create the Better Auth client with Expo plugin for React Native.
+// baseURL uses getApiUrl() which resolves process.env.EXPO_PUBLIC_API_URL at build
+// time (Metro inlines it). The expoClient plugin reads baseURL directly for the
+// OAuth proxy URL, so it must point to the real API — not localhost.
 export const authClient = createAuthClient({
   baseURL: getApiUrl(),
   fetchOptions: {
@@ -219,9 +220,8 @@ export const authClient = createAuthClient({
     usernameClient(),
     phoneNumberClient(),
     expoClient({
-      scheme: "football-with-friends", // Deep link scheme from app.json
+      scheme: "football-with-friends",
       storagePrefix: "football_auth",
-      // Type assertion needed due to mismatch between async storage and expected sync type
       storage: storage as any,
     }),
   ],
