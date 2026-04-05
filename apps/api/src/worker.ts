@@ -27,6 +27,9 @@ export type Bindings = {
   // Google OAuth
   NEXT_PUBLIC_GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  // Apple Sign In (optional)
+  APPLE_CLIENT_ID?: string;
+  APPLE_CLIENT_SECRET?: string;
   // CORS
   ALLOWED_ORIGINS?: string;
   TRUSTED_ORIGINS?: string;
@@ -58,6 +61,8 @@ app.use("*", async (c, next) => {
     BETTER_AUTH_BASE_URL: env.BETTER_AUTH_BASE_URL,
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+    APPLE_CLIENT_ID: env.APPLE_CLIENT_ID,
+    APPLE_CLIENT_SECRET: env.APPLE_CLIENT_SECRET,
     ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,
     TRUSTED_ORIGINS: env.TRUSTED_ORIGINS,
     NODE_ENV: env.NODE_ENV || "production",
@@ -195,13 +200,30 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
   // Workaround: BetterAuth's expo server plugin should append ?cookie=<session-cookies>
   // to deep link redirects after OAuth callbacks, but the plugin's after hook doesn't see
   // the location header set by thrown redirects (ctx.context.responseHeaders vs response headers).
-  // We manually append the cookie here if the plugin didn't.
+  // We manually append the session token and cookie here.
   if (path.includes("/callback/")) {
     const location = response.headers.get("location") || "";
     const setCookie = response.headers.get("set-cookie") || "";
-    if (location.startsWith("football-with-friends://") && !location.includes("cookie=") && setCookie) {
+    if (location.startsWith("football-with-friends://") && setCookie) {
       const redirectURL = new URL(location);
-      redirectURL.searchParams.set("cookie", setCookie);
+
+      // Extract session token from Set-Cookie (same pattern as web-callback)
+      const tokenMatch =
+        setCookie.match(/__Secure-better-auth\.session_token=([^;]+)/) ||
+        setCookie.match(/better-auth\.session_token=([^;]+)/);
+      if (tokenMatch?.[1]) {
+        try {
+          redirectURL.searchParams.set("session_token", decodeURIComponent(tokenMatch[1]));
+        } catch {
+          redirectURL.searchParams.set("session_token", tokenMatch[1]);
+        }
+      }
+
+      // Also append raw cookie for expoClient compatibility
+      if (!location.includes("cookie=")) {
+        redirectURL.searchParams.set("cookie", setCookie);
+      }
+
       const newHeaders = new Headers(response.headers);
       newHeaders.set("location", redirectURL.toString());
       return new Response(response.body, {
@@ -256,6 +278,8 @@ function injectCronEnv(env: Bindings) {
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+    APPLE_CLIENT_ID: env.APPLE_CLIENT_ID,
+    APPLE_CLIENT_SECRET: env.APPLE_CLIENT_SECRET,
     DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
     STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
     NODE_ENV: env.NODE_ENV || "production",

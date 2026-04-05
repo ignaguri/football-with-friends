@@ -140,8 +140,11 @@ export default function AuthLandingScreen() {
         router.replace("/(tabs)");
       }
     } catch (err: any) {
+      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message, err);
       if (err?.code !== "ERR_REQUEST_CANCELED") {
-        setServerError(t("auth.appleSignInFailed"));
+        // Surface specific error message if available (e.g., "Provider not found")
+        const message = err?.message || t("auth.appleSignInFailed");
+        setServerError(message);
       }
     }
   };

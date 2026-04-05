@@ -1,32 +1,37 @@
 // Auth client for Expo/React Native
 import { createAuthClient } from "better-auth/react";
 import { usernameClient, phoneNumberClient } from "better-auth/client/plugins";
-import { expoClient } from "@better-auth/expo/client";
+import { expoClient, getSetCookie } from "@better-auth/expo/client";
 import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
-// Storage adapter that works on both web (AsyncStorage) and native (SecureStore)
-// SecureStore doesn't work on web, so we need to use AsyncStorage there
+// Storage adapter that works on both web (AsyncStorage) and native (SecureStore).
+// IMPORTANT: getItem and setItem MUST be synchronous on native because the
+// expoClient plugin calls them without await (e.g. getCookie(storage.getItem(key))).
+// Using async here causes getItem to return a Promise (truthy), which silently
+// breaks cookie injection — getCookie(Promise) parses as empty object.
 const storage = {
-  async getItem(key: string): Promise<string | null> {
+  getItem(key: string): string | null {
     if (Platform.OS === "web") {
-      return AsyncStorage.getItem(key);
+      // expoClient skips cookie injection on web (has `if (isWeb) return` checks),
+      // so this is only called for bearer token loading which handles async separately.
+      return null;
     }
-    return SecureStore.getItemAsync(key);
+    return SecureStore.getItem(key); // sync (calls getValueWithKeySync)
   },
-  async setItem(key: string, value: string): Promise<void> {
+  setItem(key: string, value: string): void {
     if (Platform.OS === "web") {
-      await AsyncStorage.setItem(key, value);
-    } else {
-      await SecureStore.setItemAsync(key, value);
+      AsyncStorage.setItem(key, value); // fire-and-forget on web
+      return;
     }
+    SecureStore.setItem(key, value); // sync (calls setValueWithKeySync)
   },
   async deleteItem(key: string): Promise<void> {
     if (Platform.OS === "web") {
       await AsyncStorage.removeItem(key);
     } else {
-      await SecureStore.deleteItemAsync(key);
+      await SecureStore.deleteItemAsync(key); // no sync version exists
     }
   },
 };
@@ -38,14 +43,36 @@ let _cachedBearerToken: string | undefined;
 // Promise that resolves when the initial bearer token load completes.
 // The custom fetch awaits this before the first request to avoid a race condition
 // where useSession() fires getSession() before the token is loaded from storage.
-const _tokenLoadPromise: Promise<void> = storage
-  .getItem(BEARER_TOKEN_KEY)
-  .then((token) => {
+// storage.getItem is now sync on native, but we keep the Promise wrapper so
+// createDynamicFetch() can still `await _tokenLoadPromise` uniformly.
+const _tokenLoadPromise: Promise<void> = Promise.resolve().then(() => {
+  try {
+    const token = storage.getItem(BEARER_TOKEN_KEY);
     if (token) _cachedBearerToken = token;
-  })
-  .catch(() => {
+  } catch {
     // Ignore storage errors on init
-  });
+  }
+
+  // Clean up stale/corrupted cookie data from previous async storage adapter.
+  // The old adapter stored Promise objects as strings, which causes getCookie()
+  // to crash with "Cannot read property 'expires' of null".
+  if (Platform.OS !== "web") {
+    try {
+      const cookieData = storage.getItem("football_auth_cookie");
+      if (cookieData) {
+        const parsed = JSON.parse(cookieData);
+        for (const v of Object.values(parsed)) {
+          if (v === null || typeof v !== "object") {
+            storage.setItem("football_auth_cookie", "{}");
+            break;
+          }
+        }
+      }
+    } catch {
+      try { storage.setItem("football_auth_cookie", "{}"); } catch { /* ignore */ }
+    }
+  }
+});
 
 /**
  * Store a bearer token for authentication.
@@ -199,7 +226,7 @@ function createDynamicFetch() {
           // verification, and avoids URL-encoding issues across platforms.
           const tokenPart = newToken.split(".")[0] || newToken;
           _cachedBearerToken = tokenPart;
-          storage.setItem(BEARER_TOKEN_KEY, tokenPart).catch(console.error);
+          try { storage.setItem(BEARER_TOKEN_KEY, tokenPart); } catch { /* ignore */ }
         }
         // Clear token when signing out
         if (finalUrl.includes("/sign-out")) {
@@ -295,18 +322,47 @@ export async function nativeGoogleSignIn(): Promise<{ error: Error | null }> {
       return { error: new Error("Authentication failed") };
     }
 
-    // Step 3: Extract cookie from redirect URL (appended by server workaround)
+    // Step 3: Extract session data from redirect URL (appended by server workaround)
     const redirectURL = new URL(result.url);
-    const cookie = redirectURL.searchParams.get("cookie");
 
+    // Clear any stale/corrupted cookie data from previous attempts
+    // (old async storage adapter stored Promise objects instead of strings)
+    try {
+      const stale = storage.getItem("football_auth_cookie");
+      if (stale) {
+        const parsed = JSON.parse(stale);
+        // Validate structure: every value should be an object with {value, expires}
+        for (const v of Object.values(parsed)) {
+          if (v === null || typeof v !== "object") {
+            storage.setItem("football_auth_cookie", "{}");
+            break;
+          }
+        }
+      }
+    } catch {
+      storage.setItem("football_auth_cookie", "{}");
+    }
+
+    // Prefer bearer token (same proven pattern as phone auth)
+    const sessionToken = redirectURL.searchParams.get("session_token");
+    if (sessionToken) {
+      await storeBearerToken(sessionToken);
+      authClient.$store.notify("$sessionSignal");
+      return { error: null };
+    }
+
+    // Fallback: extract cookie for expoClient (now works with sync storage)
+    const cookie = redirectURL.searchParams.get("cookie");
     if (cookie) {
-      // Store cookie in the expoClient's storage so useSession() picks it up
       const cookieName = "football_auth_cookie";
-      const { getSetCookie } = require("@better-auth/expo/client");
-      const prevCookie = await storage.getItem(cookieName);
-      const toSetCookie = getSetCookie(cookie, prevCookie ?? undefined);
-      await storage.setItem(cookieName, toSetCookie);
-      // Notify the session signal to trigger useSession() refetch
+      const prevCookie = storage.getItem(cookieName);
+      try {
+        const toSetCookie = getSetCookie(cookie, prevCookie ?? undefined);
+        storage.setItem(cookieName, toSetCookie);
+      } catch {
+        // If cookie parsing fails, store empty and rely on bearer token
+        storage.setItem(cookieName, "{}");
+      }
       authClient.$store.notify("$sessionSignal");
     }
 

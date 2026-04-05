@@ -224,7 +224,7 @@ function generateResetCode(): string {
   const array = new Uint8Array(6);
   crypto.getRandomValues(array);
   for (let i = 0; i < 6; i++) {
-    code += digits[array[i] % 10];
+    code += digits[array[i]! % 10];
   }
   return code;
 }
