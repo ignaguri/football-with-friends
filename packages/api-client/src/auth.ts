@@ -164,7 +164,12 @@ function createDynamicFetch() {
       const apiBase = getApiUrl();
       const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
-      const fetchInit: RequestInit = { ...init, credentials: "include" };
+      // Preserve credentials set by plugins (expoClient sets "omit" on native).
+      // Only default to "include" on web for cross-domain cookie auth.
+      const fetchInit: RequestInit = { ...init };
+      if (!init?.credentials) {
+        fetchInit.credentials = Platform.OS === "web" ? "include" : "omit";
+      }
 
       // Inject Bearer token header for authenticated requests (all platforms)
       if (_cachedBearerToken) {
