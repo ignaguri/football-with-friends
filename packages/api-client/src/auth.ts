@@ -242,6 +242,82 @@ export const {
   $Infer,
 } = authClient;
 
+/**
+ * Native Google OAuth sign-in — bypasses expoClient's broken browser handling.
+ * Mirrors the pattern from the working oktoberfest/Supabase implementation:
+ * 1. POST to get Google auth URL
+ * 2. Open browser manually via WebBrowser.openAuthSessionAsync
+ * 3. Extract session cookie from the redirect URL
+ * 4. Store cookie and notify session signal
+ */
+export async function nativeGoogleSignIn(): Promise<{ error: Error | null }> {
+  if (Platform.OS === "web") {
+    return { error: new Error("Use web Google sign-in flow instead") };
+  }
+
+  try {
+    const Linking = require("expo-linking");
+    const WebBrowser = require("expo-web-browser");
+
+    const baseURL = getApiUrl();
+    const callbackURL = Linking.createURL("/");
+
+    // Step 1: Get Google auth URL from the API
+    const response = await fetch(`${baseURL}/api/auth/sign-in/social`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "expo-origin": Linking.createURL("", { scheme: "football-with-friends" }),
+        "x-skip-oauth-proxy": "true",
+      },
+      body: JSON.stringify({
+        provider: "google",
+        callbackURL,
+      }),
+      credentials: "omit",
+    });
+
+    const data = await response.json();
+    if (!data.url || !data.redirect) {
+      return { error: new Error(data.error?.message || "Failed to get Google auth URL") };
+    }
+
+    // Step 2: Build proxy URL and open browser manually
+    const proxyURL = `${baseURL}/api/auth/expo-authorization-proxy?authorizationURL=${encodeURIComponent(data.url)}`;
+    const result = await WebBrowser.openAuthSessionAsync(proxyURL, callbackURL, {
+      showInRecents: true,
+    });
+
+    if (result.type !== "success") {
+      if (result.type === "cancel") {
+        return { error: new Error("Authentication was cancelled") };
+      }
+      return { error: new Error("Authentication failed") };
+    }
+
+    // Step 3: Extract cookie from redirect URL (appended by server workaround)
+    const redirectURL = new URL(result.url);
+    const cookie = redirectURL.searchParams.get("cookie");
+
+    if (cookie) {
+      // Store cookie in the expoClient's storage so useSession() picks it up
+      const cookieName = "football_auth_cookie";
+      const { getSetCookie } = require("@better-auth/expo/client");
+      const prevCookie = await storage.getItem(cookieName);
+      const toSetCookie = getSetCookie(cookie, prevCookie ?? undefined);
+      await storage.setItem(cookieName, toSetCookie);
+      // Notify the session signal to trigger useSession() refetch
+      authClient.$store.notify("$sessionSignal");
+    }
+
+    return { error: null };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err : new Error("Google sign-in failed"),
+    };
+  }
+}
+
 // Phone authentication helpers
 export interface PhoneSignUpData {
   phoneNumber: string;

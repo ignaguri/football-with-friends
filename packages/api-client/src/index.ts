@@ -35,6 +35,7 @@ export {
   requestPasswordReset,
   resetPasswordWithCode,
   getAdminResetCodes,
+  nativeGoogleSignIn,
 } from "./auth";
 export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 

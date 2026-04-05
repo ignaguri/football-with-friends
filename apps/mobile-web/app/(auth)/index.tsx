@@ -1,4 +1,4 @@
-import { getConfiguredApiUrl, signIn, getSession } from "@repo/api-client";
+import { getConfiguredApiUrl, signIn, getSession, nativeGoogleSignIn } from "@repo/api-client";
 // @ts-nocheck - Tamagui type recursion workaround
 import {
   Container,
@@ -82,34 +82,25 @@ export default function AuthLandingScreen() {
           router.replace("/(tabs)");
         }
       } else {
-        // Native OAuth: expoClient opens system browser, handles callback via deep link.
-        // signIn.social() resolves after the browser flow — result.data is the initial
-        // redirect response (not user data). The session is established via cookies
-        // stored by the expoClient plugin during the deep link callback.
-        const result = await signIn.social({
-          provider: "google",
-          callbackURL: "/",
-        });
+        // Native OAuth: manually handle the browser flow (same pattern as oktoberfest app).
+        // The expoClient plugin's internal browser handling is broken — its server-side
+        // after hook doesn't append ?cookie= to the deep link redirect.
+        const { error } = await nativeGoogleSignIn();
 
-        if (result.error) {
-          setServerError(result.error.message || t("auth.googleSignInFailed"));
+        if (error) {
+          if (error.message !== "Authentication was cancelled") {
+            setServerError(error.message || t("auth.googleSignInFailed"));
+          }
           setIsGoogleLoading(false);
           return;
         }
 
-        // After the browser OAuth flow, the expoClient stores the session cookie
-        // and notifies $sessionSignal. Verify the session is established and navigate.
-        if (result.data?.user) {
+        // Session cookie stored by nativeGoogleSignIn, verify and navigate
+        const session = await getSession();
+        if (session.data?.user) {
           router.replace("/(tabs)");
         } else {
-          // The OAuth redirect flow doesn't return user data directly.
-          // Refetch session — expoClient should have stored cookies via deep link.
-          const session = await getSession();
-          if (session.data?.user) {
-            router.replace("/(tabs)");
-          } else {
-            setIsGoogleLoading(false);
-          }
+          setIsGoogleLoading(false);
         }
       }
     } catch (err: any) {
