@@ -28,9 +28,14 @@ export default function AuthLandingScreen() {
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
 
   useEffect(() => {
-    // Only check on physical devices — simulators return true but render the button invisibly
-    if (!Device.isDevice) return;
-    AppleAuthentication.isAvailableAsync().then(setIsAppleAvailable).catch(() => {});
+    AppleAuthentication.isAvailableAsync()
+      .then((available) => {
+        console.log("[AUTH] Apple Sign-In available:", available);
+        setIsAppleAvailable(available);
+      })
+      .catch((err) => {
+        console.log("[AUTH] Apple Sign-In check failed:", err?.message);
+      });
   }, []);
 
   // Detect dark mode for Google button styling

@@ -189,7 +189,28 @@ app.get("/api/auth/web-callback", async (c) => {
 // Wrap to filter cookies and avoid expo client infinite refetch bug
 // See: https://github.com/better-auth/better-auth/issues/4744
 app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const path = new URL(c.req.url).pathname;
   const response = await auth.handler(c.req.raw);
+
+  // Workaround: BetterAuth's expo server plugin should append ?cookie=<session-cookies>
+  // to deep link redirects after OAuth callbacks, but the plugin's after hook doesn't see
+  // the location header set by thrown redirects (ctx.context.responseHeaders vs response headers).
+  // We manually append the cookie here if the plugin didn't.
+  if (path.includes("/callback/")) {
+    const location = response.headers.get("location") || "";
+    const setCookie = response.headers.get("set-cookie") || "";
+    if (location.startsWith("football-with-friends://") && !location.includes("cookie=") && setCookie) {
+      const redirectURL = new URL(location);
+      redirectURL.searchParams.set("cookie", setCookie);
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set("location", redirectURL.toString());
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      });
+    }
+  }
 
   // Filter Set-Cookie headers to only include better-auth cookies
   const setCookieHeader = response.headers.get("set-cookie");
