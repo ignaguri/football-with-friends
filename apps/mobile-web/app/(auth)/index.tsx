@@ -1,4 +1,5 @@
-import { getConfiguredApiUrl, signIn, getSession } from "@repo/api-client";
+import { getConfiguredApiUrl, signIn, getSession, storeBearerToken } from "@repo/api-client";
+import * as Sentry from "@sentry/react-native";
 // @ts-nocheck - Tamagui type recursion workaround
 import {
   Container,
@@ -97,6 +98,11 @@ export default function AuthLandingScreen() {
         // Verify session was established and navigate.
         const session = await getSession();
         if (session.data?.user) {
+          // Store the session token as bearer token for the general API client.
+          // OAuth flows use cookies (expoClient), but client.ts uses bearer tokens.
+          if (session.data.session?.token) {
+            await storeBearerToken(session.data.session.token);
+          }
           router.replace("/(tabs)");
         } else {
           setIsGoogleLoading(false);
@@ -112,6 +118,8 @@ export default function AuthLandingScreen() {
   const handleAppleSignIn = async () => {
     setServerError(null);
     try {
+      Sentry.addBreadcrumb({ category: "apple-auth", message: "Starting Apple sign-in", level: "info" });
+
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -119,9 +127,24 @@ export default function AuthLandingScreen() {
         ],
       });
 
+      Sentry.addBreadcrumb({
+        category: "apple-auth",
+        message: "Got Apple credential",
+        level: "info",
+        data: {
+          hasIdentityToken: !!credential.identityToken,
+          hasAuthorizationCode: !!credential.authorizationCode,
+          hasFullName: !!credential.fullName,
+          hasEmail: !!credential.email,
+          user: credential.user?.slice(0, 8),
+        },
+      });
+
       if (!credential.identityToken) {
         throw new Error("No identity token received from Apple");
       }
+
+      Sentry.addBreadcrumb({ category: "apple-auth", message: "Calling signIn.social(apple)", level: "info" });
 
       const result = await signIn.social({
         provider: "apple",
@@ -130,18 +153,49 @@ export default function AuthLandingScreen() {
         },
       });
 
+      Sentry.addBreadcrumb({
+        category: "apple-auth",
+        message: "signIn.social result",
+        level: "info",
+        data: {
+          hasError: !!result.error,
+          errorMessage: result.error?.message,
+          hasData: !!result.data,
+          hasUser: !!result.data?.user,
+          dataKeys: result.data ? Object.keys(result.data) : [],
+        },
+      });
+
       if (result.error) {
+        Sentry.captureMessage("Apple Sign-In: signIn.social returned error", {
+          level: "error",
+          extra: { error: result.error },
+        });
         setServerError(result.error.message || t("auth.appleSignInFailed"));
         return;
       }
 
       if (result.data?.user) {
+        // Store the session token as bearer token for the general API client.
+        const session = await getSession();
+        if (session.data?.session?.token) {
+          await storeBearerToken(session.data.session.token);
+        }
+        Sentry.addBreadcrumb({ category: "apple-auth", message: "Sign-in successful, navigating", level: "info" });
         router.replace("/(tabs)");
+      } else {
+        Sentry.captureMessage("Apple Sign-In: no user in result.data", {
+          level: "warning",
+          extra: { resultData: result.data },
+        });
       }
     } catch (err: any) {
       console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message, err);
       if (err?.code !== "ERR_REQUEST_CANCELED") {
-        // Surface specific error message if available (e.g., "Provider not found")
+        Sentry.captureException(err, {
+          tags: { source: "apple-sign-in" },
+          extra: { code: err?.code, message: err?.message },
+        });
         const message = err?.message || t("auth.appleSignInFailed");
         setServerError(message);
       }

@@ -67,7 +67,7 @@ function cleanStaleCookieData() {
 // where useSession() fires getSession() before the token is loaded from storage.
 // storage.getItem is now sync on native, but we keep the Promise wrapper so
 // createDynamicFetch() can still `await _tokenLoadPromise` uniformly.
-const _tokenLoadPromise: Promise<void> = Promise.resolve().then(() => {
+export const _tokenLoadPromise: Promise<void> = Promise.resolve().then(() => {
   try {
     const token = storage.getItem(BEARER_TOKEN_KEY);
     if (token) _cachedBearerToken = token;
