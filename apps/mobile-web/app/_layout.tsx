@@ -19,18 +19,25 @@ import { useNavigationContainerRef } from "expo-router";
 import { isRunningInExpoGo } from "expo";
 
 // Sentry must be initialized at module scope, before any component renders
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+const sentryEnabled = !!sentryDsn;
+console.log("[SENTRY INIT] DSN:", sentryDsn ? `${sentryDsn.slice(0, 30)}...` : "MISSING");
+console.log("[SENTRY INIT] enabled:", sentryEnabled);
+console.log("[SENTRY INIT] environment:", process.env.EXPO_PUBLIC_ENV || "development");
+
 const navigationIntegration = Sentry.reactNavigationIntegration({
   enableTimeToInitialDisplay: !isRunningInExpoGo(),
 });
 
 Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  dsn: sentryDsn,
   tracesSampleRate: 0.2,
   sampleRate: 1.0,
   enableNativeFramesTracking: !isRunningInExpoGo(),
   integrations: [navigationIntegration],
   environment: process.env.EXPO_PUBLIC_ENV || "development",
-  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: sentryEnabled,
+  debug: true, // Temporary: logs Sentry SDK activity to console
 });
 
 import {

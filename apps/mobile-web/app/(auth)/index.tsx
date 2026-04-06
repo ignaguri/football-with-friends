@@ -225,9 +225,20 @@ export default function AuthLandingScreen() {
   };
 
   const handleTestSentry = () => {
-    addLog("Sending test event to Sentry...");
-    Sentry.captureMessage("Test event from auth screen", { level: "info" });
-    addLog("Sent! Check Sentry dashboard.");
+    const dsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+    addLog(`DSN: ${dsn ? dsn.slice(0, 30) + "..." : "MISSING!"}`);
+    addLog(`ENV: ${process.env.EXPO_PUBLIC_ENV || "not set"}`);
+    addLog(`Client enabled: ${Sentry.isInitialized?.() ?? "isInitialized N/A"}`);
+    addLog("Sending test event...");
+    const eventId = Sentry.captureMessage("Test event from auth screen", { level: "error" });
+    addLog(`captureMessage returned eventId: ${eventId || "null"}`);
+    // Also try captureException to see if that path works
+    try {
+      throw new Error("Sentry test exception");
+    } catch (e) {
+      const exId = Sentry.captureException(e);
+      addLog(`captureException returned eventId: ${exId || "null"}`);
+    }
   };
 
   return (
