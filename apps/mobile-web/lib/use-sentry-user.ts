@@ -16,5 +16,5 @@ export function useSentryUser() {
     } else {
       Sentry.setUser(null);
     }
-  }, [session?.user?.id, session?.user?.email, session?.user?.role]);
+  }, [session?.user?.id, session?.user?.email, session?.user?.name, session?.user?.role]);
 }

@@ -1,7 +1,7 @@
 const { getSentryExpoConfig } = require("@sentry/react-native/metro");
 const path = require("path");
 
-// Get the project root (monorepo root)
+// Get the app root (apps/mobile-web); the monorepo root is workspaceRoot
 const projectRoot = __dirname;
 const workspaceRoot = path.resolve(projectRoot, "../..");
 

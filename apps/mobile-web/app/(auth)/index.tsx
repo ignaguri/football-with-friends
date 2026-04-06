@@ -30,7 +30,9 @@ export default function AuthLandingScreen() {
   useEffect(() => {
     AppleAuthentication.isAvailableAsync()
       .then((available) => setIsAppleAvailable(available))
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("[AUTH] Apple availability check failed:", err);
+      });
   }, []);
 
   // Detect dark mode for Google button styling
