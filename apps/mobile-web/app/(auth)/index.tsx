@@ -1,4 +1,4 @@
-import { getConfiguredApiUrl, signIn } from "@repo/api-client";
+import { getConfiguredApiUrl, signIn, getSession } from "@repo/api-client";
 // @ts-nocheck - Tamagui type recursion workaround
 import {
   Container,
@@ -28,9 +28,14 @@ export default function AuthLandingScreen() {
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
 
   useEffect(() => {
-    // Only check on physical devices — simulators return true but render the button invisibly
-    if (!Device.isDevice) return;
-    AppleAuthentication.isAvailableAsync().then(setIsAppleAvailable).catch(() => {});
+    AppleAuthentication.isAvailableAsync()
+      .then((available) => {
+        console.log("[AUTH] Apple Sign-In available:", available);
+        setIsAppleAvailable(available);
+      })
+      .catch((err) => {
+        console.log("[AUTH] Apple Sign-In check failed:", err?.message);
+      });
   }, []);
 
   // Detect dark mode for Google button styling
@@ -77,6 +82,9 @@ export default function AuthLandingScreen() {
           router.replace("/(tabs)");
         }
       } else {
+        // Native OAuth: expoClient handles the browser flow, cookie extraction,
+        // and session signal notification. We just need to call signIn.social()
+        // and then check the session.
         const result = await signIn.social({
           provider: "google",
           callbackURL: "/",
@@ -88,12 +96,17 @@ export default function AuthLandingScreen() {
           return;
         }
 
-        if (result.data?.user) {
+        // expoClient's onSuccess hook stores the cookie and notifies $sessionSignal.
+        // Verify session was established and navigate.
+        const session = await getSession();
+        if (session.data?.user) {
           router.replace("/(tabs)");
+        } else {
+          setIsGoogleLoading(false);
         }
       }
-    } catch (err) {
-      setServerError(t("auth.googleSignInFailed"));
+    } catch (err: any) {
+      setServerError(err?.message || t("auth.googleSignInFailed"));
       setIsGoogleLoading(false);
     }
     // Note: Don't reset loading state here - BetterAuth will redirect away
@@ -129,8 +142,11 @@ export default function AuthLandingScreen() {
         router.replace("/(tabs)");
       }
     } catch (err: any) {
+      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message, err);
       if (err?.code !== "ERR_REQUEST_CANCELED") {
-        setServerError(t("auth.appleSignInFailed"));
+        // Surface specific error message if available (e.g., "Provider not found")
+        const message = err?.message || t("auth.appleSignInFailed");
+        setServerError(message);
       }
     }
   };

@@ -6,21 +6,26 @@ import * as SecureStore from "expo-secure-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
-// Storage adapter that works on both web (AsyncStorage) and native (SecureStore)
-// SecureStore doesn't work on web, so we need to use AsyncStorage there
+// Storage adapter that works on both web (AsyncStorage) and native (SecureStore).
+// IMPORTANT: getItem and setItem MUST be synchronous on native because the
+// expoClient plugin calls them without await (e.g. getCookie(storage.getItem(key))).
+// Using async here causes getItem to return a Promise (truthy), which silently
+// breaks cookie injection — getCookie(Promise) parses as empty object.
 const storage = {
-  async getItem(key: string): Promise<string | null> {
+  getItem(key: string): string | null {
     if (Platform.OS === "web") {
-      return AsyncStorage.getItem(key);
+      // expoClient skips cookie injection on web (has `if (isWeb) return` checks),
+      // so this is only called for bearer token loading which handles async separately.
+      return null;
     }
-    return SecureStore.getItemAsync(key);
+    return SecureStore.getItem(key);
   },
-  async setItem(key: string, value: string): Promise<void> {
+  setItem(key: string, value: string): void {
     if (Platform.OS === "web") {
-      await AsyncStorage.setItem(key, value);
-    } else {
-      await SecureStore.setItemAsync(key, value);
+      AsyncStorage.setItem(key, value);
+      return;
     }
+    SecureStore.setItem(key, value);
   },
   async deleteItem(key: string): Promise<void> {
     if (Platform.OS === "web") {
@@ -31,21 +36,47 @@ const storage = {
   },
 };
 
-// Bearer token management (all platforms - uses SecureStore on native, AsyncStorage on web)
 const BEARER_TOKEN_KEY = "football_auth_bearer_token";
 let _cachedBearerToken: string | undefined;
+
+/**
+ * Clear corrupted cookie data left by the old async storage adapter.
+ * The old adapter returned Promises from getItem, which got stringified
+ * and later crash getCookie() with "Cannot read property 'expires' of null".
+ */
+function cleanStaleCookieData() {
+  if (Platform.OS === "web") return;
+  const key = "football_auth_cookie";
+  try {
+    const data = storage.getItem(key);
+    if (!data) return;
+    const parsed = JSON.parse(data);
+    for (const v of Object.values(parsed)) {
+      if (v === null || typeof v !== "object") {
+        storage.setItem(key, "{}");
+        return;
+      }
+    }
+  } catch {
+    try { storage.setItem(key, "{}"); } catch { /* ignore */ }
+  }
+}
 
 // Promise that resolves when the initial bearer token load completes.
 // The custom fetch awaits this before the first request to avoid a race condition
 // where useSession() fires getSession() before the token is loaded from storage.
-const _tokenLoadPromise: Promise<void> = storage
-  .getItem(BEARER_TOKEN_KEY)
-  .then((token) => {
+// storage.getItem is now sync on native, but we keep the Promise wrapper so
+// createDynamicFetch() can still `await _tokenLoadPromise` uniformly.
+const _tokenLoadPromise: Promise<void> = Promise.resolve().then(() => {
+  try {
+    const token = storage.getItem(BEARER_TOKEN_KEY);
     if (token) _cachedBearerToken = token;
-  })
-  .catch(() => {
+  } catch {
     // Ignore storage errors on init
-  });
+  }
+
+  cleanStaleCookieData();
+});
 
 /**
  * Store a bearer token for authentication.
@@ -164,7 +195,12 @@ function createDynamicFetch() {
       const apiBase = getApiUrl();
       const finalUrl = originalUrl.replace(LOCALHOST_API, apiBase);
 
-      const fetchInit: RequestInit = { ...init, credentials: "include" };
+      // Preserve credentials set by plugins (expoClient sets "omit" on native).
+      // Only default to "include" on web for cross-domain cookie auth.
+      const fetchInit: RequestInit = { ...init };
+      if (!init?.credentials) {
+        fetchInit.credentials = Platform.OS === "web" ? "include" : "omit";
+      }
 
       // Inject Bearer token header for authenticated requests (all platforms)
       if (_cachedBearerToken) {
@@ -194,7 +230,7 @@ function createDynamicFetch() {
           // verification, and avoids URL-encoding issues across platforms.
           const tokenPart = newToken.split(".")[0] || newToken;
           _cachedBearerToken = tokenPart;
-          storage.setItem(BEARER_TOKEN_KEY, tokenPart).catch(console.error);
+          try { storage.setItem(BEARER_TOKEN_KEY, tokenPart); } catch { /* ignore */ }
         }
         // Clear token when signing out
         if (finalUrl.includes("/sign-out")) {
@@ -207,10 +243,12 @@ function createDynamicFetch() {
   }) as typeof fetch;
 }
 
-// Create the Better Auth client with Expo plugin for React Native
-// Use localhost as base URL but override with custom fetch for dynamic resolution
+// Create the Better Auth client with Expo plugin for React Native.
+// baseURL uses getApiUrl() which resolves process.env.EXPO_PUBLIC_API_URL at build
+// time (Metro inlines it). The expoClient plugin reads baseURL directly for the
+// OAuth proxy URL, so it must point to the real API — not localhost.
 export const authClient = createAuthClient({
-  baseURL: LOCALHOST_API,
+  baseURL: getApiUrl(),
   fetchOptions: {
     customFetchImpl: createDynamicFetch(),
   },
@@ -218,9 +256,8 @@ export const authClient = createAuthClient({
     usernameClient(),
     phoneNumberClient(),
     expoClient({
-      scheme: "football-with-friends", // Deep link scheme from app.json
+      scheme: "football-with-friends",
       storagePrefix: "football_auth",
-      // Type assertion needed due to mismatch between async storage and expected sync type
       storage: storage as any,
     }),
   ],

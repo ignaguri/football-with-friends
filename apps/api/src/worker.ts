@@ -16,6 +16,36 @@ import { updateMatchStatuses } from "./cron/update-match-statuses";
 // Import shared security middleware
 import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
 
+/** Extract session token from a cookie header string (Set-Cookie or Cookie). */
+function extractSessionToken(header: string): string | null {
+  const match =
+    header.match(/__Secure-better-auth\.session_token=([^;]+)/) ||
+    header.match(/better-auth\.session_token=([^;]+)/);
+  return match?.[1] ?? null;
+}
+
+/** Inject Cloudflare Worker bindings into process.env for shared package compatibility. */
+function injectEnv(env: Bindings) {
+  // @ts-ignore - process.env may not exist in CF Workers but we polyfill it
+  globalThis.process = globalThis.process || { env: {} };
+  Object.assign(process.env, {
+    TURSO_DATABASE_URL: env.TURSO_DATABASE_URL,
+    TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN,
+    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+    BETTER_AUTH_BASE_URL: env.BETTER_AUTH_BASE_URL,
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
+    APPLE_CLIENT_ID: env.APPLE_CLIENT_ID,
+    APPLE_CLIENT_SECRET: env.APPLE_CLIENT_SECRET,
+    ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,
+    TRUSTED_ORIGINS: env.TRUSTED_ORIGINS,
+    NODE_ENV: env.NODE_ENV || "production",
+    DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
+    STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
+    CRON_SECRET: env.CRON_SECRET,
+  });
+}
+
 // Cloudflare Workers environment bindings
 export type Bindings = {
   // Turso database
@@ -27,6 +57,9 @@ export type Bindings = {
   // Google OAuth
   NEXT_PUBLIC_GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  // Apple Sign In (optional)
+  APPLE_CLIENT_ID?: string;
+  APPLE_CLIENT_SECRET?: string;
   // CORS
   ALLOWED_ORIGINS?: string;
   TRUSTED_ORIGINS?: string;
@@ -42,30 +75,8 @@ export type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();
 
-// Middleware to inject environment variables into process.env
-// This allows the shared package to work with Cloudflare Workers
 app.use("*", async (c, next) => {
-  // Set process.env from Cloudflare bindings
-  // @ts-ignore - process.env may not exist in CF Workers but we polyfill it
-  globalThis.process = globalThis.process || { env: {} };
-  const env = c.env;
-
-  // Copy all bindings to process.env
-  Object.assign(process.env, {
-    TURSO_DATABASE_URL: env.TURSO_DATABASE_URL,
-    TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN,
-    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-    BETTER_AUTH_BASE_URL: env.BETTER_AUTH_BASE_URL,
-    NEXT_PUBLIC_GOOGLE_CLIENT_ID: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-    ALLOWED_ORIGINS: env.ALLOWED_ORIGINS,
-    TRUSTED_ORIGINS: env.TRUSTED_ORIGINS,
-    NODE_ENV: env.NODE_ENV || "production",
-    DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
-    STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
-    CRON_SECRET: env.CRON_SECRET,
-  });
-
+  injectEnv(c.env);
   return next();
 });
 
@@ -139,10 +150,7 @@ app.get("/api/auth/web-callback", async (c) => {
     });
 
     const cookieHeader = c.req.header("cookie") || "";
-    const rawCookieToken =
-      cookieHeader.match(/__Secure-better-auth\.session_token=([^;]+)/)?.[1] ||
-      cookieHeader.match(/better-auth\.session_token=([^;]+)/)?.[1] ||
-      null;
+    const rawCookieToken = extractSessionToken(cookieHeader);
 
     let decodedCookieToken = rawCookieToken;
     if (rawCookieToken) {
@@ -189,7 +197,28 @@ app.get("/api/auth/web-callback", async (c) => {
 // Wrap to filter cookies and avoid expo client infinite refetch bug
 // See: https://github.com/better-auth/better-auth/issues/4744
 app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const path = new URL(c.req.url).pathname;
   const response = await auth.handler(c.req.raw);
+
+  // Workaround: BetterAuth's expo server plugin should append ?cookie=<session-cookies>
+  // to deep link redirects after OAuth callbacks, but the plugin's after hook doesn't see
+  // the location header set by thrown redirects (ctx.context.responseHeaders vs response headers).
+  // We manually append the cookie here so expoClient's built-in flow can extract it.
+  if (path.includes("/callback/")) {
+    const location = response.headers.get("location") || "";
+    const setCookie = response.headers.get("set-cookie") || "";
+    if (location.startsWith("football-with-friends://") && !location.includes("cookie=") && setCookie) {
+      const redirectURL = new URL(location);
+      redirectURL.searchParams.set("cookie", setCookie);
+      const newHeaders = new Headers(response.headers);
+      newHeaders.set("location", redirectURL.toString());
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      });
+    }
+  }
 
   // Filter Set-Cookie headers to only include better-auth cookies
   const setCookieHeader = response.headers.get("set-cookie");
@@ -225,21 +254,6 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
 // API routes
 registerApiRoutes(app);
 
-// Helper to inject env vars for cron (no Hono middleware in scheduled events)
-function injectCronEnv(env: Bindings) {
-  // @ts-ignore - process.env may not exist in CF Workers but we polyfill it
-  globalThis.process = globalThis.process || { env: {} };
-  Object.assign(process.env, {
-    TURSO_DATABASE_URL: env.TURSO_DATABASE_URL,
-    TURSO_AUTH_TOKEN: env.TURSO_AUTH_TOKEN,
-    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-    NEXT_PUBLIC_GOOGLE_CLIENT_ID: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET,
-    DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
-    STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
-    NODE_ENV: env.NODE_ENV || "production",
-  });
-}
 
 // Export for Cloudflare Workers with Sentry error monitoring
 export default Sentry.withSentry(
@@ -251,7 +265,7 @@ export default Sentry.withSentry(
     fetch: app.fetch,
     async scheduled(event: any, env: Bindings, ctx: any) {
       console.log("[CRON] Running scheduled match status update");
-      injectCronEnv(env);
+      injectEnv(env);
       ctx.waitUntil(updateMatchStatuses());
     },
   } as any,

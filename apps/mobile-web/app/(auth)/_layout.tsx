@@ -10,27 +10,32 @@ export default function AuthLayout() {
   const { t } = useTranslation();
   const { data: session, isPending } = useSession();
 
-  // Show loading spinner while checking authentication
-  if (isPending) {
-    return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        backgroundColor="$background"
-      >
-        <Spinner size="large" />
-      </YStack>
-    );
-  }
-
-  // Redirect to tabs if already authenticated
-  if (session?.user) {
+  // Redirect to tabs if authenticated (but not while pending)
+  if (!isPending && session?.user) {
     return <Redirect href="/(tabs)" />;
   }
 
+  // Always render the Stack to preserve navigation state.
+  // Overlaying the spinner (instead of replacing the Stack) prevents iOS
+  // password autofill from resetting navigation when useSession re-renders.
   return (
-    <Stack
+    <>
+      {isPending && (
+        <YStack
+          position="absolute"
+          top={0}
+          left={0}
+          right={0}
+          bottom={0}
+          justifyContent="center"
+          alignItems="center"
+          backgroundColor="$background"
+          zIndex={100}
+        >
+          <Spinner size="large" />
+        </YStack>
+      )}
+      <Stack
       screenOptions={{
         headerStyle: {
           backgroundColor: theme.background?.val,
@@ -83,5 +88,6 @@ export default function AuthLayout() {
         }}
       />
     </Stack>
+    </>
   );
 }

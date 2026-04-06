@@ -239,6 +239,8 @@ function WebSelect({
   );
 }
 
+const SHEET_SNAP_POINTS = [90];
+
 // Native Tamagui Select for mobile with Adapt Sheet
 function NativeSelect({
   label,
@@ -292,7 +294,7 @@ function NativeSelect({
           <Sheet
             modal
             dismissOnSnapToBottom
-            snapPointsMode="fit"
+            snapPoints={SHEET_SNAP_POINTS}
           >
             <Sheet.Frame backgroundColor="$background" paddingTop={top} paddingLeft={left} paddingRight={right}>
               {searchable && (
