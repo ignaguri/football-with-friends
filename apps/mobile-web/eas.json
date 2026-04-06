@@ -28,7 +28,6 @@
       }
     },
     "production": {
-      "autoIncrement": true,
       "ios": {
         "image": "latest"
       },

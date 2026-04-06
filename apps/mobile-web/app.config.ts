@@ -64,7 +64,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: false,
     bundleIdentifier: "com.pepegrillo.football-with-friends",
     usesAppleSignIn: true,
-    buildNumber: "13",
+    buildNumber: "14",
     infoPlist: {
       NSPhotoLibraryUsageDescription:
         "Football with Friends uses your photo library to update your profile picture.",
