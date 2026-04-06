@@ -23,6 +23,7 @@
     "@repo/api-client": "workspace:*",
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@sentry/react-native": "^8.7.0",
     "@tamagui/config": "2.0.0-rc.26",
     "burnt": "^0.13.0",
     "expo": "~55.0.11",

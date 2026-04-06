@@ -14,6 +14,25 @@ import "@tamagui/native/setup-safe-area";
 // Import react-native-svg to ensure it's loaded before any SVG components are used
 import "react-native-svg";
 
+import * as Sentry from "@sentry/react-native";
+import { useNavigationContainerRef } from "expo-router";
+import { isRunningInExpoGo } from "expo";
+
+// Sentry must be initialized at module scope, before any component renders
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.2,
+  sampleRate: 1.0,
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+  integrations: [navigationIntegration],
+  environment: process.env.EXPO_PUBLIC_ENV || "development",
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+});
+
 import {
   APIProvider,
   configureApiClient,
@@ -36,6 +55,7 @@ import i18n from "../lib/i18n"; // Initialize i18n
 import { unregisterServiceWorker } from "../lib/register-service-worker";
 import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
+import { useSentryUser } from "../lib/use-sentry-user";
 import config from "../tamagui.config";
 import "../global.css"; // Global CSS to fix React Native Web background
 import "../assets/fonts/fonts.css"; // Montserrat font declarations for web
@@ -81,6 +101,7 @@ function AppNavigation() {
 
 function AppContent() {
   const { theme } = useThemeContext();
+  useSentryUser();
   // Ensure we always pass a valid theme name (Tamagui throws "Missing theme" if invalid/missing)
   const themeName = theme === "dark" ? "dark" : "light";
 
@@ -167,7 +188,13 @@ function AppContent() {
             <Toast>
               <YStack flex={1} backgroundColor="$background">
                 <ErrorBoundary>
-                  <APIProvider>
+                  <APIProvider
+                    onMutationError={(error) =>
+                      Sentry.captureException(error, {
+                        tags: { source: "react-query-mutation" },
+                      })
+                    }
+                  >
                     <RulesModalProvider>
                       <AppNavigation />
                     </RulesModalProvider>
@@ -183,7 +210,15 @@ function AppContent() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
+  const ref = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (ref?.current) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
@@ -192,3 +227,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);

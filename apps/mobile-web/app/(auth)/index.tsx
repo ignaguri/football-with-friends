@@ -29,13 +29,8 @@ export default function AuthLandingScreen() {
 
   useEffect(() => {
     AppleAuthentication.isAvailableAsync()
-      .then((available) => {
-        console.log("[AUTH] Apple Sign-In available:", available);
-        setIsAppleAvailable(available);
-      })
-      .catch((err) => {
-        console.log("[AUTH] Apple Sign-In check failed:", err?.message);
-      });
+      .then((available) => setIsAppleAvailable(available))
+      .catch(() => {});
   }, []);
 
   // Detect dark mode for Google button styling
@@ -207,7 +202,6 @@ export default function AuthLandingScreen() {
             <GoogleSignInWeb
               clientId={(process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "").trim()}
               onSuccess={() => {
-                console.log("[AUTH] Google sign-in successful, navigating to tabs");
                 // Use window.location.href instead of router.replace to force a full page reload
                 // This ensures useSession() gets fresh state instead of cached "no session"
                 if (typeof window !== "undefined") {
