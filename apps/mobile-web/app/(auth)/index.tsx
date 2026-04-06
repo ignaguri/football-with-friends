@@ -16,7 +16,7 @@ import * as Device from "expo-device";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
+import { Platform, ScrollView } from "react-native";
 import { useTheme } from "tamagui";
 
 import { GoogleSignInWeb } from "../../components/GoogleSignInWeb";
@@ -27,6 +27,12 @@ export default function AuthLandingScreen() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+  const addLog = (msg: string) => {
+    const ts = new Date().toLocaleTimeString();
+    setDebugLogs((prev) => [...prev, `[${ts}] ${msg}`]);
+  };
 
   useEffect(() => {
     AppleAuthentication.isAvailableAsync()
@@ -117,9 +123,11 @@ export default function AuthLandingScreen() {
 
   const handleAppleSignIn = async () => {
     setServerError(null);
-    try {
-      Sentry.addBreadcrumb({ category: "apple-auth", message: "Starting Apple sign-in", level: "info" });
+    addLog("Starting Apple sign-in...");
+    Sentry.addBreadcrumb({ category: "apple-auth", message: "Starting Apple sign-in", level: "info" });
 
+    try {
+      addLog("Calling AppleAuthentication.signInAsync()...");
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -127,6 +135,7 @@ export default function AuthLandingScreen() {
         ],
       });
 
+      addLog(`Got credential: token=${!!credential.identityToken}, authCode=${!!credential.authorizationCode}, email=${credential.email || "null"}, user=${credential.user?.slice(0, 8)}`);
       Sentry.addBreadcrumb({
         category: "apple-auth",
         message: "Got Apple credential",
@@ -141,11 +150,11 @@ export default function AuthLandingScreen() {
       });
 
       if (!credential.identityToken) {
+        addLog("ERROR: No identity token!");
         throw new Error("No identity token received from Apple");
       }
 
-      Sentry.addBreadcrumb({ category: "apple-auth", message: "Calling signIn.social(apple)", level: "info" });
-
+      addLog("Calling signIn.social(apple)...");
       const result = await signIn.social({
         provider: "apple",
         idToken: {
@@ -153,6 +162,7 @@ export default function AuthLandingScreen() {
         },
       });
 
+      addLog(`signIn.social result: error=${result.error?.message || "none"}, hasUser=${!!result.data?.user}, keys=${result.data ? Object.keys(result.data).join(",") : "none"}`);
       Sentry.addBreadcrumb({
         category: "apple-auth",
         message: "signIn.social result",
@@ -167,6 +177,7 @@ export default function AuthLandingScreen() {
       });
 
       if (result.error) {
+        addLog(`ERROR from signIn.social: ${JSON.stringify(result.error)}`);
         Sentry.captureMessage("Apple Sign-In: signIn.social returned error", {
           level: "error",
           extra: { error: result.error },
@@ -176,30 +187,41 @@ export default function AuthLandingScreen() {
       }
 
       if (result.data?.user) {
-        // Store the session token as bearer token for the general API client.
         const session = await getSession();
         if (session.data?.session?.token) {
           await storeBearerToken(session.data.session.token);
         }
-        Sentry.addBreadcrumb({ category: "apple-auth", message: "Sign-in successful, navigating", level: "info" });
+        addLog("Success! Navigating...");
         router.replace("/(tabs)");
       } else {
+        addLog(`No user in result. data=${JSON.stringify(result.data)}`);
         Sentry.captureMessage("Apple Sign-In: no user in result.data", {
           level: "warning",
           extra: { resultData: result.data },
         });
       }
     } catch (err: any) {
+      const errInfo = `code=${err?.code}, msg=${err?.message}, type=${err?.constructor?.name}`;
+      addLog(`CATCH: ${errInfo}`);
       console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message, err);
-      if (err?.code !== "ERR_REQUEST_CANCELED") {
+      if (err?.code === "ERR_REQUEST_CANCELED") {
+        addLog("User cancelled (ERR_REQUEST_CANCELED)");
+      } else {
         Sentry.captureException(err, {
           tags: { source: "apple-sign-in" },
           extra: { code: err?.code, message: err?.message },
         });
+        addLog("Sent to Sentry");
         const message = err?.message || t("auth.appleSignInFailed");
         setServerError(message);
       }
     }
+  };
+
+  const handleTestSentry = () => {
+    addLog("Sending test event to Sentry...");
+    Sentry.captureMessage("Test event from auth screen", { level: "info" });
+    addLog("Sent! Check Sentry dashboard.");
   };
 
   return (
@@ -390,6 +412,33 @@ export default function AuthLandingScreen() {
             {serverError}
           </Text>
         )}
+
+        {/* DEBUG: Sentry test + log box (temporary) */}
+        <YStack gap="$2" alignSelf="stretch" marginTop="$4">
+          <Button
+            size="$3"
+            variant="outline"
+            onPress={handleTestSentry}
+          >
+            <Text fontSize="$2">Test Sentry</Text>
+          </Button>
+          {debugLogs.length > 0 && (
+            <ScrollView
+              style={{
+                maxHeight: 200,
+                backgroundColor: "#111",
+                borderRadius: 8,
+                padding: 8,
+              }}
+            >
+              {debugLogs.map((log, i) => (
+                <Text key={i} fontSize={11} color="#0f0" fontFamily="$mono">
+                  {log}
+                </Text>
+              ))}
+            </ScrollView>
+          )}
+        </YStack>
       </YStack>
     </Container>
   );
