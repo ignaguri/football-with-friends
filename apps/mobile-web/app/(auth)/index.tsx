@@ -201,17 +201,23 @@ export default function AuthLandingScreen() {
         });
       }
     } catch (err: any) {
-      const errInfo = `code=${err?.code}, msg=${err?.message}, type=${err?.constructor?.name}`;
-      addLog(`CATCH: ${errInfo}`);
-      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message, err);
-      if (err?.code === "ERR_REQUEST_CANCELED") {
-        addLog("User cancelled (ERR_REQUEST_CANCELED)");
-      } else {
-        Sentry.captureException(err, {
-          tags: { source: "apple-sign-in" },
-          extra: { code: err?.code, message: err?.message },
-        });
-        addLog("Sent to Sentry");
+      // Log ALL error properties — Apple errors may have extra fields
+      const errProps: Record<string, unknown> = {};
+      for (const key of Object.getOwnPropertyNames(err)) {
+        try { errProps[key] = err[key]; } catch { /* ignore */ }
+      }
+      addLog(`CATCH raw: ${JSON.stringify(errProps)}`);
+      addLog(`code=${err?.code}, name=${err?.name}, msg=${err?.message}`);
+
+      // Always send to Sentry — "ERR_REQUEST_CANCELED" can also mean
+      // Apple's "Sign Up Not Completed" failure, not just user cancel
+      Sentry.captureException(err, {
+        tags: { source: "apple-sign-in", errorCode: err?.code || "unknown" },
+        extra: { ...errProps },
+      });
+      addLog("Sent to Sentry");
+
+      if (err?.code !== "ERR_REQUEST_CANCELED") {
         const message = err?.message || t("auth.appleSignInFailed");
         setServerError(message);
       }
@@ -383,7 +389,11 @@ export default function AuthLandingScreen() {
           {isAppleAvailable && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              buttonStyle={
+                isDark
+                  ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                  : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+              }
               cornerRadius={8}
               style={{ width: "100%", height: 50 }}
               onPress={handleAppleSignIn}
