@@ -43,6 +43,7 @@ import { Toast } from "@repo/ui";
 import { PortalProvider } from "tamagui";
 import { Stack } from "expo-router";
 import Head from "expo-router/head";
+import * as Updates from "expo-updates";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 import { TamaguiProvider, Theme, YStack } from "tamagui";
@@ -218,6 +219,22 @@ function RootLayout() {
       navigationIntegration.registerNavigationContainer(ref);
     }
   }, [ref]);
+
+  // Check for OTA updates on launch (native only)
+  useEffect(() => {
+    if (__DEV__ || Platform.OS === "web") return;
+    (async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (e) {
+        // Silent fail — update check is best-effort
+      }
+    })();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
