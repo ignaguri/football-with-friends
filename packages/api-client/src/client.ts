@@ -71,13 +71,13 @@ function createDynamicFetch() {
       fetchInit.headers = headers;
     }
 
-    // Web: inject Bearer token for authenticated API requests
-    // The auth client stores tokens in AsyncStorage; cookies are not available
-    // cross-origin (Vercel proxy → Cloudflare Workers), so we use Bearer auth.
-    if (Platform.OS === "web") {
+    // Inject Bearer token for authenticated API requests (all platforms).
+    // Native has no cookies; web uses cross-origin (Vercel → Cloudflare Workers)
+    // where cookies aren't available either — so Bearer auth is used everywhere.
+    {
       const token = getBearerToken();
       if (token) {
-        const headers = new Headers(init?.headers);
+        const headers = new Headers(fetchInit.headers);
         headers.set("Authorization", `Bearer ${token}`);
         fetchInit.headers = headers;
         fetchInit.credentials = "omit";
