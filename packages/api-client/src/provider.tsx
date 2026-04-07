@@ -5,13 +5,14 @@ import type { ReactNode } from "react";
 
 interface APIProviderProps {
   children: ReactNode;
+  onMutationError?: (error: Error) => void;
 }
 
 /**
  * API Provider component that sets up React Query
  * Wrap your app with this component to enable oRPC hooks
  */
-export function APIProvider({ children }: APIProviderProps) {
+export function APIProvider({ children, onMutationError }: APIProviderProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -24,6 +25,7 @@ export function APIProvider({ children }: APIProviderProps) {
           },
           mutations: {
             retry: 0,
+            onError: onMutationError,
           },
         },
       }),

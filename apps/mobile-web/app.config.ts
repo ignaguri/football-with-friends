@@ -1,0 +1,100 @@
+import type { ExpoConfig, ConfigContext } from "expo/config";
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: "Football with Friends",
+  slug: "football-with-friends",
+  owner: "pepegrillo",
+  version: "1.0.0",
+  scheme: "football-with-friends",
+  orientation: "portrait",
+  icon: "./assets/icon.png",
+  userInterfaceStyle: "light",
+  plugins: [
+    "expo-router",
+    [
+      "expo-font",
+      {
+        fonts: [
+          "./assets/fonts/Montserrat-Light.ttf",
+          "./assets/fonts/Montserrat-Regular.ttf",
+          "./assets/fonts/Montserrat-Medium.ttf",
+          "./assets/fonts/Montserrat-SemiBold.ttf",
+          "./assets/fonts/Montserrat-Bold.ttf",
+        ],
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "Football with Friends uses your photo library to update your profile picture.",
+        cameraPermission:
+          "Football with Friends uses your camera to take a profile photo.",
+      },
+    ],
+    "expo-apple-authentication",
+    "expo-localization",
+    "expo-secure-store",
+    "expo-sqlite",
+    "expo-web-browser",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          deploymentTarget: "15.1",
+        },
+      },
+    ],
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: "prostcounter",
+        project: "football-mobile",
+        url: "https://de.sentry.io/",
+      },
+    ],
+  ],
+  splash: {
+    image: "./assets/splash-icon.png",
+    resizeMode: "contain",
+    backgroundColor: "#ffffff",
+  },
+  ios: {
+    supportsTablet: false,
+    bundleIdentifier: "com.pepegrillo.football-with-friends",
+    usesAppleSignIn: true,
+    buildNumber: "15",
+    infoPlist: {
+      NSPhotoLibraryUsageDescription:
+        "Football with Friends uses your photo library to update your profile picture.",
+      NSCameraUsageDescription:
+        "Football with Friends uses your camera to take a profile photo.",
+      ITSAppUsesNonExemptEncryption: false,
+    },
+  },
+  android: {
+    package: "com.pepegrillo.footballwithfriends",
+    versionCode: 1,
+    adaptiveIcon: {
+      foregroundImage: "./assets/adaptive-icon.png",
+      backgroundColor: "#ffffff",
+    },
+    predictiveBackGestureEnabled: false,
+  },
+  web: {
+    favicon: "./assets/favicon.png",
+  },
+  extra: {
+    router: {},
+    eas: {
+      projectId: "fd683dbc-22ce-4809-b0be-8325693cd621",
+    },
+  },
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/fd683dbc-22ce-4809-b0be-8325693cd621",
+  },
+});

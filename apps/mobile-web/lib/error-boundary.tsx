@@ -1,5 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Component, ReactNode } from "react";
+import * as Sentry from "@sentry/react-native";
 import { Container, Card, Text, YStack, Button } from "@repo/ui";
 import { AlertTriangle } from "@tamagui/lucide-icons";
 import i18next from "i18next";
@@ -24,8 +25,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("ErrorBoundary caught:", error, info.componentStack);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
+    Sentry.captureException(error, {
+      contexts: {
+        react: { componentStack: info.componentStack },
+      },
+    });
   }
 
   handleRetry = () => {

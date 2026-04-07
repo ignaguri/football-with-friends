@@ -23,13 +23,13 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://football-api-staging.pepe-grillo-parlante.workers.dev",
         "EXPO_PUBLIC_ENV": "preview",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "114959048918-po7fdnktjj37nsflujuflfdd9vcsgut9.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "114959048918-po7fdnktjj37nsflujuflfdd9vcsgut9.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://f6e2bd957d49ba8f9bf064a314c3fe5e@o4507997605527552.ingest.de.sentry.io/4511172311056464"
       }
     },
     "production": {
-      "autoIncrement": true,
       "ios": {
-        "image": "latest"
+        "image": "sdk-55"
       },
       "android": {
         "buildType": "app-bundle"
@@ -38,7 +38,8 @@
       "env": {
         "EXPO_PUBLIC_API_URL": "https://football-api.pepe-grillo-parlante.workers.dev",
         "EXPO_PUBLIC_ENV": "production",
-        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "114959048918-po7fdnktjj37nsflujuflfdd9vcsgut9.apps.googleusercontent.com"
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "114959048918-po7fdnktjj37nsflujuflfdd9vcsgut9.apps.googleusercontent.com",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://f6e2bd957d49ba8f9bf064a314c3fe5e@o4507997605527552.ingest.de.sentry.io/4511172311056464"
       }
     }
   },

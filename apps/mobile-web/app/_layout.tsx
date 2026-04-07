@@ -14,17 +14,37 @@ import "@tamagui/native/setup-safe-area";
 // Import react-native-svg to ensure it's loaded before any SVG components are used
 import "react-native-svg";
 
+import * as Sentry from "@sentry/react-native";
+import { useNavigationContainerRef } from "expo-router";
+import { isRunningInExpoGo } from "expo";
+
+// Sentry must be initialized at module scope, before any component renders
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.2,
+  sampleRate: 1.0,
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+  integrations: [navigationIntegration],
+  environment: process.env.EXPO_PUBLIC_ENV || "development",
+  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
+});
+
 import {
   APIProvider,
   configureApiClient,
   configureGeneralApiClient,
   configureLanguage,
 } from "@repo/api-client";
-import { Toast } from "@repo/ui";
+import { AlertDialog, Toast } from "@repo/ui";
 import { PortalProvider } from "tamagui";
 import { Stack } from "expo-router";
 import Head from "expo-router/head";
-import { useEffect } from "react";
+import * as Updates from "expo-updates";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { TamaguiProvider, Theme, YStack } from "tamagui";
 
@@ -36,6 +56,7 @@ import i18n from "../lib/i18n"; // Initialize i18n
 import { unregisterServiceWorker } from "../lib/register-service-worker";
 import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
+import { useSentryUser } from "../lib/use-sentry-user";
 import config from "../tamagui.config";
 import "../global.css"; // Global CSS to fix React Native Web background
 import "../assets/fonts/fonts.css"; // Montserrat font declarations for web
@@ -79,8 +100,9 @@ function AppNavigation() {
   );
 }
 
-function AppContent() {
+function AppContent({ updateReady }: { updateReady: boolean }) {
   const { theme } = useThemeContext();
+  useSentryUser();
   // Ensure we always pass a valid theme name (Tamagui throws "Missing theme" if invalid/missing)
   const themeName = theme === "dark" ? "dark" : "light";
 
@@ -167,7 +189,13 @@ function AppContent() {
             <Toast>
               <YStack flex={1} backgroundColor="$background">
                 <ErrorBoundary>
-                  <APIProvider>
+                  <APIProvider
+                    onMutationError={(error) =>
+                      Sentry.captureException(error, {
+                        tags: { source: "react-query-mutation" },
+                      })
+                    }
+                  >
                     <RulesModalProvider>
                       <AppNavigation />
                     </RulesModalProvider>
@@ -178,17 +206,52 @@ function AppContent() {
             </Toast>
           </Theme>
         </PortalProvider>
+        <AlertDialog
+          open={updateReady}
+          title={i18n.t("updates.title")}
+          description={i18n.t("updates.message")}
+          confirmText={i18n.t("updates.restart")}
+          showCancel={false}
+          onConfirm={() => Updates.reloadAsync()}
+        />
       </TamaguiProvider>
     </>
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
+  const ref = useNavigationContainerRef();
+  const [updateReady, setUpdateReady] = useState(false);
+
+  useEffect(() => {
+    if (ref?.current) {
+      navigationIntegration.registerNavigationContainer(ref);
+    }
+  }, [ref]);
+
+  // Check for OTA updates on launch (native only)
+  useEffect(() => {
+    if (__DEV__ || Platform.OS === "web") return;
+    (async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          setUpdateReady(true);
+        }
+      } catch (e) {
+        // Silent fail — update check is best-effort
+      }
+    })();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <AppContent />
+        <AppContent updateReady={updateReady} />
       </ThemeProvider>
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);

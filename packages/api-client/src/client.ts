@@ -1,7 +1,7 @@
 import { hc } from "hono/client";
 import { Platform } from "react-native";
 import type { ApiRoutes } from "../../../apps/api/src/index";
-import { getBearerToken } from "./auth";
+import { getBearerToken, _tokenLoadPromise } from "./auth";
 
 // Base URL for localhost development
 const LOCALHOST_API = "http://localhost:3001";
@@ -34,7 +34,11 @@ export function configureLanguage(lang: string) {
 // Custom fetch that dynamically resolves API URL at request time
 // This ensures the URL is computed when the request is made, not at bundle time
 function createDynamicFetch() {
-  return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    // Wait for the initial token load to complete before making any request.
+    // Prevents a race where data queries fire before the token is loaded from SecureStore.
+    await _tokenLoadPromise;
+
     // Get the original URL from the input
     let originalUrl: string;
     if (typeof input === "string") {
@@ -71,13 +75,13 @@ function createDynamicFetch() {
       fetchInit.headers = headers;
     }
 
-    // Web: inject Bearer token for authenticated API requests
-    // The auth client stores tokens in AsyncStorage; cookies are not available
-    // cross-origin (Vercel proxy → Cloudflare Workers), so we use Bearer auth.
-    if (Platform.OS === "web") {
+    // Inject Bearer token for authenticated API requests (all platforms).
+    // Native has no cookies; web uses cross-origin (Vercel → Cloudflare Workers)
+    // where cookies aren't available either — so Bearer auth is used everywhere.
+    {
       const token = getBearerToken();
       if (token) {
-        const headers = new Headers(init?.headers);
+        const headers = new Headers(fetchInit.headers);
         headers.set("Authorization", `Bearer ${token}`);
         fetchInit.headers = headers;
         fetchInit.credentials = "omit";

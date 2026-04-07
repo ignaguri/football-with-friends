@@ -31,12 +31,9 @@ export function GoogleSignInWeb({
   // Handle the credential response from Google
   const handleCredentialResponse = useCallback(
     async (response: { credential: string }) => {
-      console.log("[GoogleSignInWeb] Received credential from Google");
       setIsLoading(true);
 
       try {
-        // Use BetterAuth's signIn.social with idToken for ID token-based auth
-        // This bypasses the redirect flow and verifies the token server-side
         const result = await signIn.social({
           provider: "google",
           idToken: {
@@ -44,44 +41,27 @@ export function GoogleSignInWeb({
           },
         });
 
-        console.log("[GoogleSignInWeb] signIn.social result:", JSON.stringify(result, null, 2));
-
         if (result.error) {
           console.error("[GoogleSignInWeb] Sign-in error:", result.error);
           throw new Error(result.error.message || "Google sign-in failed");
         }
 
-        // BetterAuth returns { redirect: false, token: "...", user: {...} }
-        // The FULL bearer token is in the 'set-auth-token' response header,
-        // which is automatically captured and stored by the custom fetch in api-client.
-        // DO NOT manually store data.token as it's just the token ID, not the full bearer token.
         const data = result.data as any;
 
-        // Check if we got a redirect URL instead of session (known BetterAuth issue #4485)
         if (data?.url && !data?.user) {
-          console.log("[GoogleSignInWeb] Got redirect URL instead of session");
           throw new Error("Server returned redirect URL instead of session");
         }
 
-        // If we have a user, the sign-in was successful
-        // The bearer token was already stored by the custom fetch via set-auth-token header
         if (data?.user) {
-          console.log("[GoogleSignInWeb] Sign-in successful for:", data.user.email);
-
-          // Verify the session is working by calling getSession
-          // This ensures the token is properly stored and auth works before navigating
-          console.log("[GoogleSignInWeb] Verifying session...");
           const sessionResult = await getSession();
 
           if (sessionResult.data?.user) {
-            console.log("[GoogleSignInWeb] Session verified, calling onSuccess");
             onSuccess?.();
           } else {
             console.error("[GoogleSignInWeb] Session verification failed:", sessionResult);
             throw new Error("Session verification failed after sign-in");
           }
         } else {
-          console.warn("[GoogleSignInWeb] No user in response:", Object.keys(data || {}));
           throw new Error("No user data received from server");
         }
       } catch (err) {
@@ -114,12 +94,9 @@ export function GoogleSignInWeb({
     const initGoogleSignIn = () => {
       // Wait for GIS library to load
       if (!window.google?.accounts?.id) {
-        console.log("[GoogleSignInWeb] Waiting for GIS library to load...");
         setTimeout(initGoogleSignIn, 100);
         return;
       }
-
-      console.log("[GoogleSignInWeb] Initializing GIS with client ID");
 
       // Initialize Google Identity Services
       window.google.accounts.id.initialize({
@@ -139,15 +116,11 @@ export function GoogleSignInWeb({
         width: 300,
       };
 
-      // Always render hidden button
       if (hiddenButtonRef.current) {
-        console.log("[GoogleSignInWeb] Rendering hidden Google Sign-In button");
         window.google.accounts.id.renderButton(hiddenButtonRef.current, buttonConfig);
       }
 
-      // Render visible button only if no custom button
       if (!renderCustomButton && buttonRef.current) {
-        console.log("[GoogleSignInWeb] Rendering visible Google Sign-In button");
         window.google.accounts.id.renderButton(buttonRef.current, buttonConfig);
       }
 

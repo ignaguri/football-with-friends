@@ -1,4 +1,5 @@
-import { getConfiguredApiUrl, signIn, getSession } from "@repo/api-client";
+import { getConfiguredApiUrl, signIn, getSession, storeBearerToken } from "@repo/api-client";
+import * as Sentry from "@sentry/react-native";
 // @ts-nocheck - Tamagui type recursion workaround
 import {
   Container,
@@ -29,12 +30,9 @@ export default function AuthLandingScreen() {
 
   useEffect(() => {
     AppleAuthentication.isAvailableAsync()
-      .then((available) => {
-        console.log("[AUTH] Apple Sign-In available:", available);
-        setIsAppleAvailable(available);
-      })
+      .then((available) => setIsAppleAvailable(available))
       .catch((err) => {
-        console.log("[AUTH] Apple Sign-In check failed:", err?.message);
+        console.warn("[AUTH] Apple availability check failed:", err);
       });
   }, []);
 
@@ -100,6 +98,11 @@ export default function AuthLandingScreen() {
         // Verify session was established and navigate.
         const session = await getSession();
         if (session.data?.user) {
+          // Store the session token as bearer token for the general API client.
+          // OAuth flows use cookies (expoClient), but client.ts uses bearer tokens.
+          if (session.data.session?.token) {
+            await storeBearerToken(session.data.session.token);
+          }
           router.replace("/(tabs)");
         } else {
           setIsGoogleLoading(false);
@@ -114,12 +117,26 @@ export default function AuthLandingScreen() {
 
   const handleAppleSignIn = async () => {
     setServerError(null);
+    Sentry.addBreadcrumb({ category: "apple-auth", message: "Starting Apple sign-in", level: "info" });
+
     try {
       const credential = await AppleAuthentication.signInAsync({
         requestedScopes: [
           AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
           AppleAuthentication.AppleAuthenticationScope.EMAIL,
         ],
+      });
+
+      Sentry.addBreadcrumb({
+        category: "apple-auth",
+        message: "Got Apple credential",
+        level: "info",
+        data: {
+          hasIdentityToken: !!credential.identityToken,
+          hasAuthorizationCode: !!credential.authorizationCode,
+          hasFullName: !!credential.fullName,
+          hasEmail: !!credential.email,
+        },
       });
 
       if (!credential.identityToken) {
@@ -134,17 +151,29 @@ export default function AuthLandingScreen() {
       });
 
       if (result.error) {
+        Sentry.captureMessage("Apple Sign-In: signIn.social returned error", {
+          level: "error",
+          extra: { error: result.error },
+        });
         setServerError(result.error.message || t("auth.appleSignInFailed"));
         return;
       }
 
       if (result.data?.user) {
+        // Store the session token as bearer token for the general API client.
+        const session = await getSession();
+        if (session.data?.session?.token) {
+          await storeBearerToken(session.data.session.token);
+        }
         router.replace("/(tabs)");
       }
     } catch (err: any) {
-      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message, err);
+      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message);
       if (err?.code !== "ERR_REQUEST_CANCELED") {
-        // Surface specific error message if available (e.g., "Provider not found")
+        Sentry.captureException(err, {
+          tags: { source: "apple-sign-in" },
+          extra: { code: err?.code, message: err?.message },
+        });
         const message = err?.message || t("auth.appleSignInFailed");
         setServerError(message);
       }
@@ -207,7 +236,6 @@ export default function AuthLandingScreen() {
             <GoogleSignInWeb
               clientId={(process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || "").trim()}
               onSuccess={() => {
-                console.log("[AUTH] Google sign-in successful, navigating to tabs");
                 // Use window.location.href instead of router.replace to force a full page reload
                 // This ensures useSession() gets fresh state instead of cached "no session"
                 if (typeof window !== "undefined") {
@@ -311,7 +339,11 @@ export default function AuthLandingScreen() {
           {isAppleAvailable && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              buttonStyle={
+                isDark
+                  ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                  : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+              }
               cornerRadius={8}
               style={{ width: "100%", height: 50 }}
               onPress={handleAppleSignIn}
@@ -340,6 +372,7 @@ export default function AuthLandingScreen() {
             {serverError}
           </Text>
         )}
+
       </YStack>
     </Container>
   );
