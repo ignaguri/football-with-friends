@@ -10,7 +10,7 @@
     },
     "sentry": {
       "type": "http",
-      "url": "https://mcp.sentry.dev/mcp/prostcounter/football-with-friends"
+      "url": "https://mcp.sentry.dev/mcp/prostcounter"
     },
     "vercel": {
       "type": "http",

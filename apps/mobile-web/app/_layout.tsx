@@ -39,12 +39,12 @@ import {
   configureGeneralApiClient,
   configureLanguage,
 } from "@repo/api-client";
-import { Toast } from "@repo/ui";
+import { AlertDialog, Toast } from "@repo/ui";
 import { PortalProvider } from "tamagui";
 import { Stack } from "expo-router";
 import Head from "expo-router/head";
 import * as Updates from "expo-updates";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { TamaguiProvider, Theme, YStack } from "tamagui";
 
@@ -100,7 +100,7 @@ function AppNavigation() {
   );
 }
 
-function AppContent() {
+function AppContent({ updateReady }: { updateReady: boolean }) {
   const { theme } = useThemeContext();
   useSentryUser();
   // Ensure we always pass a valid theme name (Tamagui throws "Missing theme" if invalid/missing)
@@ -206,6 +206,14 @@ function AppContent() {
             </Toast>
           </Theme>
         </PortalProvider>
+        <AlertDialog
+          open={updateReady}
+          title={i18n.t("updates.title")}
+          description={i18n.t("updates.message")}
+          confirmText={i18n.t("updates.restart")}
+          showCancel={false}
+          onConfirm={() => Updates.reloadAsync()}
+        />
       </TamaguiProvider>
     </>
   );
@@ -213,6 +221,7 @@ function AppContent() {
 
 function RootLayout() {
   const ref = useNavigationContainerRef();
+  const [updateReady, setUpdateReady] = useState(false);
 
   useEffect(() => {
     if (ref?.current) {
@@ -228,7 +237,7 @@ function RootLayout() {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
+          setUpdateReady(true);
         }
       } catch (e) {
         // Silent fail — update check is best-effort
@@ -239,7 +248,7 @@ function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
-        <AppContent />
+        <AppContent updateReady={updateReady} />
       </ThemeProvider>
     </GestureHandlerRootView>
   );

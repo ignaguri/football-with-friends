@@ -671,5 +671,10 @@
     "createFailed": "Error al crear",
     "adminOnly": "Solo los administradores pueden realizar esta acción",
     "unauthorized": "No está autorizado para realizar esta acción"
+  },
+  "updates": {
+    "title": "Actualización disponible",
+    "message": "Se descargó una nueva versión. Reiniciá la app para aplicarla.",
+    "restart": "Reiniciar"
   }
 }
