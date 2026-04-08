@@ -530,6 +530,30 @@ export interface NotificationPayload {
   data?: Record<string, unknown>;
 }
 
+export interface NotificationMatchInfo {
+  id: string;
+  date: string;
+  time: string;
+  locationName?: string;
+}
+
+export const NOTIFICATION_TYPES = {
+  MATCH_CREATED: "match_created",
+  MATCH_UPDATED: "match_updated",
+  MATCH_CANCELLED: "match_cancelled",
+  PLAYER_CONFIRMED: "player_confirmed",
+  SUBSTITUTE_PROMOTED: "substitute_promoted",
+  PLAYER_CANCELLED: "player_cancelled",
+  REMOVED_FROM_MATCH: "removed_from_match",
+  MATCH_REMINDER: "match_reminder",
+  PAYMENT_REMINDER: "payment_reminder",
+  VOTING_OPEN: "voting_open",
+  ENGAGEMENT_REMINDER: "engagement_reminder",
+} as const;
+
+export type NotificationType =
+  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
+
 // Helper types for pagination and responses
 
 export interface PaginatedResponse<T> {

@@ -14,7 +14,7 @@ import "@tamagui/native/setup-safe-area";
 // Import react-native-svg to ensure it's loaded before any SVG components are used
 import "react-native-svg";
 
-import { Sentry, initSentry, navigationIntegration } from "../lib/sentry";
+import { Sentry, initSentry, getNavigationIntegration } from "../lib/sentry";
 import { useNavigationContainerRef } from "expo-router";
 
 // Must run at module scope, before any component renders
@@ -212,7 +212,7 @@ function RootLayout() {
 
   useEffect(() => {
     if (ref?.current) {
-      navigationIntegration.registerNavigationContainer(ref);
+      getNavigationIntegration().registerNavigationContainer(ref);
     }
   }, [ref]);
 

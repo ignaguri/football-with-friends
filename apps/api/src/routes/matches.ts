@@ -152,8 +152,8 @@ app.post(
         user
       );
 
-      // Fire-and-forget: notify all users about new match
-      notifyMatchCreated(match, user.id).catch(() => {});
+      // Notify all users about new match (non-blocking)
+      c.executionCtx?.waitUntil(notifyMatchCreated(match, user.id));
 
       return c.json({ match }, 201);
     } catch (error) {
@@ -202,15 +202,15 @@ app.patch(
         user
       );
 
-      // Fire-and-forget: notify signed-up players
+      // Notify signed-up players (non-blocking)
       if (updates.status === "cancelled") {
-        notifyMatchCancelled(match).catch(() => {});
+        c.executionCtx?.waitUntil(notifyMatchCancelled(match));
       } else if (updates.date || updates.time || updates.locationId) {
         const parts: string[] = [];
         if (updates.date) parts.push("date");
         if (updates.time) parts.push("time");
         if (updates.locationId) parts.push("location");
-        notifyMatchUpdated(match, parts.join(", ") + " changed").catch(() => {});
+        c.executionCtx?.waitUntil(notifyMatchUpdated(match, parts.join(", ") + " changed"));
       }
 
       return c.json({ match });
@@ -345,15 +345,18 @@ app.patch(
       const matchId = c.req.param("id");
       const result = await getMatchService().updateSignup(signupId, updates, user);
 
-      // Fire-and-forget notifications for status changes
-      if (updates.status === "PAID" && result.oldStatus !== "PAID" && result.signup.userId) {
-        notifyPlayerConfirmed(matchId, result.signup.userId).catch(() => {});
-      }
-      if (result.oldStatus === "PAID" && updates.status === "CANCELLED") {
-        notifyPlayerCancelled(matchId, result.signup.playerName).catch(() => {});
-      }
-      if (result.promotedSubstitute?.userId) {
-        notifySubstitutePromoted(matchId, result.promotedSubstitute.userId).catch(() => {});
+      // Non-blocking notifications for status changes
+      const match = await getRepositoryFactory().matches.findById(matchId);
+      if (match) {
+        if (updates.status === "PAID" && result.oldStatus !== "PAID" && result.signup.userId) {
+          c.executionCtx?.waitUntil(notifyPlayerConfirmed(match, result.signup.userId));
+        }
+        if (result.oldStatus === "PAID" && updates.status === "CANCELLED") {
+          c.executionCtx?.waitUntil(notifyPlayerCancelled(match, result.signup.playerName));
+        }
+        if (result.promotedSubstitute?.userId) {
+          c.executionCtx?.waitUntil(notifySubstitutePromoted(match, result.promotedSubstitute.userId));
+        }
       }
 
       return c.json({ signup: result.signup });
@@ -372,14 +375,16 @@ app.delete("/:id/signup/:signupId", async (c) => {
   const user = sessionUserToUser(sessionUser);
 
   try {
-    // Look up signup before deletion to get user info for notification
-    const signup = await getRepositoryFactory().signups.findById(signupId);
+    // Look up signup and match before deletion for notification
+    const [signup, match] = await Promise.all([
+      getRepositoryFactory().signups.findById(signupId),
+      getRepositoryFactory().matches.findById(matchId),
+    ]);
 
     await getMatchService().removePlayerByAdmin(signupId, user);
 
-    // Fire-and-forget: notify removed player
-    if (signup?.userId) {
-      notifyRemovedFromMatch(matchId, signup.userId).catch(() => {});
+    if (signup?.userId && match) {
+      c.executionCtx?.waitUntil(notifyRemovedFromMatch(match, signup.userId));
     }
 
     return c.json({ success: true });

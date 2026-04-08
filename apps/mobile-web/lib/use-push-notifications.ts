@@ -8,10 +8,6 @@ import { api } from "@repo/api-client";
 let _lastRegisteredToken: string | null = null;
 let _notificationsConfigured = false;
 
-export function getLastRegisteredPushToken(): string | null {
-  return _lastRegisteredToken;
-}
-
 /**
  * Lazily load expo-notifications to avoid crashing on builds
  * that don't include the native module yet.
