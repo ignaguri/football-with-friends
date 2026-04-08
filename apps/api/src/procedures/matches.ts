@@ -154,7 +154,8 @@ export const matchesProcedures = {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        return matchService.updateSignup(input.signupId, { status: input.status }, user);
+        const result = await matchService.updateSignup(input.signupId, { status: input.status }, user);
+        return result.signup;
       }),
 
     // Remove signup

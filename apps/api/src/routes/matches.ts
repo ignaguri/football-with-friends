@@ -2,7 +2,17 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
+import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
+import {
+  notifyMatchCreated,
+  notifyMatchUpdated,
+  notifyMatchCancelled,
+  notifyPlayerConfirmed,
+  notifySubstitutePromoted,
+  notifyPlayerCancelled,
+  notifyRemovedFromMatch,
+} from "../lib/notify";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -141,6 +151,10 @@ app.post(
         { ...matchData, createdByUserId: user.id },
         user
       );
+
+      // Fire-and-forget: notify all users about new match
+      notifyMatchCreated(match, user.id).catch(() => {});
+
       return c.json({ match }, 201);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create match";
@@ -187,6 +201,18 @@ app.patch(
         },
         user
       );
+
+      // Fire-and-forget: notify signed-up players
+      if (updates.status === "cancelled") {
+        notifyMatchCancelled(match).catch(() => {});
+      } else if (updates.date || updates.time || updates.locationId) {
+        const parts: string[] = [];
+        if (updates.date) parts.push("date");
+        if (updates.time) parts.push("time");
+        if (updates.locationId) parts.push("location");
+        notifyMatchUpdated(match, parts.join(", ") + " changed").catch(() => {});
+      }
+
       return c.json({ match });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update match";
@@ -316,8 +342,21 @@ app.patch(
     const user = sessionUserToUser(sessionUser);
 
     try {
-      const signup = await getMatchService().updateSignup(signupId, updates, user);
-      return c.json({ signup });
+      const matchId = c.req.param("id");
+      const result = await getMatchService().updateSignup(signupId, updates, user);
+
+      // Fire-and-forget notifications for status changes
+      if (updates.status === "PAID" && result.oldStatus !== "PAID" && result.signup.userId) {
+        notifyPlayerConfirmed(matchId, result.signup.userId).catch(() => {});
+      }
+      if (result.oldStatus === "PAID" && updates.status === "CANCELLED") {
+        notifyPlayerCancelled(matchId, result.signup.playerName).catch(() => {});
+      }
+      if (result.promotedSubstitute?.userId) {
+        notifySubstitutePromoted(matchId, result.promotedSubstitute.userId).catch(() => {});
+      }
+
+      return c.json({ signup: result.signup });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update signup";
       return c.json({ error: message }, 400);
@@ -327,12 +366,22 @@ app.patch(
 
 // Admin: Remove a player from a match (hard delete)
 app.delete("/:id/signup/:signupId", async (c) => {
+  const matchId = c.req.param("id");
   const signupId = c.req.param("signupId");
   const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
 
   try {
+    // Look up signup before deletion to get user info for notification
+    const signup = await getRepositoryFactory().signups.findById(signupId);
+
     await getMatchService().removePlayerByAdmin(signupId, user);
+
+    // Fire-and-forget: notify removed player
+    if (signup?.userId) {
+      notifyRemovedFromMatch(matchId, signup.userId).catch(() => {});
+    }
+
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to remove player";

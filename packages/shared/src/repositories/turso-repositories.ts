@@ -954,6 +954,19 @@ export class TursoSignupRepository implements SignupRepository {
 
     return rows.map(dbSignupToSignup);
   }
+
+  async getSignedUpUserIds(matchId: string): Promise<string[]> {
+    const rows = await this.db
+      .selectFrom("signups")
+      .select("user_id")
+      .where("match_id", "=", matchId)
+      .where("status", "!=", "CANCELLED")
+      .where("user_id", "is not", null)
+      .distinct()
+      .execute();
+
+    return rows.map((r) => r.user_id).filter((id): id is string => id !== null);
+  }
 }
 
 // Turso Match Invitation Repository

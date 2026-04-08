@@ -251,6 +251,11 @@ export interface SignupRepository {
    * Find signups added by a specific user (for tracking admin/guest additions)
    */
   findAddedByUser(userId: string): Promise<Signup[]>;
+
+  /**
+   * Get distinct user IDs of non-cancelled signups for a match
+   */
+  getSignedUpUserIds(matchId: string): Promise<string[]>;
 }
 
 // Match Invitation Repository Interface (future feature)

@@ -343,7 +343,11 @@ export class MatchService {
     signupId: string,
     updates: { status?: string; playerName?: string },
     updatedBy: User,
-  ): Promise<Signup> {
+  ): Promise<{
+    signup: Signup;
+    oldStatus: string;
+    promotedSubstitute?: { id: string; userId?: string; playerName: string };
+  }> {
     const signup = await this.signupRepository.findById(signupId);
     if (!signup) {
       throw new Error("Signup not found");
@@ -359,7 +363,7 @@ export class MatchService {
       throw new Error("Not authorized to update this signup");
     }
 
-    // Store the old status to check for PAID -> CANCELLED transition
+    // Store the old status to check for transitions
     const oldStatus = signup.status;
 
     // Update the signup
@@ -367,6 +371,8 @@ export class MatchService {
       ...(updates.status && { status: updates.status as PlayerStatus }),
       ...(updates.playerName && { playerName: updates.playerName }),
     });
+
+    let promotedSubstitute: { id: string; userId?: string; playerName: string } | undefined;
 
     // Auto-promote substitute when PAID player cancels
     if (oldStatus === "PAID" && updates.status === "CANCELLED") {
@@ -387,6 +393,12 @@ export class MatchService {
               status: "PENDING",
             });
 
+            promotedSubstitute = {
+              id: firstSubstitute.id,
+              userId: firstSubstitute.userId,
+              playerName: firstSubstitute.playerName,
+            };
+
             console.log(
               `[AUTO-PROMOTE] Substitute ${firstSubstitute.id} (${firstSubstitute.playerName}) promoted to PENDING for match ${signup.matchId}`
             );
@@ -398,7 +410,7 @@ export class MatchService {
       }
     }
 
-    return updatedSignup;
+    return { signup: updatedSignup, oldStatus, promotedSubstitute };
   }
 
   /**

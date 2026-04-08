@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
+import { router } from "expo-router";
 import { useSession } from "@repo/api-client";
 import { api } from "@repo/api-client";
 
@@ -128,7 +129,9 @@ export function usePushNotifications() {
       const responseSub =
         Notifications.addNotificationResponseReceivedListener((response) => {
           const data = response.notification.request.content.data;
-          console.log("Notification tapped, data:", data);
+          if (data?.screen && typeof data.screen === "string") {
+            router.push(data.screen as any);
+          }
         });
 
       listenersRef.current = [notifSub, responseSub];
