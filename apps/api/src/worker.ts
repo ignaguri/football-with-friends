@@ -43,6 +43,7 @@ function injectEnv(env: Bindings) {
     DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
     STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
     CRON_SECRET: env.CRON_SECRET,
+    EXPO_ACCESS_TOKEN: env.EXPO_ACCESS_TOKEN,
   });
 }
 
@@ -71,6 +72,8 @@ export type Bindings = {
   CRON_SECRET?: string;
   // Monitoring
   SENTRY_DSN?: string;
+  // Push notifications
+  EXPO_ACCESS_TOKEN?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();

@@ -152,6 +152,17 @@ export interface MatchPlayerStatsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface PushTokensTable {
+  id: Generated<string>;
+  user_id: string;
+  token: string;
+  platform: "ios" | "android";
+  device_id: string | null;
+  active: number; // 0 or 1 (SQLite boolean)
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // BetterAuth verification table (used for password reset codes, OTPs, etc.)
 export interface VerificationTable {
   id: string;
@@ -175,6 +186,7 @@ export interface Database {
   match_player_stats: MatchPlayerStatsTable;
   voting_criteria: VotingCriteriaTable;
   match_votes: MatchVotesTable;
+  push_tokens: PushTokensTable;
   verification: VerificationTable;
 }
 
@@ -235,3 +247,7 @@ export type VotingCriteriaUpdate = Updateable<VotingCriteriaTable>;
 export type MatchVote = Selectable<MatchVotesTable>;
 export type NewMatchVote = Insertable<MatchVotesTable>;
 export type MatchVoteUpdate = Updateable<MatchVotesTable>;
+
+export type PushToken = Selectable<PushTokensTable>;
+export type NewPushToken = Insertable<PushTokensTable>;
+export type PushTokenUpdate = Updateable<PushTokensTable>;

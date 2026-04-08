@@ -2,6 +2,7 @@
 
 import { CourtService } from "./court-service";
 import { MatchService } from "./match-service";
+import { NotificationService } from "./notification-service";
 import { PlayerStatsService } from "./player-stats-service";
 import { RankingService } from "./ranking-service";
 import { votingRepository } from "../repositories/voting-repository";
@@ -15,8 +16,12 @@ export class ServiceFactory {
   public readonly courtService: CourtService;
   public readonly playerStatsService: PlayerStatsService;
   public readonly rankingService: RankingService;
+  public readonly notificationService: NotificationService;
 
-  constructor(repositoryFactory?: AppRepositoryFactory) {
+  constructor(
+    repositoryFactory?: AppRepositoryFactory,
+    expoAccessToken?: string,
+  ) {
     const repos = repositoryFactory || getRepositoryFactory();
 
     this.matchService = new MatchService(
@@ -35,6 +40,10 @@ export class ServiceFactory {
       repos.playerStats,
       votingRepository,
     );
+    this.notificationService = new NotificationService(
+      repos.pushTokens,
+      expoAccessToken,
+    );
   }
 }
 
@@ -46,7 +55,10 @@ let serviceFactory: ServiceFactory | null = null;
  */
 export function getServiceFactory(): ServiceFactory {
   if (!serviceFactory) {
-    serviceFactory = new ServiceFactory();
+    serviceFactory = new ServiceFactory(
+      undefined,
+      process.env.EXPO_ACCESS_TOKEN,
+    );
   }
   return serviceFactory;
 }

@@ -1,5 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useSession } from "@repo/api-client";
+import { usePushNotifications } from "../../lib/use-push-notifications";
 import {
   Home,
   Calendar,
@@ -15,6 +16,9 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { data: session, isPending } = useSession();
+
+  // Must be called before any early returns (Rules of Hooks)
+  usePushNotifications();
 
   // Show loading spinner while checking authentication
   if (isPending) {

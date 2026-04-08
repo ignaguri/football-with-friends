@@ -26,6 +26,8 @@ import type {
   SignupFilters,
   MatchDetails,
   SignupWithDetails,
+  PushTokenInfo,
+  RegisterPushTokenData,
 } from "../domain/types";
 
 // Location Repository Interface
@@ -366,6 +368,16 @@ export interface PlayerStatsRepository {
   getRankingsByBeers(limit: number): Promise<PlayerRanking[]>;
 }
 
+// Push Token Repository Interface
+export interface PushTokenRepository {
+  upsert(data: RegisterPushTokenData): Promise<PushTokenInfo>;
+  findActiveByUserId(userId: string): Promise<PushTokenInfo[]>;
+  findActiveByUserIds(userIds: string[]): Promise<PushTokenInfo[]>;
+  deactivateToken(token: string): Promise<void>;
+  deactivateByUserId(userId: string): Promise<void>;
+  deleteByToken(token: string): Promise<void>;
+}
+
 // Repository factory interface for dependency injection
 export interface RepositoryFactory {
   locations: LocationRepository;
@@ -374,6 +386,7 @@ export interface RepositoryFactory {
   signups: SignupRepository;
   invitations: MatchInvitationRepository;
   playerStats: PlayerStatsRepository;
+  pushTokens: PushTokenRepository;
 }
 
 // Database transaction interface
