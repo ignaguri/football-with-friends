@@ -32,6 +32,7 @@ export interface MatchesTable {
   cost_per_player: string | null;
   same_day_cost: string | null;
   created_by_user_id: string;
+  reminder_sent: Generated<number>;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -92,6 +93,8 @@ export interface UserTable {
   phoneNumberVerified: number;
   // Auth method tracking
   primaryAuthMethod: string | null;
+  // Notification tracking
+  last_engagement_reminder_at: string | null;
 }
 
 export interface VotingCriteriaTable {

@@ -12,6 +12,8 @@ import { auth } from "./auth";
 
 // Import cron jobs
 import { updateMatchStatuses } from "./cron/update-match-statuses";
+import { sendMatchReminders } from "./cron/send-match-reminders";
+import { sendEngagementReminders } from "./cron/send-engagement-reminders";
 
 // Import shared security middleware
 import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
@@ -267,9 +269,21 @@ export default Sentry.withSentry(
   {
     fetch: app.fetch,
     async scheduled(event: any, env: Bindings, ctx: any) {
-      console.log("[CRON] Running scheduled match status update");
+      console.log("[CRON] Running scheduled tasks");
       injectEnv(env);
-      ctx.waitUntil(updateMatchStatuses());
+      ctx.waitUntil(
+        Promise.allSettled([
+          updateMatchStatuses(),
+          sendMatchReminders(),
+          sendEngagementReminders(),
+        ]).then((results) => {
+          for (const r of results) {
+            if (r.status === "rejected") {
+              console.error("[CRON] Task failed:", r.reason);
+            }
+          }
+        }),
+      );
     },
   } as any,
 );
