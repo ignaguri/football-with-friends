@@ -94,7 +94,7 @@ export interface UserTable {
   // Auth method tracking
   primaryAuthMethod: string | null;
   // Notification tracking
-  last_engagement_reminder_at: string | null;
+  lastEngagementReminderAt: string | null;
 }
 
 export interface VotingCriteriaTable {

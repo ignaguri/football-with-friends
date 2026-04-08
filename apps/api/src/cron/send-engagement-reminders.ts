@@ -1,4 +1,3 @@
-import { sql } from "kysely";
 import { getDatabase } from "@repo/shared/database";
 import { getServiceFactory } from "@repo/shared/services";
 import { NotificationTemplates } from "@repo/shared/services";
@@ -26,8 +25,8 @@ export async function sendEngagementReminders() {
       .where("push_tokens.active", "=", 1)
       .where((eb) =>
         eb.or([
-          eb("user.last_engagement_reminder_at", "is", null),
-          eb("user.last_engagement_reminder_at", "<", cooldownDate),
+          eb("user.lastEngagementReminderAt", "is", null),
+          eb("user.lastEngagementReminderAt", "<", cooldownDate),
         ]),
       )
       .distinct()
@@ -51,16 +50,15 @@ export async function sendEngagementReminders() {
       NotificationTemplates.engagementReminder(dayOfYear),
     );
 
-    // Update last reminder timestamp
-    await db
-      .updateTable("user")
-      .set({ last_engagement_reminder_at: now.toISOString() })
-      .where(
-        "id",
-        "in",
-        userIds,
-      )
-      .execute();
+    // Update last reminder timestamp (chunk to stay within SQLite param limit)
+    const chunkSize = 500;
+    for (let i = 0; i < userIds.length; i += chunkSize) {
+      await db
+        .updateTable("user")
+        .set({ lastEngagementReminderAt: now.toISOString() })
+        .where("id", "in", userIds.slice(i, i + chunkSize))
+        .execute();
+    }
 
     console.log(`[CRON] Sent engagement reminders to ${userIds.length} users`);
     return { sent: userIds.length };

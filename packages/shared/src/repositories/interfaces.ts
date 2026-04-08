@@ -379,6 +379,7 @@ export interface PushTokenRepository {
   findActiveByUserId(userId: string): Promise<PushTokenInfo[]>;
   findActiveByUserIds(userIds: string[]): Promise<PushTokenInfo[]>;
   deactivateToken(token: string): Promise<void>;
+  deactivateTokenForUser(token: string, userId: string): Promise<void>;
   deactivateByUserId(userId: string): Promise<void>;
   deleteByToken(token: string): Promise<void>;
 }

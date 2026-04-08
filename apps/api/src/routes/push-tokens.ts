@@ -54,18 +54,18 @@ app.delete(
     }),
   ),
   async (c) => {
-    requireUser(c);
+    const user = requireUser(c);
     const { token } = c.req.valid("json");
 
     try {
-      await getNotificationService().unregisterToken(token);
+      await getNotificationService().unregisterToken(token, user.id);
       return c.json({ success: true });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Failed to unregister push token";
-      return c.json({ error: message }, 400);
+      return c.json({ error: message }, 403);
     }
   },
 );

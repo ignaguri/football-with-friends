@@ -26,10 +26,20 @@ async function toMatchInfo(match: Match): Promise<NotificationMatchInfo> {
   return { id: match.id, date: match.date, time: match.time, locationName };
 }
 
-async function getAllUserIds(excludeId?: string): Promise<string[]> {
+async function getUserIdsWithPushTokens(excludeId?: string): Promise<string[]> {
   const db = getDatabase();
-  const users = await db.selectFrom("user").select("id").execute();
-  return users.map((u) => u.id).filter((id) => id !== excludeId);
+  let query = db
+    .selectFrom("push_tokens")
+    .select("user_id")
+    .where("active", "=", 1)
+    .distinct();
+
+  if (excludeId) {
+    query = query.where("user_id", "!=", excludeId);
+  }
+
+  const rows = await query.execute();
+  return rows.map((r) => r.user_id);
 }
 
 async function getAdminUserIds(): Promise<string[]> {
@@ -41,7 +51,7 @@ async function getAdminUserIds(): Promise<string[]> {
 export async function notifyMatchCreated(match: Match, excludeUserId: string): Promise<void> {
   await safeNotify("match created", async () => {
     const [userIds, info] = await Promise.all([
-      getAllUserIds(excludeUserId),
+      getUserIdsWithPushTokens(excludeUserId),
       toMatchInfo(match),
     ]);
     if (userIds.length === 0) return;

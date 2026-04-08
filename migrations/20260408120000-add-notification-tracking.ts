@@ -1,5 +1,5 @@
 // Migration: add-notification-tracking
-// Adds reminder_sent to matches and last_engagement_reminder_at to user
+// Adds reminder_sent to matches and lastEngagementReminderAt to user
 
 import { sql } from "kysely";
 import type { Kysely, Migration } from "kysely";
@@ -17,9 +17,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     console.log("✅ Added reminder_sent column to matches");
   }
 
-  if (!(await columnExists(db, "user", "last_engagement_reminder_at"))) {
-    await sql`ALTER TABLE user ADD COLUMN last_engagement_reminder_at TEXT`.execute(db);
-    console.log("✅ Added last_engagement_reminder_at column to user");
+  if (!(await columnExists(db, "user", "lastEngagementReminderAt"))) {
+    await sql`ALTER TABLE user ADD COLUMN lastEngagementReminderAt TEXT`.execute(db);
+    console.log("✅ Added lastEngagementReminderAt column to user");
   }
 
   console.log("✅ Migration: add-notification-tracking completed");
@@ -30,8 +30,8 @@ export const down: Migration["down"] = async (db: Kysely<any>) => {
   if (await columnExists(db, "matches", "reminder_sent")) {
     await sql`ALTER TABLE matches DROP COLUMN reminder_sent`.execute(db);
   }
-  if (await columnExists(db, "user", "last_engagement_reminder_at")) {
-    await sql`ALTER TABLE user DROP COLUMN last_engagement_reminder_at`.execute(db);
+  if (await columnExists(db, "user", "lastEngagementReminderAt")) {
+    await sql`ALTER TABLE user DROP COLUMN lastEngagementReminderAt`.execute(db);
   }
   console.log("↩️ Removed notification tracking columns");
 };

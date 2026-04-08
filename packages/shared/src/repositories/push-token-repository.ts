@@ -97,6 +97,19 @@ export class TursoPushTokenRepository implements PushTokenRepository {
       .execute();
   }
 
+  async deactivateTokenForUser(token: string, userId: string): Promise<void> {
+    const result = await this.db
+      .updateTable("push_tokens")
+      .set({ updated_at: new Date().toISOString(), active: 0 })
+      .where("token", "=", token)
+      .where("user_id", "=", userId)
+      .execute();
+
+    if (Number(result[0]?.numUpdatedRows ?? 0) === 0) {
+      throw new Error("Token not found or does not belong to this user");
+    }
+  }
+
   async deactivateByUserId(userId: string): Promise<void> {
     await this.db
       .updateTable("push_tokens")

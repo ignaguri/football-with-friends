@@ -1,7 +1,5 @@
 import { getDatabase } from "@repo/shared/database";
-import { getRepositoryFactory } from "@repo/shared/repositories";
-import { getServiceFactory } from "@repo/shared/services";
-import { NotificationTemplates } from "@repo/shared/services";
+import { getServiceFactory, NotificationTemplates } from "@repo/shared/services";
 
 /**
  * Update match statuses from "upcoming" to "completed"
@@ -48,30 +46,51 @@ export async function updateMatchStatuses() {
 
     // Send voting reminders for newly completed matches
     if (matchesToComplete.length > 0) {
-      const signupRepo = getRepositoryFactory().signups;
-      const locationRepo = getRepositoryFactory().locations;
       const notificationService = getServiceFactory().notificationService;
+      const matchIds = matchesToComplete.map((m) => m.id);
+      const locationIds = [...new Set(matchesToComplete.map((m) => m.location_id))];
+
+      const [signupRows, locations] = await Promise.all([
+        db
+          .selectFrom("signups")
+          .select(["match_id", "user_id"])
+          .where("match_id", "in", matchIds)
+          .where("status", "!=", "CANCELLED")
+          .where("user_id", "is not", null)
+          .execute(),
+        db
+          .selectFrom("locations")
+          .select(["id", "name"])
+          .where("id", "in", locationIds)
+          .execute(),
+      ]);
+
+      const userIdsByMatch = new Map<string, string[]>();
+      for (const row of signupRows) {
+        if (!row.user_id) continue;
+        const ids = userIdsByMatch.get(row.match_id) ?? [];
+        ids.push(row.user_id);
+        userIdsByMatch.set(row.match_id, ids);
+      }
+      const locationsById = new Map(locations.map((l) => [l.id, l]));
 
       for (const match of matchesToComplete) {
         try {
-          const [userIds, location] = await Promise.all([
-            signupRepo.getSignedUpUserIds(match.id),
-            locationRepo.findById(match.location_id),
-          ]);
+          const userIds = [...new Set(userIdsByMatch.get(match.id) ?? [])];
+          if (userIds.length === 0) continue;
 
-          if (userIds.length > 0) {
-            const info = {
-              id: match.id,
-              date: match.date,
-              time: match.time,
-              locationName: location?.name,
-            };
-            await notificationService.sendToUsers(
-              userIds,
-              NotificationTemplates.votingOpen(info),
-            );
-            console.log(`[CRON] Sent voting reminder for match ${match.id} to ${userIds.length} users`);
-          }
+          const location = locationsById.get(match.location_id);
+          const info = {
+            id: match.id,
+            date: match.date,
+            time: match.time,
+            locationName: location?.name,
+          };
+          await notificationService.sendToUsers(
+            userIds,
+            NotificationTemplates.votingOpen(info),
+          );
+          console.log(`[CRON] Sent voting reminder for match ${match.id} to ${userIds.length} users`);
         } catch (error) {
           console.error(`[CRON] Failed to send voting reminder for match ${match.id}:`, error);
         }

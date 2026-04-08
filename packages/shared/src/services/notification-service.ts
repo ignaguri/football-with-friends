@@ -26,7 +26,10 @@ export class NotificationService {
     return this.pushTokenRepository.upsert(data);
   }
 
-  async unregisterToken(token: string): Promise<void> {
+  async unregisterToken(token: string, userId?: string): Promise<void> {
+    if (userId) {
+      return this.pushTokenRepository.deactivateTokenForUser(token, userId);
+    }
     return this.pushTokenRepository.deactivateToken(token);
   }
 
@@ -117,9 +120,7 @@ export class NotificationService {
           ) {
             // Deactivate the invalid token
             const invalidToken = chunk[j]!.to;
-            console.log(
-              `Deactivating invalid push token: ${invalidToken.substring(0, 20)}...`,
-            );
+            console.log("Deactivating invalid push token");
             await this.pushTokenRepository.deactivateToken(invalidToken);
           }
         }

@@ -77,17 +77,23 @@ async function registerForPushNotifications(): Promise<string | null> {
 
 export function usePushNotifications() {
   const { data: session } = useSession();
-  const registeredRef = useRef(false);
+  const registeredForUserRef = useRef<string | null>(null);
   const listenersRef = useRef<{ remove: () => void }[]>([]);
 
   useEffect(() => {
     // Skip on web
     if (Platform.OS === "web") return;
 
-    // Only register once per session
-    if (!session?.user || registeredRef.current) return;
+    // Reset when user changes (logout/login as different user)
+    if (!session?.user) {
+      registeredForUserRef.current = null;
+      return;
+    }
 
-    registeredRef.current = true;
+    // Only register once per user
+    if (registeredForUserRef.current === session.user.id) return;
+
+    registeredForUserRef.current = session.user.id;
 
     // Configure handler + register token
     configureNotificationHandler();
