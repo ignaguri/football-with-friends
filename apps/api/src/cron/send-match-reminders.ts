@@ -1,7 +1,9 @@
+import { addDays } from "date-fns";
 import { getDatabase } from "@repo/shared/database";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { getServiceFactory } from "@repo/shared/services";
 import { NotificationTemplates } from "@repo/shared/services";
+import { formatDateInAppTimezone } from "@repo/shared/utils";
 
 /**
  * Send match reminders for matches happening tomorrow.
@@ -11,14 +13,7 @@ export async function sendMatchReminders() {
   const db = getDatabase();
 
   // Get tomorrow's date in Europe/Berlin timezone
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowDate = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Berlin",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(tomorrow);
+  const tomorrowDate = formatDateInAppTimezone(addDays(new Date(), 1), "yyyy-MM-dd");
 
   console.log(`[CRON] Checking for matches on ${tomorrowDate} to send reminders`);
 

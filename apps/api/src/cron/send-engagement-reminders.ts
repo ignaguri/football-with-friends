@@ -1,3 +1,4 @@
+import { getDayOfYear } from "date-fns";
 import { getDatabase } from "@repo/shared/database";
 import { getServiceFactory } from "@repo/shared/services";
 import { NotificationTemplates } from "@repo/shared/services";
@@ -40,9 +41,7 @@ export async function sendEngagementReminders() {
     const userIds = eligibleUsers.map((u) => u.id);
 
     // Rotate message variant based on day of year
-    const dayOfYear = Math.floor(
-      (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (24 * 60 * 60 * 1000),
-    );
+    const dayOfYear = getDayOfYear(now);
 
     const notificationService = getServiceFactory().notificationService;
     await notificationService.sendToUsers(
