@@ -11,6 +11,8 @@ import cronRoute from "./routes/cron";
 import phoneAuthRoute from "./routes/phone-auth";
 import votingRoute from "./routes/voting";
 import rankingsRoute from "./routes/rankings";
+import pushTokensRoute from "./routes/push-tokens";
+import notificationsRoute from "./routes/notifications";
 
 export function registerApiRoutes(app: Hono<any>) {
   return app
@@ -24,7 +26,9 @@ export function registerApiRoutes(app: Hono<any>) {
     .route("/rankings", rankingsRoute)
     .route("/cron", cronRoute)
     .route("/phone-auth", phoneAuthRoute)
-    .route("/voting", votingRoute);
+    .route("/voting", votingRoute)
+    .route("/push-tokens", pushTokensRoute)
+    .route("/notifications", notificationsRoute);
 }
 
 export type ApiRoutes = ReturnType<typeof registerApiRoutes>;

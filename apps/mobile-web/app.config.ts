@@ -47,6 +47,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
+      "expo-notifications",
+      {
+        color: "#3d7c48",
+      },
+    ],
+    [
       "@sentry/react-native/expo",
       {
         organization: "prostcounter",

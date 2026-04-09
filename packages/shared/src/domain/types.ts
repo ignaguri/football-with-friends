@@ -465,6 +465,95 @@ export function isApiErrorKey(key: string): key is ApiErrorKey {
   return API_ERROR_KEYS.includes(key as ApiErrorKey);
 }
 
+// Push notification types
+
+export const PUSH_TOKEN_PLATFORMS = ["ios", "android"] as const;
+export type PushTokenPlatform = (typeof PUSH_TOKEN_PLATFORMS)[number];
+
+export interface PushTokenInfo {
+  id: string;
+  userId: string;
+  token: string;
+  platform: PushTokenPlatform;
+  deviceId?: string;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface RegisterPushTokenData {
+  userId: string;
+  token: string;
+  platform: PushTokenPlatform;
+  deviceId?: string;
+}
+
+export interface ExpoPushMessage {
+  to: string;
+  title?: string;
+  body: string;
+  data?: Record<string, unknown>;
+  sound?: "default" | null;
+  badge?: number;
+  channelId?: string;
+  priority?: "default" | "normal" | "high";
+}
+
+export interface ExpoPushTicket {
+  status: "ok" | "error";
+  id?: string;
+  message?: string;
+  details?: {
+    error?:
+      | "DeviceNotRegistered"
+      | "InvalidCredentials"
+      | "MessageTooBig"
+      | "MessageRateExceeded";
+  };
+}
+
+export interface ExpoPushReceipt {
+  status: "ok" | "error";
+  message?: string;
+  details?: {
+    error?:
+      | "DeviceNotRegistered"
+      | "InvalidCredentials"
+      | "MessageTooBig"
+      | "MessageRateExceeded";
+  };
+}
+
+export interface NotificationPayload {
+  title?: string;
+  body: string;
+  data?: Record<string, unknown>;
+}
+
+export interface NotificationMatchInfo {
+  id: string;
+  date: string;
+  time: string;
+  locationName?: string;
+}
+
+export const NOTIFICATION_TYPES = {
+  MATCH_CREATED: "match_created",
+  MATCH_UPDATED: "match_updated",
+  MATCH_CANCELLED: "match_cancelled",
+  PLAYER_CONFIRMED: "player_confirmed",
+  SUBSTITUTE_PROMOTED: "substitute_promoted",
+  PLAYER_CANCELLED: "player_cancelled",
+  REMOVED_FROM_MATCH: "removed_from_match",
+  MATCH_REMINDER: "match_reminder",
+  PAYMENT_REMINDER: "payment_reminder",
+  VOTING_OPEN: "voting_open",
+  ENGAGEMENT_REMINDER: "engagement_reminder",
+} as const;
+
+export type NotificationType =
+  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
+
 // Helper types for pagination and responses
 
 export interface PaginatedResponse<T> {

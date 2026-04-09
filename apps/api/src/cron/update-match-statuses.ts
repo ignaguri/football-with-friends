@@ -1,11 +1,12 @@
 import { getDatabase } from "@repo/shared/database";
+import { getServiceFactory, NotificationTemplates } from "@repo/shared/services";
 
 /**
  * Update match statuses from "upcoming" to "completed"
- * Runs every 6 hours via Cloudflare Cron Triggers
+ * and send voting reminders to participants.
+ * Runs every 30 minutes via Cloudflare Cron Triggers.
  *
- * Uses a single UPDATE query and native Date to stay within
- * CF Workers CPU limits (no date-fns imports).
+ * Uses native Date/Intl to stay within CF Workers CPU limits.
  */
 export async function updateMatchStatuses() {
   const db = getDatabase();
@@ -21,7 +22,15 @@ export async function updateMatchStatuses() {
   console.log(`[CRON] Updating upcoming matches before ${berlinDate}`);
 
   try {
-    // Single UPDATE query - no need to SELECT first
+    // Find matches that will transition (for voting reminders)
+    const matchesToComplete = await db
+      .selectFrom("matches")
+      .select(["id", "date", "time", "location_id"])
+      .where("status", "=", "upcoming")
+      .where("date", "<", berlinDate)
+      .execute();
+
+    // Update statuses
     const result = await db
       .updateTable("matches")
       .set({
@@ -34,6 +43,59 @@ export async function updateMatchStatuses() {
 
     const updated = Number(result[0]?.numUpdatedRows ?? 0);
     console.log(`[CRON] Updated ${updated} matches to completed`);
+
+    // Send voting reminders for newly completed matches
+    if (matchesToComplete.length > 0) {
+      const notificationService = getServiceFactory().notificationService;
+      const matchIds = matchesToComplete.map((m) => m.id);
+      const locationIds = [...new Set(matchesToComplete.map((m) => m.location_id))];
+
+      const [signupRows, locations] = await Promise.all([
+        db
+          .selectFrom("signups")
+          .select(["match_id", "user_id"])
+          .where("match_id", "in", matchIds)
+          .where("status", "!=", "CANCELLED")
+          .where("user_id", "is not", null)
+          .execute(),
+        db
+          .selectFrom("locations")
+          .select(["id", "name"])
+          .where("id", "in", locationIds)
+          .execute(),
+      ]);
+
+      const userIdsByMatch = new Map<string, string[]>();
+      for (const row of signupRows) {
+        if (!row.user_id) continue;
+        const ids = userIdsByMatch.get(row.match_id) ?? [];
+        ids.push(row.user_id);
+        userIdsByMatch.set(row.match_id, ids);
+      }
+      const locationsById = new Map(locations.map((l) => [l.id, l]));
+
+      for (const match of matchesToComplete) {
+        try {
+          const userIds = [...new Set(userIdsByMatch.get(match.id) ?? [])];
+          if (userIds.length === 0) continue;
+
+          const location = locationsById.get(match.location_id);
+          const info = {
+            id: match.id,
+            date: match.date,
+            time: match.time,
+            locationName: location?.name,
+          };
+          await notificationService.sendToUsers(
+            userIds,
+            NotificationTemplates.votingOpen(info),
+          );
+          console.log(`[CRON] Sent voting reminder for match ${match.id} to ${userIds.length} users`);
+        } catch (error) {
+          console.error(`[CRON] Failed to send voting reminder for match ${match.id}:`, error);
+        }
+      }
+    }
 
     return { updated };
   } catch (error) {

@@ -14,24 +14,11 @@ import "@tamagui/native/setup-safe-area";
 // Import react-native-svg to ensure it's loaded before any SVG components are used
 import "react-native-svg";
 
-import * as Sentry from "@sentry/react-native";
+import { Sentry, initSentry, getNavigationIntegration } from "../lib/sentry";
 import { useNavigationContainerRef } from "expo-router";
-import { isRunningInExpoGo } from "expo";
 
-// Sentry must be initialized at module scope, before any component renders
-const navigationIntegration = Sentry.reactNavigationIntegration({
-  enableTimeToInitialDisplay: !isRunningInExpoGo(),
-});
-
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-  tracesSampleRate: 0.2,
-  sampleRate: 1.0,
-  enableNativeFramesTracking: !isRunningInExpoGo(),
-  integrations: [navigationIntegration],
-  environment: process.env.EXPO_PUBLIC_ENV || "development",
-  enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN,
-});
+// Must run at module scope, before any component renders
+initSentry();
 
 import {
   APIProvider,
@@ -225,7 +212,7 @@ function RootLayout() {
 
   useEffect(() => {
     if (ref?.current) {
-      navigationIntegration.registerNavigationContainer(ref);
+      getNavigationIntegration().registerNavigationContainer(ref);
     }
   }, [ref]);
 

@@ -83,6 +83,11 @@ export default function ProfileScreen() {
   }, [session?.user]);
 
   const handleSignOut = async () => {
+    // Unregister push token before signing out
+    try {
+      const { unregisterPushToken } = await import("../../../lib/use-push-notifications");
+      await unregisterPushToken();
+    } catch {}
     await signOut();
     router.replace("/(auth)");
   };

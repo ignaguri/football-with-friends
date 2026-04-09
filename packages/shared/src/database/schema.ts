@@ -32,6 +32,7 @@ export interface MatchesTable {
   cost_per_player: string | null;
   same_day_cost: string | null;
   created_by_user_id: string;
+  reminder_sent: Generated<number>;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -92,6 +93,8 @@ export interface UserTable {
   phoneNumberVerified: number;
   // Auth method tracking
   primaryAuthMethod: string | null;
+  // Notification tracking
+  lastEngagementReminderAt: string | null;
 }
 
 export interface VotingCriteriaTable {
@@ -152,6 +155,17 @@ export interface MatchPlayerStatsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface PushTokensTable {
+  id: Generated<string>;
+  user_id: string;
+  token: string;
+  platform: "ios" | "android";
+  device_id: string | null;
+  active: number; // 0 or 1 (SQLite boolean)
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // BetterAuth verification table (used for password reset codes, OTPs, etc.)
 export interface VerificationTable {
   id: string;
@@ -175,6 +189,7 @@ export interface Database {
   match_player_stats: MatchPlayerStatsTable;
   voting_criteria: VotingCriteriaTable;
   match_votes: MatchVotesTable;
+  push_tokens: PushTokensTable;
   verification: VerificationTable;
 }
 
@@ -235,3 +250,7 @@ export type VotingCriteriaUpdate = Updateable<VotingCriteriaTable>;
 export type MatchVote = Selectable<MatchVotesTable>;
 export type NewMatchVote = Insertable<MatchVotesTable>;
 export type MatchVoteUpdate = Updateable<MatchVotesTable>;
+
+export type PushToken = Selectable<PushTokensTable>;
+export type NewPushToken = Insertable<PushTokensTable>;
+export type PushTokenUpdate = Updateable<PushTokensTable>;

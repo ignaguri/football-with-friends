@@ -12,6 +12,8 @@ import { auth } from "./auth";
 
 // Import cron jobs
 import { updateMatchStatuses } from "./cron/update-match-statuses";
+import { sendMatchReminders } from "./cron/send-match-reminders";
+import { sendEngagementReminders } from "./cron/send-engagement-reminders";
 
 // Import shared security middleware
 import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
@@ -43,6 +45,7 @@ function injectEnv(env: Bindings) {
     DEFAULT_TIMEZONE: env.DEFAULT_TIMEZONE || "Europe/Berlin",
     STORAGE_PROVIDER: env.STORAGE_PROVIDER || "turso",
     CRON_SECRET: env.CRON_SECRET,
+    EXPO_ACCESS_TOKEN: env.EXPO_ACCESS_TOKEN,
   });
 }
 
@@ -71,6 +74,8 @@ export type Bindings = {
   CRON_SECRET?: string;
   // Monitoring
   SENTRY_DSN?: string;
+  // Push notifications
+  EXPO_ACCESS_TOKEN?: string;
 };
 
 const app = new Hono<{ Bindings: Bindings; Variables: AppVariables }>();
@@ -264,9 +269,21 @@ export default Sentry.withSentry(
   {
     fetch: app.fetch,
     async scheduled(event: any, env: Bindings, ctx: any) {
-      console.log("[CRON] Running scheduled match status update");
+      console.log("[CRON] Running scheduled tasks");
       injectEnv(env);
-      ctx.waitUntil(updateMatchStatuses());
+      ctx.waitUntil(
+        Promise.allSettled([
+          updateMatchStatuses(),
+          sendMatchReminders(),
+          sendEngagementReminders(),
+        ]).then((results) => {
+          for (const r of results) {
+            if (r.status === "rejected") {
+              console.error("[CRON] Task failed:", r.reason);
+            }
+          }
+        }),
+      );
     },
   } as any,
 );
