@@ -4,6 +4,8 @@ import {
   signOut,
   client,
   getConfiguredApiUrl,
+  getWebAppUrl,
+  deleteAccount,
 } from "@repo/api-client";
 import {
   Container,
@@ -35,7 +37,9 @@ import {
   Pressable,
   Platform,
   Alert,
+  Linking,
 } from "react-native";
+import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
@@ -58,6 +62,13 @@ export default function ProfileScreen() {
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Delete account state
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -90,6 +101,33 @@ export default function ProfileScreen() {
     } catch {}
     await signOut();
     router.replace("/(auth)");
+  };
+
+  const handleDeleteAccount = async () => {
+    const expectedWord = t("profile.deleteConfirmWord");
+    if (deleteConfirmText.toUpperCase() !== expectedWord.toUpperCase()) {
+      setDeleteError(t("profile.deleteAccountConfirm"));
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      // Unregister push token first
+      try {
+        const { unregisterPushToken } = await import("../../../lib/use-push-notifications");
+        await unregisterPushToken();
+      } catch {}
+
+      await deleteAccount(deleteConfirmText, deletePassword || undefined);
+      await signOut();
+      router.replace("/(auth)");
+    } catch (err: any) {
+      setDeleteError(err.message || t("profile.deleteAccountFailed"));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleLanguageChange = async (lang: "en" | "es") => {
@@ -651,10 +689,108 @@ export default function ProfileScreen() {
                 </Button>
               )}
 
+              {/* Legal Section */}
+              <YStack gap="$2" marginTop="$3">
+                <Text fontSize="$4" fontWeight="600" color="$gray11">
+                  {t("profile.legal")}
+                </Text>
+                {[
+                  { label: "profile.privacyPolicy", url: `${getWebAppUrl()}/privacy.html` },
+                  { label: "profile.termsOfService", url: `${getWebAppUrl()}/terms.html` },
+                  { label: "profile.support", url: "mailto:pepe.grillo.parlante@gmail.com" },
+                ].map((link) => (
+                  <Pressable key={link.label} onPress={() => Linking.openURL(link.url)}>
+                    <XStack justifyContent="space-between" alignItems="center" paddingVertical="$2">
+                      <Text color="$gray11">{t(link.label)}</Text>
+                      <Text color="$gray10" fontSize="$3">&#8250;</Text>
+                    </XStack>
+                  </Pressable>
+                ))}
+              </YStack>
+
+              {/* App Version */}
+              <XStack justifyContent="space-between" alignItems="center" marginTop="$2">
+                <Text color="$gray10" fontSize="$3">{t("profile.appVersion")}</Text>
+                <Text color="$gray10" fontSize="$3">
+                  {Constants.expoConfig?.version || "1.0.0"}
+                </Text>
+              </XStack>
+
               {/* Sign Out Button */}
-              <Button variant="danger" onPress={handleSignOut} marginTop="$2">
+              <Button variant="danger" onPress={handleSignOut} marginTop="$3">
                 {t("shared.signOut")}
               </Button>
+
+              {/* Delete Account Section */}
+              {isDeletingAccount ? (
+                <YStack gap="$3" marginTop="$3" paddingTop="$3" borderTopWidth={1} borderTopColor="$red5">
+                  <Text color="$red10" fontSize="$3" fontWeight="600">
+                    {t("profile.deleteAccountTitle")}
+                  </Text>
+                  <Text color="$red9" fontSize="$2">
+                    {t("profile.deleteAccountWarning")}
+                  </Text>
+
+                  <Input
+                    label={t("profile.deleteAccountConfirm")}
+                    placeholder={t("profile.deleteConfirmWord")}
+                    value={deleteConfirmText}
+                    onChangeText={setDeleteConfirmText}
+                    autoCapitalize="characters"
+                  />
+
+                  {primaryAuthMethod !== "google" &&
+                    primaryAuthMethod !== "apple" && (
+                    <Input
+                      label={t("auth.password")}
+                      placeholder={t("auth.passwordPlaceholder")}
+                      value={deletePassword}
+                      onChangeText={setDeletePassword}
+                      secureTextEntry
+                    />
+                  )}
+
+                  {deleteError && (
+                    <Text color="$red10" fontSize="$3">
+                      {deleteError}
+                    </Text>
+                  )}
+
+                  <XStack gap="$2">
+                    <Button
+                      flex={1}
+                      variant="outline"
+                      onPress={() => {
+                        setIsDeletingAccount(false);
+                        setDeleteConfirmText("");
+                        setDeletePassword("");
+                        setDeleteError(null);
+                      }}
+                      disabled={isDeleting}
+                    >
+                      {t("shared.cancel")}
+                    </Button>
+                    <Button
+                      flex={1}
+                      variant="danger"
+                      onPress={handleDeleteAccount}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? <Spinner size="small" /> : t("profile.deleteAccount")}
+                    </Button>
+                  </XStack>
+                </YStack>
+              ) : (
+                <Button
+                  variant="outline"
+                  onPress={() => setIsDeletingAccount(true)}
+                  marginTop="$2"
+                  color="$red10"
+                  borderColor="$red7"
+                >
+                  {t("profile.deleteAccount")}
+                </Button>
+              )}
             </YStack>
           </Card>
         </YStack>

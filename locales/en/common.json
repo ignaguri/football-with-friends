@@ -238,7 +238,20 @@
     "emailLockedByAuth": "Email cannot be changed (used for authentication)",
     "phoneLockedByAuth": "Phone number cannot be changed (used for authentication)",
     "profileUpdated": "Profile updated successfully",
-    "updateFailed": "Failed to update profile"
+    "updateFailed": "Failed to update profile",
+    "deleteAccount": "Delete Account",
+    "deleteAccountTitle": "Delete Your Account?",
+    "deleteAccountWarning": "This will permanently delete your account and all associated data including match history, stats, and votes. This action cannot be undone.",
+    "deleteAccountConfirm": "Type DELETE to confirm",
+    "deleteAccountSuccess": "Your account has been deleted",
+    "deleteAccountFailed": "Failed to delete account",
+    "deleting": "Deleting...",
+    "deleteConfirmWord": "DELETE",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "support": "Support & Contact",
+    "legal": "Legal",
+    "appVersion": "App Version"
   },
   "auth": {
     "welcomeBack": "Welcome Back",

@@ -11,6 +11,7 @@ import {
   type R2Bucket,
 } from "../lib/r2";
 import { type AppVariables, requireUser } from "../middleware/security";
+import { verifyPassword } from "../crypto/password";
 
 // Phone number validation (international format)
 const phoneRegex = /^\+[1-9]\d{6,14}$/;
@@ -437,6 +438,82 @@ app.post(
       }
 
       return c.json({ error: "Failed to set password" }, 500);
+    }
+  }
+);
+
+// Delete account — permanently removes user and all associated data
+const deleteAccountSchema = z.object({
+  confirmText: z.string(),
+  password: z.string().optional(),
+});
+
+app.post(
+  "/delete-account",
+  zValidator("json", deleteAccountSchema),
+  async (c) => {
+    const { confirmText, password } = c.req.valid("json");
+    const user = requireUser(c);
+    const userId = user.id;
+
+    // Validate confirmation text (accept both "DELETE" and "ELIMINAR")
+    const validConfirmTexts = ["DELETE", "ELIMINAR"];
+    if (!validConfirmTexts.includes(confirmText.toUpperCase())) {
+      return c.json({ error: "Invalid confirmation text" }, 400);
+    }
+
+    try {
+      const db = getDatabase();
+
+      // Check if user has a credential account (password-based)
+      const credentialAccount = await db
+        .selectFrom("account")
+        .select(["id", "password"])
+        .where("userId", "=", userId)
+        .where("providerId", "=", "credential")
+        .executeTakeFirst();
+
+      // If user has a password, require it for deletion
+      if (credentialAccount) {
+        if (!password) {
+          return c.json({ error: "Password is required to delete your account", requiresPassword: true }, 400);
+        }
+        const storedHash = credentialAccount.password;
+        if (storedHash) {
+          const isValid = await verifyPassword({ password, hash: storedHash });
+          if (!isValid) {
+            return c.json({ error: "Incorrect password" }, 400);
+          }
+        }
+      }
+
+      // Clean up non-cascading user data (independent operations run in parallel)
+      await Promise.all([
+        db.deleteFrom("push_tokens").where("user_id", "=", userId).execute(),
+        db.deleteFrom("match_player_stats").where("user_id", "=", userId).execute(),
+        db.deleteFrom("match_votes").where("voter_user_id", "=", userId).execute(),
+        db.deleteFrom("match_votes").where("voted_for_user_id", "=", userId).execute(),
+        db.updateTable("signups").set({ user_id: null }).where("user_id", "=", userId).execute(),
+        db.deleteFrom("match_invitations").where("invited_by_user_id", "=", userId).execute(),
+      ]);
+
+      // Clean up R2 profile pictures
+      try {
+        const bucket = c.env?.PROFILE_PICTURES;
+        if (bucket) {
+          await deleteOldProfilePictures(bucket, userId, 0);
+        }
+      } catch (e) {
+        console.error("Failed to clean up profile pictures:", e);
+      }
+
+      // Delete user row — account and session tables CASCADE automatically
+      await db.deleteFrom("user").where("id", "=", userId).execute();
+
+      return c.json({ success: true });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      return c.json({ error: "Failed to delete account" }, 500);
     }
   }
 );
