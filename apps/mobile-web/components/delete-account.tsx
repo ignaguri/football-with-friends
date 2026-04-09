@@ -16,10 +16,14 @@ export function DeleteAccountSection({ primaryAuthMethod }: DeleteAccountSection
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showPassword, setShowPassword] = useState(
+    primaryAuthMethod !== "google" && primaryAuthMethod !== "apple"
+  );
 
   const handleDelete = async () => {
+    const trimmed = confirmText.trim();
     const expectedWord = t("profile.deleteConfirmWord");
-    if (confirmText.toUpperCase() !== expectedWord.toUpperCase()) {
+    if (trimmed.toUpperCase() !== expectedWord.toUpperCase()) {
       setError(t("profile.deleteAccountConfirm"));
       return;
     }
@@ -33,10 +37,14 @@ export function DeleteAccountSection({ primaryAuthMethod }: DeleteAccountSection
         await unregisterPushToken();
       } catch {}
 
-      await deleteAccount(confirmText, password || undefined);
+      await deleteAccount(trimmed, password || undefined);
       await signOut();
       router.replace("/(auth)");
     } catch (err: any) {
+      // If server says password is required (e.g. Google user who later set a password)
+      if (err.message?.includes("Password is required")) {
+        setShowPassword(true);
+      }
       setError(err.message || t("profile.deleteAccountFailed"));
     } finally {
       setIsDeleting(false);
@@ -49,8 +57,6 @@ export function DeleteAccountSection({ primaryAuthMethod }: DeleteAccountSection
     setPassword("");
     setError(null);
   };
-
-  const needsPassword = primaryAuthMethod !== "google" && primaryAuthMethod !== "apple";
 
   if (!isExpanded) {
     return (
@@ -83,7 +89,7 @@ export function DeleteAccountSection({ primaryAuthMethod }: DeleteAccountSection
         autoCapitalize="characters"
       />
 
-      {needsPassword && (
+      {showPassword && (
         <Input
           label={t("auth.password")}
           placeholder={t("auth.passwordPlaceholder")}

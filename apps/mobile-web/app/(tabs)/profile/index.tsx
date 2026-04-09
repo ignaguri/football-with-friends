@@ -674,7 +674,7 @@ export default function ProfileScreen() {
                 { label: "profile.termsOfService", url: `${getWebAppUrl()}/terms.html` },
                 { label: "profile.support", url: "mailto:pepe.grillo.parlante@gmail.com" },
               ].map((link) => (
-                <Pressable key={link.label} onPress={() => Linking.openURL(link.url)}>
+                <Pressable key={link.label} onPress={() => Linking.openURL(link.url).catch(() => {})}>
                   <XStack justifyContent="space-between" alignItems="center" paddingVertical="$2">
                     <Text color="$gray11" fontSize="$2">{t(link.label)}</Text>
                     <Text color="$gray10" fontSize="$2">&#8250;</Text>

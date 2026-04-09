@@ -458,7 +458,7 @@ app.post(
 
     // Validate confirmation text (accept both "DELETE" and "ELIMINAR")
     const validConfirmTexts = ["DELETE", "ELIMINAR"];
-    if (!validConfirmTexts.includes(confirmText.toUpperCase())) {
+    if (!validConfirmTexts.includes(confirmText.trim().toUpperCase())) {
       return c.json({ error: "Invalid confirmation text" }, 400);
     }
 
