@@ -4,6 +4,7 @@ import {
   signOut,
   client,
   getConfiguredApiUrl,
+  getWebAppUrl,
 } from "@repo/api-client";
 import {
   Container,
@@ -35,9 +36,12 @@ import {
   Pressable,
   Platform,
   Alert,
+  Linking,
 } from "react-native";
+import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { DeleteAccountSection } from "../../../components/delete-account";
 import { changeLanguage, getCurrentLanguage } from "../../../lib/i18n";
 import { useThemeContext } from "../../../lib/theme-context";
 
@@ -652,9 +656,42 @@ export default function ProfileScreen() {
               )}
 
               {/* Sign Out Button */}
-              <Button variant="danger" onPress={handleSignOut} marginTop="$2">
+              <Button variant="danger" onPress={handleSignOut} marginTop="$3">
                 {t("shared.signOut")}
               </Button>
+            </YStack>
+          </Card>
+
+          {/* Legal & Account Card */}
+          <Card variant="outlined">
+            <YStack gap="$3">
+              <Text fontSize="$5" fontWeight="600">
+                {t("profile.legal")}
+              </Text>
+
+              {[
+                { label: "profile.privacyPolicy", url: `${getWebAppUrl()}/privacy.html` },
+                { label: "profile.termsOfService", url: `${getWebAppUrl()}/terms.html` },
+                { label: "profile.support", url: "mailto:pepe.grillo.parlante@gmail.com" },
+              ].map((link) => (
+                <Pressable key={link.label} onPress={() => Linking.openURL(link.url).catch(() => {})}>
+                  <XStack justifyContent="space-between" alignItems="center" paddingVertical="$2">
+                    <Text color="$gray11" fontSize="$2">{t(link.label)}</Text>
+                    <Text color="$gray10" fontSize="$2">&#8250;</Text>
+                  </XStack>
+                </Pressable>
+              ))}
+
+              {/* App Version */}
+              <XStack justifyContent="space-between" alignItems="center" marginTop="$1">
+                <Text color="$gray10" fontSize="$3">{t("profile.appVersion")}</Text>
+                <Text color="$gray10" fontSize="$3">
+                  {Constants.expoConfig?.version || "1.0.0"}
+                </Text>
+              </XStack>
+
+              {/* Delete Account */}
+              <DeleteAccountSection primaryAuthMethod={primaryAuthMethod} />
             </YStack>
           </Card>
         </YStack>

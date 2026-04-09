@@ -25,6 +25,8 @@ export {
   getSession,
   configureApiClient,
   getConfiguredApiUrl,
+  configureWebAppUrl,
+  getWebAppUrl,
   storeBearerToken,
   clearBearerToken,
   getBearerToken,
@@ -35,6 +37,7 @@ export {
   requestPasswordReset,
   resetPasswordWithCode,
   getAdminResetCodes,
+  deleteAccount,
 } from "./auth";
 export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 

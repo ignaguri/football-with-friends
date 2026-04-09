@@ -116,6 +116,9 @@ const LOCALHOST_API = "http://localhost:3001";
 // Configured API URL (set via configureApiClient)
 let _configuredApiUrl: string | null = null;
 
+// Configured Web App URL (set via configureWebAppUrl)
+let _configuredWebAppUrl: string | null = null;
+
 // Google Client ID for One Tap (set via configureGoogleClientId)
 let _googleClientId: string | null = null;
 
@@ -128,6 +131,29 @@ export function configureApiClient(apiUrl: string | undefined) {
   if (apiUrl && apiUrl.length > 0 && !apiUrl.includes("${")) {
     _configuredApiUrl = apiUrl.trim();
   }
+}
+
+/**
+ * Configure the Web App URL for legal page links.
+ * Call this early in your app initialization (e.g., in _layout.tsx).
+ * For Expo apps, pass process.env.EXPO_PUBLIC_WEB_APP_URL or use the default.
+ */
+export function configureWebAppUrl(url: string | undefined) {
+  if (url && url.length > 0 && !url.includes("${")) {
+    _configuredWebAppUrl = url.trim().replace(/\/$/, "");
+  }
+}
+
+/**
+ * Get the configured Web App URL for legal page links.
+ * Falls back to the production Vercel URL.
+ */
+export function getWebAppUrl(): string {
+  if (_configuredWebAppUrl) return _configuredWebAppUrl;
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+  return "https://football-with-friends.vercel.app";
 }
 
 /**
@@ -464,6 +490,36 @@ export async function getAdminResetCodes(): Promise<
   return result.codes;
 }
 
+
+/**
+ * Delete the current user's account and all associated data.
+ * Requires typing a confirmation word and password (for credential accounts).
+ */
+export async function deleteAccount(confirmText: string, password?: string) {
+  await _tokenLoadPromise;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (_cachedBearerToken) {
+    headers["Authorization"] = `Bearer ${_cachedBearerToken}`;
+  }
+
+  const response = await fetch(`${getApiUrl()}/api/profile/delete-account`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ confirmText, password: password || undefined }),
+  });
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(
+      result.error || "Failed to delete account"
+    );
+  }
+
+  // Clear local auth state
+  await clearBearerToken();
+}
 
 // Export types
 export type Session = typeof authClient.$Infer.Session;

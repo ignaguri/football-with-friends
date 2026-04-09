@@ -239,7 +239,20 @@
     "emailLockedByAuth": "El email no se puede cambiar (se usa para autenticación)",
     "phoneLockedByAuth": "El teléfono no se puede cambiar (se usa para autenticación)",
     "profileUpdated": "Perfil actualizado exitosamente",
-    "updateFailed": "Error al actualizar el perfil"
+    "updateFailed": "Error al actualizar el perfil",
+    "deleteAccount": "Eliminar Cuenta",
+    "deleteAccountTitle": "¿Eliminar tu cuenta?",
+    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta y todos los datos asociados incluyendo historial de partidos, estadísticas y votos. Esta acción no se puede deshacer.",
+    "deleteAccountConfirm": "Escribí ELIMINAR para confirmar",
+    "deleteAccountSuccess": "Tu cuenta ha sido eliminada",
+    "deleteAccountFailed": "Error al eliminar la cuenta",
+    "deleting": "Eliminando...",
+    "deleteConfirmWord": "ELIMINAR",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio",
+    "support": "Soporte y Contacto",
+    "legal": "Legal",
+    "appVersion": "Versión de la App"
   },
   "auth": {
     "welcomeBack": "Bienvenido de vuelta",
