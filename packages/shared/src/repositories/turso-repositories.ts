@@ -1742,7 +1742,11 @@ export class TursoMatchMediaRepository {
         eb.fn.max<string>("m.created_at").as("lastUploadAt"),
         eb.fn.countAll<number>().as("totalCount"),
       ])
-      .groupBy(["m.match_id"])
+      .groupBy((eb) => [
+        sql`m.match_id`,
+        sql`mt.match_date`,
+        sql`l.name`,
+      ])
       .orderBy("lastUploadAt", "desc")
       .limit(matchesPerPage + 1); // fetch one extra to detect next page
 
