@@ -571,3 +571,40 @@ export interface ApiResponse<T = unknown> {
   error?: string;
   details?: unknown;
 }
+
+// --- Match media ---
+
+export const MEDIA_KINDS = ["photo", "video"] as const;
+export type MediaKind = (typeof MEDIA_KINDS)[number];
+
+export const REACTION_EMOJIS = ["❤️", "🔥", "⚽", "😂", "🍺"] as const;
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
+
+export type MatchMediaReactionSummary = {
+  emoji: ReactionEmoji;
+  count: number;
+  didReact: boolean;
+};
+
+export type MatchMedia = {
+  id: string;
+  matchId: string;
+  uploaderUserId: string;
+  uploaderName: string;
+  kind: MediaKind;
+  mimeType: string;
+  sizeBytes: number;
+  caption: string | null;
+  url: string;
+  posterUrl: string | null;
+  createdAt: string; // ISO-8601
+  reactions: MatchMediaReactionSummary[];
+};
+
+export type MatchMediaFeedGroup = {
+  matchId: string;
+  matchDate: string;     // ISO date
+  fieldName: string | null;
+  items: MatchMedia[];
+  totalCount: number;    // total items in this match; can be > items.length
+};
