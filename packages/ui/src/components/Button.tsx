@@ -1,7 +1,7 @@
 import { Button as TamaguiButton, ButtonProps } from "tamagui";
 
 export interface CustomButtonProps extends Omit<ButtonProps, "variant"> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "danger-outline";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "danger-outline" | "navy";
 }
 
 export function Button({ variant = "primary", ...props }: CustomButtonProps) {
@@ -48,6 +48,12 @@ export function Button({ variant = "primary", ...props }: CustomButtonProps) {
       alignSelf: "stretch" as const,
       hoverStyle: { backgroundColor: "$red2" },
       pressStyle: { backgroundColor: "$red3" },
+    },
+    navy: {
+      backgroundColor: "$brandNavy",
+      color: "white",
+      hoverStyle: { backgroundColor: "$brandNavyHover" },
+      pressStyle: { backgroundColor: "$brandNavyHover" },
     },
   };
 

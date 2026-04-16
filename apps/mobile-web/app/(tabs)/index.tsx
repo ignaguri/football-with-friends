@@ -67,12 +67,9 @@ export default function HomeScreen() {
 
               {/* Matches Button */}
               <Button
-                variant="primary"
+                variant="navy"
                 size="$5"
                 onPress={() => router.push("/(tabs)/matches")}
-                backgroundColor="$brandNavy"
-                hoverStyle={{ backgroundColor: "$brandNavyHover" }}
-                pressStyle={{ backgroundColor: "$brandNavyHover" }}
                 borderRadius={28}
                 height={60}
               >
@@ -86,12 +83,9 @@ export default function HomeScreen() {
 
               {/* Social Button */}
               <Button
-                variant="primary"
+                variant="navy"
                 size="$5"
                 onPress={() => router.push("/(tabs)/social")}
-                backgroundColor="$brandNavy"
-                hoverStyle={{ backgroundColor: "$brandNavyHover" }}
-                pressStyle={{ backgroundColor: "$brandNavyHover" }}
                 borderRadius={28}
                 height={60}
               >
@@ -105,12 +99,9 @@ export default function HomeScreen() {
 
               {/* Profile Button */}
               <Button
-                variant="primary"
+                variant="navy"
                 size="$5"
                 onPress={() => router.push("/(tabs)/profile")}
-                backgroundColor="$brandNavy"
-                hoverStyle={{ backgroundColor: "$brandNavyHover" }}
-                pressStyle={{ backgroundColor: "$brandNavyHover" }}
                 borderRadius={28}
                 height={60}
               >

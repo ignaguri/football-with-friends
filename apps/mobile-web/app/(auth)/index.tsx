@@ -205,12 +205,9 @@ export default function AuthLandingScreen() {
           {/* Phone Button - Primary */}
           <Button
             onPress={() => router.push("/(auth)/phone-signin")}
-            variant="primary"
+            variant="navy"
             size="$5"
             width="100%"
-            backgroundColor="$brandNavy"
-            hoverStyle={{ backgroundColor: "$brandNavyHover" }}
-            pressStyle={{ backgroundColor: "$brandNavyHover" }}
             fontWeight="400"
           >
             <XStack gap="$3" alignItems="center" justifyContent="center">
