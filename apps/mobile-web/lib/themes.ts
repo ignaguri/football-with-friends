@@ -95,10 +95,13 @@ const brandLight = {
 }
 
 const brandDark = {
-  // Navy is lighter in dark mode so it doesn't disappear into the background
-  brandNavy: '#6D819D',
-  brandNavyHover: '#8498B3',
-  // Dark mode: slightly stronger white overlay since navy is lighter
+  // Navy is lighter in dark mode so it doesn't disappear into the background,
+  // but not so light that white labels fail WCAG AA (≥4.5:1 on normal text).
+  brandNavy: '#5D7289',
+  brandNavyHover: '#7186A1',
+  // Lower alpha in dark mode: the lighter dark-mode navy already has less
+  // contrast with white, so 0.15 here looks visually equivalent to 0.2 on
+  // the darker light-mode navy.
   brandNavyOverlay: 'rgba(255, 255, 255, 0.15)',
   brandWhatsapp: '#25D366', // brand color, unchanged by design
   googleButtonBg: '#131314',
