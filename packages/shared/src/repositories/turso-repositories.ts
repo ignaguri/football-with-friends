@@ -1659,4 +1659,52 @@ export class TursoMatchMediaRepository {
       ownReactions: ownByMedia.get(r.id) ?? new Set<string>(),
     }));
   }
+
+  /**
+   * Toggle a reaction. Inserts if not present, deletes if present.
+   * Returns the final state: true = now reacted, false = reaction removed.
+   */
+  async toggleReaction(
+    mediaId: string,
+    userId: string,
+    emoji: ReactionEmoji
+  ): Promise<{ didReact: boolean; newCount: number }> {
+    const existing = await this.db
+      .selectFrom("match_media_reaction")
+      .select(["media_id"])
+      .where("media_id", "=", mediaId)
+      .where("user_id", "=", userId)
+      .where("emoji", "=", emoji)
+      .executeTakeFirst();
+
+    if (existing) {
+      await this.db
+        .deleteFrom("match_media_reaction")
+        .where("media_id", "=", mediaId)
+        .where("user_id", "=", userId)
+        .where("emoji", "=", emoji)
+        .execute();
+    } else {
+      await this.db
+        .insertInto("match_media_reaction")
+        .values({
+          media_id: mediaId,
+          user_id: userId,
+          emoji,
+        })
+        .execute();
+    }
+
+    const countRow = await this.db
+      .selectFrom("match_media_reaction")
+      .select((eb) => eb.fn.countAll<number>().as("c"))
+      .where("media_id", "=", mediaId)
+      .where("emoji", "=", emoji)
+      .executeTakeFirst();
+
+    return {
+      didReact: !existing,
+      newCount: Number(countRow?.c ?? 0),
+    };
+  }
 }
