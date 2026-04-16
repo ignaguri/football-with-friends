@@ -1,6 +1,6 @@
 import { ComponentType, Fragment } from "react";
-import { XStack, YStack, Text } from "tamagui";
-import { View, StyleSheet } from "react-native";
+import { Separator, XStack, YStack, Text } from "tamagui";
+import { View } from "react-native";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
 import { getCountryFlag } from "../utils/country-flags";
@@ -142,7 +142,7 @@ export function PlayersTable({
   };
 
   const RowSeparator = () => (
-    <View style={separatorStyle.line} />
+    <Separator borderColor="$borderColor" marginHorizontal="$3" marginVertical="$1.5" />
   );
 
   const renderWithSeparators = (list: PlayerRow[]) =>
@@ -184,11 +184,3 @@ export function PlayersTable({
   );
 }
 
-const separatorStyle = StyleSheet.create({
-  line: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#a1a1aa',
-    marginHorizontal: 12,
-    marginVertical: 6,
-  },
-});

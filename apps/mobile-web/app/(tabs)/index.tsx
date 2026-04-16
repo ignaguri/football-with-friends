@@ -10,7 +10,6 @@ import {
   Spinner,
   Dialog,
   List,
-  colors,
 } from "@repo/ui";
 import { Calendar, Trophy, CircleUserRound } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
@@ -71,9 +70,9 @@ export default function HomeScreen() {
                 variant="primary"
                 size="$5"
                 onPress={() => router.push("/(tabs)/matches")}
-                backgroundColor={colors.navyBlue}
-                hoverStyle={{ backgroundColor: colors.navyBlueHover }}
-                pressStyle={{ backgroundColor: colors.navyBlueHover }}
+                backgroundColor="$brandNavy"
+                hoverStyle={{ backgroundColor: "$brandNavyHover" }}
+                pressStyle={{ backgroundColor: "$brandNavyHover" }}
                 borderRadius={28}
                 height={60}
               >
@@ -90,9 +89,9 @@ export default function HomeScreen() {
                 variant="primary"
                 size="$5"
                 onPress={() => router.push("/(tabs)/social")}
-                backgroundColor={colors.navyBlue}
-                hoverStyle={{ backgroundColor: colors.navyBlueHover }}
-                pressStyle={{ backgroundColor: colors.navyBlueHover }}
+                backgroundColor="$brandNavy"
+                hoverStyle={{ backgroundColor: "$brandNavyHover" }}
+                pressStyle={{ backgroundColor: "$brandNavyHover" }}
                 borderRadius={28}
                 height={60}
               >
@@ -109,9 +108,9 @@ export default function HomeScreen() {
                 variant="primary"
                 size="$5"
                 onPress={() => router.push("/(tabs)/profile")}
-                backgroundColor={colors.navyBlue}
-                hoverStyle={{ backgroundColor: colors.navyBlueHover }}
-                pressStyle={{ backgroundColor: colors.navyBlueHover }}
+                backgroundColor="$brandNavy"
+                hoverStyle={{ backgroundColor: "$brandNavyHover" }}
+                pressStyle={{ backgroundColor: "$brandNavyHover" }}
                 borderRadius={28}
                 height={60}
               >

@@ -8,14 +8,12 @@ import {
   Spinner,
   Tabs,
   Button,
-  colors,
 } from "@repo/ui";
 import { Plus, BookOpen } from "@tamagui/lucide-icons";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView, Pressable } from "react-native";
-import { useTheme } from "tamagui";
 import { formatMatchDateTime } from "../../../lib/date-utils";
 
 type MatchType = "upcoming" | "past";
@@ -23,7 +21,6 @@ type MatchType = "upcoming" | "past";
 export default function MatchesListScreen() {
   const { t } = useTranslation();
   const { data: session } = useSession();
-  const theme = useTheme();
   const [activeTab, setActiveTab] = useState<MatchType>("upcoming");
 
   const {
@@ -136,16 +133,14 @@ export default function MatchesListScreen() {
                   style={{ width: "100%" }}
                 >
                   <YStack
-                    backgroundColor={colors.navyBlue}
+                    backgroundColor="$brandNavy"
                     borderRadius={16}
                     padding="$4"
                     gap="$1"
                     pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                    borderWidth={2}
-                    borderColor="rgba(0, 0, 0, 0.6)"
                     $platform-web={{
-                      // @ts-ignore - boxShadow is web-only
-                      boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
+                      // @ts-ignore - boxShadow is web-only, reads a theme-scoped CSS var
+                      boxShadow: "0px 4px 8px var(--shadow3)",
                     }}
                   >
                     <XStack justifyContent="space-between" alignItems="center">
@@ -158,7 +153,7 @@ export default function MatchesListScreen() {
                             fontSize="$2"
                             fontWeight="600"
                             color="white"
-                            backgroundColor="rgba(255, 255, 255, 0.2)"
+                            backgroundColor="$brandNavyOverlay"
                             paddingHorizontal="$2"
                             paddingVertical="$1"
                             borderRadius="$2"

@@ -9,7 +9,7 @@ export function Button({ variant = "primary", ...props }: CustomButtonProps) {
   const variantStyles = {
     primary: {
       backgroundColor: "$blue10",
-      color: "#FFFFFF",
+      color: "white",
       hoverStyle: { backgroundColor: "$blue11" },
       pressStyle: { backgroundColor: "$blue11" },
     },
@@ -36,7 +36,7 @@ export function Button({ variant = "primary", ...props }: CustomButtonProps) {
     },
     danger: {
       backgroundColor: "$red10",
-      color: "#FFFFFF",
+      color: "white",
       hoverStyle: { backgroundColor: "$red11" },
       pressStyle: { backgroundColor: "$red11" },
     },

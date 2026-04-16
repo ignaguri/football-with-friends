@@ -317,7 +317,7 @@ function NativeSelect({
             <Sheet.Overlay
               // @ts-expect-error Tamagui RC: animation types need config augmentation
               animation="lazy"
-              backgroundColor="rgba(0, 0, 0, 0.5)"
+              backgroundColor="$overlayColor"
               enterStyle={{ opacity: 0 }}
               exitStyle={{ opacity: 0 }}
             />

@@ -39,8 +39,7 @@ export function Dialog({
           key="overlay"
           // @ts-expect-error Tamagui RC: animation types need config augmentation
           animation="quick"
-          opacity={0.5}
-          backgroundColor="rgba(0, 0, 0, 0.5)"
+          backgroundColor="$overlayColor"
           enterStyle={{ opacity: 0 }}
           exitStyle={{ opacity: 0 }}
         />

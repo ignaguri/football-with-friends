@@ -23,19 +23,21 @@ import * as Colors from '@tamagui/colors'
  * - gray: Muted text, borders, disabled states
  */
 
-// Dark mode: starts very dark, ends mid-gray (text will be light on these)
+// Dark mode: softer near-black background, smooth progression to light text.
+// Step 10 fills the old gap between step 10 (56%) and step 11 (88%) so
+// "bright-but-not-primary" text has a real token instead of reaching for hex.
 const darkPalette = [
-  'hsla(45, 16%, 1%, 1)',   // 1 - near black (background)
-  'hsla(45, 16%, 6%, 1)',   // 2
-  'hsla(45, 16%, 11%, 1)',  // 3 - subtle surfaces
-  'hsla(45, 16%, 16%, 1)',  // 4
-  'hsla(45, 16%, 21%, 1)',  // 5 - borders
-  'hsla(45, 16%, 27%, 1)',  // 6
-  'hsla(45, 16%, 33%, 1)',  // 7 - muted elements
-  'hsla(45, 16%, 40%, 1)',  // 8
-  'hsla(45, 16%, 48%, 1)',  // 9 - secondary text
-  'hsla(45, 16%, 56%, 1)',  // 10
-  'hsla(45, 16%, 88%, 1)',  // 11 - primary text
+  'hsla(45, 16%, 5%, 1)',   // 1 - soft black (background, OLED-friendly)
+  'hsla(45, 16%, 8%, 1)',   // 2
+  'hsla(45, 16%, 12%, 1)',  // 3 - subtle surfaces
+  'hsla(45, 16%, 17%, 1)',  // 4
+  'hsla(45, 16%, 22%, 1)',  // 5 - borders
+  'hsla(45, 16%, 28%, 1)',  // 6
+  'hsla(45, 16%, 35%, 1)',  // 7 - muted elements
+  'hsla(45, 16%, 45%, 1)',  // 8
+  'hsla(45, 16%, 58%, 1)',  // 9 - secondary text (WCAG AA vs step 1)
+  'hsla(45, 16%, 72%, 1)',  // 10 - bright-but-not-primary text
+  'hsla(45, 16%, 86%, 1)',  // 11 - primary text
   'hsla(45, 16%, 97%, 1)',  // 12 - high contrast text
 ]
 
@@ -73,6 +75,42 @@ const darkShadows = {
   shadow6: 'rgba(0,0,0,0.7)',
 }
 
+// Brand + semantic tokens that need a single source of truth and
+// auto-switch by theme. Exposed as $brandNavy, $googleButtonBg, $overlayColor, etc.
+const brandLight = {
+  brandNavy: '#486284',
+  brandNavyHover: '#6D819D',
+  // Subtle overlay pill on a navy card (e.g. "you joined" badge)
+  brandNavyOverlay: 'rgba(255, 255, 255, 0.2)',
+  brandWhatsapp: '#25D366',
+  // Google sign-in palette (per Google brand guidelines)
+  googleButtonBg: '#FFFFFF',
+  googleButtonBgHover: '#F8F9FA',
+  googleButtonBgPress: '#E8F0FE',
+  googleButtonBorder: '#747775',
+  googleButtonBorderHover: '#4285F4',
+  googleButtonText: '#1F1F1F',
+  // Modal / sheet overlay
+  overlayColor: 'rgba(0, 0, 0, 0.5)',
+}
+
+const brandDark = {
+  // Navy is lighter in dark mode so it doesn't disappear into the background
+  brandNavy: '#6D819D',
+  brandNavyHover: '#8498B3',
+  // Dark mode: slightly stronger white overlay since navy is lighter
+  brandNavyOverlay: 'rgba(255, 255, 255, 0.15)',
+  brandWhatsapp: '#25D366', // brand color, unchanged by design
+  googleButtonBg: '#131314',
+  googleButtonBgHover: '#2A2A2A',
+  googleButtonBgPress: '#3A3A3A',
+  googleButtonBorder: '#8E918F',
+  googleButtonBorderHover: '#C1C1C1',
+  googleButtonText: '#E3E3E3',
+  // Heavier overlay in dark mode adds depth and hides background UI more
+  overlayColor: 'rgba(0, 0, 0, 0.7)',
+}
+
 // Football green accent palette (pitch/field color)
 const accentDarkPalette = [
   'hsla(133, 45%, 18%, 1)',  // 1 - darkest
@@ -83,8 +121,8 @@ const accentDarkPalette = [
   'hsla(133, 50%, 38%, 1)',  // 6
   'hsla(133, 50%, 42%, 1)',  // 7
   'hsla(133, 50%, 46%, 1)',  // 8
-  'hsla(133, 50%, 50%, 1)',  // 9 - main accent
-  'hsla(133, 50%, 55%, 1)',  // 10
+  'hsla(133, 55%, 55%, 1)',  // 9 - main accent (brighter punch on dark bg)
+  'hsla(133, 55%, 62%, 1)',  // 10
   'hsla(133, 30%, 90%, 1)',  // 11 - light text on dark
   'hsla(133, 20%, 96%, 1)',  // 12 - lightest
 ]
@@ -120,6 +158,7 @@ const builtThemes = createThemes({
         ...Colors.gray,
         ...Colors.purple,
         ...lightShadows,
+        ...brandLight,
         shadowColor: lightShadows.shadow3,
       },
       dark: {
@@ -131,6 +170,7 @@ const builtThemes = createThemes({
         ...Colors.grayDark,
         ...Colors.purpleDark,
         ...darkShadows,
+        ...brandDark,
         shadowColor: darkShadows.shadow3,
       },
     },
