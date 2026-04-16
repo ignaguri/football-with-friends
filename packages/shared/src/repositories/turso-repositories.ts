@@ -1577,4 +1577,86 @@ export class TursoMatchMediaRepository {
       .executeTakeFirst();
     return Number(row?.c ?? 0);
   }
+
+  /**
+   * List all media for a match, including the uploader's name, aggregated reaction counts,
+   * and whether the calling user reacted to each emoji.
+   *
+   * `callerUserId` may be null for anonymous calls (reactions will have `didReact: false`).
+   */
+  async listByMatch(
+    matchId: string,
+    callerUserId: string | null
+  ): Promise<Array<{
+    id: string;
+    matchId: string;
+    uploaderUserId: string;
+    uploaderName: string;
+    kind: MediaKind;
+    mimeType: string;
+    sizeBytes: number;
+    caption: string | null;
+    r2Key: string;
+    createdAt: Date;
+    reactionCounts: Record<string, number>;
+    ownReactions: Set<string>;
+  }>> {
+    const rows = await this.db
+      .selectFrom("match_media as m")
+      .innerJoin("user as u", "u.id", "m.uploader_user_id")
+      .select([
+        "m.id as id",
+        "m.match_id as matchId",
+        "m.uploader_user_id as uploaderUserId",
+        "u.name as uploaderName",
+        "m.kind as kind",
+        "m.mime_type as mimeType",
+        "m.size_bytes as sizeBytes",
+        "m.caption as caption",
+        "m.r2_key as r2Key",
+        "m.created_at as createdAt",
+      ])
+      .where("m.match_id", "=", matchId)
+      .orderBy("m.created_at", "desc")
+      .execute();
+
+    if (rows.length === 0) return [];
+
+    const mediaIds = rows.map((r) => r.id);
+
+    const reactionRows = await this.db
+      .selectFrom("match_media_reaction")
+      .select(["media_id", "user_id", "emoji"])
+      .where("media_id", "in", mediaIds)
+      .execute();
+
+    const countsByMedia = new Map<string, Record<string, number>>();
+    const ownByMedia = new Map<string, Set<string>>();
+    for (const r of reactionRows) {
+      const counts = countsByMedia.get(r.media_id) ?? {};
+      counts[r.emoji] = (counts[r.emoji] ?? 0) + 1;
+      countsByMedia.set(r.media_id, counts);
+
+      if (callerUserId && r.user_id === callerUserId) {
+        const set = ownByMedia.get(r.media_id) ?? new Set<string>();
+        set.add(r.emoji);
+        ownByMedia.set(r.media_id, set);
+      }
+    }
+
+    return rows.map((r) => ({
+      id: r.id,
+      matchId: r.matchId,
+      uploaderUserId: r.uploaderUserId,
+      uploaderName: r.uploaderName ?? "",
+      kind: r.kind as MediaKind,
+      mimeType: r.mimeType,
+      sizeBytes: r.sizeBytes,
+      caption: r.caption,
+      r2Key: r.r2Key,
+      createdAt: new Date(r.createdAt as unknown as string),
+      reactionCounts: countsByMedia.get(r.id) ?? {},
+      ownReactions: ownByMedia.get(r.id) ?? new Set<string>(),
+    }));
+  }
 }
