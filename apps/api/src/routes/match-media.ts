@@ -271,4 +271,60 @@ app.get("/file/:key{.+}", async (c) => {
   });
 });
 
+// --- Global feed ---------------------------------------------------------
+
+app.get("/feed", async (c) => {
+  const user = requireUser(c);
+  const cursor = c.req.query("cursor") ?? null;
+  const limit = Math.min(Math.max(Number(c.req.query("limit") ?? "5"), 1), 20);
+  const itemsPerMatch = 6;
+
+  const { groups, nextCursor } = await mediaRepo.feed({
+    cursor,
+    matchesPerPage: limit,
+    itemsPerMatch,
+  });
+
+  // Hydrate each group's mediaIds into full MatchMedia items.
+  const groupResults: MatchMediaFeedGroup[] = [];
+  for (const g of groups) {
+    const items = await mediaRepo.listByMatch(g.matchId, user.id);
+    const filtered = items
+      .filter((it) => g.mediaIds.includes(it.id))
+      .sort(
+        (a, b) =>
+          g.mediaIds.indexOf(a.id) - g.mediaIds.indexOf(b.id)
+      )
+      .map<MatchMedia>((r) => {
+        const posterKey = r.kind === "video"
+          ? generateMatchMediaPosterKey(r.matchId, r.id)
+          : null;
+        return {
+          id: r.id,
+          matchId: r.matchId,
+          uploaderUserId: r.uploaderUserId,
+          uploaderName: r.uploaderName,
+          kind: r.kind,
+          mimeType: r.mimeType,
+          sizeBytes: r.sizeBytes,
+          caption: r.caption,
+          url: buildMediaUrl(c, r.r2Key),
+          posterUrl: posterKey ? buildMediaUrl(c, posterKey) : null,
+          createdAt: r.createdAt.toISOString(),
+          reactions: reactionsFromCounts(r.reactionCounts, r.ownReactions),
+        };
+      });
+
+    groupResults.push({
+      matchId: g.matchId,
+      matchDate: g.matchDate,
+      fieldName: g.fieldName,
+      items: filtered,
+      totalCount: g.totalCount,
+    });
+  }
+
+  return c.json({ groups: groupResults, nextCursor });
+});
+
 export default app;
