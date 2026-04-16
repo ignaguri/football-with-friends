@@ -229,4 +229,26 @@ app.delete("/:matchId/:mediaId", async (c) => {
   return c.body(null, 204);
 });
 
+// --- Reactions -----------------------------------------------------------
+
+app.post("/:matchId/:mediaId/reactions", async (c) => {
+  const user = requireUser(c);
+  const matchId = c.req.param("matchId");
+  const mediaId = c.req.param("mediaId");
+
+  const payload = await c.req.json<{ emoji?: string }>().catch(() => ({ emoji: undefined }));
+  const emoji = payload.emoji as ReactionEmoji | undefined;
+  if (!emoji || !(REACTION_EMOJIS as readonly string[]).includes(emoji)) {
+    return c.json({ error: "Invalid emoji" }, 400);
+  }
+
+  const media = await mediaRepo.findById(mediaId);
+  if (!media || media.matchId !== matchId) {
+    return c.json({ error: "Media not found" }, 404);
+  }
+
+  const result = await mediaRepo.toggleReaction(mediaId, user.id, emoji);
+  return c.json(result);
+});
+
 export default app;
