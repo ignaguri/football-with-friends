@@ -8,7 +8,6 @@ import {
   YStack,
   XStack,
   Image,
-  colors,
 } from "@repo/ui";
 import { Mail } from "@tamagui/lucide-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -20,10 +19,15 @@ import { Platform } from "react-native";
 import { useTheme } from "tamagui";
 
 import { GoogleSignInWeb } from "../../components/GoogleSignInWeb";
+import { useThemeContext } from "../../lib/theme-context";
 
 export default function AuthLandingScreen() {
   const { t } = useTranslation();
-  const theme = useTheme();
+  const { theme } = useThemeContext();
+  const tamaguiTheme = useTheme();
+  const isDark = theme === "dark";
+  // `tintColor` is a native image prop — resolve the theme token to a real color
+  const whatsappTintColor = tamaguiTheme.brandWhatsapp?.val ?? "#25D366";
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
@@ -35,11 +39,6 @@ export default function AuthLandingScreen() {
         console.warn("[AUTH] Apple availability check failed:", err);
       });
   }, []);
-
-  // Detect dark mode for Google button styling
-  const isDark =
-    theme.background?.val === "#000000" ||
-    theme.background?.val?.startsWith("#1");
 
   const handleGoogleAuth = async () => {
     setIsGoogleLoading(true);
@@ -206,19 +205,16 @@ export default function AuthLandingScreen() {
           {/* Phone Button - Primary */}
           <Button
             onPress={() => router.push("/(auth)/phone-signin")}
-            variant="primary"
+            variant="navy"
             size="$5"
             width="100%"
-            backgroundColor={colors.navyBlue}
-            hoverStyle={{ backgroundColor: colors.navyBlueHover }}
-            pressStyle={{ backgroundColor: colors.navyBlueHover }}
             fontWeight="400"
           >
             <XStack gap="$3" alignItems="center" justifyContent="center">
               <Image
                 source={require("../../assets/whatsapp-logo.svg")}
                 style={{ width: 24, height: 24 }}
-                tintColor="#25D366"
+                tintColor={whatsappTintColor}
               />
               <Text
                 color="white"
@@ -286,17 +282,17 @@ export default function AuthLandingScreen() {
               width="100%"
               disabled={isGoogleLoading}
               opacity={isGoogleLoading ? 0.5 : 1}
-              backgroundColor={isDark ? "#131314" : "white"}
+              backgroundColor="$googleButtonBg"
               borderWidth={1}
-              borderColor={isDark ? "#8E918F" : "#747775"}
+              borderColor="$googleButtonBorder"
               hoverStyle={{
-                backgroundColor: isDark ? "#2A2A2A" : "#F8F9FA",
-                borderColor: isDark ? "#C1C1C1" : "#4285F4",
+                backgroundColor: "$googleButtonBgHover",
+                borderColor: "$googleButtonBorderHover",
                 transform: [{ scale: 1.01 }],
               }}
               pressStyle={{
-                backgroundColor: isDark ? "#3A3A3A" : "#E8F0FE",
-                borderColor: isDark ? "#C1C1C1" : "#4285F4",
+                backgroundColor: "$googleButtonBgPress",
+                borderColor: "$googleButtonBorderHover",
                 transform: [{ scale: 0.99 }],
               }}
               paddingHorizontal="$3"
@@ -305,7 +301,7 @@ export default function AuthLandingScreen() {
               <XStack gap="$3" alignItems="center" justifyContent="center">
                 {isGoogleLoading ? (
                   <Text
-                    color={isDark ? "#E3E3E3" : "#1F1F1F"}
+                    color="$googleButtonText"
                     fontSize="$5"
                     fontFamily="$body"
                   >
@@ -322,7 +318,7 @@ export default function AuthLandingScreen() {
                       style={{ width: 24, height: 24 }}
                     />
                     <Text
-                      color={isDark ? "#E3E3E3" : "#1F1F1F"}
+                      color="$googleButtonText"
                       fontSize="$5"
                       fontFamily="$body"
                       fontWeight="500"

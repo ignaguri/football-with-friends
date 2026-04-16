@@ -140,9 +140,5 @@ export {
 } from "./utils/country-flags";
 export type { Country, CountryWithDialCode } from "./utils/country-flags";
 
-// Colors
-export { colors } from "./colors";
-export type { ColorKey } from "./colors";
-
 // Display name utilities
 export { getPlayerDisplayParts, getPlayerDisplayLabel } from "./utils/display-name";

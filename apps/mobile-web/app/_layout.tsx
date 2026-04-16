@@ -144,7 +144,7 @@ function AppContent({ updateReady }: { updateReady: boolean }) {
           />
           <meta
             name="theme-color"
-            content="#4ca861"
+            content="#0F0E0B"
             media="(prefers-color-scheme: dark)"
           />
           <meta name="apple-mobile-web-app-capable" content="yes" />
