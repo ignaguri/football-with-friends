@@ -1,5 +1,5 @@
 import { ComponentType, Fragment } from "react";
-import { Separator, XStack, YStack, Text } from "tamagui";
+import { XStack, YStack, Text, View as TView } from "tamagui";
 import { View } from "react-native";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
 import { Button } from "./Button";
@@ -141,8 +141,15 @@ export function PlayersTable({
   );
   };
 
+  // Tamagui's <Separator> renders as zero-height on native (no default CSS),
+  // so we use a 1px colored View instead — theme-aware via backgroundColor.
   const RowSeparator = () => (
-    <Separator borderColor="$borderColor" marginHorizontal="$3" marginVertical="$1.5" />
+    <TView
+      backgroundColor="$borderColor"
+      height={1}
+      marginHorizontal="$3"
+      marginVertical="$1.5"
+    />
   );
 
   const renderWithSeparators = (list: PlayerRow[]) =>
