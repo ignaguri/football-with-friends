@@ -160,4 +160,73 @@ app.post("/:matchId", async (c) => {
   return c.json(dto, 201);
 });
 
+// --- List ----------------------------------------------------------------
+
+app.get("/:matchId", async (c) => {
+  const user = requireUser(c);
+  const matchId = c.req.param("matchId");
+
+  const rows = await mediaRepo.listByMatch(matchId, user.id);
+  const items: MatchMedia[] = rows.map((r) => {
+    const posterKey = r.kind === "video"
+      ? generateMatchMediaPosterKey(r.matchId, r.id)
+      : null;
+    return {
+      id: r.id,
+      matchId: r.matchId,
+      uploaderUserId: r.uploaderUserId,
+      uploaderName: r.uploaderName,
+      kind: r.kind,
+      mimeType: r.mimeType,
+      sizeBytes: r.sizeBytes,
+      caption: r.caption,
+      url: buildMediaUrl(c, r.r2Key),
+      posterUrl: posterKey ? buildMediaUrl(c, posterKey) : null,
+      createdAt: r.createdAt.toISOString(),
+      reactions: reactionsFromCounts(r.reactionCounts, r.ownReactions),
+    };
+  });
+
+  return c.json({ items });
+});
+
+// --- Count ---------------------------------------------------------------
+
+app.get("/:matchId/count", async (c) => {
+  requireUser(c);
+  const matchId = c.req.param("matchId");
+  const count = await mediaRepo.countByMatch(matchId);
+  return c.json({ count });
+});
+
+// --- Delete --------------------------------------------------------------
+
+app.delete("/:matchId/:mediaId", async (c) => {
+  const user = requireUser(c);
+  const matchId = c.req.param("matchId");
+  const mediaId = c.req.param("mediaId");
+
+  const media = await mediaRepo.findById(mediaId);
+  if (!media || media.matchId !== matchId) {
+    return c.json({ error: "Media not found" }, 404);
+  }
+
+  const isOwner = media.uploaderUserId === user.id;
+  const isAdmin = user.role === "admin";
+  if (!isOwner && !isAdmin) {
+    return c.json({ error: "Forbidden" }, 403);
+  }
+
+  const bucket = c.env?.MATCH_MEDIA;
+  if (!bucket) return c.json({ error: "Storage not configured" }, 500);
+
+  await deleteFromR2(bucket, media.r2Key).catch(() => {});
+  if (media.kind === "video") {
+    await deleteFromR2(bucket, generateMatchMediaPosterKey(matchId, mediaId)).catch(() => {});
+  }
+  await mediaRepo.deleteById(mediaId);
+
+  return c.body(null, 204);
+});
+
 export default app;
