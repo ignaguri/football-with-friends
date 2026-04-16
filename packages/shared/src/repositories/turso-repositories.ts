@@ -1707,4 +1707,88 @@ export class TursoMatchMediaRepository {
       newCount: Number(countRow?.c ?? 0),
     };
   }
+
+  /**
+   * Returns a page of matches (ordered by most-recent-upload per match), with up to
+   * `itemsPerMatch` media items each. Cursor is the `createdAt` of the last match's
+   * latest item (ISO string). Empty cursor = first page.
+   */
+  async feed(options: {
+    cursor: string | null;
+    matchesPerPage: number;
+    itemsPerMatch: number;
+  }): Promise<{
+    groups: Array<{
+      matchId: string;
+      matchDate: string;
+      fieldName: string | null;
+      lastUploadAt: string;
+      totalCount: number;
+      mediaIds: string[];
+    }>;
+    nextCursor: string | null;
+  }> {
+    const { cursor, matchesPerPage, itemsPerMatch } = options;
+
+    // Step 1: Get distinct matches ordered by their most recent upload, after cursor.
+    let matchQuery = this.db
+      .selectFrom("match_media as m")
+      .innerJoin("matches as mt", "mt.id", "m.match_id")
+      .leftJoin("locations as l", "l.id", "mt.location_id")
+      .select((eb) => [
+        sql<string>`m.match_id`.as("matchId"),
+        sql<string>`mt.match_date`.as("matchDate"),
+        sql<string | null>`l.name`.as("fieldName"),
+        eb.fn.max<string>("m.created_at").as("lastUploadAt"),
+        eb.fn.countAll<number>().as("totalCount"),
+      ])
+      .groupBy(["m.match_id"])
+      .orderBy("lastUploadAt", "desc")
+      .limit(matchesPerPage + 1); // fetch one extra to detect next page
+
+    if (cursor) {
+      matchQuery = matchQuery.having(sql`MAX(m.created_at)`, "<", cursor);
+    }
+
+    const matchRows = await matchQuery.execute();
+
+    const hasMore = matchRows.length > matchesPerPage;
+    const pageMatches = hasMore ? matchRows.slice(0, matchesPerPage) : matchRows;
+    const nextCursor =
+      hasMore && pageMatches.length > 0
+        ? (pageMatches[pageMatches.length - 1]?.lastUploadAt as unknown as string) ?? null
+        : null;
+
+    if (pageMatches.length === 0) {
+      return { groups: [], nextCursor: null };
+    }
+
+    // Step 2: For each match in this page, fetch the latest `itemsPerMatch` media ids.
+    const matchIds = pageMatches.map((r) => r.matchId);
+    const itemRows = await this.db
+      .selectFrom("match_media")
+      .select(["id", "match_id", "created_at"])
+      .where("match_id", "in", matchIds)
+      .orderBy("match_id", "asc")
+      .orderBy("created_at", "desc")
+      .execute();
+
+    const idsByMatch = new Map<string, string[]>();
+    for (const row of itemRows) {
+      const list = idsByMatch.get(row.match_id) ?? [];
+      if (list.length < itemsPerMatch) list.push(row.id);
+      idsByMatch.set(row.match_id, list);
+    }
+
+    const groups = pageMatches.map((r) => ({
+      matchId: r.matchId,
+      matchDate: r.matchDate as unknown as string,
+      fieldName: r.fieldName,
+      lastUploadAt: r.lastUploadAt as unknown as string,
+      totalCount: Number(r.totalCount),
+      mediaIds: idsByMatch.get(r.matchId) ?? [],
+    }));
+
+    return { groups, nextCursor };
+  }
 }
