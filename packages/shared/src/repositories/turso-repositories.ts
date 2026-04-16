@@ -39,6 +39,11 @@ import type {
   MatchDetails,
   SignupWithDetails,
   PlayerStatus,
+  MatchMedia,
+  MatchMediaFeedGroup,
+  MatchMediaReactionSummary,
+  MediaKind,
+  ReactionEmoji,
 } from "../domain/types";
 
 import { getDatabase } from "../database/connection";
@@ -1495,5 +1500,81 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         value: Number(row.value),
       };
     });
+  }
+}
+
+// Turso Match Media Repository -------------------------------------------
+
+export interface CreateMatchMediaInput {
+  id: string;
+  matchId: string;
+  uploaderUserId: string;
+  kind: MediaKind;
+  mimeType: string;
+  sizeBytes: number;
+  caption: string | null;
+  r2Key: string;
+}
+
+export class TursoMatchMediaRepository {
+  private db = getDatabase();
+
+  async create(input: CreateMatchMediaInput): Promise<void> {
+    await this.db
+      .insertInto("match_media")
+      .values({
+        id: input.id,
+        match_id: input.matchId,
+        uploader_user_id: input.uploaderUserId,
+        kind: input.kind,
+        mime_type: input.mimeType,
+        size_bytes: input.sizeBytes,
+        caption: input.caption,
+        r2_key: input.r2Key,
+      })
+      .execute();
+  }
+
+  async findById(id: string): Promise<{
+    id: string;
+    matchId: string;
+    uploaderUserId: string;
+    kind: MediaKind;
+    mimeType: string;
+    sizeBytes: number;
+    caption: string | null;
+    r2Key: string;
+    createdAt: Date;
+  } | null> {
+    const row = await this.db
+      .selectFrom("match_media")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+    if (!row) return null;
+    return {
+      id: row.id,
+      matchId: row.match_id,
+      uploaderUserId: row.uploader_user_id,
+      kind: row.kind,
+      mimeType: row.mime_type,
+      sizeBytes: row.size_bytes,
+      caption: row.caption,
+      r2Key: row.r2_key,
+      createdAt: new Date(row.created_at as unknown as string),
+    };
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await this.db.deleteFrom("match_media").where("id", "=", id).execute();
+  }
+
+  async countByMatch(matchId: string): Promise<number> {
+    const row = await this.db
+      .selectFrom("match_media")
+      .select((eb) => eb.fn.countAll<number>().as("c"))
+      .where("match_id", "=", matchId)
+      .executeTakeFirst();
+    return Number(row?.c ?? 0);
   }
 }
