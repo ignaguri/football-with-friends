@@ -251,4 +251,24 @@ app.post("/:matchId/:mediaId/reactions", async (c) => {
   return c.json(result);
 });
 
+// --- Serve file ----------------------------------------------------------
+
+app.get("/file/:key{.+}", async (c) => {
+  requireUser(c);
+  const key = decodeURIComponent(c.req.param("key"));
+  const bucket = c.env?.MATCH_MEDIA;
+  if (!bucket) return c.json({ error: "Storage not configured" }, 500);
+
+  const object = await getFromR2(bucket, key);
+  if (!object) return c.json({ error: "Not found" }, 404);
+
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": object.httpMetadata?.contentType || "application/octet-stream",
+      "Cache-Control": "public, max-age=31536000",
+      ETag: object.etag,
+    },
+  });
+});
+
 export default app;
