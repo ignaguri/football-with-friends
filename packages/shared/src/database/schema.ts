@@ -155,6 +155,25 @@ export interface MatchPlayerStatsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface MatchMediaTable {
+  id: string;
+  match_id: string;
+  uploader_user_id: string;
+  kind: "photo" | "video";
+  mime_type: string;
+  size_bytes: number;
+  caption: string | null;
+  r2_key: string;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface MatchMediaReactionTable {
+  media_id: string;
+  user_id: string;
+  emoji: string;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
 export interface PushTokensTable {
   id: Generated<string>;
   user_id: string;
@@ -187,6 +206,8 @@ export interface Database {
   account: AccountTable;
   settings: SettingsTable;
   match_player_stats: MatchPlayerStatsTable;
+  match_media: MatchMediaTable;
+  match_media_reaction: MatchMediaReactionTable;
   voting_criteria: VotingCriteriaTable;
   match_votes: MatchVotesTable;
   push_tokens: PushTokensTable;
