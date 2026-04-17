@@ -18,6 +18,7 @@ import {
   TursoSignupRepository,
   TursoMatchInvitationRepository,
   TursoPlayerStatsRepository,
+  TursoMatchMediaRepository,
 } from "./turso-repositories";
 
 import { TursoPushTokenRepository } from "./push-token-repository";
@@ -34,6 +35,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
   public readonly invitations: MatchInvitationRepository;
   public readonly playerStats: PlayerStatsRepository;
   public readonly pushTokens: PushTokenRepository;
+  public readonly matchMedia: TursoMatchMediaRepository;
 
   constructor(provider: StorageProvider = "turso") {
     switch (provider) {
@@ -46,6 +48,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
         this.invitations = new TursoMatchInvitationRepository();
         this.playerStats = new TursoPlayerStatsRepository();
         this.pushTokens = new TursoPushTokenRepository();
+        this.matchMedia = new TursoMatchMediaRepository();
         break;
 
       default:

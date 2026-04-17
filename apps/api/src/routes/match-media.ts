@@ -8,11 +8,7 @@ import {
   type MatchMediaReactionSummary,
   type ReactionEmoji,
 } from "@repo/shared/domain";
-import {
-  TursoMatchMediaRepository,
-  TursoMatchRepository,
-  TursoSignupRepository,
-} from "@repo/shared/repositories";
+import { getRepositoryFactory } from "@repo/shared/repositories";
 
 import { requireUser } from "../middleware/security";
 import {
@@ -39,9 +35,7 @@ const PHOTO_MIMES = ["image/webp", "image/jpeg", "image/png"];
 const VIDEO_MIMES = ["video/mp4", "video/quicktime"];
 const CAPTION_MAX_LEN = 280;
 
-const mediaRepo = new TursoMatchMediaRepository();
-const matchRepo = new TursoMatchRepository();
-const signupRepo = new TursoSignupRepository();
+const repos = () => getRepositoryFactory();
 
 function buildMediaUrl(
   c: any,
@@ -68,10 +62,10 @@ app.post("/:matchId", async (c) => {
   const user = requireUser(c);
   const matchId = c.req.param("matchId");
 
-  const match = await matchRepo.findById(matchId);
+  const match = await repos().matches.findById(matchId);
   if (!match) return c.json({ error: "Match not found" }, 404);
 
-  const participantIds = await signupRepo.getSignedUpUserIds(matchId);
+  const participantIds = await repos().signups.getSignedUpUserIds(matchId);
   const isParticipant = participantIds.includes(user.id);
   const isAdmin = user.role === "admin";
   if (!isParticipant && !isAdmin) {
@@ -124,7 +118,7 @@ app.post("/:matchId", async (c) => {
   }
 
   try {
-    await mediaRepo.create({
+    await repos().matchMedia.create({
       id: mediaId,
       matchId,
       uploaderUserId: user.id,
@@ -166,7 +160,7 @@ app.get("/:matchId", async (c) => {
   const user = requireUser(c);
   const matchId = c.req.param("matchId");
 
-  const rows = await mediaRepo.listByMatch(matchId, user.id);
+  const rows = await repos().matchMedia.listByMatch(matchId, user.id);
   const items: MatchMedia[] = rows.map((r) => {
     const posterKey = r.kind === "video"
       ? generateMatchMediaPosterKey(r.matchId, r.id)
@@ -195,7 +189,7 @@ app.get("/:matchId", async (c) => {
 app.get("/:matchId/count", async (c) => {
   requireUser(c);
   const matchId = c.req.param("matchId");
-  const count = await mediaRepo.countByMatch(matchId);
+  const count = await repos().matchMedia.countByMatch(matchId);
   return c.json({ count });
 });
 
@@ -206,7 +200,7 @@ app.delete("/:matchId/:mediaId", async (c) => {
   const matchId = c.req.param("matchId");
   const mediaId = c.req.param("mediaId");
 
-  const media = await mediaRepo.findById(mediaId);
+  const media = await repos().matchMedia.findById(mediaId);
   if (!media || media.matchId !== matchId) {
     return c.json({ error: "Media not found" }, 404);
   }
@@ -224,7 +218,7 @@ app.delete("/:matchId/:mediaId", async (c) => {
   if (media.kind === "video") {
     await deleteFromR2(bucket, generateMatchMediaPosterKey(matchId, mediaId)).catch(() => {});
   }
-  await mediaRepo.deleteById(mediaId);
+  await repos().matchMedia.deleteById(mediaId);
 
   return c.body(null, 204);
 });
@@ -242,12 +236,12 @@ app.post("/:matchId/:mediaId/reactions", async (c) => {
     return c.json({ error: "Invalid emoji" }, 400);
   }
 
-  const media = await mediaRepo.findById(mediaId);
+  const media = await repos().matchMedia.findById(mediaId);
   if (!media || media.matchId !== matchId) {
     return c.json({ error: "Media not found" }, 404);
   }
 
-  const result = await mediaRepo.toggleReaction(mediaId, user.id, emoji);
+  const result = await repos().matchMedia.toggleReaction(mediaId, user.id, emoji);
   return c.json(result);
 });
 
@@ -279,7 +273,7 @@ app.get("/feed", async (c) => {
   const limit = Math.min(Math.max(Number(c.req.query("limit") ?? "5"), 1), 20);
   const itemsPerMatch = 6;
 
-  const { groups, nextCursor } = await mediaRepo.feed({
+  const { groups, nextCursor } = await repos().matchMedia.feed({
     cursor,
     matchesPerPage: limit,
     itemsPerMatch,
@@ -288,7 +282,7 @@ app.get("/feed", async (c) => {
   // Hydrate each group's mediaIds into full MatchMedia items.
   const groupResults: MatchMediaFeedGroup[] = [];
   for (const g of groups) {
-    const items = await mediaRepo.listByMatch(g.matchId, user.id);
+    const items = await repos().matchMedia.listByMatch(g.matchId, user.id);
     const filtered = items
       .filter((it) => g.mediaIds.includes(it.id))
       .sort(
