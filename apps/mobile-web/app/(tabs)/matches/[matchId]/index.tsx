@@ -50,12 +50,12 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 
-import { formatFullDate } from "../../../../lib/date-utils";
+import { formatFullDate } from "@/lib/date-utils";
 import {
   generateICS as generateICSFromUtils,
   getGoogleCalendarUrl,
   openGoogleCalendar,
-} from "../../../../lib/calendar-utils";
+} from "@/lib/calendar-utils";
 
 interface Signup {
   id: string;
@@ -96,7 +96,7 @@ interface MatchDetails {
 function WhatsAppIcon({ size = 20 }: { size?: number }) {
   return (
     <Image
-      source={require("../../../../assets/whatsapp-logo.svg")}
+      source={require("@/assets/whatsapp-logo.svg")}
       style={{ width: size, height: size }}
       pointerEvents="none"
     />
@@ -106,7 +106,7 @@ function WhatsAppIcon({ size = 20 }: { size?: number }) {
 function PayPalIcon({ size = 20 }: { size?: number }) {
   return (
     <Image
-      source={require("../../../../assets/paypal-logo.svg")}
+      source={require("@/assets/paypal-logo.svg")}
       style={{ width: size, height: size }}
       pointerEvents="none"
     />
