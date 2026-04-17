@@ -2,7 +2,7 @@
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
-import { X, ChevronLeft, ChevronRight, MoreVertical } from "@tamagui/lucide-icons";
+import { X, ChevronLeft, ChevronRight, MoreVertical, Trash2 } from "@tamagui/lucide-icons";
 import { useEffect, useState } from "react";
 import { Modal, View, useWindowDimensions } from "react-native";
 import { XStack, YStack, Text } from "tamagui";
@@ -27,8 +27,8 @@ function IconChip({
   return (
     <YStack
       onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
+      role="button"
+      aria-label={accessibilityLabel}
       width={40}
       height={40}
       borderRadius={20}
@@ -81,11 +81,19 @@ export function MediaLightbox({
   canDelete,
 }: MediaLightboxProps) {
   const [index, setIndex] = useState(startIndex);
+  const [menuOpen, setMenuOpen] = useState(false);
   const { width, height } = useWindowDimensions();
 
   useEffect(() => {
     if (visible) setIndex(startIndex);
   }, [visible, startIndex]);
+
+  // Close the action menu whenever the user navigates to a different item or
+  // the lightbox itself closes — prevents a stale menu hovering over the wrong
+  // media.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [index, visible]);
 
   if (!visible || items.length === 0) return null;
   const item = items[Math.max(0, Math.min(index, items.length - 1))];
@@ -152,9 +160,57 @@ export function MediaLightbox({
               </Text>
             </YStack>
             {canDelete(item) && onDelete && (
-              <IconChip onPress={() => onDelete(item)} accessibilityLabel="Delete">
-                <MoreVertical size={22} color="$color" />
-              </IconChip>
+              <YStack position="relative">
+                <IconChip
+                  onPress={() => setMenuOpen((o) => !o)}
+                  accessibilityLabel="More actions"
+                >
+                  <MoreVertical size={22} color="$color" />
+                </IconChip>
+                {menuOpen && (
+                  <YStack
+                    nativeID="media-lightbox-menu"
+                    position="absolute"
+                    bottom={48}
+                    right={0}
+                    minWidth={180}
+                    backgroundColor="$background"
+                    borderRadius="$3"
+                    borderWidth={1}
+                    borderColor="$borderColor"
+                    padding="$1"
+                    gap="$1"
+                    // elevation + shadowColor for native, translated to box-shadow on web
+                    elevation={5}
+                    shadowColor="$shadowColor"
+                    shadowOffset={{ width: 0, height: 2 }}
+                    shadowOpacity={0.2}
+                    shadowRadius={8}
+                    zIndex={20}
+                  >
+                    <XStack
+                      onPress={() => {
+                        setMenuOpen(false);
+                        onDelete(item);
+                      }}
+                      role="menuitem"
+                      aria-label="Delete"
+                      cursor="pointer"
+                      hoverStyle={{ backgroundColor: "$red4" }}
+                      pressStyle={{ backgroundColor: "$red5" }}
+                      padding="$2"
+                      gap="$2"
+                      alignItems="center"
+                      borderRadius="$2"
+                    >
+                      <Trash2 size={18} color="$red10" />
+                      <Text color="$red10" fontSize="$3">
+                        Delete
+                      </Text>
+                    </XStack>
+                  </YStack>
+                )}
+              </YStack>
             )}
           </XStack>
           {item.caption && (

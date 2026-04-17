@@ -69,3 +69,6 @@ div:has(> div > h1[role="heading"]) {
 #media-lightbox-footer {
   background-color: var(--backgroundHover) !important;
 }
+#media-lightbox-menu {
+  background-color: var(--background) !important;
+}
