@@ -93,6 +93,9 @@ export type { AwardCardProps } from "./components/AwardCard";
 export { VotingStatsSection } from "./components/VotingStatsSection";
 export type { VotingStatsSectionProps } from "./components/VotingStatsSection";
 
+export { ReactionBar } from "./components/ReactionBar";
+export type { ReactionBarProps } from "./components/ReactionBar";
+
 export { ExclusiveMultiSelect } from "./components/exclusive-multi-select";
 export type {
   ExclusiveMultiSelectProps,
