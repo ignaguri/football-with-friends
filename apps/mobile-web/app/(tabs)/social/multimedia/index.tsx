@@ -12,12 +12,12 @@ import type { MatchMedia, MatchMediaFeedGroup } from "@repo/shared/domain";
 const THUMB_SIZE = 56;
 const MAX_THUMBS = 3;
 
-function FeedThumb({ item, overlay }: { item: MatchMedia; overlay: number | null }) {
+function FeedThumb({ item }: { item: MatchMedia }) {
   const thumbUrl = item.kind === "video" && item.posterUrl ? item.posterUrl : item.url;
   return (
     <View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 6, overflow: "hidden" }}>
       <Image source={{ uri: thumbUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
-      {item.kind === "video" && overlay === null && (
+      {item.kind === "video" && (
         <View
           style={{
             position: "absolute",
@@ -30,22 +30,29 @@ function FeedThumb({ item, overlay }: { item: MatchMedia; overlay: number | null
           <Play size={18} color="#fff" />
         </View>
       )}
-      {overlay !== null && (
-        <View
-          style={{
-            position: "absolute",
-            inset: 0,
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0,0,0,0.55)",
-          }}
-        >
-          <Text color="#fff" fontWeight="700" fontSize="$3">
-            +{overlay}
-          </Text>
-        </View>
-      )}
     </View>
+  );
+}
+
+// Rendered in place of the 3rd thumbnail when a match has more photos than
+// MAX_THUMBS. Solid-colored circle keeps it clearly readable against the
+// neighbouring thumbnails, and adapts to theme via $blue8 / $blue11.
+function FeedOverflowBadge({ count }: { count: number }) {
+  return (
+    <YStack
+      width={THUMB_SIZE}
+      height={THUMB_SIZE}
+      borderRadius={THUMB_SIZE / 2}
+      backgroundColor="$blue8"
+      borderWidth={2}
+      borderColor="$background"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Text color="$blue12" fontWeight="700" fontSize="$5">
+        +{count}
+      </Text>
+    </YStack>
   );
 }
 
@@ -104,16 +111,13 @@ export default function MultimediaFeedScreen() {
                       accessibilityLabel={`Open gallery for ${formatDisplayDate(g.matchDate, "MMM d")}`}
                     >
                       <XStack alignItems="center" gap="$3">
-                        <XStack gap={4}>
+                        <XStack gap={4} alignItems="center">
                           {displayItems.map((item, i) => {
                             const isLast = i === displayItems.length - 1;
-                            return (
-                              <FeedThumb
-                                key={item.id}
-                                item={item}
-                                overlay={isLast && overflow > 0 ? overflow : null}
-                              />
-                            );
+                            if (isLast && overflow > 0) {
+                              return <FeedOverflowBadge key="overflow" count={overflow} />;
+                            }
+                            return <FeedThumb key={item.id} item={item} />;
                           })}
                         </XStack>
                         <YStack flex={1}>
