@@ -271,6 +271,14 @@ export default function MatchGalleryScreen() {
           toggleReactionMut.mutate({ mediaId: item.id, emoji })
         }
         onDelete={(item) => {
+          // RN Web's Alert.alert ignores button arrays, so use window.confirm
+          // on web. Native platforms get the standard destructive-style alert.
+          if (Platform.OS === "web") {
+            if (window.confirm(t("multimedia.deleteConfirm"))) {
+              deleteMut.mutate(item.id);
+            }
+            return;
+          }
           Alert.alert(t("multimedia.deleteConfirm"), undefined, [
             { text: t("multimedia.cancel"), style: "cancel" },
             {
