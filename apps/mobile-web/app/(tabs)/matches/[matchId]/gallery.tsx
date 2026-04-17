@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { MediaGrid, MediaLightbox } from "@repo/ui";
 import { api, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
-import { useLocalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView } from "react-native";
@@ -233,7 +233,6 @@ export default function MatchGalleryScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("multimedia.title") }} />
       <Container variant="padded">
         <ScrollView
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
