@@ -96,6 +96,9 @@ export type { VotingStatsSectionProps } from "./components/VotingStatsSection";
 export { ReactionBar } from "./components/ReactionBar";
 export type { ReactionBarProps } from "./components/ReactionBar";
 
+export { MediaGrid } from "./components/MediaGrid";
+export type { MediaGridProps } from "./components/MediaGrid";
+
 export { ExclusiveMultiSelect } from "./components/exclusive-multi-select";
 export type {
   ExclusiveMultiSelectProps,
