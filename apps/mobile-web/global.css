@@ -58,3 +58,14 @@ div:has(> h1[role="heading"]) {
 div:has(> div > h1[role="heading"]) {
   background-color: var(--background) !important;
 }
+
+/* MediaLightbox: the outer backdrop and the footer panel can't always be
+ * compiler-flattened by Tamagui (they live inside RN's <Modal>), so they fall
+ * back to .css-view-g5y9jx which is zapped by the transparency reset above.
+ * Re-assert theme-variable backgrounds via their nativeID ids. */
+#media-lightbox-overlay {
+  background-color: var(--background) !important;
+}
+#media-lightbox-footer {
+  background-color: var(--backgroundHover) !important;
+}

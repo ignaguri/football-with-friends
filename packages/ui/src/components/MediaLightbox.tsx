@@ -4,9 +4,46 @@ import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { X, ChevronLeft, ChevronRight, MoreVertical } from "@tamagui/lucide-icons";
 import { useEffect, useState } from "react";
-import { Modal, Pressable, View, useWindowDimensions } from "react-native";
+import { Modal, View, useWindowDimensions } from "react-native";
 import { XStack, YStack, Text } from "tamagui";
 import { ReactionBar } from "./ReactionBar";
+
+// IconChip: a Tamagui-native pressable circular button. Using onPress +
+// pressStyle on the YStack (rather than wrapping in RN's <Pressable>) keeps
+// the whole subtree inside Tamagui's compiler scope — atomic RN Web classes
+// (css-view-g5y9jx) are zapped to transparent by an !important reset rule and
+// Tamagui's flattened classes are the ones that win.
+function IconChip({
+  onPress,
+  children,
+  accessibilityLabel,
+  style,
+}: {
+  onPress: () => void;
+  children: React.ReactNode;
+  accessibilityLabel: string;
+  style?: object;
+}) {
+  return (
+    <YStack
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      width={40}
+      height={40}
+      borderRadius={20}
+      backgroundColor="$color4"
+      alignItems="center"
+      justifyContent="center"
+      cursor="pointer"
+      pressStyle={{ backgroundColor: "$color5" }}
+      hoverStyle={{ backgroundColor: "$color5" }}
+      style={style}
+    >
+      {children}
+    </YStack>
+  );
+}
 
 export type MediaLightboxProps = {
   items: MatchMedia[];
@@ -57,16 +94,18 @@ export function MediaLightbox({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.92)" }}>
-        {/* Close */}
-        <Pressable
+      {/* nativeID becomes `id` on web. Paired with a selector override in
+          apps/mobile-web/global.css so the backdrop defeats the project's
+          .css-view-g5y9jx { background: transparent !important } reset when
+          Tamagui's compiler can't flatten this tree. */}
+      <YStack nativeID="media-lightbox-overlay" flex={1} backgroundColor="$background">
+        <IconChip
           onPress={onClose}
-          style={{ position: "absolute", top: 40, right: 16, zIndex: 10, padding: 8 }}
-          accessibilityRole="button"
           accessibilityLabel="Close"
+          style={{ position: "absolute", top: 24, right: 16, zIndex: 10 }}
         >
-          <X size={28} color="#fff" />
-        </Pressable>
+          <X size={24} color="$color" />
+        </IconChip>
 
         {/* Media */}
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -82,52 +121,44 @@ export function MediaLightbox({
           )}
         </View>
 
-        {/* Prev/Next */}
         {canPrev && (
-          <Pressable
+          <IconChip
             onPress={() => setIndex((i) => i - 1)}
-            style={{ position: "absolute", left: 8, top: "50%", padding: 12 }}
-            accessibilityRole="button"
             accessibilityLabel="Previous"
+            style={{ position: "absolute", left: 8, top: "50%", zIndex: 10 }}
           >
-            <ChevronLeft size={32} color="#fff" />
-          </Pressable>
+            <ChevronLeft size={24} color="$color" />
+          </IconChip>
         )}
         {canNext && (
-          <Pressable
+          <IconChip
             onPress={() => setIndex((i) => i + 1)}
-            style={{ position: "absolute", right: 8, top: "50%", padding: 12 }}
-            accessibilityRole="button"
             accessibilityLabel="Next"
+            style={{ position: "absolute", right: 8, top: "50%", zIndex: 10 }}
           >
-            <ChevronRight size={32} color="#fff" />
-          </Pressable>
+            <ChevronRight size={24} color="$color" />
+          </IconChip>
         )}
 
         {/* Footer */}
-        <YStack padding="$3" gap="$2" backgroundColor="rgba(0,0,0,0.6)">
+        <YStack nativeID="media-lightbox-footer" padding="$3" gap="$2" backgroundColor="$backgroundHover">
           <XStack alignItems="center" justifyContent="space-between">
             <YStack flex={1}>
-              <Text color="#fff" fontSize="$4" fontWeight="600">
+              <Text color="$color" fontSize="$4" fontWeight="600">
                 {item.uploaderName}
               </Text>
-              <Text color="#aaa" fontSize="$2">
+              <Text color="$gray11" fontSize="$2">
                 {new Date(item.createdAt).toLocaleString()}
               </Text>
             </YStack>
             {canDelete(item) && onDelete && (
-              <Pressable
-                onPress={() => onDelete(item)}
-                accessibilityRole="button"
-                accessibilityLabel="Delete"
-                style={{ padding: 8 }}
-              >
-                <MoreVertical size={22} color="#fff" />
-              </Pressable>
+              <IconChip onPress={() => onDelete(item)} accessibilityLabel="Delete">
+                <MoreVertical size={22} color="$color" />
+              </IconChip>
             )}
           </XStack>
           {item.caption && (
-            <Text color="#ddd" fontSize="$3">
+            <Text color="$gray11" fontSize="$3">
               {item.caption}
             </Text>
           )}
@@ -136,7 +167,7 @@ export function MediaLightbox({
             onToggle={(emoji) => onToggleReaction(item, emoji)}
           />
         </YStack>
-      </View>
+      </YStack>
     </Modal>
   );
 }
