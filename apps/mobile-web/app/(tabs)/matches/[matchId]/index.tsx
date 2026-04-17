@@ -50,12 +50,12 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 
-import { formatFullDate } from "../../../lib/date-utils";
+import { formatFullDate } from "../../../../lib/date-utils";
 import {
   generateICS as generateICSFromUtils,
   getGoogleCalendarUrl,
   openGoogleCalendar,
-} from "../../../lib/calendar-utils";
+} from "../../../../lib/calendar-utils";
 
 interface Signup {
   id: string;
