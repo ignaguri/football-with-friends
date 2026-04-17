@@ -827,7 +827,7 @@ export default function MatchDetailScreen() {
           )}
 
           {/* Multimedia Gallery Card */}
-          {userId && (
+          {userId && (mediaCount > 0 || isParticipating || isAdmin) && (
             <Pressable
               onPress={() => router.push(`/(tabs)/matches/${matchId}/gallery`)}
               accessibilityRole="button"
@@ -854,6 +854,8 @@ export default function MatchDetailScreen() {
                         ? t("multimedia.addFirstPhoto")
                         : t("multimedia.galleryCount", { count: mediaCount })}
                     </Text>
+                    {/* Note: addFirstPhoto is only shown to participants/admin since
+                        the card is hidden for non-participants when count === 0. */}
                   </YStack>
                   <ChevronRight size={20} color="$gray10" />
                 </XStack>

@@ -31,9 +31,21 @@ export default function MatchesLayout() {
         }}
       />
       <Stack.Screen
-        name="[matchId]"
+        name="[matchId]/index"
         options={{
           title: t("nav.matches"),
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable onPress={() => router.back()} style={{ marginLeft: 8 }}>
+              <ChevronLeft size={28} color={theme.color?.val} />
+            </Pressable>
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="[matchId]/gallery"
+        options={{
+          title: t("multimedia.title"),
           headerBackVisible: false,
           headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ marginLeft: 8 }}>

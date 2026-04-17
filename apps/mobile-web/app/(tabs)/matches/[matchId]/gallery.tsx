@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { MediaGrid, MediaLightbox } from "@repo/ui";
-import { api, useQuery, useMutation, useQueryClient } from "@repo/api-client";
+import { api, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,10 +37,22 @@ export default function MatchGalleryScreen() {
   const userId = session?.user?.id ?? null;
   const isAdmin = session?.user?.role === "admin";
 
-  // Participant check: we don't have a first-class "am I in this match?" client call,
-  // so we approximate by letting the server reject if we're wrong. The Upload button
-  // shows when the user is logged in; the API enforces the real check.
-  const canUpload = !!userId;
+  // Fetch the match to get the server-authoritative `isUserSignedUp` flag so we
+  // can gate the Upload button client-side (server still enforces on POST).
+  const { data: match } = useQuery({
+    queryKey: ["match", matchId],
+    queryFn: async () => {
+      const res = await client.api.matches[":id"].$get({
+        param: { id: matchId! },
+        query: { userId: userId || "" },
+      });
+      if (!res.ok) return null;
+      return res.json() as Promise<{ isUserSignedUp?: boolean }>;
+    },
+    enabled: !!matchId && !!userId,
+  });
+
+  const canUpload = !!userId && (match?.isUserSignedUp === true || isAdmin);
 
   const canDelete = useCallback(
     (item: MatchMedia) => !!userId && (item.uploaderUserId === userId || isAdmin),
@@ -77,6 +89,22 @@ export default function MatchGalleryScreen() {
           if (i === 1) void pick("video");
         }
       );
+    } else if (Platform.OS === "web") {
+      // RN Web's Alert.alert doesn't render custom button arrays — it falls
+      // through to window.alert(title, message), ignoring buttons. Use the
+      // browser's native file picker with All media types and derive the kind
+      // from the picked asset's type.
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) return;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        quality: 0.8,
+        videoMaxDuration: 30,
+      });
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      const kind: "photo" | "video" = asset.type === "video" ? "video" : "photo";
+      await submitUpload(asset, kind);
     } else {
       Alert.alert(t("multimedia.upload"), undefined, [
         { text: t("multimedia.pickPhoto"), onPress: () => void pick("photo") },
