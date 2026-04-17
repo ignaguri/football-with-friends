@@ -273,6 +273,9 @@ importers:
       expo-video:
         specifier: ^55.0.15
         version: 55.0.15(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)
+      expo-video-thumbnails:
+        specifier: ^55.0.14
+        version: 55.0.14(expo@55.0.11)
       expo-web-browser:
         specifier: ^55.0.12
         version: 55.0.12(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))
@@ -5057,6 +5060,11 @@ packages:
       expo: '*'
       react: 19.2.0
       react-native: '*'
+
+  expo-video-thumbnails@55.0.14:
+    resolution: {integrity: sha512-OeUXzElV/+iXXtzLFgjQKGKRlRh3qcqarEMKBMLQKO4LZ39H8EtJIs+DsEMs/UM9fPe5Xhi5dm2QkNblJQxLtg==}
+    peerDependencies:
+      expo: '*'
 
   expo-video@55.0.15:
     resolution: {integrity: sha512-4GEEiTH5hGsyEt7Chsiv8IS4ioYuEJ4Wc+tjbf8NiGvAw0bQquN41zWmYLnwgzPoU3tCr8SaACgEvJRc3+FcWw==}
@@ -14583,6 +14591,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
+
+  expo-video-thumbnails@55.0.14(expo@55.0.11):
+    dependencies:
+      expo: 55.0.11(@babel/core@7.29.0)(@expo/dom-webview@55.0.5)(@expo/metro-runtime@55.0.9)(expo-router@55.0.10)(react-dom@19.2.0(react@19.2.0))(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0)(typescript@5.9.3)
 
   expo-video@55.0.15(expo@55.0.11)(react-native@0.83.4(@babel/core@7.29.0)(@types/react@19.2.14)(react@19.2.0))(react@19.2.0):
     dependencies:
