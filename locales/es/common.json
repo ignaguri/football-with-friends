@@ -536,11 +536,37 @@
     "statsCard": "Estadísticas de Jugadores",
     "statsCardDesc": "Ver estadísticas y tabla de posiciones",
     "multimediaCard": "Multimedia",
-    "multimediaCardDesc": "Próximamente",
+    "multimediaCardDesc": "Fotos y videos de nuestros partidos",
     "tabs": {
       "players": "Jugadores",
       "rankings": "Rankings",
       "awards": "Premios"
+    }
+  },
+  "multimedia": {
+    "title": "Multimedia",
+    "upload": "Subir",
+    "uploading": "Subiendo… {{percent}}%",
+    "captionPlaceholder": "Agregá un comentario (opcional)",
+    "post": "Publicar",
+    "cancel": "Cancelar",
+    "emptyMatch": "Todavía no hay fotos. ¡Sé el primero!",
+    "emptyFeed": "Aún no hay multimedia. Subí algo desde un partido.",
+    "viewGallery": "Ver galería",
+    "galleryCount_one": "{{count}} elemento",
+    "galleryCount_other": "{{count}} elementos",
+    "addFirstPhoto": "Subí la primera foto →",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar este archivo?",
+    "permissionOnlyParticipants": "Solo los jugadores del partido pueden subir",
+    "pickPhoto": "Galería de fotos",
+    "pickVideo": "Galería de videos",
+    "takePhoto": "Tomar foto",
+    "recordVideo": "Grabar video",
+    "errors": {
+      "fileTooLarge": "Archivo muy grande (máx {{max}})",
+      "invalidType": "Tipo de archivo no soportado",
+      "uploadFailed": "Error al subir — intentá de nuevo"
     }
   },
   "playerStats": {

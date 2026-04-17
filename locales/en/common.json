@@ -533,11 +533,37 @@
     "statsCard": "Player Stats",
     "statsCardDesc": "Browse all player stats & leaderboard",
     "multimediaCard": "Multimedia",
-    "multimediaCardDesc": "Coming soon",
+    "multimediaCardDesc": "Photos and videos from our matches",
     "tabs": {
       "players": "Players",
       "rankings": "Rankings",
       "awards": "Awards"
+    }
+  },
+  "multimedia": {
+    "title": "Multimedia",
+    "upload": "Upload",
+    "uploading": "Uploading… {{percent}}%",
+    "captionPlaceholder": "Add a caption (optional)",
+    "post": "Post",
+    "cancel": "Cancel",
+    "emptyMatch": "No photos yet. Be the first to share!",
+    "emptyFeed": "No multimedia yet. Upload from a match to get started.",
+    "viewGallery": "View gallery",
+    "galleryCount_one": "{{count}} item",
+    "galleryCount_other": "{{count}} items",
+    "addFirstPhoto": "Add the first photo →",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this photo/video?",
+    "permissionOnlyParticipants": "Only match participants can upload",
+    "pickPhoto": "Photo library",
+    "pickVideo": "Video library",
+    "takePhoto": "Take photo",
+    "recordVideo": "Record video",
+    "errors": {
+      "fileTooLarge": "File too large (max {{max}})",
+      "invalidType": "Unsupported file type",
+      "uploadFailed": "Upload failed — please try again"
     }
   },
   "playerStats": {
