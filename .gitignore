@@ -121,3 +121,6 @@ google-play-service-account.json
 apps/api/.dev.vars
 .worktrees/
 .memelord/
+
+# Superpowers brainstorm companion session files
+.superpowers/
