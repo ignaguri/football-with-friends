@@ -34,12 +34,15 @@ import {
   Share2,
   Pencil,
   Trash2,
+  Image as ImageIcon,
+  ChevronRight,
 } from "@tamagui/lucide-icons";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
 import {
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   Share,
@@ -47,12 +50,12 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 
-import { formatFullDate } from "../../../lib/date-utils";
+import { formatFullDate } from "@/lib/date-utils";
 import {
   generateICS as generateICSFromUtils,
   getGoogleCalendarUrl,
   openGoogleCalendar,
-} from "../../../lib/calendar-utils";
+} from "@/lib/calendar-utils";
 
 interface Signup {
   id: string;
@@ -93,7 +96,7 @@ interface MatchDetails {
 function WhatsAppIcon({ size = 20 }: { size?: number }) {
   return (
     <Image
-      source={require("../../../assets/whatsapp-logo.svg")}
+      source={require("@/assets/whatsapp-logo.svg")}
       style={{ width: size, height: size }}
       pointerEvents="none"
     />
@@ -103,7 +106,7 @@ function WhatsAppIcon({ size = 20 }: { size?: number }) {
 function PayPalIcon({ size = 20 }: { size?: number }) {
   return (
     <Image
-      source={require("../../../assets/paypal-logo.svg")}
+      source={require("@/assets/paypal-logo.svg")}
       style={{ width: size, height: size }}
       pointerEvents="none"
     />
@@ -163,6 +166,19 @@ export default function MatchDetailScreen() {
       return res.json();
     },
   });
+
+  const { data: mediaCountData } = useQuery({
+    queryKey: ["matchMediaCount", matchId],
+    queryFn: async () => {
+      const res = await client.api["match-media"][":matchId"].count.$get({
+        param: { matchId: matchId! },
+      });
+      if (!res.ok) return { count: 0 };
+      return (await res.json()) as { count: number };
+    },
+    enabled: !!matchId,
+  });
+  const mediaCount = mediaCountData?.count ?? 0;
 
   const signupMutation = useMutation({
     mutationFn: async () => {
@@ -808,6 +824,43 @@ export default function MatchDetailScreen() {
                 />
               </YStack>
             </Card>
+          )}
+
+          {/* Multimedia Gallery Card */}
+          {userId && (mediaCount > 0 || isParticipating || isAdmin) && (
+            <Pressable
+              onPress={() => router.push(`/(tabs)/matches/${matchId}/gallery`)}
+              accessibilityRole="button"
+              accessibilityLabel={t("multimedia.viewGallery")}
+            >
+              <Card variant="elevated" padding="$4">
+                <XStack alignItems="center" gap="$3">
+                  <YStack
+                    width={40}
+                    height={40}
+                    borderRadius={10}
+                    backgroundColor="$purple4"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <ImageIcon size={20} color="$purple10" />
+                  </YStack>
+                  <YStack flex={1}>
+                    <Text fontSize="$5" fontWeight="bold">
+                      {t("multimedia.title")}
+                    </Text>
+                    <Text fontSize="$3" color="$gray11">
+                      {mediaCount === 0
+                        ? t("multimedia.addFirstPhoto")
+                        : t("multimedia.galleryCount", { count: mediaCount })}
+                    </Text>
+                    {/* Note: addFirstPhoto is only shown to participants/admin since
+                        the card is hidden for non-participants when count === 0. */}
+                  </YStack>
+                  <ChevronRight size={20} color="$gray10" />
+                </XStack>
+              </Card>
+            </Pressable>
           )}
 
           {/* Not logged in prompt */}

@@ -21,11 +21,11 @@ if (isStaging) {
 async function main() {
   // Dynamic import after environment is loaded
   const { MigrationRunner, MigrationError, MigrationStatusError } =
-    await import("@/lib/database/migrator");
-  const { getTursoEnv } = await import("@/lib/env");
+    await import("../packages/shared/src/database/migrator");
+  const { getTursoEnv } = await import("../packages/shared/src/env");
 
   // Reset env cache so staging/production env is picked up
-  const { resetEnvCache } = await import("@/lib/env");
+  const { resetEnvCache } = await import("../packages/shared/src/env");
   resetEnvCache();
 
   // Validate environment for remote migrations

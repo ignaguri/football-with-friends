@@ -39,6 +39,11 @@ import type {
   MatchDetails,
   SignupWithDetails,
   PlayerStatus,
+  MatchMedia,
+  MatchMediaFeedGroup,
+  MatchMediaReactionSummary,
+  MediaKind,
+  ReactionEmoji,
 } from "../domain/types";
 
 import { getDatabase } from "../database/connection";
@@ -1495,5 +1500,374 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         value: Number(row.value),
       };
     });
+  }
+}
+
+// Turso Match Media Repository -------------------------------------------
+
+export interface CreateMatchMediaInput {
+  id: string;
+  matchId: string;
+  uploaderUserId: string;
+  kind: MediaKind;
+  mimeType: string;
+  sizeBytes: number;
+  caption: string | null;
+  r2Key: string;
+}
+
+export class TursoMatchMediaRepository {
+  private db = getDatabase();
+
+  async create(input: CreateMatchMediaInput): Promise<void> {
+    await this.db
+      .insertInto("match_media")
+      .values({
+        id: input.id,
+        match_id: input.matchId,
+        uploader_user_id: input.uploaderUserId,
+        kind: input.kind,
+        mime_type: input.mimeType,
+        size_bytes: input.sizeBytes,
+        caption: input.caption,
+        r2_key: input.r2Key,
+      })
+      .execute();
+  }
+
+  async findById(id: string): Promise<{
+    id: string;
+    matchId: string;
+    uploaderUserId: string;
+    kind: MediaKind;
+    mimeType: string;
+    sizeBytes: number;
+    caption: string | null;
+    r2Key: string;
+    createdAt: Date;
+  } | null> {
+    const row = await this.db
+      .selectFrom("match_media")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+    if (!row) return null;
+    return {
+      id: row.id,
+      matchId: row.match_id,
+      uploaderUserId: row.uploader_user_id,
+      kind: row.kind,
+      mimeType: row.mime_type,
+      sizeBytes: row.size_bytes,
+      caption: row.caption,
+      r2Key: row.r2_key,
+      createdAt: new Date(row.created_at as unknown as string),
+    };
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await this.db.deleteFrom("match_media").where("id", "=", id).execute();
+  }
+
+  async countByMatch(matchId: string): Promise<number> {
+    const row = await this.db
+      .selectFrom("match_media")
+      .select((eb) => eb.fn.countAll<number>().as("c"))
+      .where("match_id", "=", matchId)
+      .executeTakeFirst();
+    return Number(row?.c ?? 0);
+  }
+
+  /**
+   * List all media for a match, including the uploader's name, aggregated reaction counts,
+   * and whether the calling user reacted to each emoji.
+   *
+   * `callerUserId` may be null for anonymous calls (reactions will have `didReact: false`).
+   */
+  async listByMatch(
+    matchId: string,
+    callerUserId: string | null
+  ): Promise<Array<{
+    id: string;
+    matchId: string;
+    uploaderUserId: string;
+    uploaderName: string;
+    kind: MediaKind;
+    mimeType: string;
+    sizeBytes: number;
+    caption: string | null;
+    r2Key: string;
+    createdAt: Date;
+    reactionCounts: Record<string, number>;
+    ownReactions: Set<string>;
+  }>> {
+    const rows = await this.db
+      .selectFrom("match_media as m")
+      .innerJoin("user as u", "u.id", "m.uploader_user_id")
+      .select([
+        "m.id as id",
+        "m.match_id as matchId",
+        "m.uploader_user_id as uploaderUserId",
+        "u.name as uploaderName",
+        "m.kind as kind",
+        "m.mime_type as mimeType",
+        "m.size_bytes as sizeBytes",
+        "m.caption as caption",
+        "m.r2_key as r2Key",
+        "m.created_at as createdAt",
+      ])
+      .where("m.match_id", "=", matchId)
+      .orderBy("m.created_at", "desc")
+      .execute();
+
+    if (rows.length === 0) return [];
+
+    const mediaIds = rows.map((r) => r.id);
+
+    const reactionRows = await this.db
+      .selectFrom("match_media_reaction")
+      .select(["media_id", "user_id", "emoji"])
+      .where("media_id", "in", mediaIds)
+      .execute();
+
+    const countsByMedia = new Map<string, Record<string, number>>();
+    const ownByMedia = new Map<string, Set<string>>();
+    for (const r of reactionRows) {
+      const counts = countsByMedia.get(r.media_id) ?? {};
+      counts[r.emoji] = (counts[r.emoji] ?? 0) + 1;
+      countsByMedia.set(r.media_id, counts);
+
+      if (callerUserId && r.user_id === callerUserId) {
+        const set = ownByMedia.get(r.media_id) ?? new Set<string>();
+        set.add(r.emoji);
+        ownByMedia.set(r.media_id, set);
+      }
+    }
+
+    return rows.map((r) => ({
+      id: r.id,
+      matchId: r.matchId,
+      uploaderUserId: r.uploaderUserId,
+      uploaderName: r.uploaderName ?? "",
+      kind: r.kind as MediaKind,
+      mimeType: r.mimeType,
+      sizeBytes: r.sizeBytes,
+      caption: r.caption,
+      r2Key: r.r2Key,
+      createdAt: new Date(r.createdAt as unknown as string),
+      reactionCounts: countsByMedia.get(r.id) ?? {},
+      ownReactions: ownByMedia.get(r.id) ?? new Set<string>(),
+    }));
+  }
+
+  /**
+   * Hydrate a set of media IDs with uploader name + aggregated reactions.
+   * Returns rows in the same shape as `listByMatch`, but filtered to the
+   * explicit ID list. Preserves natural ordering of rows from the DB; callers
+   * should re-sort if a specific order is needed.
+   */
+  async listByIds(
+    mediaIds: string[],
+    callerUserId: string | null
+  ): Promise<Array<{
+    id: string;
+    matchId: string;
+    uploaderUserId: string;
+    uploaderName: string;
+    kind: MediaKind;
+    mimeType: string;
+    sizeBytes: number;
+    caption: string | null;
+    r2Key: string;
+    createdAt: Date;
+    reactionCounts: Record<string, number>;
+    ownReactions: Set<string>;
+  }>> {
+    if (mediaIds.length === 0) return [];
+
+    const rows = await this.db
+      .selectFrom("match_media as m")
+      .innerJoin("user as u", "u.id", "m.uploader_user_id")
+      .select([
+        "m.id as id",
+        "m.match_id as matchId",
+        "m.uploader_user_id as uploaderUserId",
+        "u.name as uploaderName",
+        "m.kind as kind",
+        "m.mime_type as mimeType",
+        "m.size_bytes as sizeBytes",
+        "m.caption as caption",
+        "m.r2_key as r2Key",
+        "m.created_at as createdAt",
+      ])
+      .where("m.id", "in", mediaIds)
+      .execute();
+
+    if (rows.length === 0) return [];
+
+    const reactionRows = await this.db
+      .selectFrom("match_media_reaction")
+      .select(["media_id", "user_id", "emoji"])
+      .where("media_id", "in", mediaIds)
+      .execute();
+
+    const countsByMedia = new Map<string, Record<string, number>>();
+    const ownByMedia = new Map<string, Set<string>>();
+    for (const r of reactionRows) {
+      const counts = countsByMedia.get(r.media_id) ?? {};
+      counts[r.emoji] = (counts[r.emoji] ?? 0) + 1;
+      countsByMedia.set(r.media_id, counts);
+
+      if (callerUserId && r.user_id === callerUserId) {
+        const set = ownByMedia.get(r.media_id) ?? new Set<string>();
+        set.add(r.emoji);
+        ownByMedia.set(r.media_id, set);
+      }
+    }
+
+    return rows.map((r) => ({
+      id: r.id,
+      matchId: r.matchId,
+      uploaderUserId: r.uploaderUserId,
+      uploaderName: r.uploaderName ?? "",
+      kind: r.kind as MediaKind,
+      mimeType: r.mimeType,
+      sizeBytes: r.sizeBytes,
+      caption: r.caption,
+      r2Key: r.r2Key,
+      createdAt: new Date(r.createdAt as unknown as string),
+      reactionCounts: countsByMedia.get(r.id) ?? {},
+      ownReactions: ownByMedia.get(r.id) ?? new Set<string>(),
+    }));
+  }
+
+  /**
+   * Toggle a reaction. Inserts if not present, deletes if present.
+   * Returns the final state: true = now reacted, false = reaction removed.
+   */
+  async toggleReaction(
+    mediaId: string,
+    userId: string,
+    emoji: ReactionEmoji
+  ): Promise<{ didReact: boolean; newCount: number }> {
+    // Race-safe toggle: try INSERT OR IGNORE first. If the insert reports 0
+    // changes, the row already existed, so we DELETE it instead. This avoids
+    // read-then-write unique-constraint violations under concurrent requests.
+    const insertResult = await this.db
+      .insertInto("match_media_reaction")
+      .values({ media_id: mediaId, user_id: userId, emoji })
+      .onConflict((oc) => oc.doNothing())
+      .executeTakeFirst();
+
+    const didInsert = Number(insertResult.numInsertedOrUpdatedRows ?? 0) > 0;
+
+    if (!didInsert) {
+      await this.db
+        .deleteFrom("match_media_reaction")
+        .where("media_id", "=", mediaId)
+        .where("user_id", "=", userId)
+        .where("emoji", "=", emoji)
+        .execute();
+    }
+
+    const countRow = await this.db
+      .selectFrom("match_media_reaction")
+      .select((eb) => eb.fn.countAll<number>().as("c"))
+      .where("media_id", "=", mediaId)
+      .where("emoji", "=", emoji)
+      .executeTakeFirst();
+
+    return {
+      didReact: didInsert,
+      newCount: Number(countRow?.c ?? 0),
+    };
+  }
+
+  /**
+   * Returns a page of matches (ordered by most-recent-upload per match), with up to
+   * `itemsPerMatch` media items each. Cursor is the `createdAt` of the last match's
+   * latest item (ISO string). Empty cursor = first page.
+   */
+  async feed(options: {
+    cursor: string | null;
+    matchesPerPage: number;
+    itemsPerMatch: number;
+  }): Promise<{
+    groups: Array<{
+      matchId: string;
+      matchDate: string;
+      fieldName: string | null;
+      lastUploadAt: string;
+      totalCount: number;
+      mediaIds: string[];
+    }>;
+    nextCursor: string | null;
+  }> {
+    const { cursor, matchesPerPage, itemsPerMatch } = options;
+
+    // Step 1: Get distinct matches ordered by their most recent upload, after cursor.
+    let matchQuery = this.db
+      .selectFrom("match_media as m")
+      .innerJoin("matches as mt", "mt.id", "m.match_id")
+      .leftJoin("locations as l", "l.id", "mt.location_id")
+      .select((eb) => [
+        sql<string>`m.match_id`.as("matchId"),
+        sql<string>`mt.date`.as("matchDate"),
+        sql<string | null>`l.name`.as("fieldName"),
+        eb.fn.max<string>("m.created_at").as("lastUploadAt"),
+        eb.fn.countAll<number>().as("totalCount"),
+      ])
+      .groupBy((eb) => [
+        sql`m.match_id`,
+        sql`mt.date`,
+        sql`l.name`,
+      ])
+      .orderBy("lastUploadAt", "desc")
+      .limit(matchesPerPage + 1); // fetch one extra to detect next page
+
+    if (cursor) {
+      matchQuery = matchQuery.having(sql`MAX(m.created_at)`, "<", cursor);
+    }
+
+    const matchRows = await matchQuery.execute();
+
+    const hasMore = matchRows.length > matchesPerPage;
+    const pageMatches = hasMore ? matchRows.slice(0, matchesPerPage) : matchRows;
+    const nextCursor =
+      hasMore && pageMatches.length > 0
+        ? (pageMatches[pageMatches.length - 1]?.lastUploadAt as unknown as string) ?? null
+        : null;
+
+    if (pageMatches.length === 0) {
+      return { groups: [], nextCursor: null };
+    }
+
+    // Step 2: For each match in this page, fetch the latest `itemsPerMatch` media ids.
+    const matchIds = pageMatches.map((r) => r.matchId);
+    const itemRows = await this.db
+      .selectFrom("match_media")
+      .select(["id", "match_id", "created_at"])
+      .where("match_id", "in", matchIds)
+      .orderBy("match_id", "asc")
+      .orderBy("created_at", "desc")
+      .execute();
+
+    const idsByMatch = new Map<string, string[]>();
+    for (const row of itemRows) {
+      const list = idsByMatch.get(row.match_id) ?? [];
+      if (list.length < itemsPerMatch) list.push(row.id);
+      idsByMatch.set(row.match_id, list);
+    }
+
+    const groups = pageMatches.map((r) => ({
+      matchId: r.matchId,
+      matchDate: r.matchDate as unknown as string,
+      fieldName: r.fieldName,
+      lastUploadAt: r.lastUploadAt as unknown as string,
+      totalCount: Number(r.totalCount),
+      mediaIds: idsByMatch.get(r.matchId) ?? [],
+    }));
+
+    return { groups, nextCursor };
   }
 }

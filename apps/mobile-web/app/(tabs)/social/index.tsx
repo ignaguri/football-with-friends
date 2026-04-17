@@ -49,28 +49,30 @@ export default function SocialHubScreen() {
           </Card>
         </Pressable>
 
-        <Card variant="elevated" padding="$5" opacity={0.6}>
-          <XStack gap="$4" alignItems="center">
-            <YStack
-              width={48}
-              height={48}
-              borderRadius={12}
-              backgroundColor="$purple4"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Image size={24} color="$purple10" />
-            </YStack>
-            <YStack flex={1}>
-              <Text fontSize="$6" fontWeight="bold">
-                {t("social.multimediaCard")}
-              </Text>
-              <Text fontSize="$3" color="$gray11" marginTop="$1">
-                {t("social.multimediaCardDesc")}
-              </Text>
-            </YStack>
-          </XStack>
-        </Card>
+        <Pressable onPress={() => router.push("/(tabs)/social/multimedia")}>
+          <Card variant="elevated" padding="$5">
+            <XStack gap="$4" alignItems="center">
+              <YStack
+                width={48}
+                height={48}
+                borderRadius={12}
+                backgroundColor="$purple4"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Image size={24} color="$purple10" />
+              </YStack>
+              <YStack flex={1}>
+                <Text fontSize="$6" fontWeight="bold">
+                  {t("social.multimediaCard")}
+                </Text>
+                <Text fontSize="$3" color="$gray11" marginTop="$1">
+                  {t("social.multimediaCardDesc")}
+                </Text>
+              </YStack>
+            </XStack>
+          </Card>
+        </Pressable>
       </YStack>
     </Container>
     </>

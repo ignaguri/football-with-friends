@@ -105,3 +105,40 @@ export async function deleteOldProfilePictures(
   const toDelete = sorted.slice(keepLatest);
   await Promise.all(toDelete.map((obj) => bucket.delete(obj.key)));
 }
+
+// Match media key helpers ------------------------------------------------
+
+/** Maps a mime type to a storage extension. Returns null for unsupported types. */
+export function extFromMediaMime(mime: string): string | null {
+  switch (mime) {
+    case "image/webp":
+      return "webp";
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "video/mp4":
+      return "mp4";
+    case "video/quicktime":
+      return "mov";
+    default:
+      return null;
+  }
+}
+
+/** R2 key for a match-media asset: `matches/{matchId}/{mediaId}.{ext}`. */
+export function generateMatchMediaKey(
+  matchId: string,
+  mediaId: string,
+  ext: string
+): string {
+  return `matches/${matchId}/${mediaId}.${ext}`;
+}
+
+/** R2 key for a video's poster frame: sibling of the main asset. */
+export function generateMatchMediaPosterKey(
+  matchId: string,
+  mediaId: string
+): string {
+  return `matches/${matchId}/${mediaId}.poster.jpg`;
+}

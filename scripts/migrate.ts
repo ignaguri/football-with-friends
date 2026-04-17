@@ -11,7 +11,7 @@ config({ path: ".env" });
 async function main() {
   // Dynamic import after environment is loaded
   const { MigrationRunner, MigrationError, MigrationStatusError } =
-    await import("@/lib/database/migrator");
+    await import("../packages/shared/src/database/migrator");
 
   const command = process.argv[2];
   const runner = new MigrationRunner();
