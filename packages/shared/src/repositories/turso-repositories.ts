@@ -1812,14 +1812,14 @@ export class TursoMatchMediaRepository {
       .leftJoin("locations as l", "l.id", "mt.location_id")
       .select((eb) => [
         sql<string>`m.match_id`.as("matchId"),
-        sql<string>`mt.match_date`.as("matchDate"),
+        sql<string>`mt.date`.as("matchDate"),
         sql<string | null>`l.name`.as("fieldName"),
         eb.fn.max<string>("m.created_at").as("lastUploadAt"),
         eb.fn.countAll<number>().as("totalCount"),
       ])
       .groupBy((eb) => [
         sql`m.match_id`,
-        sql`mt.match_date`,
+        sql`mt.date`,
         sql`l.name`,
       ])
       .orderBy("lastUploadAt", "desc")
