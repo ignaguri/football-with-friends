@@ -83,9 +83,9 @@ export type MatchMedia = {
   mimeType: string;
   sizeBytes: number;
   caption: string | null;
-  url: string;                 // computed: /api/matches/{matchId}/media/{key}
+  url: string;                 // computed: /api/match-media/file/:key
   posterUrl: string | null;    // computed for videos only
-  createdAt: Date;
+  createdAt: string;           // ISO timestamp
   reactions: Array<{ emoji: ReactionEmoji; count: number; didReact: boolean }>;
 };
 ```

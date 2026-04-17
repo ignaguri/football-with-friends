@@ -1,8 +1,8 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { MediaGrid, MediaLightbox } from "@repo/ui";
 import { api, useQuery, useMutation, useQueryClient } from "@repo/api-client";
-import { useLocalSearchParams, router, Stack } from "expo-router";
-import { useState, useMemo, useCallback } from "react";
+import { useLocalSearchParams, Stack } from "expo-router";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -78,9 +78,11 @@ export default function MatchGalleryScreen() {
         }
       );
     } else {
-      // Minimal Android/web fallback: photo-only by default. A proper action sheet
-      // can be added later.
-      void pick("photo");
+      Alert.alert(t("multimedia.upload"), undefined, [
+        { text: t("multimedia.pickPhoto"), onPress: () => void pick("photo") },
+        { text: t("multimedia.pickVideo"), onPress: () => void pick("video") },
+        { text: t("multimedia.cancel"), style: "cancel" },
+      ]);
     }
   };
 

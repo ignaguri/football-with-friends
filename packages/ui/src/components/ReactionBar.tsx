@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { REACTION_EMOJIS, type MatchMediaReactionSummary, type ReactionEmoji } from "@repo/shared/domain";
-import { XStack, YStack, Text } from "tamagui";
+import { XStack, Text } from "tamagui";
 import { Pressable } from "react-native";
 
 export type ReactionBarProps = {

@@ -10,7 +10,7 @@ import {
 } from "@repo/shared/domain";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 
-import { requireUser } from "../middleware/security";
+import { rateLimitMiddleware, requireUser } from "../middleware/security";
 import {
   deleteFromR2,
   extFromMediaMime,
@@ -56,7 +56,88 @@ function reactionsFromCounts(
   }));
 }
 
+// --- Global feed ---------------------------------------------------------
+// NOTE: static-path routes (`/feed`, `/file/:key`) MUST come before the
+// parameterized `/:matchId` route so Hono doesn't match e.g. "feed" as a
+// matchId.
+
+app.get("/feed", async (c) => {
+  const user = requireUser(c);
+  const cursor = c.req.query("cursor") ?? null;
+  const limit = Math.min(Math.max(Number(c.req.query("limit") ?? "5"), 1), 20);
+  const itemsPerMatch = 6;
+
+  const { groups, nextCursor } = await repos().matchMedia.feed({
+    cursor,
+    matchesPerPage: limit,
+    itemsPerMatch,
+  });
+
+  // Batch-hydrate all mediaIds across all groups in a single query (avoids N+1).
+  const allMediaIds = groups.flatMap((g) => g.mediaIds);
+  const hydrated = await repos().matchMedia.listByIds(allMediaIds, user.id);
+  const byId = new Map(hydrated.map((r) => [r.id, r] as const));
+
+  const groupResults: MatchMediaFeedGroup[] = groups.map((g) => ({
+    matchId: g.matchId,
+    matchDate: g.matchDate,
+    fieldName: g.fieldName,
+    totalCount: g.totalCount,
+    items: g.mediaIds
+      .map((id) => byId.get(id))
+      .filter((r): r is NonNullable<typeof r> => r !== undefined)
+      .map<MatchMedia>((r) => {
+        const posterKey = r.kind === "video"
+          ? generateMatchMediaPosterKey(r.matchId, r.id)
+          : null;
+        return {
+          id: r.id,
+          matchId: r.matchId,
+          uploaderUserId: r.uploaderUserId,
+          uploaderName: r.uploaderName,
+          kind: r.kind,
+          mimeType: r.mimeType,
+          sizeBytes: r.sizeBytes,
+          caption: r.caption,
+          url: buildMediaUrl(c, r.r2Key),
+          posterUrl: posterKey ? buildMediaUrl(c, posterKey) : null,
+          createdAt: r.createdAt.toISOString(),
+          reactions: reactionsFromCounts(r.reactionCounts, r.ownReactions),
+        };
+      }),
+  }));
+
+  return c.json({ groups: groupResults, nextCursor });
+});
+
+// --- Serve file ----------------------------------------------------------
+
+app.get("/file/:key{.+}", async (c) => {
+  requireUser(c);
+  const key = decodeURIComponent(c.req.param("key"));
+  const bucket = c.env?.MATCH_MEDIA;
+  if (!bucket) return c.json({ error: "Storage not configured" }, 500);
+
+  const object = await getFromR2(bucket, key);
+  if (!object) return c.json({ error: "Not found" }, 404);
+
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": object.httpMetadata?.contentType || "application/octet-stream",
+      "Cache-Control": "public, max-age=31536000",
+      ETag: object.etag,
+    },
+  });
+});
+
 // --- Upload ---------------------------------------------------------------
+
+// Rate limit uploads to curb abuse (keyed by IP, matching the project's
+// existing auth/phone-auth rate-limit usage in worker.ts).
+app.use("/:matchId", async (c, next) => {
+  if (c.req.method !== "POST") return next();
+  return rateLimitMiddleware("match-media-upload")(c, next);
+});
 
 app.post("/:matchId", async (c) => {
   const user = requireUser(c);
@@ -243,82 +324,6 @@ app.post("/:matchId/:mediaId/reactions", async (c) => {
 
   const result = await repos().matchMedia.toggleReaction(mediaId, user.id, emoji);
   return c.json(result);
-});
-
-// --- Serve file ----------------------------------------------------------
-
-app.get("/file/:key{.+}", async (c) => {
-  requireUser(c);
-  const key = decodeURIComponent(c.req.param("key"));
-  const bucket = c.env?.MATCH_MEDIA;
-  if (!bucket) return c.json({ error: "Storage not configured" }, 500);
-
-  const object = await getFromR2(bucket, key);
-  if (!object) return c.json({ error: "Not found" }, 404);
-
-  return new Response(object.body, {
-    headers: {
-      "Content-Type": object.httpMetadata?.contentType || "application/octet-stream",
-      "Cache-Control": "public, max-age=31536000",
-      ETag: object.etag,
-    },
-  });
-});
-
-// --- Global feed ---------------------------------------------------------
-
-app.get("/feed", async (c) => {
-  const user = requireUser(c);
-  const cursor = c.req.query("cursor") ?? null;
-  const limit = Math.min(Math.max(Number(c.req.query("limit") ?? "5"), 1), 20);
-  const itemsPerMatch = 6;
-
-  const { groups, nextCursor } = await repos().matchMedia.feed({
-    cursor,
-    matchesPerPage: limit,
-    itemsPerMatch,
-  });
-
-  // Hydrate each group's mediaIds into full MatchMedia items.
-  const groupResults: MatchMediaFeedGroup[] = [];
-  for (const g of groups) {
-    const items = await repos().matchMedia.listByMatch(g.matchId, user.id);
-    const filtered = items
-      .filter((it) => g.mediaIds.includes(it.id))
-      .sort(
-        (a, b) =>
-          g.mediaIds.indexOf(a.id) - g.mediaIds.indexOf(b.id)
-      )
-      .map<MatchMedia>((r) => {
-        const posterKey = r.kind === "video"
-          ? generateMatchMediaPosterKey(r.matchId, r.id)
-          : null;
-        return {
-          id: r.id,
-          matchId: r.matchId,
-          uploaderUserId: r.uploaderUserId,
-          uploaderName: r.uploaderName,
-          kind: r.kind,
-          mimeType: r.mimeType,
-          sizeBytes: r.sizeBytes,
-          caption: r.caption,
-          url: buildMediaUrl(c, r.r2Key),
-          posterUrl: posterKey ? buildMediaUrl(c, posterKey) : null,
-          createdAt: r.createdAt.toISOString(),
-          reactions: reactionsFromCounts(r.reactionCounts, r.ownReactions),
-        };
-      });
-
-    groupResults.push({
-      matchId: g.matchId,
-      matchDate: g.matchDate,
-      fieldName: g.fieldName,
-      items: filtered,
-      totalCount: g.totalCount,
-    });
-  }
-
-  return c.json({ groups: groupResults, nextCursor });
 });
 
 export default app;

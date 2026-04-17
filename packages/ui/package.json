@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "^8.6.0",
+    "@repo/shared": "workspace:*",
     "expo-image": "~55.0.6",
+    "expo-video": "^55.0.15",
     "@tamagui/lucide-icons": "2.0.0-rc.26",
     "@tamagui/toast": "2.0.0-rc.26",
     "date-fns": "^4.1.0",

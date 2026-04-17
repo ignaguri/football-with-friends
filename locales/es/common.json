@@ -563,6 +563,7 @@
     "pickVideo": "Galería de videos",
     "takePhoto": "Tomar foto",
     "recordVideo": "Grabar video",
+    "loading": "Cargando…",
     "errors": {
       "fileTooLarge": "Archivo muy grande (máx {{max}})",
       "invalidType": "Tipo de archivo no soportado",

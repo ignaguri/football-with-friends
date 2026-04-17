@@ -82,7 +82,7 @@ export default function MultimediaFeedScreen() {
               })}
               {isFetchingNextPage && (
                 <YStack padding="$3" alignItems="center">
-                  <Text color="$gray11">Loading…</Text>
+                  <Text color="$gray11">{t("multimedia.loading")}</Text>
                 </YStack>
               )}
             </YStack>

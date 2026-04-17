@@ -1661,6 +1661,87 @@ export class TursoMatchMediaRepository {
   }
 
   /**
+   * Hydrate a set of media IDs with uploader name + aggregated reactions.
+   * Returns rows in the same shape as `listByMatch`, but filtered to the
+   * explicit ID list. Preserves natural ordering of rows from the DB; callers
+   * should re-sort if a specific order is needed.
+   */
+  async listByIds(
+    mediaIds: string[],
+    callerUserId: string | null
+  ): Promise<Array<{
+    id: string;
+    matchId: string;
+    uploaderUserId: string;
+    uploaderName: string;
+    kind: MediaKind;
+    mimeType: string;
+    sizeBytes: number;
+    caption: string | null;
+    r2Key: string;
+    createdAt: Date;
+    reactionCounts: Record<string, number>;
+    ownReactions: Set<string>;
+  }>> {
+    if (mediaIds.length === 0) return [];
+
+    const rows = await this.db
+      .selectFrom("match_media as m")
+      .innerJoin("user as u", "u.id", "m.uploader_user_id")
+      .select([
+        "m.id as id",
+        "m.match_id as matchId",
+        "m.uploader_user_id as uploaderUserId",
+        "u.name as uploaderName",
+        "m.kind as kind",
+        "m.mime_type as mimeType",
+        "m.size_bytes as sizeBytes",
+        "m.caption as caption",
+        "m.r2_key as r2Key",
+        "m.created_at as createdAt",
+      ])
+      .where("m.id", "in", mediaIds)
+      .execute();
+
+    if (rows.length === 0) return [];
+
+    const reactionRows = await this.db
+      .selectFrom("match_media_reaction")
+      .select(["media_id", "user_id", "emoji"])
+      .where("media_id", "in", mediaIds)
+      .execute();
+
+    const countsByMedia = new Map<string, Record<string, number>>();
+    const ownByMedia = new Map<string, Set<string>>();
+    for (const r of reactionRows) {
+      const counts = countsByMedia.get(r.media_id) ?? {};
+      counts[r.emoji] = (counts[r.emoji] ?? 0) + 1;
+      countsByMedia.set(r.media_id, counts);
+
+      if (callerUserId && r.user_id === callerUserId) {
+        const set = ownByMedia.get(r.media_id) ?? new Set<string>();
+        set.add(r.emoji);
+        ownByMedia.set(r.media_id, set);
+      }
+    }
+
+    return rows.map((r) => ({
+      id: r.id,
+      matchId: r.matchId,
+      uploaderUserId: r.uploaderUserId,
+      uploaderName: r.uploaderName ?? "",
+      kind: r.kind as MediaKind,
+      mimeType: r.mimeType,
+      sizeBytes: r.sizeBytes,
+      caption: r.caption,
+      r2Key: r.r2Key,
+      createdAt: new Date(r.createdAt as unknown as string),
+      reactionCounts: countsByMedia.get(r.id) ?? {},
+      ownReactions: ownByMedia.get(r.id) ?? new Set<string>(),
+    }));
+  }
+
+  /**
    * Toggle a reaction. Inserts if not present, deletes if present.
    * Returns the final state: true = now reacted, false = reaction removed.
    */
@@ -1669,29 +1750,23 @@ export class TursoMatchMediaRepository {
     userId: string,
     emoji: ReactionEmoji
   ): Promise<{ didReact: boolean; newCount: number }> {
-    const existing = await this.db
-      .selectFrom("match_media_reaction")
-      .select(["media_id"])
-      .where("media_id", "=", mediaId)
-      .where("user_id", "=", userId)
-      .where("emoji", "=", emoji)
+    // Race-safe toggle: try INSERT OR IGNORE first. If the insert reports 0
+    // changes, the row already existed, so we DELETE it instead. This avoids
+    // read-then-write unique-constraint violations under concurrent requests.
+    const insertResult = await this.db
+      .insertInto("match_media_reaction")
+      .values({ media_id: mediaId, user_id: userId, emoji })
+      .onConflict((oc) => oc.doNothing())
       .executeTakeFirst();
 
-    if (existing) {
+    const didInsert = Number(insertResult.numInsertedOrUpdatedRows ?? 0) > 0;
+
+    if (!didInsert) {
       await this.db
         .deleteFrom("match_media_reaction")
         .where("media_id", "=", mediaId)
         .where("user_id", "=", userId)
         .where("emoji", "=", emoji)
-        .execute();
-    } else {
-      await this.db
-        .insertInto("match_media_reaction")
-        .values({
-          media_id: mediaId,
-          user_id: userId,
-          emoji,
-        })
         .execute();
     }
 
@@ -1703,7 +1778,7 @@ export class TursoMatchMediaRepository {
       .executeTakeFirst();
 
     return {
-      didReact: !existing,
+      didReact: didInsert,
       newCount: Number(countRow?.c ?? 0),
     };
   }

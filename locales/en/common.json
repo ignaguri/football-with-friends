@@ -560,6 +560,7 @@
     "pickVideo": "Video library",
     "takePhoto": "Take photo",
     "recordVideo": "Record video",
+    "loading": "Loading…",
     "errors": {
       "fileTooLarge": "File too large (max {{max}})",
       "invalidType": "Unsupported file type",
