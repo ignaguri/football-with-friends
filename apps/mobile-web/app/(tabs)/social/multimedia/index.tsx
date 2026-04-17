@@ -99,8 +99,14 @@ export default function MultimediaFeedScreen() {
           ) : (
             <YStack gap="$3">
               {groups.map((g) => {
-                const displayItems = g.items.slice(0, MAX_THUMBS);
-                const overflow = Math.max(0, g.totalCount - MAX_THUMBS);
+                // When the total fits, show all thumbs with no badge.
+                // When it doesn't, give up one thumb slot to the badge so the
+                // badge count reflects every photo it's standing in for
+                // (including the one whose thumb we're replacing).
+                const hasOverflow = g.totalCount > MAX_THUMBS;
+                const visibleThumbs = hasOverflow ? MAX_THUMBS - 1 : MAX_THUMBS;
+                const displayItems = g.items.slice(0, visibleThumbs);
+                const overflow = hasOverflow ? g.totalCount - visibleThumbs : 0;
                 return (
                   <Card key={g.matchId} padding="$2">
                     <Pressable
@@ -112,13 +118,10 @@ export default function MultimediaFeedScreen() {
                     >
                       <XStack alignItems="center" gap="$3">
                         <XStack gap={4} alignItems="center">
-                          {displayItems.map((item, i) => {
-                            const isLast = i === displayItems.length - 1;
-                            if (isLast && overflow > 0) {
-                              return <FeedOverflowBadge key="overflow" count={overflow} />;
-                            }
-                            return <FeedThumb key={item.id} item={item} />;
-                          })}
+                          {displayItems.map((item) => (
+                            <FeedThumb key={item.id} item={item} />
+                          ))}
+                          {overflow > 0 && <FeedOverflowBadge count={overflow} />}
                         </XStack>
                         <YStack flex={1}>
                           <Text fontSize="$3" fontWeight="700" color="$gray12">
