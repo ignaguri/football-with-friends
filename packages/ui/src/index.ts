@@ -99,6 +99,9 @@ export type { ReactionBarProps } from "./components/ReactionBar";
 export { MediaGrid } from "./components/MediaGrid";
 export type { MediaGridProps } from "./components/MediaGrid";
 
+export { MediaLightbox } from "./components/MediaLightbox";
+export type { MediaLightboxProps } from "./components/MediaLightbox";
+
 export { ExclusiveMultiSelect } from "./components/exclusive-multi-select";
 export type {
   ExclusiveMultiSelectProps,
