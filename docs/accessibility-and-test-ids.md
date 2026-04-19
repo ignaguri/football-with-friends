@@ -148,4 +148,4 @@ The audit is phased as separate PRs:
 - Tier 4 — auth flows
 - Tier 5 — `eslint-plugin-jsx-a11y` wired in
 
-Each tier ships independently and is reverible. No visible UI changes in any of them — only added props.
+Each tier ships independently and is reversible. No visible UI changes in any of them — only added props.

@@ -117,7 +117,7 @@ export default function MultimediaFeedScreen() {
                       accessibilityLabel={t("a11y.openGallery", {
                         date: formatDisplayDate(g.matchDate, "MMM d"),
                       })}
-                      testID={`feed-group-${g.matchId}`}
+                      testID={`social-multimedia-feed-group-${g.matchId}`}
                     >
                       <XStack alignItems="center" gap="$3">
                         <XStack gap={4} alignItems="center">

@@ -3,6 +3,16 @@ import { REACTION_EMOJIS, type MatchMediaReactionSummary, type ReactionEmoji } f
 import { XStack, Text } from "tamagui";
 import { Pressable } from "react-native";
 
+// ASCII token per emoji so testIDs stay predictable for automation tools
+// (DOM attribute selectors and some agent frameworks struggle with raw emoji).
+const EMOJI_TEST_IDS: Record<ReactionEmoji, string> = {
+  "❤️": "heart",
+  "🔥": "fire",
+  "⚽": "ball",
+  "😂": "laugh",
+  "🍺": "beer",
+};
+
 export type ReactionBarProps = {
   reactions: MatchMediaReactionSummary[];
   onToggle: (emoji: ReactionEmoji) => void;
@@ -22,7 +32,7 @@ export function ReactionBar({ reactions, onToggle, disabled }: ReactionBarProps)
             onPress={() => !disabled && onToggle(emoji)}
             accessibilityRole="button"
             accessibilityLabel={`${emoji} reaction, ${r.count} ${r.count === 1 ? "person" : "people"}`}
-            testID={`reaction-btn-${emoji}`}
+            testID={`reaction-btn-${EMOJI_TEST_IDS[emoji]}`}
           >
             <XStack
               alignItems="center"
