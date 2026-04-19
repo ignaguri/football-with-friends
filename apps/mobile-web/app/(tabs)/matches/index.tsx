@@ -69,6 +69,8 @@ export default function MatchesListScreen() {
               size="$3"
               onPress={() => router.push("/(tabs)/rules")}
               paddingHorizontal="$3"
+              accessibilityLabel={t("a11y.viewRules")}
+              testID="matches-rules-btn"
             >
               <XStack gap="$2" alignItems="center">
                 <BookOpen size={20} />
@@ -85,6 +87,7 @@ export default function MatchesListScreen() {
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as MatchType)}
             tabs={tabs}
+            testIDPrefix="matches-tab"
           />
         </YStack>
 
@@ -131,6 +134,18 @@ export default function MatchesListScreen() {
                   key={match.id}
                   onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
                   style={{ width: "100%" }}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    match.location?.name
+                      ? t("a11y.openMatch", {
+                          date: formatMatchDateTime(match.date, match.time),
+                          location: match.location.name,
+                        })
+                      : t("a11y.openMatchNoLocation", {
+                          date: formatMatchDateTime(match.date, match.time),
+                        })
+                  }
+                  testID={`matches-card-${match.id}`}
                 >
                   <YStack
                     backgroundColor="$brandNavy"
@@ -180,6 +195,8 @@ export default function MatchesListScreen() {
                 onPress={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
                 marginTop="$4"
+                accessibilityLabel={t("a11y.loadMoreMatches")}
+                testID="matches-load-more"
               >
                 {isFetchingNextPage ? (
                   <Spinner size="small" />
@@ -207,6 +224,8 @@ export default function MatchesListScreen() {
             padding="$0"
             justifyContent="center"
             alignItems="center"
+            accessibilityLabel={t("a11y.addMatch")}
+            testID="matches-fab-add"
           >
             <Plus size={28} color="white" />
           </Button>

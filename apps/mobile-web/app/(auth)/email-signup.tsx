@@ -96,6 +96,7 @@ export default function EmailSignUpScreen() {
                     placeholder={t("auth.namePlaceholder")}
                     value={value}
                     onChangeText={onChange}
+                    testID="auth-email-signup-name"
                     error={
                       emailForm.formState.errors.name
                         ? t(emailForm.formState.errors.name.message as string)
@@ -116,6 +117,7 @@ export default function EmailSignUpScreen() {
                     onChangeText={onChange}
                     autoCapitalize="none"
                     keyboardType="email-address"
+                    testID="auth-email-signup-email"
                     error={
                       emailForm.formState.errors.email
                         ? t(
@@ -138,6 +140,7 @@ export default function EmailSignUpScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
+                    testID="auth-email-signup-password"
                     error={
                       emailForm.formState.errors.password
                         ? t(
@@ -162,6 +165,7 @@ export default function EmailSignUpScreen() {
                     onChangeText={onChange}
                     autoCapitalize="none"
                     helperText={t("auth.usernameHelp")}
+                    testID="auth-email-signup-username"
                     error={
                       emailForm.formState.errors.username
                         ? t(
@@ -185,6 +189,7 @@ export default function EmailSignUpScreen() {
                   onPress={emailForm.handleSubmit(onSubmit)}
                   disabled={isLoading}
                   variant="primary"
+                  testID="auth-email-signup-submit"
                 >
                   {isLoading ? <Spinner size="small" /> : t("auth.signUp")}
                 </Button>

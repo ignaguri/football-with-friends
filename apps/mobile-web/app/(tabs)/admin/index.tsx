@@ -148,6 +148,7 @@ export default function OrganizerScreen() {
               size="$3"
               variant={activeTab === "matches" ? "primary" : "outline"}
               onPress={() => setActiveTab("matches")}
+              testID="admin-tab-matches"
             >
               {t("organizer.tabs.matches")}
             </Button>
@@ -156,6 +157,7 @@ export default function OrganizerScreen() {
               size="$3"
               variant={activeTab === "locations" ? "primary" : "outline"}
               onPress={() => setActiveTab("locations")}
+              testID="admin-tab-locations"
             >
               {t("organizer.tabs.locations")}
             </Button>
@@ -164,6 +166,7 @@ export default function OrganizerScreen() {
               size="$3"
               variant={activeTab === "courts" ? "primary" : "outline"}
               onPress={() => setActiveTab("courts")}
+              testID="admin-tab-courts"
             >
               {t("organizer.tabs.courts")}
             </Button>
@@ -174,6 +177,7 @@ export default function OrganizerScreen() {
               size="$3"
               variant={activeTab === "voting" ? "primary" : "outline"}
               onPress={() => setActiveTab("voting")}
+              testID="admin-tab-voting"
             >
               {t("voting.title")}
             </Button>
@@ -182,6 +186,7 @@ export default function OrganizerScreen() {
               size="$3"
               variant={activeTab === "settings" ? "primary" : "outline"}
               onPress={() => setActiveTab("settings")}
+              testID="admin-tab-settings"
             >
               {t("settings.title")}
             </Button>
@@ -328,6 +333,7 @@ function MatchesTab() {
         <Button
           variant="primary"
           onPress={() => router.push("/(tabs)/admin/add-match")}
+          testID="admin-matches-add-btn"
         >
           {t("addMatch.title")}
         </Button>
@@ -377,6 +383,7 @@ function MatchesTab() {
                       size="$3"
                       variant="outline"
                       onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
+                      testID={`admin-match-row-${match.id}-view`}
                     >
                       {t("organizer.viewMatch")}
                     </Button>
@@ -391,6 +398,7 @@ function MatchesTab() {
                             params: { matchId: match.id },
                           })
                         }
+                        testID={`admin-match-row-${match.id}-edit`}
                       >
                         {t("organizer.edit")}
                       </Button>
@@ -401,6 +409,7 @@ function MatchesTab() {
                         variant="danger"
                         onPress={() => handleDelete(match)}
                         disabled={deleteMutation.isPending}
+                        testID={`admin-match-row-${match.id}-delete`}
                       >
                         {t("organizer.delete")}
                       </Button>
@@ -414,6 +423,7 @@ function MatchesTab() {
                         variant="outline"
                         onPress={() => handleCancel(match)}
                         disabled={cancelMutation.isPending}
+                        testID={`admin-match-row-${match.id}-cancel`}
                       >
                         {t("organizer.cancelMatch")}
                       </Button>
@@ -423,6 +433,7 @@ function MatchesTab() {
                         variant="danger"
                         onPress={() => handleDelete(match)}
                         disabled={deleteMutation.isPending}
+                        testID={`admin-match-row-${match.id}-delete`}
                       >
                         {t("organizer.delete")}
                       </Button>
@@ -625,7 +636,11 @@ function LocationsTab() {
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Location Button */}
-        <Button variant="primary" onPress={() => setShowAddDialog(true)}>
+        <Button
+          variant="primary"
+          onPress={() => setShowAddDialog(true)}
+          testID="admin-locations-add-btn"
+        >
           {t("locations.addLocation")}
         </Button>
 
@@ -652,6 +667,7 @@ function LocationsTab() {
                     size="$3"
                     variant="outline"
                     onPress={() => openEdit(location)}
+                    testID={`admin-location-row-${location.id}-edit`}
                   >
                     {t("organizer.edit")}
                   </Button>
@@ -660,6 +676,7 @@ function LocationsTab() {
                     variant="danger"
                     onPress={() => handleDelete(location)}
                     disabled={deleteMutation.isPending}
+                    testID={`admin-location-row-${location.id}-delete`}
                   >
                     {t("locations.delete")}
                   </Button>
@@ -933,7 +950,11 @@ function CourtsTab() {
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Court Button */}
-        <Button variant="primary" onPress={() => setShowAddDialog(true)}>
+        <Button
+          variant="primary"
+          onPress={() => setShowAddDialog(true)}
+          testID="admin-courts-add-btn"
+        >
           {t("courts.addCourt")}
         </Button>
 
@@ -968,6 +989,7 @@ function CourtsTab() {
                     size="$3"
                     variant="outline"
                     onPress={() => openEdit(court)}
+                    testID={`admin-court-row-${court.id}-edit`}
                   >
                     {t("courts.edit")}
                   </Button>
@@ -976,6 +998,7 @@ function CourtsTab() {
                     variant="danger"
                     onPress={() => handleDelete(court)}
                     disabled={deleteMutation.isPending}
+                    testID={`admin-court-row-${court.id}-delete`}
                   >
                     {t("courts.delete")}
                   </Button>
@@ -1302,6 +1325,7 @@ function SettingsTab() {
           variant="primary"
           onPress={handleSave}
           disabled={updateMutation.isPending}
+          testID="admin-settings-save-btn"
         >
           {updateMutation.isPending ? t("shared.loading") : t("shared.save")}
         </Button>
@@ -1608,7 +1632,11 @@ function VotingCriteriaTab() {
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Criteria Button */}
-        <Button variant="primary" onPress={() => setShowAddDialog(true)}>
+        <Button
+          variant="primary"
+          onPress={() => setShowAddDialog(true)}
+          testID="admin-voting-add-btn"
+        >
           {t("admin.addCriteria")}
         </Button>
 
@@ -1658,6 +1686,7 @@ function VotingCriteriaTab() {
                       })
                     }
                     disabled={toggleActiveMutation.isPending}
+                    testID={`admin-voting-row-${c.id}-toggle`}
                   >
                     {c.isActive ? t("admin.deactivate") : t("admin.activate")}
                   </Button>
@@ -1665,6 +1694,7 @@ function VotingCriteriaTab() {
                     size="$3"
                     variant="outline"
                     onPress={() => openEdit(c)}
+                    testID={`admin-voting-row-${c.id}-edit`}
                   >
                     {t("organizer.edit")}
                   </Button>
@@ -1673,6 +1703,7 @@ function VotingCriteriaTab() {
                     variant="danger"
                     onPress={() => handleDelete(c)}
                     disabled={deleteMutation.isPending}
+                    testID={`admin-voting-row-${c.id}-delete`}
                   >
                     {t("shared.delete")}
                   </Button>

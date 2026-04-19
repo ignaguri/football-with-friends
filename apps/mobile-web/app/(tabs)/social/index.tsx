@@ -24,7 +24,12 @@ export default function SocialHubScreen() {
         marginHorizontal="auto"
         width="100%"
       >
-        <Pressable onPress={() => router.push("/(tabs)/social/stats")}>
+        <Pressable
+          onPress={() => router.push("/(tabs)/social/stats")}
+          accessibilityRole="button"
+          accessibilityLabel={t("a11y.openStats")}
+          testID="social-hub-stats"
+        >
           <Card variant="elevated" padding="$5">
             <XStack gap="$4" alignItems="center">
               <YStack
@@ -49,7 +54,12 @@ export default function SocialHubScreen() {
           </Card>
         </Pressable>
 
-        <Pressable onPress={() => router.push("/(tabs)/social/multimedia")}>
+        <Pressable
+          onPress={() => router.push("/(tabs)/social/multimedia")}
+          accessibilityRole="button"
+          accessibilityLabel={t("a11y.openMultimedia")}
+          testID="social-hub-multimedia"
+        >
           <Card variant="elevated" padding="$5">
             <XStack gap="$4" alignItems="center">
               <YStack

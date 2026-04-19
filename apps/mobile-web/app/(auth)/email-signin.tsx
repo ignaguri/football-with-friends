@@ -146,6 +146,7 @@ export default function EmailSignInScreen() {
                         onChangeText={onChange}
                         autoCapitalize="none"
                         keyboardType="email-address"
+                        testID="auth-email-signin-email"
                         error={
                           emailForm.formState.errors.email
                             ? t(
@@ -168,6 +169,7 @@ export default function EmailSignInScreen() {
                         value={value}
                         onChangeText={onChange}
                         secureTextEntry
+                        testID="auth-email-signin-password"
                         error={
                           emailForm.formState.errors.password
                             ? t(
@@ -186,6 +188,7 @@ export default function EmailSignInScreen() {
                     textAlign="right"
                     cursor="pointer"
                     onPress={() => router.push("/(auth)/forgot-password")}
+                    testID="auth-email-signin-forgot-link"
                   >
                     {t("auth.forgotPassword")}
                   </Text>
@@ -218,6 +221,7 @@ export default function EmailSignInScreen() {
                         value={newPassword}
                         onChangeText={setNewPassword}
                         secureTextEntry
+                        testID="auth-email-signin-new-password"
                       />
 
                       <Input
@@ -226,6 +230,7 @@ export default function EmailSignInScreen() {
                         value={confirmPassword}
                         onChangeText={setConfirmPassword}
                         secureTextEntry
+                        testID="auth-email-signin-confirm-password"
                       />
                     </>
                   )}
@@ -244,6 +249,7 @@ export default function EmailSignInScreen() {
                     onPress={emailForm.handleSubmit(onSubmit)}
                     disabled={isLoading}
                     variant="primary"
+                    testID="auth-email-signin-submit"
                   >
                     {isLoading ? <Spinner size="small" color="white" /> : t("auth.signIn")}
                   </Button>
@@ -252,6 +258,7 @@ export default function EmailSignInScreen() {
                     onPress={handlePasswordReset}
                     disabled={isLoading}
                     variant="primary"
+                    testID="auth-email-signin-reset-submit"
                   >
                     {isLoading ? (
                       <Spinner size="small" color="white" />

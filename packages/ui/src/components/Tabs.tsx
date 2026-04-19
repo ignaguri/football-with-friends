@@ -26,9 +26,10 @@ export interface TabsProps {
   value: string;
   onValueChange: (value: string) => void;
   tabs: TabItem[];
+  testIDPrefix?: string;
 }
 
-export function Tabs({ value, onValueChange, tabs }: TabsProps) {
+export function Tabs({ value, onValueChange, tabs, testIDPrefix }: TabsProps) {
   return (
     <TamaguiTabs
       value={value}
@@ -41,6 +42,7 @@ export function Tabs({ value, onValueChange, tabs }: TabsProps) {
           <StyledTab
             key={tab.value}
             value={tab.value}
+            testID={testIDPrefix ? `${testIDPrefix}-${tab.value}` : undefined}
             {...(value === tab.value && {
               backgroundColor: "$background",
               shadowColor: "$shadowColor",

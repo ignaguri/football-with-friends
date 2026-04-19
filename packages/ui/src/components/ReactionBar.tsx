@@ -22,6 +22,7 @@ export function ReactionBar({ reactions, onToggle, disabled }: ReactionBarProps)
             onPress={() => !disabled && onToggle(emoji)}
             accessibilityRole="button"
             accessibilityLabel={`${emoji} reaction, ${r.count} ${r.count === 1 ? "person" : "people"}`}
+            testID={`reaction-btn-${emoji}`}
           >
             <XStack
               alignItems="center"

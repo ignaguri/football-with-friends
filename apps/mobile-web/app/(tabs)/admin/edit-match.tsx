@@ -360,6 +360,7 @@ export default function EditMatchScreen() {
             size="$5"
             onPress={handleSubmit}
             disabled={updateMutation.isPending}
+            testID="admin-edit-match-submit"
           >
             {updateMutation.isPending
               ? t("editMatch.saving")

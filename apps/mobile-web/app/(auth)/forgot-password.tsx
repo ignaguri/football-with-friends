@@ -141,6 +141,7 @@ export default function ForgotPasswordScreen() {
                   onChangeText={setIdentifier}
                   autoCapitalize="none"
                   keyboardType="email-address"
+                  testID="auth-forgot-identifier"
                 />
               ) : (
                 <>
@@ -151,6 +152,7 @@ export default function ForgotPasswordScreen() {
                     onChangeText={setCode}
                     keyboardType="number-pad"
                     maxLength={6}
+                    testID="auth-forgot-code"
                   />
 
                   <Input
@@ -159,6 +161,7 @@ export default function ForgotPasswordScreen() {
                     value={newPassword}
                     onChangeText={setNewPassword}
                     secureTextEntry
+                    testID="auth-forgot-new-password"
                   />
 
                   <Input
@@ -167,6 +170,7 @@ export default function ForgotPasswordScreen() {
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry
+                    testID="auth-forgot-confirm-password"
                   />
                 </>
               )}
@@ -184,6 +188,11 @@ export default function ForgotPasswordScreen() {
                   }
                   disabled={isLoading}
                   variant="primary"
+                  testID={
+                    step === "request"
+                      ? "auth-forgot-request-submit"
+                      : "auth-forgot-reset-submit"
+                  }
                 >
                   {isLoading ? (
                     <Spinner size="small" color="white" />

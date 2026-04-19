@@ -11,6 +11,7 @@ export interface PlayerAction {
   label: string;
   onPress: () => void;
   variant?: "primary" | "outline" | "danger" | "danger-outline" | "ghost";
+  testID?: string;
 }
 
 export interface PlayerRow {
@@ -24,6 +25,7 @@ export interface PlayerRow {
   actions?: PlayerAction[];
   username?: string | null;
   displayUsername?: string | null;
+  testID?: string;
 }
 
 export interface PlayersTableProps {
@@ -72,6 +74,7 @@ export function PlayersTable({
     return (
     <XStack
       key={player.id}
+      testID={player.testID}
       justifyContent="space-between"
       alignItems="center"
       paddingVertical="$2"
@@ -128,6 +131,7 @@ export function PlayersTable({
                     height={28}
                     onPress={action.onPress}
                     aria-label={action.label}
+                    testID={action.testID}
                   >
                     <IconComponent size={16} />
                   </Button>

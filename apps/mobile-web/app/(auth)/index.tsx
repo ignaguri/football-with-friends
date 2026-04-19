@@ -209,6 +209,7 @@ export default function AuthLandingScreen() {
             size="$5"
             width="100%"
             fontWeight="400"
+            testID="auth-landing-phone-btn"
           >
             <XStack gap="$3" alignItems="center" justifyContent="center">
               <Image
@@ -257,6 +258,7 @@ export default function AuthLandingScreen() {
                   disabled={isGoogleLoading}
                   opacity={isGoogleLoading ? 0.5 : 1}
                   fontWeight="400"
+                  testID="auth-landing-google-btn"
                 >
                   <XStack gap="$3" alignItems="center" justifyContent="center">
                     <Image
@@ -282,6 +284,7 @@ export default function AuthLandingScreen() {
               width="100%"
               disabled={isGoogleLoading}
               opacity={isGoogleLoading ? 0.5 : 1}
+              testID="auth-landing-google-btn"
               backgroundColor="$googleButtonBg"
               borderWidth={1}
               borderColor="$googleButtonBorder"
@@ -352,6 +355,7 @@ export default function AuthLandingScreen() {
             variant="outline"
             size="$5"
             fontWeight="400"
+            testID="auth-landing-email-btn"
           >
             <XStack gap="$3" alignItems="center" justifyContent="center">
               <Mail size={24} color="$gray11" />

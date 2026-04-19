@@ -315,6 +315,7 @@ export default function AddMatchScreen() {
             size="$5"
             onPress={handleSubmit}
             disabled={createMutation.isPending}
+            testID="admin-add-match-submit"
           >
             {createMutation.isPending
               ? t("addMatch.adding")

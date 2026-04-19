@@ -2,6 +2,7 @@ import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import prettierConfig from "eslint-config-prettier";
 import importPlugin from "eslint-plugin-import";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import prettierPlugin from "eslint-plugin-prettier";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
@@ -100,6 +101,18 @@ const config = [
       // TypeScript rules
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "@typescript-eslint/consistent-type-imports": "error",
+    },
+  },
+  // Accessibility guardrails for the mobile-web app. Warn-level; see
+  // docs/accessibility-and-test-ids.md for the rationale and manual checks
+  // this pairs with.
+  {
+    files: ["apps/mobile-web/**/*.tsx"],
+    plugins: { "jsx-a11y": jsxA11y },
+    rules: {
+      "jsx-a11y/no-static-element-interactions": "warn",
+      "jsx-a11y/click-events-have-key-events": "warn",
+      "jsx-a11y/no-noninteractive-element-to-interactive-role": "warn",
     },
   },
   // Migration files specific rules
