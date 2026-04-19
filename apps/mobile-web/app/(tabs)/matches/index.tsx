@@ -129,7 +129,9 @@ export default function MatchesListScreen() {
             {!isLoading &&
               !error &&
               matches &&
-              matches.map((match) => (
+              matches.map((match) => {
+                const dateTime = formatMatchDateTime(match.date, match.time);
+                return (
                 <Pressable
                   key={match.id}
                   onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
@@ -138,12 +140,10 @@ export default function MatchesListScreen() {
                   accessibilityLabel={
                     match.location?.name
                       ? t("a11y.openMatch", {
-                          date: formatMatchDateTime(match.date, match.time),
+                          date: dateTime,
                           location: match.location.name,
                         })
-                      : t("a11y.openMatchNoLocation", {
-                          date: formatMatchDateTime(match.date, match.time),
-                        })
+                      : t("a11y.openMatchNoLocation", { date: dateTime })
                   }
                   testID={`matches-card-${match.id}`}
                 >
@@ -160,7 +160,7 @@ export default function MatchesListScreen() {
                   >
                     <XStack justifyContent="space-between" alignItems="center">
                       <Text color="white" fontSize="$5" fontWeight="500">
-                        {formatMatchDateTime(match.date, match.time)}
+                        {dateTime}
                       </Text>
                       {(match as any).userSignupStatus &&
                         (match as any).userSignupStatus !== "CANCELLED" && (
@@ -186,7 +186,8 @@ export default function MatchesListScreen() {
                     )}
                   </YStack>
                 </Pressable>
-              ))}
+                );
+              })}
 
             {/* Load More Button */}
             {!isLoading && !error && hasNextPage && (
