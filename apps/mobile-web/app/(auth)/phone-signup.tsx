@@ -106,6 +106,7 @@ export default function PhoneSignUpScreen() {
                     placeholder={t("auth.namePlaceholder")}
                     value={value}
                     onChangeText={onChange}
+                    testID="auth-phone-signup-name"
                     error={
                       phoneForm.formState.errors.name
                         ? t(phoneForm.formState.errors.name.message as string)
@@ -147,6 +148,7 @@ export default function PhoneSignUpScreen() {
                     value={value}
                     onChangeText={onChange}
                     secureTextEntry
+                    testID="auth-phone-signup-password"
                     error={
                       phoneForm.formState.errors.password
                         ? t(
@@ -171,6 +173,7 @@ export default function PhoneSignUpScreen() {
                   onPress={phoneForm.handleSubmit(onSubmit)}
                   disabled={isLoading}
                   variant="primary"
+                  testID="auth-phone-signup-submit"
                 >
                   {isLoading ? <Spinner size="small" color="white" /> : t("auth.signUp")}
                 </Button>

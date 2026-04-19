@@ -451,6 +451,8 @@ export default function MatchDetailScreen() {
 
     const actions: PlayerAction[] = [];
 
+    const testIDBase = `match-detail-player-${player.id}`;
+
     // Admin: edit guest player name
     if (isAdmin && player.signupType === "guest") {
       actions.push({
@@ -458,6 +460,7 @@ export default function MatchDetailScreen() {
         label: t("matchDetail.editName"),
         onPress: () => handleEditPlayerName(player.id, player.playerName),
         variant: "outline",
+        testID: `${testIDBase}-edit-name`,
       });
     }
 
@@ -470,6 +473,7 @@ export default function MatchDetailScreen() {
             label: t("matchDetail.markPaid"),
             onPress: () => handleMarkAsPaid(player.id),
             variant: "outline",
+            testID: `${testIDBase}-mark-paid`,
           });
         } else if (isOwn) {
           // Non-admin players get Pay and Notify options
@@ -478,12 +482,14 @@ export default function MatchDetailScreen() {
             label: t("matchDetail.pay"),
             onPress: handleOpenPayment,
             variant: "outline",
+            testID: `${testIDBase}-pay`,
           });
           actions.push({
             icon: WhatsAppIcon,
             label: t("notify.trigger"),
             onPress: handleNotifyPaid,
             variant: "outline",
+            testID: `${testIDBase}-notify`,
           });
         }
         actions.push({
@@ -491,6 +497,7 @@ export default function MatchDetailScreen() {
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
           variant: "danger-outline",
+          testID: `${testIDBase}-cancel`,
         });
         break;
 
@@ -500,6 +507,7 @@ export default function MatchDetailScreen() {
           label: t("actions.cancel"),
           onPress: () => handleCancelSignup(player.id, player.status),
           variant: "danger-outline",
+          testID: `${testIDBase}-cancel`,
         });
         break;
 
@@ -510,12 +518,14 @@ export default function MatchDetailScreen() {
           label: t("matchDetail.rejoin"),
           onPress: () => handleRejoin(player.id),
           variant: "primary",
+          testID: `${testIDBase}-rejoin`,
         });
         actions.push({
           icon: WhatsAppIcon,
           label: t("notify.cantPlay"),
           onPress: handleNotifyPaid,
           variant: "outline",
+          testID: `${testIDBase}-cant-play`,
         });
         break;
     }
@@ -527,6 +537,7 @@ export default function MatchDetailScreen() {
         label: t("matchDetail.removePlayer"),
         onPress: () => handleRemovePlayer(player.id),
         variant: "danger-outline",
+        testID: `${testIDBase}-remove`,
       });
     }
 
@@ -547,6 +558,7 @@ export default function MatchDetailScreen() {
       addedByName: signup.addedByName,
       isCurrentUser: signup.userId === userId,
       actions: getPlayerActions(signup),
+      testID: `match-detail-player-row-${signup.id}`,
     }));
   };
 
@@ -654,6 +666,8 @@ export default function MatchDetailScreen() {
                           })
                         }
                         padding="$2"
+                        accessibilityLabel={t("a11y.editMatch")}
+                        testID="match-detail-edit-btn"
                       >
                         <Pencil size={20} />
                       </Button>
@@ -667,6 +681,8 @@ export default function MatchDetailScreen() {
                       circular
                       onPress={handleAddToCalendar}
                       padding="$2"
+                      accessibilityLabel={t("a11y.addToCalendar")}
+                      testID="match-detail-calendar-btn"
                     >
                       <Calendar size={20} />
                     </Button>
@@ -679,6 +695,8 @@ export default function MatchDetailScreen() {
                     circular
                     onPress={handleShareMatch}
                     padding="$2"
+                    accessibilityLabel={t("a11y.shareMatch")}
+                    testID="match-detail-share-btn"
                   >
                     <Share2 size={20} />
                   </Button>
@@ -758,6 +776,7 @@ export default function MatchDetailScreen() {
                       variant="primary"
                       size="$5"
                       onPress={() => setShowJoinModal(true)}
+                      testID="match-detail-join-btn"
                     >
                       {t("actions.wantToPlay")}
                     </Button>
@@ -807,6 +826,7 @@ export default function MatchDetailScreen() {
                         variant="outline"
                         size="$3"
                         onPress={() => setShowGuestDialog(true)}
+                        testID="match-detail-invite-friend-btn"
                       >
                         <UserPlus size={16} />
                         <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>

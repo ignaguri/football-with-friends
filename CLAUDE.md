@@ -122,6 +122,15 @@ The application implements comprehensive timezone support to ensure consistent d
 - Match listings show dates in Berlin timezone regardless of user location
 - Shared across mobile, web, and API via `@repo/shared` package
 
+### Accessibility & Automation Identifiers
+Interactive elements follow a shared convention so screen readers AND automation tools (Chrome DevTools MCP, agent-browser) can reliably identify them.
+
+- Priority: **semantic role + accessible name first**, `testID` only as a fallback for repeated/ambiguous elements. Chrome DevTools MCP snapshots the accessibility tree, not the DOM.
+- Icon-only buttons require `accessibilityLabel` (from the `a11y` i18n namespace). Any `Pressable` acting as a button requires `accessibilityRole="button"`.
+- `testID` naming: kebab-case hierarchical, `{screen}-{element}[-{id}]` (e.g. `matches-fab-add`, `matches-card-42`).
+
+Full convention, examples, and verification steps: [`docs/accessibility-and-test-ids.md`](docs/accessibility-and-test-ids.md).
+
 ### Development Workflow
 1. **Install dependencies**: `pnpm install` (installs for all workspaces)
 2. **Start development**: `pnpm dev` (starts API and mobile app concurrently)

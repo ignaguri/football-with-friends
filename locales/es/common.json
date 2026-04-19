@@ -442,6 +442,23 @@
     "error": "Error: {message}",
     "saving": "Guardando..."
   },
+  "a11y": {
+    "addMatch": "Agregar partido",
+    "openMatch": "Abrir partido del {{date}}, {{location}}",
+    "openMatchNoLocation": "Abrir partido del {{date}}",
+    "viewRules": "Ver reglas",
+    "editMatch": "Editar partido",
+    "addToCalendar": "Agregar partido al calendario",
+    "shareMatch": "Compartir partido",
+    "loadMoreMatches": "Cargar más partidos",
+    "joinMatch": "Unirme al partido",
+    "inviteFriend": "Invitar un amigo",
+    "playerAction": "{{action}} para {{playerName}}",
+    "openStats": "Abrir estadísticas",
+    "openMultimedia": "Abrir multimedia",
+    "openGallery": "Abrir galería del {{date}}",
+    "uploadMedia": "Subir foto o video"
+  },
   "status": {
     "paid": "Pagado",
     "pending": "Pendiente",

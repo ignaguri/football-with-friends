@@ -244,6 +244,8 @@ export default function MatchGalleryScreen() {
                 icon={<Plus size={16} />}
                 onPress={openUpload}
                 disabled={uploading}
+                accessibilityLabel={t("a11y.uploadMedia")}
+                testID="gallery-upload-btn"
               >
                 {uploading ? t("multimedia.uploading", { percent: 0 }) : t("multimedia.upload")}
               </Button>

@@ -17,11 +17,13 @@ function IconChip({
   onPress,
   children,
   accessibilityLabel,
+  testID,
   style,
 }: {
   onPress: () => void;
   children: React.ReactNode;
   accessibilityLabel: string;
+  testID?: string;
   style?: object;
 }) {
   return (
@@ -29,6 +31,7 @@ function IconChip({
       onPress={onPress}
       role="button"
       aria-label={accessibilityLabel}
+      testID={testID}
       width={40}
       height={40}
       borderRadius={20}
@@ -110,6 +113,7 @@ export function MediaLightbox({
         <IconChip
           onPress={onClose}
           accessibilityLabel="Close"
+          testID="lightbox-close"
           style={{ position: "absolute", top: 24, right: 16, zIndex: 10 }}
         >
           <X size={24} color="$color" />
@@ -133,6 +137,7 @@ export function MediaLightbox({
           <IconChip
             onPress={() => setIndex((i) => i - 1)}
             accessibilityLabel="Previous"
+            testID="lightbox-prev"
             style={{ position: "absolute", left: 8, top: "50%", zIndex: 10 }}
           >
             <ChevronLeft size={24} color="$color" />
@@ -142,6 +147,7 @@ export function MediaLightbox({
           <IconChip
             onPress={() => setIndex((i) => i + 1)}
             accessibilityLabel="Next"
+            testID="lightbox-next"
             style={{ position: "absolute", right: 8, top: "50%", zIndex: 10 }}
           >
             <ChevronRight size={24} color="$color" />
@@ -164,6 +170,7 @@ export function MediaLightbox({
                 <IconChip
                   onPress={() => setMenuOpen((o) => !o)}
                   accessibilityLabel="More actions"
+                  testID="lightbox-menu-btn"
                 >
                   <MoreVertical size={22} color="$color" />
                 </IconChip>
@@ -195,6 +202,7 @@ export function MediaLightbox({
                       }}
                       role="menuitem"
                       aria-label="Delete"
+                      testID="lightbox-delete"
                       cursor="pointer"
                       hoverStyle={{ backgroundColor: "$red4" }}
                       pressStyle={{ backgroundColor: "$red5" }}

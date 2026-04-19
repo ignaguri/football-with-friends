@@ -439,6 +439,23 @@
     "error": "Error: {message}",
     "saving": "Saving..."
   },
+  "a11y": {
+    "addMatch": "Add match",
+    "openMatch": "Open match on {{date}}, {{location}}",
+    "openMatchNoLocation": "Open match on {{date}}",
+    "viewRules": "View rules",
+    "editMatch": "Edit match",
+    "addToCalendar": "Add match to calendar",
+    "shareMatch": "Share match",
+    "loadMoreMatches": "Load more matches",
+    "joinMatch": "Join match",
+    "inviteFriend": "Invite a friend",
+    "playerAction": "{{action}} for {{playerName}}",
+    "openStats": "Open player stats",
+    "openMultimedia": "Open multimedia feed",
+    "openGallery": "Open gallery for {{date}}",
+    "uploadMedia": "Upload photo or video"
+  },
   "status": {
     "paid": "Paid",
     "pending": "Pending",

@@ -114,7 +114,10 @@ export default function MultimediaFeedScreen() {
                         router.push(`/(tabs)/matches/${g.matchId}/gallery`)
                       }
                       accessibilityRole="button"
-                      accessibilityLabel={`Open gallery for ${formatDisplayDate(g.matchDate, "MMM d")}`}
+                      accessibilityLabel={t("a11y.openGallery", {
+                        date: formatDisplayDate(g.matchDate, "MMM d"),
+                      })}
+                      testID={`social-multimedia-feed-group-${g.matchId}`}
                     >
                       <XStack alignItems="center" gap="$3">
                         <XStack gap={4} alignItems="center">

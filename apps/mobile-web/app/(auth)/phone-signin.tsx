@@ -166,6 +166,7 @@ export default function PhoneSignInScreen() {
                         value={value}
                         onChangeText={onChange}
                         secureTextEntry
+                        testID="auth-phone-signin-password"
                         error={
                           phoneForm.formState.errors.password
                             ? t(phoneForm.formState.errors.password.message as string)
@@ -181,6 +182,7 @@ export default function PhoneSignInScreen() {
                     textAlign="right"
                     cursor="pointer"
                     onPress={() => router.push("/(auth)/forgot-password")}
+                    testID="auth-phone-signin-forgot-link"
                   >
                     {t("auth.forgotPassword")}
                   </Text>
@@ -213,6 +215,7 @@ export default function PhoneSignInScreen() {
                         value={newPassword}
                         onChangeText={setNewPassword}
                         secureTextEntry
+                        testID="auth-phone-signin-new-password"
                       />
 
                       <Input
@@ -221,6 +224,7 @@ export default function PhoneSignInScreen() {
                         value={confirmPassword}
                         onChangeText={setConfirmPassword}
                         secureTextEntry
+                        testID="auth-phone-signin-confirm-password"
                       />
                     </>
                   )}
@@ -239,6 +243,7 @@ export default function PhoneSignInScreen() {
                     onPress={phoneForm.handleSubmit(onSubmit)}
                     disabled={isLoading}
                     variant="primary"
+                    testID="auth-phone-signin-submit"
                   >
                     {isLoading ? <Spinner size="small" color="white" /> : t("auth.signIn")}
                   </Button>
@@ -247,6 +252,7 @@ export default function PhoneSignInScreen() {
                     onPress={handlePasswordReset}
                     disabled={isLoading}
                     variant="primary"
+                    testID="auth-phone-signin-reset-submit"
                   >
                     {isLoading ? (
                       <Spinner size="small" color="white" />
