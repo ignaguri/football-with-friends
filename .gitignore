@@ -124,3 +124,11 @@ apps/api/.dev.vars
 
 # Superpowers brainstorm companion session files
 .superpowers/
+
+# EAS local build artifacts (loose files at app roots)
+apps/mobile-web/build-*.ipa
+apps/mobile-web/build-*.aab
+apps/mobile-web/build-*.apk
+
+# Wrangler-generated Cloudflare Worker types (regenerate with `wrangler types`)
+apps/api/worker-configuration.d.ts
