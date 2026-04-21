@@ -11,6 +11,7 @@
     "generate-icons": "node scripts/generate-pwa-icons.js",
     "copy-public": "node scripts/copy-public-files.js",
     "build:sw": "workbox injectManifest workbox-config.js",
+    "eas-build-post-install": "node scripts/patch-gradle-jvmargs.js",
     "lint": "eslint app --ext .ts,.tsx",
     "typecheck": "echo '⚠️  TypeScript check disabled for mobile-web due to Tamagui type recursion (see TAMAGUI_TYPECHECK.md)' && exit 0"
   },
