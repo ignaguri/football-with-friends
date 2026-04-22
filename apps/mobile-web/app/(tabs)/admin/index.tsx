@@ -338,6 +338,17 @@ function MatchesTab() {
           {t("addMatch.title")}
         </Button>
 
+        {/* Create Group — superadmin only */}
+        {session?.user?.role === "superadmin" ? (
+          <Button
+            variant="outline"
+            onPress={() => router.push("/(tabs)/admin/create-group")}
+            testID="admin-groups-create-btn"
+          >
+            {t("groups.create.title")}
+          </Button>
+        ) : null}
+
         {/* Matches List */}
         {!matches || matches.length === 0 ? (
           <Card variant="outlined">

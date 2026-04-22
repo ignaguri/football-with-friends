@@ -733,5 +733,44 @@
     "title": "Actualización disponible",
     "message": "Se descargó una nueva versión. Reiniciá la app para aplicarla.",
     "restart": "Reiniciar"
+  },
+  "groups": {
+    "switcher": {
+      "label": "Grupo",
+      "loading": "Cargando grupos…"
+    },
+    "myGroups": {
+      "title": "Mis grupos",
+      "empty": "Todavía no perteneces a ningún grupo.",
+      "owner": "Dueño",
+      "organizer": "Organizador",
+      "member": "Miembro"
+    },
+    "create": {
+      "title": "Crear grupo",
+      "nameLabel": "Nombre del grupo",
+      "namePlaceholder": "ej. Fútbol de los sábados",
+      "cta": "Crear",
+      "success": "Grupo creado",
+      "superadminOnly": "Solo el superadmin puede crear nuevos grupos"
+    },
+    "detail": {
+      "title": "Detalle del grupo",
+      "members": "Miembros",
+      "settings": "Ajustes",
+      "leave": "Salir del grupo",
+      "transfer": "Transferir propiedad",
+      "delete": "Eliminar grupo",
+      "deleteConfirm": "¿Eliminar este grupo? No se puede deshacer."
+    },
+    "members": {
+      "promote": "Promover a organizador",
+      "demote": "Pasar a miembro",
+      "kick": "Quitar del grupo"
+    },
+    "noGroup": {
+      "title": "Todavía sin grupo",
+      "body": "Pedile al organizador un link de invitación y abrilo para entrar."
+    }
   }
 }

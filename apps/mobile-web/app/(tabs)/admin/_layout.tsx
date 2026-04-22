@@ -58,6 +58,12 @@ export default function AdminLayout() {
           ),
         }}
       />
+      <Stack.Screen
+        name="create-group"
+        options={{
+          title: t("groups.create.title"),
+        }}
+      />
     </Stack>
   );
 }

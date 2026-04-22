@@ -730,5 +730,44 @@
     "title": "Update Available",
     "message": "A new version has been downloaded. Restart the app to apply it.",
     "restart": "Restart"
+  },
+  "groups": {
+    "switcher": {
+      "label": "Group",
+      "loading": "Loading groups…"
+    },
+    "myGroups": {
+      "title": "My Groups",
+      "empty": "You're not in any group yet.",
+      "owner": "Owner",
+      "organizer": "Organizer",
+      "member": "Member"
+    },
+    "create": {
+      "title": "Create Group",
+      "nameLabel": "Group name",
+      "namePlaceholder": "e.g. Saturday Futsal",
+      "cta": "Create",
+      "success": "Group created",
+      "superadminOnly": "Only superadmin can create new groups"
+    },
+    "detail": {
+      "title": "Group Details",
+      "members": "Members",
+      "settings": "Settings",
+      "leave": "Leave group",
+      "transfer": "Transfer ownership",
+      "delete": "Delete group",
+      "deleteConfirm": "Delete this group? This cannot be undone."
+    },
+    "members": {
+      "promote": "Promote to organizer",
+      "demote": "Demote to member",
+      "kick": "Remove from group"
+    },
+    "noGroup": {
+      "title": "No group yet",
+      "body": "Ask your organizer for an invite link, then open it to join."
+    }
   }
 }
