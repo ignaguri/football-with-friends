@@ -103,7 +103,6 @@ export class MatchService {
     groupId: string,
     matchId: string,
     updates: UpdateMatchData,
-    _updatedBy: User,
   ): Promise<Match> {
     const existingMatch = await this.matchRepository.findById(matchId);
     if (!existingMatch || existingMatch.groupId !== groupId) {
@@ -138,11 +137,7 @@ export class MatchService {
    * Delete a match. Caller must be organizer (route-level); we verify the
    * match belongs to the caller's group before hard-deleting.
    */
-  async deleteMatch(
-    groupId: string,
-    matchId: string,
-    _deletedBy: User,
-  ): Promise<void> {
+  async deleteMatch(groupId: string, matchId: string): Promise<void> {
     const existingMatch = await this.matchRepository.findById(matchId);
     if (!existingMatch || existingMatch.groupId !== groupId) {
       throw new Error("Match not found");

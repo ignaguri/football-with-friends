@@ -5,7 +5,7 @@ import { getServiceFactory } from "@repo/shared/services";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
-import { requireOrganizer } from "../middleware/authz";
+import { isCurrentOrganizer, requireOrganizer } from "../middleware/authz";
 import {
   notifyMatchCreated,
   notifyMatchUpdated,
@@ -192,8 +192,6 @@ app.patch(
     const denied = requireOrganizer(c);
     if (denied) return denied;
 
-    const sessionUser = requireUser(c);
-    const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
     const matchId = c.req.param("id");
     const updates = c.req.valid("json");
@@ -208,7 +206,6 @@ app.patch(
           costPerPlayer: updates.costPerPlayer === null ? undefined : updates.costPerPlayer,
           sameDayCost: updates.sameDayCost === null ? undefined : updates.sameDayCost,
         },
-        user,
       );
 
       if (updates.status === "cancelled") {
@@ -234,13 +231,11 @@ app.delete("/:id", async (c) => {
   const denied = requireOrganizer(c);
   if (denied) return denied;
 
-  const sessionUser = requireUser(c);
-  const user = sessionUserToUser(sessionUser);
   const current = requireCurrentGroup(c);
   const matchId = c.req.param("id");
 
   try {
-    await getMatchService().deleteMatch(current.id, matchId, user);
+    await getMatchService().deleteMatch(current.id, matchId);
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete match";
@@ -358,7 +353,7 @@ app.patch(
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
-    const isOrganizer = c.get("isSuperadmin") === true || current.role === "organizer";
+    const isOrganizer = isCurrentOrganizer(c);
 
     try {
       const matchId = c.req.param("id");
@@ -458,7 +453,7 @@ app.post(
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
-    const isOrganizer = c.get("isSuperadmin") === true || current.role === "organizer";
+    const isOrganizer = isCurrentOrganizer(c);
 
     try {
       const stats = await getPlayerStatsService().recordStats(
@@ -497,7 +492,7 @@ app.patch(
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
-    const isOrganizer = c.get("isSuperadmin") === true || current.role === "organizer";
+    const isOrganizer = isCurrentOrganizer(c);
 
     try {
       const stats = await getPlayerStatsService().updateStats(

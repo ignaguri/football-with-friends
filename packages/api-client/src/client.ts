@@ -41,11 +41,10 @@ export function configureLanguage(lang: string) {
 // This ensures the URL is computed when the request is made, not at bundle time
 function createDynamicFetch() {
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    // Wait for the initial token load to complete before making any request.
-    // Prevents a race where data queries fire before the token is loaded from SecureStore.
-    await _tokenLoadPromise;
-    // Same race applies to the persisted active group id.
-    await _groupIdLoadPromise;
+    // Wait for persisted bearer token and active group id to hydrate before
+    // the first request fires. Prevents useSession() / data queries from
+    // racing the boot hydration.
+    await Promise.all([_tokenLoadPromise, _groupIdLoadPromise]);
 
     // Get the original URL from the input
     let originalUrl: string;

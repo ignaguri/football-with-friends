@@ -638,6 +638,15 @@ export type MatchMediaFeedGroup = {
 export const MEMBER_ROLES = ["organizer", "member"] as const;
 export type MemberRole = (typeof MEMBER_ROLES)[number];
 
+// Platform-level role on the `user` table. Post-Phase-1 only `user` and
+// `superadmin` exist; `admin` is retained as a transitional alias that
+// BetterAuth's admin plugin also accepts.
+export const PLATFORM_ROLES = ["user", "superadmin"] as const;
+export type PlatformRole = (typeof PLATFORM_ROLES)[number];
+
+// HTTP header carrying the active group id across every authed request.
+export const GROUP_HEADER = "X-Group-Id";
+
 export const GROUP_VISIBILITIES = ["private", "public"] as const;
 export type GroupVisibility = (typeof GROUP_VISIBILITIES)[number];
 

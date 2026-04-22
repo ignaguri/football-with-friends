@@ -159,6 +159,64 @@ export class TursoGroupRepository {
     }));
   }
 
+  /**
+   * Returns the caller's membership + ownership for a single group in one
+   * round-trip. Hot path — called by groupContextMiddleware on every scoped
+   * request. Returns null when the user isn't a member or the group is
+   * soft-deleted.
+   */
+  async findMembership(
+    groupId: string,
+    userId: string,
+  ): Promise<{ id: string; role: MemberRole; isOwner: boolean } | null> {
+    const row = await this.db
+      .selectFrom("groups")
+      .innerJoin("group_members", "group_members.group_id", "groups.id")
+      .where("groups.id", "=", groupId)
+      .where("group_members.user_id", "=", userId)
+      .where("groups.deleted_at", "is", null)
+      .select([
+        "groups.id as id",
+        "groups.owner_user_id as owner_user_id",
+        "group_members.role as role",
+      ])
+      .executeTakeFirst();
+    if (!row) return null;
+    return {
+      id: row.id,
+      role: row.role as MemberRole,
+      isOwner: row.owner_user_id === userId,
+    };
+  }
+
+  /**
+   * Oldest-joined membership for the user; auto-pick fallback when no header
+   * is sent. Limits to 1 so we don't hydrate the full group list.
+   */
+  async findFirstMembership(
+    userId: string,
+  ): Promise<{ id: string; role: MemberRole; isOwner: boolean } | null> {
+    const row = await this.db
+      .selectFrom("groups")
+      .innerJoin("group_members", "group_members.group_id", "groups.id")
+      .where("group_members.user_id", "=", userId)
+      .where("groups.deleted_at", "is", null)
+      .select([
+        "groups.id as id",
+        "groups.owner_user_id as owner_user_id",
+        "group_members.role as role",
+      ])
+      .orderBy("group_members.joined_at", "asc")
+      .limit(1)
+      .executeTakeFirst();
+    if (!row) return null;
+    return {
+      id: row.id,
+      role: row.role as MemberRole,
+      isOwner: row.owner_user_id === userId,
+    };
+  }
+
   async update(id: string, data: UpdateGroupData): Promise<Group> {
     const values: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (data.name !== undefined) values.name = data.name;

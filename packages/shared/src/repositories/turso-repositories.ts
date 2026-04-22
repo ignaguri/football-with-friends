@@ -106,12 +106,10 @@ function dbMatchToMatch(row: any): Match {
 function dbMatchWithCourtToMatch(row: any): Match {
   const match = dbMatchToMatch(row);
 
-  // Add court information if it exists. Court lives in the same group as the
-  // match, so we propagate `match.groupId` rather than select group_id twice.
   if (row.court_name) {
     match.court = {
       id: row.court_id,
-      groupId: match.groupId,
+      groupId: row.court_group_id,
       locationId: row.location_id,
       name: row.court_name,
       description: row.court_description || "",
@@ -121,11 +119,10 @@ function dbMatchWithCourtToMatch(row: any): Match {
     };
   }
 
-  // Add location information if it exists.
   if (row.location_name) {
     match.location = {
       id: row.location_id,
-      groupId: match.groupId,
+      groupId: row.location_group_id,
       name: row.location_name,
       address: row.location_address || "",
       coordinates: row.location_coordinates || "",
@@ -302,6 +299,7 @@ export class TursoCourtRepository implements CourtRepository {
       .leftJoin("locations", "courts.location_id", "locations.id")
       .select([
         "courts.id",
+        "courts.group_id",
         "courts.location_id",
         "courts.name",
         "courts.description",
@@ -309,6 +307,7 @@ export class TursoCourtRepository implements CourtRepository {
         "courts.created_at",
         "courts.updated_at",
         "locations.id as location_id",
+        "locations.group_id as location_group_id",
         "locations.name as location_name",
         "locations.address as location_address",
         "locations.coordinates as location_coordinates",
@@ -325,7 +324,10 @@ export class TursoCourtRepository implements CourtRepository {
     if (row.location_id) {
       court.location = {
         id: row.location_id,
-        groupId: court.groupId,
+        // group_id is nullable in the schema (see Phase 1 NOT NULL tightening
+        // deferral in the plan doc) but always populated post-backfill;
+        // fall back to the court's group if somehow missing.
+        groupId: row.location_group_id ?? court.groupId,
         name: row.location_name || "Unknown Location",
         address: row.location_address || "",
         coordinates: row.location_coordinates || "",
@@ -487,12 +489,14 @@ export class TursoMatchRepository implements MatchRepository {
         "matches.created_at",
         "matches.updated_at",
         "courts.id as court_id",
+        "courts.group_id as court_group_id",
         "courts.name as court_name",
         "courts.description as court_description",
         "courts.is_active as court_is_active",
         "courts.created_at as court_created_at",
         "courts.updated_at as court_updated_at",
         "locations.id as location_id",
+        "locations.group_id as location_group_id",
         "locations.name as location_name",
         "locations.address as location_address",
         "locations.coordinates as location_coordinates",

@@ -1,17 +1,11 @@
 import type { Context, Next } from "hono";
-import type { MemberRole, User } from "@repo/shared/domain";
+import type { MemberRole, PlatformRole, User } from "@repo/shared/domain";
 import { auth } from "../auth";
 
 /**
  * Shared security types and middleware for the API.
  * Used by both worker.ts (Cloudflare Workers) and index.ts (Bun dev).
  */
-
-// Session user stored in Hono context by the global auth middleware.
-// Post-Phase-1 the only platform-level role is 'superadmin' (Ignacio). 'admin'
-// is accepted during the transition as an alias for 'superadmin' so a stale
-// DB row doesn't break auth while the migration propagates.
-export type PlatformRole = "user" | "superadmin";
 
 export type SessionUser = {
   id: string;
@@ -27,12 +21,9 @@ export type CurrentGroup = {
   isOwner: boolean;
 };
 
-// Hono app variables — user is optional because public routes don't set it.
-// currentGroup/isSuperadmin are set by groupContextMiddleware on scoped routes.
 export type AppVariables = {
   user?: SessionUser;
   currentGroup?: CurrentGroup;
-  isSuperadmin?: boolean;
 };
 
 // Convert session user to the full domain User type (with synthetic timestamps)

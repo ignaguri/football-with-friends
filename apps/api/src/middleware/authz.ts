@@ -1,44 +1,68 @@
 // Group-relative authorization helpers. These replace the old global
-// `user.role === "admin"` check. They run inside a handler (not as middleware)
-// because they need the active group already bound by groupContextMiddleware.
+// `user.role === "admin"` check. Called inside handlers (not as middleware)
+// because they depend on the active group bound by groupContextMiddleware.
 //
 // Semantics:
-//   - requireOrganizer: organizer role in the current group OR platform superadmin.
-//   - requireOwner:     owner of the current group OR platform superadmin.
-//   - requireMember:    any member of the current group. Middleware already
-//                       enforces this; the function is exported for explicit
-//                       self-documentation at call sites that want to signal
-//                       "this endpoint is member-only by design".
+//   - requireSuperadmin: platform-level superadmin only.
+//   - requireOrganizer:  organizer of the current group OR superadmin.
+//   - requireOwner:      owner of the current group OR superadmin.
+//   - requireMember:     any member — middleware already enforces this.
 //
-// On failure each helper throws an HTTPException-equivalent JSON error via
-// `c.json(...)` — callers should `return` whatever the helper returns.
+// Each returns null on success or a 403 `Response` on failure. Handlers:
+//   const denied = requireOrganizer(c);
+//   if (denied) return denied;
 
 import type { Context } from "hono";
 import { requireCurrentGroup } from "./group-context";
+import { requireUser } from "./security";
 
-function forbidden(c: Context, message: string) {
+function forbidden(c: Context, message: string): Response {
   return c.json({ error: message, code: "FORBIDDEN" }, 403);
 }
 
-/** Organizer of the current group OR superadmin. Returns null on success, a Response on failure. */
+export function isSuperadmin(c: Context): boolean {
+  return requireUser(c).role === "superadmin";
+}
+
+export function isCurrentOrganizer(c: Context): boolean {
+  if (isSuperadmin(c)) return true;
+  return requireCurrentGroup(c).role === "organizer";
+}
+
+export function requireSuperadmin(c: Context): Response | null {
+  return isSuperadmin(c) ? null : forbidden(c, "Superadmin role required");
+}
+
 export function requireOrganizer(c: Context): Response | null {
-  const isSuperadmin = c.get("isSuperadmin") === true;
-  if (isSuperadmin) return null;
-  const current = requireCurrentGroup(c);
-  if (current.role === "organizer") return null;
-  return forbidden(c, "Organizer role required for this action");
+  return isCurrentOrganizer(c)
+    ? null
+    : forbidden(c, "Organizer role required for this action");
 }
 
-/** Owner of the current group OR superadmin. Returns null on success, a Response on failure. */
 export function requireOwner(c: Context): Response | null {
-  const isSuperadmin = c.get("isSuperadmin") === true;
-  if (isSuperadmin) return null;
-  const current = requireCurrentGroup(c);
-  if (current.isOwner) return null;
-  return forbidden(c, "Owner role required for this action");
+  if (isSuperadmin(c)) return null;
+  return requireCurrentGroup(c).isOwner
+    ? null
+    : forbidden(c, "Owner role required for this action");
 }
 
-/** Explicitly assert membership. Middleware already enforces this. */
 export function requireMember(_c: Context): Response | null {
+  return null;
+}
+
+/**
+ * Asserts that a group-scoped entity belongs to the caller's current group.
+ * Returns a 404 `Response` on mismatch (intentionally 404 not 403 to avoid
+ * id-existence leakage across groups). Returns null on success.
+ */
+export function assertInCurrentGroup(
+  c: Context,
+  entity: { groupId: string } | null | undefined,
+  notFoundMessage = "Not found",
+): Response | null {
+  const current = requireCurrentGroup(c);
+  if (!entity || entity.groupId !== current.id) {
+    return c.json({ error: notFoundMessage }, 404);
+  }
   return null;
 }
