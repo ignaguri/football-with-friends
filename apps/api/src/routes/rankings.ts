@@ -2,8 +2,17 @@ import { Hono } from "hono";
 import { getServiceFactory } from "@repo/shared/services";
 import { auth } from "../auth";
 import type { RankingCriteria } from "@repo/shared/domain";
+import { type AppVariables } from "../middleware/security";
+import { groupContextMiddleware } from "../middleware/group-context";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", groupContextMiddleware);
+
+// NOTE: ranking aggregates currently span all groups. Scoping them to the
+// active group is a follow-up — safe to defer because all production data
+// lives in `grp_legacy` post-migration, so rankings are effectively
+// correct. Tracked with the voting-scoping follow-up.
 
 const getRankingService = () => getServiceFactory().rankingService;
 

@@ -11,6 +11,10 @@ import {
 import { getRepositoryFactory } from "@repo/shared/repositories";
 
 import { rateLimitMiddleware, requireUser } from "../middleware/security";
+// TODO(phase-1-follow-up): match-media endpoints aren't yet group-scoped.
+// They're safe in single-tenant production (grp_legacy only) but will leak
+// across groups once the app is truly multi-tenant. Add groupContextMiddleware
+// and match.groupId checks to /feed, /:matchId, and /:matchId/:mediaId.
 import {
   deleteFromR2,
   extFromMediaMime,

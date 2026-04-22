@@ -1,10 +1,15 @@
 import { Hono } from "hono";
 import { votingService, getServiceFactory } from "@repo/shared/services";
+import { getRepositoryFactory } from "@repo/shared/repositories";
 import { auth } from "../auth";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { type AppVariables } from "../middleware/security";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", groupContextMiddleware);
 
 // Helper to get language from Accept-Language header
 function getLanguage(acceptLanguage: string | null | undefined): "en" | "es" {
@@ -12,25 +17,38 @@ function getLanguage(acceptLanguage: string | null | undefined): "en" | "es" {
   return acceptLanguage.toLowerCase().startsWith("es") ? "es" : "en";
 }
 
-// Helper to check admin role
-async function requireAdmin(headers: Headers): Promise<{ user: any }> {
+// NOTE: voting criteria themselves are currently managed globally (treated as
+// platform-level by the old admin model). Scoping criteria / leaderboard data
+// per-group is tracked as follow-up polish. For now: criteria CRUD remains
+// superadmin-only; match-specific voting endpoints verify the match belongs
+// to the current group so cross-group matchIds return 404.
+async function requireSuperadmin(headers: Headers): Promise<{ user: any }> {
   const session = await auth.api.getSession({ headers });
   if (!session?.user) {
     throw new Error("Not authenticated");
   }
-  if ((session.user as any).role !== "admin") {
+  const role = (session.user as any).role;
+  if (role !== "superadmin" && role !== "admin") {
     throw new Error("Admin access required");
   }
   return session;
 }
 
-// Helper to get authenticated user
 async function requireAuth(headers: Headers): Promise<{ user: any }> {
   const session = await auth.api.getSession({ headers });
   if (!session?.user) {
     throw new Error("Not authenticated");
   }
   return session;
+}
+
+async function assertMatchInCurrentGroup(c: any, matchId: string): Promise<Response | null> {
+  const current = requireCurrentGroup(c);
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  if (!match || match.groupId !== current.id) {
+    return c.json({ error: "Match not found" }, 404);
+  }
+  return null;
 }
 
 // ==================== VOTING CRITERIA ====================
@@ -50,7 +68,7 @@ app.get("/criteria", async (c) => {
 // Get all voting criteria including inactive (admin only) - returns full data for editing
 app.get("/criteria/all", async (c) => {
   try {
-    await requireAdmin(c.req.raw.headers);
+    await requireSuperadmin(c.req.raw.headers);
     const criteria = await votingService.getAllCriteriaFull();
     return c.json({ criteria });
   } catch (error: any) {
@@ -80,7 +98,7 @@ app.post(
   zValidator("json", createCriteriaSchema),
   async (c) => {
     try {
-      await requireAdmin(c.req.raw.headers);
+      await requireSuperadmin(c.req.raw.headers);
       const data = c.req.valid("json");
       const criteria = await votingService.createCriteria(data);
       return c.json({ criteria }, 201);
@@ -116,7 +134,7 @@ app.patch(
   zValidator("json", updateCriteriaSchema),
   async (c) => {
     try {
-      await requireAdmin(c.req.raw.headers);
+      await requireSuperadmin(c.req.raw.headers);
       const id = c.req.param("id");
       const data = c.req.valid("json");
       const criteria = await votingService.updateCriteria(id, data);
@@ -143,7 +161,7 @@ app.patch(
 // Delete criteria (soft delete, admin only)
 app.delete("/criteria/:id", async (c) => {
   try {
-    await requireAdmin(c.req.raw.headers);
+    await requireSuperadmin(c.req.raw.headers);
     const id = c.req.param("id");
     await votingService.deleteCriteria(id);
     return c.json({ success: true });
@@ -169,6 +187,8 @@ app.get("/matches/:matchId", async (c) => {
   try {
     const session = await requireAuth(c.req.raw.headers);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     const votes = await votingService.getUserVotesForMatch(
       matchId,
       session.user.id
@@ -200,6 +220,8 @@ app.post(
     try {
       const session = await requireAuth(c.req.raw.headers);
       const matchId = c.req.param("matchId");
+      const notFound = await assertMatchInCurrentGroup(c, matchId);
+      if (notFound) return notFound;
       const { votes } = c.req.valid("json");
 
       const submittedVotes = await votingService.submitVotes(
@@ -231,6 +253,8 @@ app.get("/matches/:matchId/results", async (c) => {
   try {
     await requireAuth(c.req.raw.headers);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     const language = getLanguage(c.req.header("Accept-Language"));
     const results = await votingService.getMatchVotingResults(matchId, language);
     return c.json(results);
@@ -248,6 +272,8 @@ app.delete("/matches/:matchId", async (c) => {
   try {
     const session = await requireAuth(c.req.raw.headers);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     await votingService.clearUserVotesForMatch(matchId, session.user.id);
     return c.json({ success: true });
   } catch (error: any) {
@@ -264,6 +290,8 @@ app.get("/matches/:matchId/has-voted", async (c) => {
   try {
     const session = await requireAuth(c.req.raw.headers);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     const hasVoted = await votingService.hasUserVotedForMatch(
       matchId,
       session.user.id
