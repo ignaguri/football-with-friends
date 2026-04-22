@@ -491,9 +491,10 @@ export class VotingRepository {
   }
 
   /**
-   * Get voting leaderboard (top N players per criteria across all matches)
+   * Get voting leaderboard (top N players per criteria) scoped to a group.
    */
   async getVotingLeaderboard(
+    groupId: string,
     language: "en" | "es" = "en",
     topN: number = 3
   ): Promise<VotingLeaderboard> {
@@ -533,7 +534,7 @@ export class VotingRepository {
           COUNT(*) as vote_count,
           ROW_NUMBER() OVER (PARTITION BY vc.id ORDER BY COUNT(*) DESC) as rank
         FROM voting_criteria vc
-        INNER JOIN match_votes mv ON vc.id = mv.criteria_id
+        INNER JOIN match_votes mv ON vc.id = mv.criteria_id AND mv.group_id = ${groupId}
         INNER JOIN user u ON mv.voted_for_user_id = u.id
         WHERE vc.is_active = 1
         GROUP BY vc.id, vc.code, criteria_name, criteria_description, vc.sort_order, mv.voted_for_user_id, u.name, u.username, u.displayUsername, u.nationality, u.profilePicture
@@ -577,9 +578,10 @@ export class VotingRepository {
   }
 
   /**
-   * Get player rankings by total votes received across all criteria
+   * Get player rankings by total votes received across all criteria, scoped
+   * to a group.
    */
-  async getRankingsByTotalVotes(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByTotalVotes(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const db = getDatabase();
 
     const rows = await sql<{
@@ -604,7 +606,7 @@ export class VotingRepository {
         COUNT(mv.id) as total_votes,
         ROW_NUMBER() OVER (ORDER BY COUNT(mv.id) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN match_votes mv ON u.id = mv.voted_for_user_id
+      INNER JOIN match_votes mv ON u.id = mv.voted_for_user_id AND mv.group_id = ${groupId}
       GROUP BY u.id
       ORDER BY rank ASC
       LIMIT ${limit}

@@ -15,7 +15,12 @@ export default function GroupDetailScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const { data: session } = useSession();
   const { myRole, amIOwner } = useCurrentGroup();
-  const { data: group, isLoading } = useGroupDetail(groupId ?? null);
+  const {
+    data: group,
+    isLoading,
+    error,
+    refetch,
+  } = useGroupDetail(groupId ?? null);
 
   // The server already returns `members` inlined on the detail response for
   // organizers/superadmin, so we read from there rather than firing a
@@ -25,10 +30,21 @@ export default function GroupDetailScreen() {
   const members = isOrganizerView ? (group as any)?.members ?? [] : [];
   const leaveMutation = useLeaveGroup();
 
-  if (isLoading || !group) {
+  if (isLoading) {
     return (
       <YStack flex={1} justifyContent="center" alignItems="center">
         <Spinner size="large" />
+      </YStack>
+    );
+  }
+
+  if (error || !group) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$3">
+        <Text color="$red10" textAlign="center">
+          {t("groups.detail.loadError")}
+        </Text>
+        <Button onPress={() => refetch()}>{t("shared.tryAgain")}</Button>
       </YStack>
     );
   }

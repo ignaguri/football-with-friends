@@ -761,7 +761,8 @@
       "leave": "Salir del grupo",
       "transfer": "Transferir propiedad",
       "delete": "Eliminar grupo",
-      "deleteConfirm": "¿Eliminar este grupo? No se puede deshacer."
+      "deleteConfirm": "¿Eliminar este grupo? No se puede deshacer.",
+      "loadError": "No se pudo cargar este grupo. Revisá tu conexión e intentá de nuevo."
     },
     "members": {
       "promote": "Promover a organizador",

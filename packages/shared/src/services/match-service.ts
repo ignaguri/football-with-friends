@@ -277,7 +277,7 @@ export class MatchService {
    * enforced at the route; this method validates the match belongs to the
    * caller's group.
    */
-  async addPlayerByAdmin(
+  async addPlayerAsOrganizer(
     groupId: string,
     matchId: string,
     playerData: {
@@ -286,7 +286,7 @@ export class MatchService {
       playerEmail: string;
       status?: string;
     },
-    admin: User,
+    actor: User,
   ): Promise<Signup> {
     const match = await this.matchRepository.findById(matchId);
     if (!match || match.groupId !== groupId) {
@@ -303,11 +303,11 @@ export class MatchService {
       }
     }
 
-    return this.signupRepository.addPlayerByAdmin(
+    return this.signupRepository.addPlayerAsOrganizer(
       groupId,
       matchId,
       playerData,
-      admin.id,
+      actor.id,
     );
   }
 
@@ -315,17 +315,17 @@ export class MatchService {
    * Organizer: Remove a player from a match. Authz at route; here we
    * verify cross-group isolation via the signup's group_id.
    */
-  async removePlayerByAdmin(
+  async removePlayerAsOrganizer(
     groupId: string,
     signupId: string,
-    admin: User,
+    actor: User,
   ): Promise<void> {
     const signup = await this.signupRepository.findById(signupId);
     if (!signup || signup.groupId !== groupId) {
       throw new Error("Signup not found");
     }
 
-    await this.signupRepository.removePlayerByAdmin(signupId, admin.id);
+    await this.signupRepository.removePlayerAsOrganizer(signupId, actor.id);
   }
 
   /**

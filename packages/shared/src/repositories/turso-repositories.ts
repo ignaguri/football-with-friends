@@ -53,14 +53,23 @@ function generateId(): string {
   return nanoid();
 }
 
-// Helper function to convert database row to domain object.
 // Post-Phase-1 every scoped row has group_id set. We assert here rather than
 // widening the domain type because any legacy NULL would indicate a migration
-// slip we want to catch loudly.
+// slip we want to catch loudly instead of silently propagating `null` as a
+// string-typed `groupId` (would bypass cross-group checks downstream).
+function assertGroupId(value: unknown, table: string, id: unknown): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(
+      `Invariant violation: ${table} row ${String(id) || "(unknown id)"} has a missing group_id; check Phase 1 backfill.`,
+    );
+  }
+  return value;
+}
+
 function dbLocationToLocation(row: any): Location {
   return {
     id: row.id,
-    groupId: row.group_id,
+    groupId: assertGroupId(row.group_id, "locations", row.id),
     name: row.name,
     address: row.address || "",
     coordinates: row.coordinates || "",
@@ -73,7 +82,7 @@ function dbLocationToLocation(row: any): Location {
 function dbCourtToCourt(row: any): Court {
   return {
     id: row.id,
-    groupId: row.group_id,
+    groupId: assertGroupId(row.group_id, "courts", row.id),
     locationId: row.location_id,
     name: row.name,
     description: row.description || "",
@@ -86,7 +95,7 @@ function dbCourtToCourt(row: any): Court {
 function dbMatchToMatch(row: any): Match {
   return {
     id: row.id,
-    groupId: row.group_id,
+    groupId: assertGroupId(row.group_id, "matches", row.id),
     locationId: row.location_id,
     courtId: row.court_id || undefined,
     date: row.date,
@@ -109,7 +118,7 @@ function dbMatchWithCourtToMatch(row: any): Match {
   if (row.court_name) {
     match.court = {
       id: row.court_id,
-      groupId: row.court_group_id,
+      groupId: assertGroupId(row.court_group_id, "courts", row.court_id),
       locationId: row.location_id,
       name: row.court_name,
       description: row.court_description || "",
@@ -122,7 +131,7 @@ function dbMatchWithCourtToMatch(row: any): Match {
   if (row.location_name) {
     match.location = {
       id: row.location_id,
-      groupId: row.location_group_id,
+      groupId: assertGroupId(row.location_group_id, "locations", row.location_id),
       name: row.location_name,
       address: row.location_address || "",
       coordinates: row.location_coordinates || "",
@@ -138,7 +147,7 @@ function dbMatchWithCourtToMatch(row: any): Match {
 function dbSignupToSignup(row: any): Signup {
   return {
     id: row.id,
-    groupId: row.group_id,
+    groupId: assertGroupId(row.group_id, "signups", row.id),
     matchId: row.match_id,
     userId: row.user_id,
     playerName: row.player_name,
@@ -957,7 +966,7 @@ export class TursoSignupRepository implements SignupRepository {
     return dbSignupToSignup(newSignup);
   }
 
-  async addPlayerByAdmin(
+  async addPlayerAsOrganizer(
     groupId: string,
     matchId: string,
     playerData: {
@@ -966,7 +975,7 @@ export class TursoSignupRepository implements SignupRepository {
       playerEmail: string;
       status?: string;
     },
-    adminId: string,
+    actorId: string,
   ): Promise<Signup> {
     return this.create({
       groupId,
@@ -975,14 +984,15 @@ export class TursoSignupRepository implements SignupRepository {
       playerName: playerData.playerName,
       playerEmail: playerData.playerEmail,
       status: (playerData.status as PlayerStatus) || "PENDING",
+      // DB-stored enum value kept as-is to avoid a migration; only callers
+      // renamed to reflect the new organizer-scoped authorization model.
       signupType: "admin_added",
-      addedByUserId: adminId,
+      addedByUserId: actorId,
     });
   }
 
-  async removePlayerByAdmin(signupId: string, adminId: string): Promise<void> {
-    // You might want to log this action for audit purposes
-    console.log(`Admin ${adminId} removing signup ${signupId}`);
+  async removePlayerAsOrganizer(signupId: string, actorId: string): Promise<void> {
+    console.log(`Organizer ${actorId} removing signup ${signupId}`);
     await this.delete(signupId);
   }
 
@@ -1126,7 +1136,7 @@ export class TursoMatchInvitationRepository
 function dbStatsToMatchPlayerStats(row: any): MatchPlayerStats {
   return {
     id: row.id,
-    groupId: row.group_id,
+    groupId: assertGroupId(row.group_id, "match_player_stats", row.id),
     matchId: row.match_id,
     userId: row.user_id,
     goals: row.goals,
@@ -1402,7 +1412,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     };
   }
 
-  async getRankingsByMatches(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByMatches(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1425,7 +1435,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COUNT(DISTINCT s.match_id) as value,
         ROW_NUMBER() OVER (ORDER BY COUNT(DISTINCT s.match_id) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
       GROUP BY u.id
       ORDER BY rank ASC
       LIMIT ${limit}
@@ -1448,7 +1458,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByThirdTimes(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1471,8 +1481,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.third_time_attended), 0) as value,
         ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_attended), 0) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
       GROUP BY u.id
       HAVING value > 0
       ORDER BY rank ASC
@@ -1496,7 +1506,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByBeers(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByBeers(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1519,8 +1529,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.third_time_beers), 0) as value,
         ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_beers), 0) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
       GROUP BY u.id
       HAVING value > 0
       ORDER BY rank ASC
@@ -1828,9 +1838,11 @@ export class TursoMatchMediaRepository {
   /**
    * Returns a page of matches (ordered by most-recent-upload per match), with up to
    * `itemsPerMatch` media items each. Cursor is the `createdAt` of the last match's
-   * latest item (ISO string). Empty cursor = first page.
+   * latest item (ISO string). Empty cursor = first page. Scoped to `groupId` — the
+   * match row is the scoping anchor since match_media itself has no group column.
    */
   async feed(options: {
+    groupId: string;
     cursor: string | null;
     matchesPerPage: number;
     itemsPerMatch: number;
@@ -1845,7 +1857,7 @@ export class TursoMatchMediaRepository {
     }>;
     nextCursor: string | null;
   }> {
-    const { cursor, matchesPerPage, itemsPerMatch } = options;
+    const { groupId, cursor, matchesPerPage, itemsPerMatch } = options;
 
     // Step 1: Get distinct matches ordered by their most recent upload, after cursor.
     let matchQuery = this.db
@@ -1859,6 +1871,7 @@ export class TursoMatchMediaRepository {
         eb.fn.max<string>("m.created_at").as("lastUploadAt"),
         eb.fn.countAll<number>().as("totalCount"),
       ])
+      .where("mt.group_id", "=", groupId)
       .groupBy((eb) => [
         sql`m.match_id`,
         sql`mt.date`,

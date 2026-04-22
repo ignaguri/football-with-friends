@@ -5,7 +5,10 @@ import { getRepositoryFactory } from "@repo/shared/repositories";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { type AppVariables, requireUser } from "../middleware/security";
-import { groupContextMiddleware } from "../middleware/group-context";
+import {
+  groupContextMiddleware,
+  requireCurrentGroup,
+} from "../middleware/group-context";
 import { assertInCurrentGroup, requireSuperadmin } from "../middleware/authz";
 
 const app = new Hono<{ Variables: AppVariables }>();
@@ -17,9 +20,10 @@ function getLanguage(acceptLanguage: string | null | undefined): "en" | "es" {
   return acceptLanguage.toLowerCase().startsWith("es") ? "es" : "en";
 }
 
-// Voting criteria and the leaderboard still span groups — tracked as follow-up
-// polish. Match-specific endpoints route through `assertMatchInCurrentGroup`
-// so cross-group matchIds 404.
+// Voting criteria are global (shared across groups) by design. Per-group
+// leaderboards and match-specific endpoints are scoped via `currentGroup.id`
+// (filtered by `match_votes.group_id`) and `assertMatchInCurrentGroup`
+// respectively — cross-group matchIds 404, other groups' votes never surface.
 async function assertMatchInCurrentGroup(
   c: Context,
   matchId: string,
@@ -287,14 +291,16 @@ app.get("/matches/:matchId/has-voted", async (c) => {
   }
 });
 
-// Get voting leaderboard (top N players per criteria across all matches)
+// Get voting leaderboard (top N players per criteria) for the active group.
 app.get("/leaderboard", async (c) => {
   try {
     requireUser(c);
+    const current = requireCurrentGroup(c);
     const { topN = "3" } = c.req.query();
     const language = getLanguage(c.req.header("Accept-Language"));
     const rankingService = getServiceFactory().rankingService;
     const leaderboard = await rankingService.getVotingLeaderboard(
+      current.id,
       language,
       parseInt(topN, 10)
     );

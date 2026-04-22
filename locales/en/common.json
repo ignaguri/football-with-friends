@@ -758,7 +758,8 @@
       "leave": "Leave group",
       "transfer": "Transfer ownership",
       "delete": "Delete group",
-      "deleteConfirm": "Delete this group? This cannot be undone."
+      "deleteConfirm": "Delete this group? This cannot be undone.",
+      "loadError": "Couldn't load this group. Check your connection and try again."
     },
     "members": {
       "promote": "Promote to organizer",

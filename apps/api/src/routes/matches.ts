@@ -322,7 +322,7 @@ app.post(
     const current = requireCurrentGroup(c);
 
     try {
-      const signup = await getMatchService().addPlayerByAdmin(
+      const signup = await getMatchService().addPlayerAsOrganizer(
         current.id,
         matchId,
         playerData,
@@ -403,7 +403,7 @@ app.delete("/:id/signup/:signupId", async (c) => {
       getRepositoryFactory().matches.findById(matchId),
     ]);
 
-    await getMatchService().removePlayerByAdmin(current.id, signupId, user);
+    await getMatchService().removePlayerAsOrganizer(current.id, signupId, user);
 
     if (signup?.userId && match && match.groupId === current.id) {
       c.executionCtx?.waitUntil(notifyRemovedFromMatch(match, signup.userId));

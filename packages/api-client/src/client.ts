@@ -7,6 +7,7 @@ import {
   _groupIdLoadPromise,
   getActiveGroupId,
   recordGroupIdFromResponse,
+  setActiveGroupId,
 } from "./group-storage";
 
 // Base URL for localhost development
@@ -129,6 +130,18 @@ function createDynamicFetch() {
           errorData = await clonedResponse.json();
         } catch {
           // Response body is not JSON, ignore
+        }
+        // Stale active group (user left / was kicked): clear the cached id so
+        // the next request omits `X-Group-Id` and the server auto-picks the
+        // user's first remaining membership. Without this the client keeps
+        // sending the dead id and every scoped call 403s.
+        if (
+          response.status === 403 &&
+          typeof errorData === "object" &&
+          errorData !== null &&
+          (errorData as { code?: string }).code === "FORBIDDEN_GROUP"
+        ) {
+          setActiveGroupId(null);
         }
         const error = new Error(`API error: ${response.status} ${response.statusText}`) as Error & {
           response: Response;

@@ -6,6 +6,7 @@
 
 import type { GroupVisibility, MemberRole } from "@repo/shared/domain";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { client as _client } from "./client";
 import {
   getActiveGroupId,
@@ -73,6 +74,17 @@ export function useCurrentGroup() {
   const { data: myGroups, isLoading } = useMyGroups();
   const activeId = getActiveGroupId();
   const current = myGroups?.find((g) => g.id === activeId) ?? myGroups?.[0];
+
+  // Self-heal persisted id: if the stored id points to a group the user no
+  // longer belongs to, the fetch interceptor keeps echoing the stale id and
+  // every scoped call 403s until the user manually switches. When we fall
+  // back to myGroups[0], persist that correction so future requests use it.
+  useEffect(() => {
+    if (!current) return;
+    if (activeId && activeId !== current.id) {
+      setActiveGroupId(current.id);
+    }
+  }, [activeId, current?.id]);
 
   function switchGroup(id: string) {
     setActiveGroupId(id);

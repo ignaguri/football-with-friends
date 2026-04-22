@@ -229,9 +229,10 @@ export interface SignupRepository {
   addGuest(guestData: CreateGuestSignupData): Promise<Signup>;
 
   /**
-   * Admin-only: Add a player to a match (can override capacity)
+   * Organizer action: add a player to a match (can override capacity).
+   * Authz is enforced at the route layer; this method only persists.
    */
-  addPlayerByAdmin(
+  addPlayerAsOrganizer(
     groupId: string,
     matchId: string,
     playerData: {
@@ -240,13 +241,13 @@ export interface SignupRepository {
       playerEmail: string;
       status?: string;
     },
-    adminId: string,
+    actorId: string,
   ): Promise<Signup>;
 
   /**
-   * Admin-only: Remove a player from a match
+   * Organizer action: remove a player from a match.
    */
-  removePlayerByAdmin(signupId: string, adminId: string): Promise<void>;
+  removePlayerAsOrganizer(signupId: string, actorId: string): Promise<void>;
 
   /**
    * Find signups added by a specific user (for tracking admin/guest additions)
@@ -359,19 +360,19 @@ export interface PlayerStatsRepository {
   getUserById(userId: string): Promise<User | null>;
 
   /**
-   * Get player rankings by total matches played
+   * Get player rankings by total matches played, scoped to a group.
    */
-  getRankingsByMatches(limit: number): Promise<PlayerRanking[]>;
+  getRankingsByMatches(groupId: string, limit: number): Promise<PlayerRanking[]>;
 
   /**
-   * Get player rankings by third time attendances
+   * Get player rankings by third time attendances, scoped to a group.
    */
-  getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]>;
+  getRankingsByThirdTimes(groupId: string, limit: number): Promise<PlayerRanking[]>;
 
   /**
-   * Get player rankings by total beers consumed
+   * Get player rankings by total beers consumed, scoped to a group.
    */
-  getRankingsByBeers(limit: number): Promise<PlayerRanking[]>;
+  getRankingsByBeers(groupId: string, limit: number): Promise<PlayerRanking[]>;
 }
 
 // Push Token Repository Interface
