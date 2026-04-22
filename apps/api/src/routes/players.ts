@@ -1,8 +1,12 @@
 import { Hono } from "hono";
 import { getServiceFactory } from "@repo/shared/services";
 import { auth } from "../auth";
+import { type AppVariables } from "../middleware/security";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", groupContextMiddleware);
 
 const getPlayerStatsService = () => getServiceFactory().playerStatsService;
 const getRankingService = () => getServiceFactory().rankingService;
@@ -32,7 +36,9 @@ app.get("/me/finished-matches", async (c) => {
   }
 
   try {
+    const current = requireCurrentGroup(c);
     const matches = await getPlayerStatsService().getFinishedMatchesForUser(
+      current.id,
       session.user.id,
     );
     return c.json(matches);

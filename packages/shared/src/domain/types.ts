@@ -40,6 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 export interface Location {
   id: string;
+  groupId: string;
   name: string;
   address?: string;
   coordinates?: string;
@@ -50,6 +51,7 @@ export interface Location {
 
 export interface Court {
   id: string;
+  groupId: string;
   locationId: string;
   name: string;
   description?: string;
@@ -63,6 +65,7 @@ export interface Court {
 
 export interface Match {
   id: string;
+  groupId: string;
   locationId: string;
   courtId?: string;
   date: string; // ISO date string YYYY-MM-DD
@@ -85,6 +88,7 @@ export interface Match {
 
 export interface Signup {
   id: string;
+  groupId: string;
   matchId: string;
   userId?: string; // nullable for guests
   playerName: string;
@@ -92,6 +96,7 @@ export interface Signup {
   status: PlayerStatus;
   signupType: SignupType;
   guestOwnerId?: string; // for guest signups
+  rosterId?: string; // points to group_roster; supplants guest_owner_id
   addedByUserId: string; // tracks who added this signup
   signedUpAt: Date;
   updatedAt: Date;
@@ -142,6 +147,7 @@ export interface User {
 // Player stats for a specific match
 export interface MatchPlayerStats {
   id: string;
+  groupId: string;
   matchId: string;
   userId: string;
   goals: number;
@@ -230,24 +236,29 @@ export interface VotingLeaderboard {
 // Data transfer objects (DTOs) for creating/updating entities
 
 export interface CreateLocationData {
+  groupId: string;
   name: string;
   address?: string;
   coordinates?: string;
   courtCount?: number;
 }
 
-export interface UpdateLocationData extends Partial<CreateLocationData> {}
+export interface UpdateLocationData
+  extends Partial<Omit<CreateLocationData, "groupId">> {}
 
 export interface CreateCourtData {
+  groupId: string;
   locationId: string;
   name: string;
   description?: string;
   isActive?: boolean;
 }
 
-export interface UpdateCourtData extends Partial<CreateCourtData> {}
+export interface UpdateCourtData
+  extends Partial<Omit<CreateCourtData, "groupId">> {}
 
 export interface CreateMatchData {
+  groupId: string;
   locationId: string;
   courtId?: string;
   date: string;
@@ -260,11 +271,12 @@ export interface CreateMatchData {
 }
 
 export interface UpdateMatchData
-  extends Partial<Omit<CreateMatchData, "createdByUserId">> {
+  extends Partial<Omit<CreateMatchData, "createdByUserId" | "groupId">> {
   status?: MatchStatus;
 }
 
 export interface CreateSignupData {
+  groupId: string;
   matchId: string;
   userId?: string;
   playerName: string;
@@ -272,13 +284,15 @@ export interface CreateSignupData {
   status?: PlayerStatus;
   signupType: SignupType;
   guestOwnerId?: string;
+  rosterId?: string;
   addedByUserId: string;
 }
 
 export interface UpdateSignupData
-  extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId">> {}
+  extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId" | "groupId">> {}
 
 export interface CreateGuestSignupData {
+  groupId: string;
   matchId: string;
   guestName?: string;
   ownerUserId: string;
@@ -294,6 +308,7 @@ export interface CreateInvitationData {
 }
 
 export interface CreateMatchPlayerStatsData {
+  groupId: string;
   matchId: string;
   userId: string;
   goals?: number;
@@ -311,6 +326,7 @@ export interface UpdateMatchPlayerStatsData {
 // Filter and query types
 
 export interface MatchFilters {
+  groupId?: string; // scope-by-group filter; required on all request-driven list calls
   status?: MatchStatus;
   type?: "past" | "upcoming";
   userId?: string; // matches where user is signed up
@@ -321,6 +337,7 @@ export interface MatchFilters {
 }
 
 export interface SignupFilters {
+  groupId?: string;
   matchId?: string;
   userId?: string;
   status?: PlayerStatus;

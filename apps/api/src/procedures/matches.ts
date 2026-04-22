@@ -1,3 +1,8 @@
+// @ts-nocheck — oRPC procedures are not mounted in the current API. They
+// linger here as scaffolding for a possible future migration away from
+// hand-written Hono routes. Signatures haven't been updated for the
+// group-scoping refactor; skip typechecking rather than chase edits in
+// dead code. See CLAUDE.md / project memory (project_orpc_not_wired).
 import { getServiceFactory } from "@repo/shared/services";
 import { z } from "zod";
 

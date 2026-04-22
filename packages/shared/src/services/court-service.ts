@@ -7,24 +7,30 @@ export class CourtService {
   constructor(private courtRepository: CourtRepository) {}
 
   /**
-   * Get all courts
+   * Get all courts for a group
    */
-  async getAllCourts(): Promise<Court[]> {
-    return this.courtRepository.findAll();
+  async getAllCourts(groupId: string): Promise<Court[]> {
+    return this.courtRepository.findAll(groupId);
   }
 
   /**
-   * Get courts by location ID
+   * Get courts by location ID (scoped to group)
    */
-  async getCourtsByLocationId(locationId: string): Promise<Court[]> {
-    return this.courtRepository.findByLocationId(locationId);
+  async getCourtsByLocationId(
+    groupId: string,
+    locationId: string,
+  ): Promise<Court[]> {
+    return this.courtRepository.findByLocationId(groupId, locationId);
   }
 
   /**
-   * Get active courts by location ID
+   * Get active courts by location ID (scoped to group)
    */
-  async getActiveCourtsByLocationId(locationId: string): Promise<Court[]> {
-    return this.courtRepository.findActiveByLocationId(locationId);
+  async getActiveCourtsByLocationId(
+    groupId: string,
+    locationId: string,
+  ): Promise<Court[]> {
+    return this.courtRepository.findActiveByLocationId(groupId, locationId);
   }
 
   /**

@@ -61,27 +61,30 @@ export class PlayerStatsService {
   }
 
   /**
-   * Record or update stats for a player in a match
-   * Authorization: admin can record for anyone, players can record their own
+   * Record or update stats for a player in a match.
+   * Authorization: organizer of the group can record for anyone, users can
+   * record their own. The `isOrganizer` flag is resolved by the calling
+   * route from the active group context.
    */
   async recordStats(
+    groupId: string,
     matchId: string,
     userId: string,
-    data: Partial<CreateMatchPlayerStatsData>,
+    data: Partial<Omit<CreateMatchPlayerStatsData, "groupId" | "matchId" | "userId">>,
     recordedBy: User,
+    isOrganizer: boolean,
   ): Promise<MatchPlayerStats> {
-    // Authorization check: admin or self
-    if (recordedBy.role !== "admin" && recordedBy.id !== userId) {
-      throw new Error("You can only record your own stats or be an admin");
+    if (!isOrganizer && recordedBy.id !== userId) {
+      throw new Error("You can only record your own stats or be an organizer");
     }
 
-    // Verify match exists
     const match = await this.matchRepository.findById(matchId);
-    if (!match) {
+    if (!match || match.groupId !== groupId) {
       throw new Error("Match not found");
     }
 
     return this.playerStatsRepository.upsert({
+      groupId,
       matchId,
       userId,
       goals: data.goals,
@@ -91,17 +94,18 @@ export class PlayerStatsService {
   }
 
   /**
-   * Update existing stats
-   * Authorization: admin or self
+   * Update existing stats. Authorization mirrors recordStats.
    */
   async updateStats(
+    groupId: string,
     matchId: string,
     userId: string,
     updates: UpdateMatchPlayerStatsData,
     updatedBy: User,
+    isOrganizer: boolean,
   ): Promise<MatchPlayerStats> {
-    if (updatedBy.role !== "admin" && updatedBy.id !== userId) {
-      throw new Error("You can only update your own stats or be an admin");
+    if (!isOrganizer && updatedBy.id !== userId) {
+      throw new Error("You can only update your own stats or be an organizer");
     }
 
     const existing = await this.playerStatsRepository.findByMatchAndUser(
@@ -110,14 +114,18 @@ export class PlayerStatsService {
     );
 
     if (!existing) {
-      // If no existing stats, create them via upsert
       return this.playerStatsRepository.upsert({
+        groupId,
         matchId,
         userId,
         goals: updates.goals,
         thirdTimeAttended: updates.thirdTimeAttended,
         thirdTimeBeers: updates.thirdTimeBeers,
       });
+    }
+
+    if (existing.groupId !== groupId) {
+      throw new Error("Match not found");
     }
 
     return this.playerStatsRepository.update(existing.id, updates);
@@ -145,6 +153,7 @@ export class PlayerStatsService {
    * Used by the "My Info" screen for self-service stats entry.
    */
   async getFinishedMatchesForUser(
+    groupId: string,
     userId: string,
   ): Promise<FinishedMatchForUser[]> {
     if (!this.signupRepository) {
@@ -152,7 +161,7 @@ export class PlayerStatsService {
     }
 
     const [completedMatchesResult, userSignups, userStats] = await Promise.all([
-      this.matchRepository.findAll({ status: "completed" }),
+      this.matchRepository.findAll({ groupId, status: "completed" }),
       this.signupRepository.findByUserId(userId),
       this.playerStatsRepository.findByUserId(userId),
     ]);

@@ -33,9 +33,9 @@ import type {
 // Location Repository Interface
 export interface LocationRepository {
   /**
-   * Find all locations
+   * Find all locations in a group
    */
-  findAll(): Promise<Location[]>;
+  findAll(groupId: string): Promise<Location[]>;
 
   /**
    * Find a location by ID
@@ -61,19 +61,19 @@ export interface LocationRepository {
 // Court Repository Interface
 export interface CourtRepository {
   /**
-   * Find all courts
+   * Find all courts in a group
    */
-  findAll(): Promise<Court[]>;
+  findAll(groupId: string): Promise<Court[]>;
 
   /**
-   * Find courts by location ID
+   * Find courts by location ID (scoped to group)
    */
-  findByLocationId(locationId: string): Promise<Court[]>;
+  findByLocationId(groupId: string, locationId: string): Promise<Court[]>;
 
   /**
-   * Find active courts by location ID
+   * Find active courts by location ID (scoped to group)
    */
-  findActiveByLocationId(locationId: string): Promise<Court[]>;
+  findActiveByLocationId(groupId: string, locationId: string): Promise<Court[]>;
 
   /**
    * Find a court by ID
@@ -151,9 +151,9 @@ export interface MatchRepository {
   delete(id: string): Promise<void>;
 
   /**
-   * Check if a date already has a match (for duplicate prevention)
+   * Check if a date already has a match within the group (duplicate prevention)
    */
-  existsOnDate(date: string): Promise<boolean>;
+  existsOnDate(groupId: string, date: string): Promise<boolean>;
 }
 
 // Signup Repository Interface
@@ -232,6 +232,7 @@ export interface SignupRepository {
    * Admin-only: Add a player to a match (can override capacity)
    */
   addPlayerByAdmin(
+    groupId: string,
     matchId: string,
     playerData: {
       userId?: string;

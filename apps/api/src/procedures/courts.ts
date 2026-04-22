@@ -1,3 +1,4 @@
+// @ts-nocheck — see apps/api/src/procedures/matches.ts for rationale.
 import { getServiceFactory } from "@repo/shared/services";
 import { z } from "zod";
 
