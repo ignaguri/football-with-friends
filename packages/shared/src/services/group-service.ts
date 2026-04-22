@@ -51,6 +51,11 @@ export class GroupService {
     return group;
   }
 
+  /**
+   * Organizer-only full view: group + members + settings. Members use
+   * `findById` directly and skip the member/settings fetches — see the
+   * route handler for the lighter payload shape.
+   */
   async getGroupDetails(groupId: string): Promise<GroupDetails | null> {
     const group = await this.groupRepo.findById(groupId);
     if (!group) return null;
@@ -59,6 +64,10 @@ export class GroupService {
       this.settingsRepo.getAll(groupId),
     ]);
     return { ...group, members, settings };
+  }
+
+  async getGroupBasics(groupId: string): Promise<Group | null> {
+    return this.groupRepo.findById(groupId);
   }
 
   async updateGroup(groupId: string, updates: UpdateGroupData): Promise<Group> {

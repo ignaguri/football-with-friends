@@ -17,6 +17,7 @@ import {
   requireCurrentGroup,
 } from "../middleware/group-context";
 import {
+  assertInCurrentGroup,
   isSuperadmin,
   requireOrganizer,
   requireOwner,
@@ -75,37 +76,34 @@ app.post(
 // above bypass this because they're the switcher/bootstrap entry points.
 app.use("*", groupContextMiddleware);
 
-function assertPathMatchesCurrent(c: any, pathId: string): Response | null {
-  const current = requireCurrentGroup(c);
-  if (current.id !== pathId && !isSuperadmin(c)) {
-    return c.json({ error: "Group not found" }, 404);
-  }
-  return null;
-}
-
-// Group details — organizer sees everything, member sees name + role only.
+// Group details. Organizers get the full roster + settings; members get a
+// stripped {id, name, slug, visibility, myRole} payload and the service
+// skips the member/settings queries to avoid hydrating data we'll drop.
 app.get("/:id", async (c) => {
   const id = c.req.param("id");
-  const mismatched = assertPathMatchesCurrent(c, id);
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
   if (mismatched) return mismatched;
 
   const current = requireCurrentGroup(c);
-  const details = await getGroupService().getGroupDetails(id);
-  if (!details) return c.json({ error: "Group not found" }, 404);
+  const isOrganizerView = current.role === "organizer" || isSuperadmin(c);
 
-  if (current.role === "member" && !isSuperadmin(c)) {
-    return c.json({
-      group: {
-        id: details.id,
-        name: details.name,
-        slug: details.slug,
-        visibility: details.visibility,
-        myRole: current.role,
-      },
-    });
+  if (isOrganizerView) {
+    const details = await getGroupService().getGroupDetails(id);
+    if (!details) return c.json({ error: "Group not found" }, 404);
+    return c.json({ group: details });
   }
 
-  return c.json({ group: details });
+  const group = await getGroupService().getGroupBasics(id);
+  if (!group) return c.json({ error: "Group not found" }, 404);
+  return c.json({
+    group: {
+      id: group.id,
+      name: group.name,
+      slug: group.slug,
+      visibility: group.visibility,
+      myRole: current.role,
+    },
+  });
 });
 
 app.patch(
@@ -120,7 +118,7 @@ app.patch(
   ),
   async (c) => {
     const id = c.req.param("id");
-    const mismatched = assertPathMatchesCurrent(c, id);
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
     if (mismatched) return mismatched;
 
     const denied = requireOrganizer(c);
@@ -145,7 +143,7 @@ app.patch(
 
 app.delete("/:id", async (c) => {
   const id = c.req.param("id");
-  const mismatched = assertPathMatchesCurrent(c, id);
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
   if (mismatched) return mismatched;
 
   const denied = requireOwner(c);
@@ -164,7 +162,7 @@ app.delete("/:id", async (c) => {
 
 app.get("/:id/members", async (c) => {
   const id = c.req.param("id");
-  const mismatched = assertPathMatchesCurrent(c, id);
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
   if (mismatched) return mismatched;
 
   const denied = requireOrganizer(c);
@@ -180,7 +178,7 @@ app.patch(
   async (c) => {
     const id = c.req.param("id");
     const targetUserId = c.req.param("userId");
-    const mismatched = assertPathMatchesCurrent(c, id);
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
     if (mismatched) return mismatched;
 
     const denied = requireOwner(c);
@@ -201,7 +199,7 @@ app.patch(
 app.delete("/:id/members/:userId", async (c) => {
   const id = c.req.param("id");
   const targetUserId = c.req.param("userId");
-  const mismatched = assertPathMatchesCurrent(c, id);
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
   if (mismatched) return mismatched;
 
   const denied = requireOrganizer(c);
@@ -218,7 +216,7 @@ app.delete("/:id/members/:userId", async (c) => {
 
 app.post("/:id/leave", async (c) => {
   const id = c.req.param("id");
-  const mismatched = assertPathMatchesCurrent(c, id);
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
   if (mismatched) return mismatched;
 
   const user = requireUser(c);
@@ -237,7 +235,7 @@ app.post(
   zValidator("json", z.object({ toUserId: z.string().min(1) })),
   async (c) => {
     const id = c.req.param("id");
-    const mismatched = assertPathMatchesCurrent(c, id);
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
     if (mismatched) return mismatched;
 
     const denied = requireOwner(c);

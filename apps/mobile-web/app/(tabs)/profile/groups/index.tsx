@@ -1,5 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useCurrentGroup, useMyGroups } from "@repo/api-client";
+import { useCurrentGroup } from "@repo/api-client";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView } from "react-native";
@@ -7,8 +7,7 @@ import { Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function MyGroupsScreen() {
   const { t } = useTranslation();
-  const { data: groups, isLoading } = useMyGroups();
-  const { groupId, switchGroup } = useCurrentGroup();
+  const { myGroups: groups, groupId, switchGroup, isLoading } = useCurrentGroup();
 
   if (isLoading) {
     return (

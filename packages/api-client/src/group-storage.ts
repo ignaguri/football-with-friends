@@ -24,6 +24,7 @@ export function getActiveGroupId(): string | null {
 }
 
 export function setActiveGroupId(id: string | null): void {
+  if (id === _cachedGroupId) return;
   _cachedGroupId = id;
   try {
     if (id) storage.setItem(STORAGE_KEY, id);

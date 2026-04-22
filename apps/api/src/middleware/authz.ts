@@ -51,17 +51,24 @@ export function requireMember(_c: Context): Response | null {
 }
 
 /**
- * Asserts that a group-scoped entity belongs to the caller's current group.
- * Returns a 404 `Response` on mismatch (intentionally 404 not 403 to avoid
- * id-existence leakage across groups). Returns null on success.
+ * Asserts that a group-scoped entity (or a bare group id) matches the
+ * caller's current group. Returns a 404 `Response` on mismatch
+ * (intentionally 404 not 403 to avoid id-existence leakage across groups).
+ * Returns null on success. Superadmin bypasses the check since their
+ * current-group binding is already chosen explicitly via X-Group-Id.
  */
 export function assertInCurrentGroup(
   c: Context,
-  entity: { groupId: string } | null | undefined,
+  entityOrId: { groupId: string } | string | null | undefined,
   notFoundMessage = "Not found",
 ): Response | null {
   const current = requireCurrentGroup(c);
-  if (!entity || entity.groupId !== current.id) {
+  const groupId =
+    typeof entityOrId === "string" ? entityOrId : entityOrId?.groupId;
+  if (!groupId) {
+    return c.json({ error: notFoundMessage }, 404);
+  }
+  if (groupId !== current.id && !isSuperadmin(c)) {
     return c.json({ error: notFoundMessage }, 404);
   }
   return null;

@@ -4,6 +4,7 @@
 // active group id) and with the Phase 1 `X-Group-Id` fetch interceptor in
 // `client.ts` (which carries the active group on every request).
 
+import type { GroupVisibility, MemberRole } from "@repo/shared/domain";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { client as _client } from "./client";
 import {
@@ -18,6 +19,10 @@ import {
 // reasons).
 const client = _client as any;
 
+// The fetch wrapper in `client.ts` already throws on non-OK responses with
+// structured `{response, data, status}` metadata, so mutations here don't
+// re-check `res.ok` — it'd be dead code and would double-consume the body.
+
 // Query-key namespace. Use these — don't inline strings — so cache
 // invalidation stays consistent when we add more hooks in Phase 3.
 export const groupQueryKeys = {
@@ -27,21 +32,21 @@ export const groupQueryKeys = {
   members: (id: string) => [...groupQueryKeys.all, "members", id] as const,
 };
 
-async function fetchMyGroups() {
+export interface MyGroupSummary {
+  id: string;
+  name: string;
+  slug: string;
+  ownerUserId: string;
+  visibility: GroupVisibility;
+  myRole: MemberRole;
+  amIOwner: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+async function fetchMyGroups(): Promise<MyGroupSummary[]> {
   const res = await client.api.groups.me.$get();
-  const data = (await res.json()) as {
-    groups: Array<{
-      id: string;
-      name: string;
-      slug: string;
-      ownerUserId: string;
-      visibility: "private" | "public";
-      myRole: "organizer" | "member";
-      amIOwner: boolean;
-      createdAt: string;
-      updatedAt: string;
-    }>;
-  };
+  const data = (await res.json()) as { groups: MyGroupSummary[] };
   return data.groups;
 }
 
@@ -57,6 +62,11 @@ export function useMyGroups() {
  * active group id (server may have auto-picked on boot — see the fetch
  * interceptor) and the list of my groups. `noGroup` is true once the
  * list has loaded and is empty.
+ *
+ * Implementation note: `getActiveGroupId()` is read non-reactively, but
+ * `switchGroup` calls `queryClient.invalidateQueries()` which refetches
+ * `useMyGroups`; the resulting data change re-runs this hook and picks up
+ * the new active id. Future refactors should preserve that coupling.
  */
 export function useCurrentGroup() {
   const queryClient = useQueryClient();
@@ -114,7 +124,6 @@ export function useCreateGroup() {
   return useMutation({
     mutationFn: async (input: { name: string; slug?: string }) => {
       const res = await client.api.groups.$post({ json: input });
-      if (!res.ok) throw new Error(await res.text());
       const data = (await res.json()) as {
         group: { id: string; name: string; slug: string };
       };
@@ -132,13 +141,12 @@ export function useUpdateGroup(groupId: string) {
     mutationFn: async (input: {
       name?: string;
       slug?: string;
-      visibility?: "private" | "public";
+      visibility?: GroupVisibility;
     }) => {
       const res = await client.api.groups[":id"].$patch({
         param: { id: groupId },
         json: input,
       });
-      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {
@@ -151,12 +159,11 @@ export function useUpdateGroup(groupId: string) {
 export function useUpdateMemberRole(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { userId: string; role: "organizer" | "member" }) => {
+    mutationFn: async (input: { userId: string; role: MemberRole }) => {
       const res = await client.api.groups[":id"].members[":userId"].$patch({
         param: { id: groupId, userId: input.userId },
         json: { role: input.role },
       });
-      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {
@@ -172,7 +179,6 @@ export function useKickMember(groupId: string) {
       const res = await client.api.groups[":id"].members[":userId"].$delete({
         param: { id: groupId, userId },
       });
-      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {
@@ -188,7 +194,6 @@ export function useLeaveGroup() {
       const res = await client.api.groups[":id"].leave.$post({
         param: { id: groupId },
       });
-      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {
@@ -205,7 +210,6 @@ export function useTransferOwnership(groupId: string) {
         param: { id: groupId },
         json: { toUserId },
       });
-      if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
     onSuccess: () => {

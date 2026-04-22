@@ -2,8 +2,8 @@
 import {
   useCurrentGroup,
   useGroupDetail,
-  useGroupMembers,
   useLeaveGroup,
+  useSession,
 } from "@repo/api-client";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -13,12 +13,16 @@ import { Button, Spinner, Text, YStack } from "tamagui";
 export default function GroupDetailScreen() {
   const { t } = useTranslation();
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
+  const { data: session } = useSession();
   const { myRole, amIOwner } = useCurrentGroup();
   const { data: group, isLoading } = useGroupDetail(groupId ?? null);
-  // Members are only visible to organizers/superadmin — the server returns
-  // a stripped group payload for members, so we gate the fetch too.
-  const canSeeMembers = myRole === "organizer";
-  const { data: members } = useGroupMembers(canSeeMembers ? (groupId ?? null) : null);
+
+  // The server already returns `members` inlined on the detail response for
+  // organizers/superadmin, so we read from there rather than firing a
+  // separate /members query.
+  const isOrganizerView =
+    session?.user?.role === "superadmin" || myRole === "organizer";
+  const members = isOrganizerView ? (group as any)?.members ?? [] : [];
   const leaveMutation = useLeaveGroup();
 
   if (isLoading || !group) {
@@ -45,12 +49,12 @@ export default function GroupDetailScreen() {
           <Text color="$gray11">{group.slug}</Text>
         </YStack>
 
-        {canSeeMembers ? (
+        {isOrganizerView ? (
           <YStack gap="$2">
             <Text fontSize="$5" fontWeight="600">
               {t("groups.detail.members")}
             </Text>
-            {members?.map((m: any) => (
+            {members.map((m: any) => (
               <Text key={m.id} color="$gray12">
                 {m.userId} — {m.role}
               </Text>
