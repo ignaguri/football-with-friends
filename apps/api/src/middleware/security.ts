@@ -1,5 +1,5 @@
 import type { Context, Next } from "hono";
-import type { User } from "@repo/shared/domain";
+import type { MemberRole, User } from "@repo/shared/domain";
 import { auth } from "../auth";
 
 /**
@@ -7,16 +7,33 @@ import { auth } from "../auth";
  * Used by both worker.ts (Cloudflare Workers) and index.ts (Bun dev).
  */
 
-// Session user stored in Hono context by the global auth middleware
+// Session user stored in Hono context by the global auth middleware.
+// Post-Phase-1 the only platform-level role is 'superadmin' (Ignacio). 'admin'
+// is accepted during the transition as an alias for 'superadmin' so a stale
+// DB row doesn't break auth while the migration propagates.
+export type PlatformRole = "user" | "superadmin";
+
 export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: PlatformRole;
 };
 
-// Hono app variables — user is optional because public routes don't set it
-export type AppVariables = { user?: SessionUser };
+// Active group bound by groupContextMiddleware on every scoped request.
+export type CurrentGroup = {
+  id: string;
+  role: MemberRole;
+  isOwner: boolean;
+};
+
+// Hono app variables — user is optional because public routes don't set it.
+// currentGroup/isSuperadmin are set by groupContextMiddleware on scoped routes.
+export type AppVariables = {
+  user?: SessionUser;
+  currentGroup?: CurrentGroup;
+  isSuperadmin?: boolean;
+};
 
 // Convert session user to the full domain User type (with synthetic timestamps)
 export function sessionUserToUser(sessionUser: SessionUser): User {
@@ -63,11 +80,18 @@ export async function authMiddleware(c: Context, next: Next) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
+  // Normalize role: pre-migration 'admin' rows are treated as 'superadmin'
+  // so the transition doesn't lock anyone out mid-deploy. Post-migration only
+  // 'user' and 'superadmin' exist in the DB.
+  const rawRole = (session.user as any).role as string | undefined;
+  const role: PlatformRole =
+    rawRole === "superadmin" || rawRole === "admin" ? "superadmin" : "user";
+
   c.set("user", {
     id: session.user.id,
     email: session.user.email,
     name: session.user.name || "",
-    role: ((session.user as any).role as "user" | "admin") || "user",
+    role,
   });
   return next();
 }

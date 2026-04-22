@@ -120,13 +120,17 @@ export interface MatchInvitation {
   invitedByUser?: User;
 }
 
-// User type from BetterAuth (extended)
+// User type from BetterAuth (extended).
+// Post-Phase-1, the platform-level role is either 'user' (default) or
+// 'superadmin' (only Ignacio). 'admin' is retained as a transitional alias:
+// BetterAuth's admin plugin still accepts it, and legacy rows may linger
+// until the migration has fully propagated.
 export interface User {
   id: string;
   name: string;
   email: string;
   image?: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "superadmin";
   nationality?: string; // ISO 3166-1 alpha-2 country code (e.g., "US", "AR", "DE")
   username?: string | null;
   displayUsername?: string | null;

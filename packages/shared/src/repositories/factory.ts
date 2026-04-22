@@ -22,6 +22,13 @@ import {
 } from "./turso-repositories";
 
 import { TursoPushTokenRepository } from "./push-token-repository";
+import {
+  TursoGroupRepository,
+  TursoGroupMembershipRepository,
+  TursoGroupInviteRepository,
+  TursoGroupRosterRepository,
+  TursoGroupSettingsRepository,
+} from "./group-repositories";
 
 // Configuration type
 export type StorageProvider = "turso" | "local-db";
@@ -36,6 +43,11 @@ export class AppRepositoryFactory implements RepositoryFactory {
   public readonly playerStats: PlayerStatsRepository;
   public readonly pushTokens: PushTokenRepository;
   public readonly matchMedia: TursoMatchMediaRepository;
+  public readonly groups: TursoGroupRepository;
+  public readonly groupMembers: TursoGroupMembershipRepository;
+  public readonly groupInvites: TursoGroupInviteRepository;
+  public readonly groupRoster: TursoGroupRosterRepository;
+  public readonly groupSettings: TursoGroupSettingsRepository;
 
   constructor(provider: StorageProvider = "turso") {
     switch (provider) {
@@ -49,6 +61,11 @@ export class AppRepositoryFactory implements RepositoryFactory {
         this.playerStats = new TursoPlayerStatsRepository();
         this.pushTokens = new TursoPushTokenRepository();
         this.matchMedia = new TursoMatchMediaRepository();
+        this.groups = new TursoGroupRepository();
+        this.groupMembers = new TursoGroupMembershipRepository();
+        this.groupInvites = new TursoGroupInviteRepository();
+        this.groupRoster = new TursoGroupRosterRepository();
+        this.groupSettings = new TursoGroupSettingsRepository();
         break;
 
       default:

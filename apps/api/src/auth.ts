@@ -178,7 +178,10 @@ function createAuthInstance() {
     },
     plugins: [
       bearer(),
-      admin(),
+      // 'admin' is kept as a transitional alias so users whose role column
+      // hasn't yet been migrated don't lose BetterAuth-admin capabilities
+      // mid-rollout. Post-migration only 'superadmin' exists in the DB.
+      admin({ adminRoles: ["admin", "superadmin"] }),
       username({
         minUsernameLength: 3,
         maxUsernameLength: 20,

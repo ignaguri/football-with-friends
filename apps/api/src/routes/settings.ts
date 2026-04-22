@@ -48,7 +48,7 @@ app.patch(
   ),
   async (c) => {
     const user = requireUser(c);
-    if (user.role !== "admin") {
+    if (user.role !== "superadmin") {
       return c.json({ error: "Only administrators can update settings" }, 403);
     }
 
