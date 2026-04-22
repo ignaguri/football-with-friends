@@ -41,5 +41,13 @@ export {
 } from "./auth";
 export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 
+// Active group storage — consumed by the client fetch interceptor and
+// exposed for the mobile-web switcher (Phase 2).
+export {
+  getActiveGroupId,
+  setActiveGroupId,
+  GROUP_HEADER,
+} from "./group-storage";
+
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

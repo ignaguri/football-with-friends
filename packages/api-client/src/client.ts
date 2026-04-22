@@ -2,6 +2,12 @@ import { hc } from "hono/client";
 import { Platform } from "react-native";
 import type { ApiRoutes } from "../../../apps/api/src/index";
 import { getBearerToken, _tokenLoadPromise } from "./auth";
+import {
+  GROUP_HEADER,
+  _groupIdLoadPromise,
+  getActiveGroupId,
+  recordGroupIdFromResponse,
+} from "./group-storage";
 
 // Base URL for localhost development
 const LOCALHOST_API = "http://localhost:3001";
@@ -38,6 +44,8 @@ function createDynamicFetch() {
     // Wait for the initial token load to complete before making any request.
     // Prevents a race where data queries fire before the token is loaded from SecureStore.
     await _tokenLoadPromise;
+    // Same race applies to the persisted active group id.
+    await _groupIdLoadPromise;
 
     // Get the original URL from the input
     let originalUrl: string;
@@ -88,6 +96,18 @@ function createDynamicFetch() {
       }
     }
 
+    // Attach the active group id so the server scopes the response to it.
+    // On first launch we have no persisted id — the server auto-picks and
+    // echoes one back in the response, which we persist via the handler below.
+    {
+      const groupId = getActiveGroupId();
+      if (groupId) {
+        const headers = new Headers(fetchInit.headers);
+        headers.set(GROUP_HEADER, groupId);
+        fetchInit.headers = headers;
+      }
+    }
+
     // Handle Request objects specially
     let responsePromise: Promise<Response>;
     if (typeof input !== "string" && !(input instanceof URL)) {
@@ -99,6 +119,9 @@ function createDynamicFetch() {
     // Throw on non-OK responses so React Query treats them as errors
     // instead of passing error payloads as successful data
     return responsePromise.then(async (response) => {
+      // Sync active-group cache with the server's echoed header so the
+      // auto-picked group on first boot (or after a switch) persists.
+      recordGroupIdFromResponse(response);
       if (!response.ok) {
         // Clone the response so we can read the body without consuming it
         const clonedResponse = response.clone();
