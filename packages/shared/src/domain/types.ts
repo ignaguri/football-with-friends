@@ -608,3 +608,146 @@ export type MatchMediaFeedGroup = {
   items: MatchMedia[];
   totalCount: number;    // total items in this match; can be > items.length
 };
+
+// --- Groups (multi-tenant scoping) ---
+// See docs/superpowers/specs/2026-04-22-group-oriented-scoping-design.md.
+// Scoping is introduced in Phase 0 (tables + nullable columns) and activated
+// in Phase 1 (backfill + middleware). These types describe the target shape.
+
+export const MEMBER_ROLES = ["organizer", "member"] as const;
+export type MemberRole = (typeof MEMBER_ROLES)[number];
+
+export const GROUP_VISIBILITIES = ["private", "public"] as const;
+export type GroupVisibility = (typeof GROUP_VISIBILITIES)[number];
+
+export interface Group {
+  id: string;
+  name: string;
+  slug: string;
+  ownerUserId: string;
+  visibility: GroupVisibility;
+  deletedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields (from joins)
+  owner?: User;
+  memberCount?: number;
+  myRole?: MemberRole;
+  amIOwner?: boolean;
+}
+
+export interface GroupMember {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: MemberRole;
+  joinedAt: Date;
+
+  // Populated fields
+  user?: User;
+}
+
+export interface GroupInvite {
+  id: string;
+  groupId: string;
+  token: string;
+  createdByUserId: string;
+  expiresAt?: Date;
+  maxUses?: number;
+  usesCount: number;
+  targetPhone?: string;
+  targetUserId?: string;
+  revokedAt?: Date;
+  createdAt: Date;
+
+  // Populated fields
+  group?: Group;
+  createdByUser?: User;
+}
+
+export type GroupInviteInvalidReason =
+  | "expired"
+  | "revoked"
+  | "exhausted"
+  | "target_mismatch"
+  | "not_found";
+
+export interface GroupInvitePreview {
+  valid: boolean;
+  reason?: GroupInviteInvalidReason;
+  group?: {
+    id: string;
+    name: string;
+  };
+  inviter?: {
+    id: string;
+    name: string;
+  };
+  expiresAt?: Date;
+}
+
+export interface GroupRoster {
+  id: string;
+  groupId: string;
+  displayName: string;
+  phone?: string;
+  email?: string;
+  claimedByUserId?: string;
+  createdByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields
+  claimedByUser?: User;
+  createdByUser?: User;
+}
+
+// DTOs
+
+export interface CreateGroupData {
+  name: string;
+  slug?: string; // auto-derived from name if omitted
+  ownerUserId: string;
+  visibility?: GroupVisibility;
+}
+
+export interface UpdateGroupData {
+  name?: string;
+  slug?: string;
+  visibility?: GroupVisibility;
+}
+
+export interface CreateGroupInviteData {
+  groupId: string;
+  createdByUserId: string;
+  expiresAt?: Date;
+  maxUses?: number;
+  targetPhone?: string;
+  targetUserId?: string;
+}
+
+export interface CreateGroupRosterData {
+  groupId: string;
+  displayName: string;
+  phone?: string;
+  email?: string;
+  createdByUserId: string;
+}
+
+export interface UpdateGroupRosterData {
+  displayName?: string;
+  phone?: string;
+  email?: string;
+  claimedByUserId?: string | null;
+}
+
+export interface GroupMemberFilters {
+  groupId: string;
+  role?: MemberRole;
+}
+
+export interface GroupRosterFilters {
+  groupId: string;
+  claimed?: boolean;
+}
