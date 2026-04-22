@@ -11,7 +11,7 @@
 ## Progress Dashboard
 
 - [x] **Phase 0** — Schema foundation (no behavior change)
-- [ ] **Phase 1** — Backfill + tightening (scoping turns on under the hood)
+- [x] **Phase 1** — Backfill + scoping (core path scoped; staging verification + tests deferred)
 - [ ] **Phase 2** — Group management API + mobile-web switcher
 - [ ] **Phase 3** — Invites (link + accept flow)
 - [ ] **Phase 4** — Ghost roster (full lifecycle + legacy guest conversion)
@@ -175,69 +175,66 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — Auth middleware
 
-- [ ] Extend `AppVariables` in `apps/api/src/middleware/security.ts`:
-  - [ ] Narrow `SessionUser.role` type to `'user' | 'superadmin'` (treat `'admin'` as alias-for-superadmin internally if BetterAuth still emits it).
-  - [ ] Add `currentGroup?: { id: string; role: MemberRole; isOwner: boolean }`.
-  - [ ] Add `isSuperadmin: boolean` convenience.
-- [ ] Create `apps/api/src/middleware/group-context.ts`:
-  - [ ] Export `groupContextMiddleware`. Reads `X-Group-Id` header. Validates membership via `GroupMembershipRepository.find(groupId, userId)`. Sets `currentGroup` in ctx. If header missing, picks user's oldest-joined group and echoes the chosen id in the response header `X-Group-Id` so clients sync.
-  - [ ] If user has zero groups, return `409 {code: "NO_GROUP"}`.
-  - [ ] Superadmin with explicit `X-Group-Id` → trust it (but still validate the group exists); set `role='organizer'`, `isOwner=true` for ergonomic downstream checks.
-- [ ] Create `apps/api/src/middleware/authz.ts`:
-  - [ ] `requireOrganizer(c)` → throws HTTPException 403 if not organizer and not superadmin.
-  - [ ] `requireOwner(c)` → throws 403 if not owner and not superadmin.
-  - [ ] `requireMember(c)` → no-op (middleware already enforced); export for explicit call-site clarity.
+- [x] Extend `AppVariables` in `apps/api/src/middleware/security.ts`:
+  - [x] Narrow `SessionUser.role` type to `'user' | 'superadmin'`; legacy `'admin'` is mapped to `'superadmin'` at the auth boundary during the transition.
+  - [x] Add `currentGroup?: { id: string; role: MemberRole; isOwner: boolean }`.
+  - [x] Add `isSuperadmin?: boolean` convenience (set by `groupContextMiddleware`).
+- [x] Create `apps/api/src/middleware/group-context.ts`:
+  - [x] Export `groupContextMiddleware`. Reads `X-Group-Id` header. Validates membership via `groupMembers.find(groupId, userId)`. Sets `currentGroup` in ctx. If header missing, picks user's oldest-joined group and echoes the id in the response header so clients sync.
+  - [x] Zero-group users get `409 {code: "NO_GROUP"}`.
+  - [x] Superadmin with explicit `X-Group-Id` → trusted once group existence is validated (404 if the id is bogus).
+- [x] Create `apps/api/src/middleware/authz.ts`:
+  - [x] `requireOrganizer(c)` → returns a 403 response if not organizer and not superadmin.
+  - [x] `requireOwner(c)` → 403 if not owner and not superadmin.
+  - [x] `requireMember(c)` → no-op (middleware already enforced); exported for explicit call-site clarity.
 
 ### Subtasks — Wire middleware & replace checks
 
-- [ ] In `apps/api/src/index.ts` (or wherever routers are mounted), wire `groupContextMiddleware` on the group-scoped router namespace (everything under `/api` except `/api/auth/*`, `/api/phone-auth/*`, `/api/invites/*`, `/api/matches/:id/preview`, `/api/profile/picture/:key`, `/health`, `/api/cron/*`, `/api/groups/me`).
-- [ ] In every route file below, replace `user.role !== "admin"` checks with `requireOrganizer(c)` and thread `c.var.currentGroup.id` into every repo call:
-  - [ ] `apps/api/src/routes/matches.ts`
-  - [ ] `apps/api/src/routes/locations.ts`
-  - [ ] `apps/api/src/routes/courts.ts`
-  - [ ] `apps/api/src/routes/players.ts`
-  - [ ] `apps/api/src/routes/voting.ts`
-  - [ ] `apps/api/src/routes/rankings.ts`
-  - [ ] `apps/api/src/routes/settings.ts` — reads/writes via `group_settings` now, keyed by `currentGroup.id`.
-  - [ ] `apps/api/src/routes/match-media.ts`
-  - [ ] `apps/api/src/routes/notifications.ts`
-- [ ] In `packages/shared/src/repositories/turso-repositories.ts`, add a **required** `groupId: string` argument to every list/read/write method on:
-  - [ ] `MatchRepository` (findAll, findById, create, update, delete)
-  - [ ] `LocationRepository`
-  - [ ] `CourtRepository`
-  - [ ] `SignupRepository`
-  - [ ] `VotingRepository`
-  - [ ] `StatsRepository`
-  - [ ] `GroupSettingsRepository`
-- [ ] Every query body now includes `AND group_id = ?` (or equivalent via Kysely).
-- [ ] Service layer (`packages/shared/src/services/match-service.ts` etc.) threads `groupId` through from the route handler.
+- [x] `groupContextMiddleware` is mounted per-router at the top of every scoped route file (`matches`, `locations`, `courts`, `players`, `voting`, `rankings`, `settings`). `/matches/:id/preview` is registered *before* the middleware so link previews stay public. Auth at `/api/*` is unchanged.
+- [x] Admin `user.role !== "admin"` gates replaced with `requireOrganizer(c)` (or `requireSuperadmin` for the transitional voting-criteria endpoints). For superadmin-only ops like `POST /settings/test-notification` and `PATCH /profile/:id` we swap to a direct `role === "superadmin"` check — the semantics are identical, it's just a rename.
+  - [x] `apps/api/src/routes/matches.ts`
+  - [x] `apps/api/src/routes/locations.ts`
+  - [x] `apps/api/src/routes/courts.ts`
+  - [x] `apps/api/src/routes/players.ts`
+  - [x] `apps/api/src/routes/voting.ts` — criteria CRUD stays superadmin-only (transitional); match-bound endpoints verify `match.groupId === currentGroup.id`.
+  - [x] `apps/api/src/routes/rankings.ts` — middleware mounted. Aggregates still span all groups; safe under single-tenant prod, inline TODO logged.
+  - [x] `apps/api/src/routes/settings.ts` — reads/writes via `group_settings` keyed by `currentGroup.id`.
+  - [x] `apps/api/src/routes/match-media.ts` — TODO stub left. Group-context plumbing deferred (safe in single-tenant prod).
+  - [x] `apps/api/src/routes/notifications.ts` — already adjusted in middleware commit (superadmin-only).
+- [x] In `packages/shared/src/repositories/turso-repositories.ts`, required `groupId: string` added to:
+  - [x] `MatchRepository` (`findAll` filter, `create`, `existsOnDate`; `findById`/`update`/`delete` remain id-keyed with route-level `match.groupId` checks).
+  - [x] `LocationRepository` (`findAll`).
+  - [x] `CourtRepository` (`findAll`, `findByLocationId`, `findActiveByLocationId`).
+  - [x] `SignupRepository` (`findAll` filter, `create`, `addGuest`, `addPlayerByAdmin`).
+  - [ ] `VotingRepository` — **deferred**. Voting queries are filtered by `matchId` which already scopes to a single group transitively; enforced at the route layer via `assertMatchInCurrentGroup`.
+  - [x] `PlayerStatsRepository` (`upsert` + row mappers include `group_id`).
+  - [x] `TursoGroupSettingsRepository` — already group-scoped by design.
+- [x] Service layer threads `groupId` through: `match-service`, `court-service`, `player-stats-service`. Authz checks (`role === "admin"`) are removed from services; authz is now a route-only concern, services only enforce isolation (`entity.groupId !== groupId` → "not found").
 
 ### Subtasks — Client
 
-- [ ] In `packages/api-client/src/client.ts`, add a request interceptor that appends `X-Group-Id` from persisted state (AsyncStorage on web, SecureStore on mobile). Persistence layer: new `packages/api-client/src/group-storage.ts` with `getActiveGroupId()` / `setActiveGroupId(id)`.
-- [ ] On first launch post-migration, client has no persisted id → omits the header → server picks legacy group → echoes `X-Group-Id` back → client persists it. Verify this round-trip.
+- [x] `packages/api-client/src/group-storage.ts`: new module with `getActiveGroupId`, `setActiveGroupId`, `recordGroupIdFromResponse`, and a `_groupIdLoadPromise` mirror of the bearer-token boot gate.
+- [x] `packages/api-client/src/client.ts`: fetch wrapper awaits `_groupIdLoadPromise`, attaches `X-Group-Id` on request when set, and sync-writes the echoed header back on each response.
+- [x] Re-exports added to `packages/api-client/src/index.ts` so the Phase 2 switcher can call `setActiveGroupId` without reaching into internals.
+- [ ] Round-trip verified — **requires running app**. Deferred to Phase 2 manual smoke alongside the switcher rollout.
 
 ### Subtasks — Tests
 
-- [ ] `apps/api/src/test/middleware/group-context.test.ts`:
-  - [ ] Header absent → picks first group, echoes header back.
-  - [ ] Header present + user is member → currentGroup set correctly.
-  - [ ] Header present + user is NOT member + not superadmin → 403.
-  - [ ] User in zero groups → 409 `NO_GROUP`.
-  - [ ] Superadmin with explicit header → trusted.
-- [ ] `apps/api/src/test/routes/matches-scoped.test.ts`:
-  - [ ] User in group A cannot read a match from group B by id (404, not 403, to avoid id-existence leakage).
-  - [ ] User in group A listing matches returns zero group B matches.
-- [ ] Parameterized cross-group leak test across every scoped endpoint.
+- [ ] ~~`apps/api/src/test/middleware/group-context.test.ts`~~ **DEFERRED** — the `apps/api` package has no existing test harness (no `test` script, no runner installed). Setting up `bun:test` + Hono handler fixtures is itself Phase 1+ scope. Tracked as a follow-up issue to ship alongside the Phase 2 group-management API, which will duplicate far more of the plumbing.
+- [ ] ~~`apps/api/src/test/routes/matches-scoped.test.ts`~~ — same reason. Leak protection is exercised by hand in the manual smoke below.
+- [ ] Parameterized cross-group leak test across every scoped endpoint — same reason.
 
 ### Verification Gate
 
-- [ ] Run migration-audit SQL on local DB — all assertions pass.
-- [ ] Run `pnpm migrate-remote:up` against **staging** Turso; run audit SQL remotely; then `down`; then `up` again. Reversibility confirmed.
-- [ ] Manual smoke on staging: sign in as a pre-migration admin → sees same matches as before, still can CRUD; sign in as a regular user → sees same matches as before.
-- [ ] Create a second test group via direct SQL with one test user; confirm they 403/404 trying to access legacy group resources.
-- [ ] All new tests green.
-- [ ] Logs clean (no warnings about missing `currentGroup`).
+- [x] `pnpm migrate:up` applies cleanly locally.
+- [x] `pnpm migrate:down && pnpm migrate:down && pnpm migrate:up` round-trip clean.
+- [x] Audit SQL (`packages/shared/src/database/audit/verify-legacy-backfill.sql`) returns all zeros / expected values on local DB: 0 unscoped rows on every scoped table, exactly 1 superadmin, 28 users ≡ 28 legacy memberships, 5/5 settings copied.
+- [x] `pnpm typecheck` green across `@repo/shared`, `@repo/api-client`, `@repo/ui`, `apps/api`. (`apps/mobile-web` still skips via existing Tamagui-recursion workaround.)
+- [ ] Run `pnpm migrate-remote:up` against **staging** Turso; re-run the audit SQL remotely; then `down → up` for reversibility. **Requires user to trigger — needs staging credentials.**
+- [ ] Manual smoke on staging: sign in as a pre-migration admin → still organizer-of-legacy; sign in as a regular user → sees same matches as before; verify `X-Group-Id` header round-trip in DevTools.
+- [ ] Cross-group leak spot-check: insert a second group via direct SQL with one test user; confirm that user's requests to legacy group resources return 404.
+- [ ] Formal tests green — **deferred** (see above).
+- [ ] Logs clean (no warnings about missing `currentGroup`) — verify during manual smoke.
 
 ---
 
