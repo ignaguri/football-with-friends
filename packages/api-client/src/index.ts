@@ -49,5 +49,20 @@ export {
   GROUP_HEADER,
 } from "./group-storage";
 
+// Group-management React Query hooks (Phase 2).
+export {
+  groupQueryKeys,
+  useMyGroups,
+  useCurrentGroup,
+  useGroupDetail,
+  useGroupMembers,
+  useCreateGroup,
+  useUpdateGroup,
+  useUpdateMemberRole,
+  useKickMember,
+  useLeaveGroup,
+  useTransferOwnership,
+} from "./groups";
+
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";
