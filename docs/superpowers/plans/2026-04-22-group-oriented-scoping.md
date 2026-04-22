@@ -150,25 +150,28 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — Migrations
 
-- [ ] Write migration `<ts>-backfill-legacy-group.ts`:
-  - [ ] Look up Ignacio's user id by email `ignacioguri@gmail.com`. **Fail the migration if not found** (do not fall back silently — this is a fatal misconfig).
-  - [ ] Insert one row into `groups`: `id='grp_legacy'`, `name='Fútbol con los pibes'`, `slug='legacy'`, `owner_user_id=<Ignacio>`, `visibility='private'`.
-  - [ ] For every row in `user`: insert `group_members` with `role='organizer'` iff `user.role='admin'`, else `role='member'`.
-  - [ ] `UPDATE matches SET group_id='grp_legacy' WHERE group_id IS NULL`.
-  - [ ] Same for `locations`, `courts`, `signups`, `voting_criteria`, `match_votes`, `match_player_stats`.
-  - [ ] Copy every row of `settings` into `group_settings` with `group_id='grp_legacy'`.
-  - [ ] `down` reverses by nullifying all group_id columns, deleting `group_settings` rows, deleting `group_members` rows, deleting the legacy group.
-- [ ] Write migration `<ts>-tighten-group-id-not-null.ts`:
-  - [ ] Flip every `group_id` column (on the 7 scoped tables) to `NOT NULL`. Turso/LibSQL may require table-rebuild syntax — model after an existing migration that adds a NOT NULL column.
-  - [ ] `down` re-nullifies the columns.
-- [ ] Write migration `<ts>-migrate-user-role.ts`:
-  - [ ] `UPDATE user SET role='user' WHERE role='admin' AND email != 'ignacioguri@gmail.com'`.
-  - [ ] `UPDATE user SET role='superadmin' WHERE email='ignacioguri@gmail.com'`.
-  - [ ] `down` inverts (Ignacio back to `admin`, former admins... this is a one-way change in practice; `down` needs to re-elevate based on `group_members.role='organizer' AND group_id='grp_legacy'` to reconstruct original admin set).
-- [ ] Write a migration-audit SQL script committed at `packages/shared/src/database/audit/verify-legacy-backfill.sql`:
-  - [ ] Assert `SELECT COUNT(*) FROM matches WHERE group_id IS NULL = 0` (same for every scoped table).
-  - [ ] Assert `SELECT COUNT(*) FROM user WHERE role='superadmin' = 1`.
-  - [ ] Assert `SELECT COUNT(*) FROM group_members WHERE group_id='grp_legacy'` equals `SELECT COUNT(*) FROM user`.
+- [x] Write migration `migrations/20260422120200-backfill-legacy-group.ts`:
+  - [x] Look up Ignacio's user id by email `ignacioguri@gmail.com`. **Fail the migration if not found** (do not fall back silently — this is a fatal misconfig).
+  - [x] Insert one row into `groups`: `id='grp_legacy'`, `name='Fútbol con los pibes'`, `slug='legacy'`, `owner_user_id=<Ignacio>`, `visibility='private'`.
+  - [x] For every row in `user`: insert `group_members` with `role='organizer'` iff `user.role='admin'`, else `role='member'`.
+  - [x] `UPDATE matches SET group_id='grp_legacy' WHERE group_id IS NULL`.
+  - [x] Same for `locations`, `courts`, `signups`, `voting_criteria`, `match_votes`, `match_player_stats`.
+  - [x] Copy every row of `settings` into `group_settings` with `group_id='grp_legacy'`.
+  - [x] `down` reverses by nullifying all group_id columns, deleting `group_settings` rows, deleting `group_members` rows, deleting the legacy group.
+- [ ] ~~Write migration `<ts>-tighten-group-id-not-null.ts`~~ **DEFERRED** — SQLite doesn't support `ALTER COLUMN … SET NOT NULL`; the only path is a full table rebuild for each of the 7 tables, which is disproportionately risky for the guarantee it provides. Enforcement moves up a layer:
+  - Kysely schema types (`packages/shared/src/database/schema.ts`) will tighten `group_id` to `string` (non-null) once repos thread it through (see "Thread groupId through repos").
+  - Every repo read/write method takes a required `groupId: string` parameter. A row can only land in the DB with `group_id = currentGroup.id`, so new rows can never be NULL at rest.
+  - Revisit post-launch if we ever observe drift (e.g. in an analytics export) — that's when the table rebuild becomes worth the risk.
+- [x] Write migration `migrations/20260422120300-migrate-user-role.ts`:
+  - [x] `UPDATE user SET role='user' WHERE role='admin' AND email != 'ignacioguri@gmail.com'`.
+  - [x] `UPDATE user SET role='superadmin' WHERE email='ignacioguri@gmail.com'`.
+  - [x] Runtime guard: migration throws if `superadmin_count != 1` after running.
+  - [x] `down` re-elevates anyone whose `group_members.role='organizer' AND group_id='grp_legacy'` back to `'admin'` — reconstructs the pre-migration admin set.
+- [x] Migration-audit SQL script at `packages/shared/src/database/audit/verify-legacy-backfill.sql`:
+  - [x] Asserts zero unscoped rows on every scoped table.
+  - [x] Asserts exactly 1 superadmin and 0 residual `'admin'` users.
+  - [x] Asserts `group_members where group_id='grp_legacy'` count equals `user` count.
+  - [x] Spot-checks legacy group owner and settings copy count. Verified locally: all checks pass.
 
 ### Subtasks — Auth middleware
 
