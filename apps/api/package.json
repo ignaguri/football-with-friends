@@ -11,7 +11,9 @@
     "cf:dev": "wrangler dev",
     "cf:deploy": "wrangler deploy",
     "cf:deploy:preview": "wrangler deploy --env preview",
-    "cf:tail": "wrangler tail"
+    "cf:tail": "wrangler tail",
+    "test": "bun test",
+    "test:watch": "bun test --watch"
   },
   "dependencies": {
     "@better-auth/expo": "^1.5.5",
