@@ -8,7 +8,6 @@ import type {
   UpdateMatchData,
   MatchFilters,
   CreateSignupData,
-  CreateGuestSignupData,
   Signup,
   User,
   PlayerStatus,
@@ -19,7 +18,35 @@ import type {
   LocationRepository,
   CourtRepository,
 } from "../repositories/interfaces";
+import type {
+  TursoGroupMembershipRepository,
+  TursoGroupRosterRepository,
+} from "../repositories/group-repositories";
 import { getDatabase } from "../database/connection";
+
+export type AddGuestPlayerInput =
+  | { rosterId: string; status?: PlayerStatus }
+  | {
+      guestName: string;
+      phone?: string;
+      email?: string;
+      status?: PlayerStatus;
+    };
+
+/**
+ * Thrown by `addGuestPlayer` when the inline `guestName` branch would create
+ * a ghost whose phone/email matches an existing group member. The route
+ * maps this to a 409 instead of the generic 400 we use for other errors,
+ * so the UI can suggest inviting the member instead.
+ */
+export class RosterMemberCollisionError extends Error {
+  readonly userId: string;
+  constructor(userId: string) {
+    super("already_member");
+    this.name = "RosterMemberCollisionError";
+    this.userId = userId;
+  }
+}
 
 export class MatchService {
   constructor(
@@ -27,6 +54,8 @@ export class MatchService {
     private signupRepository: SignupRepository,
     private locationRepository: LocationRepository,
     private courtRepository: CourtRepository,
+    private rosterRepository: TursoGroupRosterRepository,
+    private memberRepository: TursoGroupMembershipRepository,
   ) {}
 
   /**
@@ -221,51 +250,78 @@ export class MatchService {
   }
 
   /**
-   * Add a guest player to a match
-   * If match is full but substitute spots are available, guest joins as SUBSTITUTE
+   * Add a guest player to a match. Accepts either an existing `rosterId`
+   * (preferred — the organizer picked an existing ghost) or a `guestName`
+   * shortcut that creates a ghost inline before creating the signup.
+   *
+   * If the match is full but substitute spots are available, the guest
+   * joins as SUBSTITUTE. Capacity is validated BEFORE any ghost insert to
+   * avoid orphaning a roster row on a rejected signup.
    */
   async addGuestPlayer(
     groupId: string,
     matchId: string,
-    guestData: Omit<CreateGuestSignupData, "groupId">,
+    input: AddGuestPlayerInput,
     addedBy: User,
   ): Promise<Signup> {
-    // Validate match exists and is in the caller's group.
     const match = await this.matchRepository.findById(matchId);
     if (!match || match.groupId !== groupId) {
       throw new Error("Match not found");
     }
-
-    // Check if match is still open
     if (match.status !== "upcoming") {
       throw new Error("Cannot add guests to this match");
     }
 
-    // Check capacity (based on paid players only)
     const isFull = await this.signupRepository.isMatchFull(
       matchId,
       match.maxPlayers,
     );
-
-    let guestStatus = guestData.status || "PENDING";
-
+    let guestStatus: PlayerStatus = input.status || "PENDING";
     if (isFull) {
-      // Match is full - check if substitute spots are available
       const substituteCount = await this.signupRepository.getSubstituteCount(matchId);
       const maxSubstitutes = match.maxSubstitutes || 0;
-
       if (substituteCount >= maxSubstitutes) {
         throw new Error("Match and substitute list are full");
       }
-
-      // Guest joins as substitute
       guestStatus = "SUBSTITUTE";
     }
 
+    let rosterId: string;
+    let guestName: string;
+    if ("rosterId" in input) {
+      const ghost = await this.rosterRepository.findById(input.rosterId);
+      if (!ghost || ghost.groupId !== groupId) {
+        throw new Error("Roster entry not found");
+      }
+      rosterId = ghost.id;
+      guestName = ghost.displayName;
+    } else {
+      // Same collision precheck as GroupService.createRosterEntry so the
+      // inline-create path can't stealth-bypass the "already a member" rule.
+      const collidingMemberId = await this.memberRepository.findMemberByContact(
+        groupId,
+        { phone: input.phone, email: input.email },
+      );
+      if (collidingMemberId) {
+        throw new RosterMemberCollisionError(collidingMemberId);
+      }
+      const ghost = await this.rosterRepository.create({
+        groupId,
+        displayName: input.guestName,
+        phone: input.phone,
+        email: input.email,
+        createdByUserId: addedBy.id,
+      });
+      rosterId = ghost.id;
+      guestName = ghost.displayName;
+    }
+
     return this.signupRepository.addGuest({
-      ...guestData,
       groupId,
-      status: guestStatus as PlayerStatus,
+      matchId,
+      guestName,
+      rosterId,
+      status: guestStatus,
       ownerUserId: addedBy.id,
       ownerName: addedBy.name,
       ownerEmail: addedBy.email,

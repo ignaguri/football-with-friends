@@ -31,6 +31,8 @@ export class ServiceFactory {
       repos.signups,
       repos.locations,
       repos.courts,
+      repos.groupRoster,
+      repos.groupMembers,
     );
     this.courtService = new CourtService(repos.courts);
     this.playerStatsService = new PlayerStatsService(

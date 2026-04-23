@@ -798,6 +798,33 @@
       "loadErrorBody": "Revisá tu conexión e intentá de nuevo.",
       "acceptFailedTitle": "No pudimos unirte al grupo",
       "acceptFailedBody": "Algo salió mal. Intentá de nuevo."
+    },
+    "roster": {
+      "title": "Plantel",
+      "add": "Agregar invitado",
+      "empty": "Todavía no hay invitados — agregá uno para sumarlo a los partidos.",
+      "displayName": "Nombre para mostrar",
+      "phone": "Teléfono (opcional)",
+      "email": "Email (opcional)",
+      "claimed": "Vinculado",
+      "unclaimed": "Sin vincular",
+      "linkedTo": "Vinculado a {{name}}",
+      "linkToMember": "Vincular a un miembro existente",
+      "unlinkFromMember": "Desvincular de {{name}}",
+      "searchMembers": "Buscar miembros…",
+      "noMembersFound": "Ningún miembro coincide con la búsqueda.",
+      "editTitle": "Editar invitado",
+      "deleteTitle": "Eliminar invitado",
+      "deleteCta": "Eliminar",
+      "deleteConfirm": "¿Eliminar definitivamente \"{{name}}\" del plantel de este grupo?",
+      "forceDeleteCta": "Eliminar igual",
+      "forceDeleteConfirm": "\"{{name}}\" todavía está vinculado a {{count}} inscripción(es). Al eliminar se conserva el historial pero se desvincula el nombre del invitado. ¿Continuar?",
+      "alreadyMemberError": "Ya hay un miembro con ese teléfono o email en este grupo — invitalo directamente en lugar de agregarlo como invitado.",
+      "guestPickerTitle": "Elegir invitado",
+      "guestPickerSearch": "Buscar en el plantel…",
+      "guestPickerEmpty": "Todavía no hay invitados cargados.",
+      "quickAddTitle": "Agregado rápido + inscripción",
+      "quickAddHint": "Solo el nombre. Teléfono/email opcionales. Se creará un invitado en este grupo y se lo anotará al partido."
     }
   }
 }

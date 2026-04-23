@@ -937,13 +937,6 @@ export class TursoSignupRepository implements SignupRepository {
   async addGuest(guestData: CreateGuestSignupData): Promise<Signup> {
     const id = generateId();
     const now = new Date().toISOString();
-
-    // Compose guest display name
-    const name = guestData.guestName
-      ? `${guestData.guestName} (Guest of ${guestData.ownerName})`
-      : `Guest of ${guestData.ownerName}`;
-
-    // Generate unique guest email
     const playerEmail = `guest-${generateId()}@local`;
 
     const newSignup = {
@@ -951,12 +944,13 @@ export class TursoSignupRepository implements SignupRepository {
       group_id: guestData.groupId,
       match_id: guestData.matchId,
       user_id: null,
-      player_name: name,
+      player_name: guestData.guestName,
       player_email: playerEmail,
       status: guestData.status || "PENDING",
       signup_type: "guest" as const,
       guest_owner_id: guestData.ownerUserId,
       added_by_user_id: guestData.ownerUserId,
+      roster_id: guestData.rosterId,
       signed_up_at: now,
       updated_at: now,
     };

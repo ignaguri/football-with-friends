@@ -51,3 +51,11 @@ WHERE g.id = 'grp_legacy';
 SELECT 'settings_copied' AS check_name,
        (SELECT COUNT(*) FROM settings) AS global_count,
        (SELECT COUNT(*) FROM group_settings WHERE group_id = 'grp_legacy') AS group_count;
+
+-- 7. Phase 4: every legacy guest signup has a roster_id. Post the
+-- convert-legacy-guests-to-ghosts migration this must be 0.
+SELECT 'unlinked_guest_signups' AS check_name, COUNT(*) AS expected_zero
+FROM signups
+WHERE group_id = 'grp_legacy'
+  AND user_id IS NULL
+  AND roster_id IS NULL;

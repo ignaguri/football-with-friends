@@ -250,7 +250,7 @@ app.get("/:id/invites", async (c) => {
 // E.164 per BetterAuth phone-auth + profile routes; targetPhone must match
 // the exact shape we store in `user.phoneNumber` or `acceptInvite` never
 // matches and the organizer has effectively created a dead invite.
-const INVITE_TARGET_PHONE_REGEX = /^\+[1-9]\d{6,14}$/;
+export const INVITE_TARGET_PHONE_REGEX = /^\+[1-9]\d{6,14}$/;
 
 app.post(
   "/:id/invites",
@@ -312,6 +312,148 @@ app.delete("/:id/invites/:inviteId", async (c) => {
     return c.json({ error: message }, 404);
   }
 });
+
+// Roster (ghosts) ---------------------------------------------------------
+// Organizer-only. Ghosts are managed player profiles that may be claimed
+// by a real user via invite accept or organizer-driven linking.
+
+app.get("/:id/roster", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const roster = await getGroupService().listRoster(id);
+  return c.json({ roster });
+});
+
+app.post(
+  "/:id/roster",
+  zValidator(
+    "json",
+    z.object({
+      displayName: z.string().trim().min(1).max(120),
+      phone: z
+        .string()
+        .trim()
+        .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
+        .optional(),
+      email: z.string().trim().email().optional(),
+    }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const body = c.req.valid("json");
+
+    try {
+      const outcome = await getGroupService().createRosterEntry({
+        groupId: id,
+        displayName: body.displayName,
+        phone: body.phone,
+        email: body.email,
+        createdByUserId: user.id,
+      });
+      if (!outcome.created) {
+        return c.json(
+          { error: outcome.reason, userId: outcome.userId },
+          409,
+        );
+      }
+      return c.json({ entry: outcome.entry }, 201);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create roster entry";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.patch(
+  "/:id/roster/:rosterId",
+  zValidator(
+    "json",
+    z
+      .object({
+        displayName: z.string().trim().min(1).max(120).optional(),
+        phone: z
+          .string()
+          .trim()
+          .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
+          .nullable()
+          .optional(),
+        email: z.string().trim().email().nullable().optional(),
+        claimedByUserId: z.string().min(1).nullable().optional(),
+      })
+      .refine((v) => Object.keys(v).length > 0, {
+        message: "At least one field must be provided",
+      }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const rosterId = c.req.param("rosterId");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const patch = c.req.valid("json");
+
+    try {
+      const entry = await getGroupService().updateRosterEntry(rosterId, id, {
+        displayName: patch.displayName,
+        phone: patch.phone,
+        email: patch.email,
+        claimedByUserId: patch.claimedByUserId,
+      });
+      return c.json({ entry });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update roster entry";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.delete(
+  "/:id/roster/:rosterId",
+  zValidator("query", z.object({ force: z.enum(["true", "false"]).optional() })),
+  async (c) => {
+  const id = c.req.param("id");
+  const rosterId = c.req.param("rosterId");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const force = c.req.valid("query").force === "true";
+
+  try {
+    const outcome = await getGroupService().deleteRosterEntry(rosterId, id, { force });
+    if (!outcome.deleted) {
+      return c.json(
+        {
+          error: outcome.reason,
+          referencingSignupCount: outcome.referencingSignupCount,
+        },
+        409,
+      );
+    }
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to delete roster entry";
+    return c.json({ error: message }, 404);
+  }
+  },
+);
 
 app.post(
   "/:id/transfer-ownership",

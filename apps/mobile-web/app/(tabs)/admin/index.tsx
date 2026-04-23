@@ -190,6 +190,15 @@ export default function OrganizerScreen() {
             >
               {t("settings.title")}
             </Button>
+            <Button
+              flex={1}
+              size="$3"
+              variant="outline"
+              onPress={() => router.push("/(tabs)/admin/roster")}
+              testID="admin-tab-roster"
+            >
+              {t("groups.roster.title")}
+            </Button>
           </XStack>
         </YStack>
 

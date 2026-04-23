@@ -9,8 +9,10 @@ import type {
   GroupInviteInvalidReason,
   GroupInvitePreview,
   GroupMember,
+  GroupRoster,
   MemberRole,
   UpdateGroupData,
+  UpdateGroupRosterData,
 } from "../domain/types";
 import { getDatabase } from "../database/connection";
 import type {
@@ -46,6 +48,36 @@ export type InviteAcceptOutcome =
       joined: false;
       reason: GroupInviteInvalidReason;
     };
+
+export interface RosterCreateParams {
+  groupId: string;
+  displayName: string;
+  phone?: string;
+  email?: string;
+  createdByUserId: string;
+}
+
+export type RosterCreateErrorReason = "already_member";
+export type RosterDeleteErrorReason = "referenced";
+
+export type CreateRosterOutcome =
+  | { created: true; entry: GroupRoster }
+  | { created: false; reason: RosterCreateErrorReason; userId: string };
+
+export type DeleteRosterOutcome =
+  | { deleted: true }
+  | {
+      deleted: false;
+      reason: RosterDeleteErrorReason;
+      referencingSignupCount: number;
+    };
+
+export type RosterListEntry = Omit<
+  GroupRoster,
+  "claimedByUser" | "createdByUser"
+> & {
+  claimedByUser?: { id: string; name: string };
+};
 
 export class GroupService {
   constructor(
@@ -331,5 +363,127 @@ export class GroupService {
       claimedRosterId,
       ambiguousRosterMatches,
     };
+  }
+
+  // --- Roster (ghosts) ---------------------------------------------------
+
+  /**
+   * Organizer view of the group's roster. Hydrates `claimedByUser` with
+   * id/name via a single batched lookup so the UI can render linked-member
+   * badges without N+1 queries.
+   */
+  async listRoster(groupId: string): Promise<RosterListEntry[]> {
+    const entries = await this.rosterRepo.listByGroup(groupId);
+    const claimedIds = Array.from(
+      new Set(
+        entries.map((e) => e.claimedByUserId).filter((v): v is string => !!v),
+      ),
+    );
+    if (claimedIds.length === 0) return entries;
+
+    const users = await getDatabase()
+      .selectFrom("user")
+      .select(["id", "name"])
+      .where("id", "in", claimedIds)
+      .execute();
+    const byId = new Map(users.map((u) => [u.id, { id: u.id, name: u.name ?? "" }]));
+    return entries.map((e) => ({
+      ...e,
+      claimedByUser: e.claimedByUserId ? byId.get(e.claimedByUserId) : undefined,
+    }));
+  }
+
+  /**
+   * Creates a ghost after rejecting phone/email collisions with an existing
+   * member. This protects against the common mistake of "add a guest to the
+   * roster" when the right action is "invite them as a member" — the service
+   * surfaces the existing userId so the UI can link to an invite flow.
+   */
+  async createRosterEntry(params: RosterCreateParams): Promise<CreateRosterOutcome> {
+    const collidingMemberId = await this.memberRepo.findMemberByContact(
+      params.groupId,
+      { phone: params.phone, email: params.email },
+    );
+    if (collidingMemberId) {
+      return {
+        created: false,
+        reason: "already_member",
+        userId: collidingMemberId,
+      };
+    }
+
+    const entry = await this.rosterRepo.create({
+      groupId: params.groupId,
+      displayName: params.displayName,
+      phone: params.phone,
+      email: params.email,
+      createdByUserId: params.createdByUserId,
+    });
+    return { created: true, entry };
+  }
+
+  /**
+   * Partial update + cross-group guard. If the caller is setting
+   * `claimedByUserId` to a non-null value we verify membership so we don't
+   * silently attribute signups to a non-member.
+   */
+  async updateRosterEntry(
+    rosterId: string,
+    currentGroupId: string,
+    patch: UpdateGroupRosterData,
+  ): Promise<GroupRoster> {
+    const existing = await this.rosterRepo.findById(rosterId);
+    if (!existing || existing.groupId !== currentGroupId) {
+      throw new Error("Roster entry not found");
+    }
+    if (patch.claimedByUserId) {
+      const membership = await this.memberRepo.find(
+        currentGroupId,
+        patch.claimedByUserId,
+      );
+      if (!membership) {
+        throw new Error("Target user is not a member of this group");
+      }
+    }
+    return this.rosterRepo.update(rosterId, patch);
+  }
+
+  /**
+   * Default-safe delete: refuses to drop a ghost that still appears in
+   * signups, returning the reference count so the UI can offer a force
+   * path. The force path nulls `signups.roster_id` rather than deleting
+   * the signup — we'd rather lose the attribution link than the history.
+   */
+  async deleteRosterEntry(
+    rosterId: string,
+    currentGroupId: string,
+    options: { force?: boolean } = {},
+  ): Promise<DeleteRosterOutcome> {
+    const existing = await this.rosterRepo.findById(rosterId);
+    if (!existing || existing.groupId !== currentGroupId) {
+      throw new Error("Roster entry not found");
+    }
+
+    const db = getDatabase();
+    const countRow = await db
+      .selectFrom("signups")
+      .select((eb) => eb.fn.countAll().as("c"))
+      .where("roster_id", "=", rosterId)
+      .executeTakeFirst();
+    const referencingSignupCount = Number(countRow?.c ?? 0);
+
+    if (referencingSignupCount > 0 && !options.force) {
+      return { deleted: false, reason: "referenced", referencingSignupCount };
+    }
+
+    if (referencingSignupCount > 0) {
+      await db
+        .updateTable("signups")
+        .set({ roster_id: null })
+        .where("roster_id", "=", rosterId)
+        .execute();
+    }
+    await this.rosterRepo.delete(rosterId);
+    return { deleted: true };
   }
 }

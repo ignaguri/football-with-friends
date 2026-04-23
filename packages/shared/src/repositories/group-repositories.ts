@@ -264,6 +264,34 @@ export class TursoGroupMembershipRepository {
     return row ? rowToMember(row) : null;
   }
 
+  /**
+   * Returns the user_id of an existing group member whose phone or email
+   * matches the given contact, or null. Used by roster create/quick-add
+   * paths to refuse creating a ghost that collides with a real member —
+   * organizers should invite that user, not ghost-ify them.
+   */
+  async findMemberByContact(
+    groupId: string,
+    contact: { phone?: string; email?: string },
+  ): Promise<string | null> {
+    if (!contact.phone && !contact.email) return null;
+    const row = await this.db
+      .selectFrom("user")
+      .innerJoin("group_members", "group_members.user_id", "user.id")
+      .select("user.id as id")
+      .where("group_members.group_id", "=", groupId)
+      .where((eb) => {
+        const clauses = [];
+        if (contact.phone)
+          clauses.push(eb("user.phoneNumber", "=", contact.phone));
+        if (contact.email) clauses.push(eb("user.email", "=", contact.email));
+        return eb.or(clauses);
+      })
+      .limit(1)
+      .executeTakeFirst();
+    return row?.id ?? null;
+  }
+
   async listByGroup(groupId: string): Promise<GroupMember[]> {
     const rows = await this.db
       .selectFrom("group_members")
@@ -453,6 +481,15 @@ export class TursoGroupRosterRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
     return rowToRoster(row);
+  }
+
+  async findById(id: string): Promise<GroupRoster | null> {
+    const row = await this.db
+      .selectFrom("group_roster")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+    return row ? rowToRoster(row) : null;
   }
 
   async listByGroup(groupId: string): Promise<GroupRoster[]> {

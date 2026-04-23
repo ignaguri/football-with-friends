@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { getServiceFactory } from "@repo/shared/services";
+import { getServiceFactory, RosterMemberCollisionError } from "@repo/shared/services";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
+import { INVITE_TARGET_PHONE_REGEX } from "./groups";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import { isCurrentOrganizer, requireOrganizer } from "../middleware/authz";
 import {
@@ -259,21 +260,41 @@ app.post("/:id/signup", async (c) => {
   }
 });
 
-// Add a guest to a match
+// Add a guest to a match. Accepts either `{rosterId}` (existing ghost) or
+// `{guestName, phone?, email?}` (inline create). The service backs every
+// guest signup with a roster entry.
 app.post(
   "/:id/guest",
   zValidator(
     "json",
-    z.object({
-      matchId: z.string(),
-      guestName: z.string().min(1, "Guest name is required"),
-      guestEmail: z.string().email().optional(),
-      status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
-    })
+    z.union([
+      z.object({
+        rosterId: z.string().min(1),
+        status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+      }),
+      z.object({
+        guestName: z.string().trim().min(1, "Guest name is required"),
+        phone: z
+          .string()
+          .trim()
+          .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
+          .optional(),
+        email: z.string().trim().email().optional(),
+        status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+      }),
+    ])
   ),
   async (c) => {
     const matchId = c.req.param("id");
-    const guestData = c.req.valid("json");
+    const body = c.req.valid("json");
+
+    // Organizer-only: the `rosterId` branch could be safely open to members,
+    // but the `guestName` branch writes to `group_roster`, which is an
+    // organizer-managed table. Gating the whole endpoint keeps roster
+    // authorship consistent with the rest of the roster CRUD.
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
@@ -282,17 +303,14 @@ app.post(
       const signup = await getMatchService().addGuestPlayer(
         current.id,
         matchId,
-        {
-          ...guestData,
-          matchId,
-          ownerUserId: user.id,
-          ownerName: user.name,
-          ownerEmail: user.email,
-        },
+        body,
         user,
       );
       return c.json({ signup }, 201);
     } catch (error) {
+      if (error instanceof RosterMemberCollisionError) {
+        return c.json({ error: "already_member", userId: error.userId }, 409);
+      }
       const message = error instanceof Error ? error.message : "Failed to add guest";
       return c.json({ error: message }, 400);
     }
