@@ -29,6 +29,18 @@ export default function ProfileLayout() {
           title: t("profile.myProfile"),
         }}
       />
+      <Stack.Screen
+        name="groups/index"
+        options={{
+          title: t("groups.myGroups.title"),
+        }}
+      />
+      <Stack.Screen
+        name="groups/[groupId]"
+        options={{
+          title: t("groups.detail.title"),
+        }}
+      />
     </Stack>
   );
 }

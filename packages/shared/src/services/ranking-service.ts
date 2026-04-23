@@ -16,34 +16,36 @@ export class RankingService {
   ) {}
 
   /**
-   * Get player rankings by specified criteria
+   * Get player rankings by specified criteria, scoped to a group.
    */
   async getPlayerRankings(
+    groupId: string,
     criteria: RankingCriteria,
     limit = 50
   ): Promise<PlayerRanking[]> {
     switch (criteria) {
       case "matches":
-        return this.playerStatsRepository.getRankingsByMatches(limit);
+        return this.playerStatsRepository.getRankingsByMatches(groupId, limit);
       case "third_times":
-        return this.playerStatsRepository.getRankingsByThirdTimes(limit);
+        return this.playerStatsRepository.getRankingsByThirdTimes(groupId, limit);
       case "beers":
-        return this.playerStatsRepository.getRankingsByBeers(limit);
+        return this.playerStatsRepository.getRankingsByBeers(groupId, limit);
       case "total_votes":
-        return this.votingRepository.getRankingsByTotalVotes(limit);
+        return this.votingRepository.getRankingsByTotalVotes(groupId, limit);
       default:
         throw new Error(`Unsupported ranking criteria: ${criteria}`);
     }
   }
 
   /**
-   * Get voting leaderboard (top N players per criteria)
+   * Get voting leaderboard (top N players per criteria), scoped to a group.
    */
   async getVotingLeaderboard(
+    groupId: string,
     language: "en" | "es",
     topN = 3
   ): Promise<VotingLeaderboard> {
-    return this.votingRepository.getVotingLeaderboard(language, topN);
+    return this.votingRepository.getVotingLeaderboard(groupId, language, topN);
   }
 
   /**

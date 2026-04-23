@@ -2,6 +2,13 @@ import { hc } from "hono/client";
 import { Platform } from "react-native";
 import type { ApiRoutes } from "../../../apps/api/src/index";
 import { getBearerToken, _tokenLoadPromise } from "./auth";
+import {
+  GROUP_HEADER,
+  _groupIdLoadPromise,
+  getActiveGroupId,
+  recordGroupIdFromResponse,
+  setActiveGroupId,
+} from "./group-storage";
 
 // Base URL for localhost development
 const LOCALHOST_API = "http://localhost:3001";
@@ -35,9 +42,10 @@ export function configureLanguage(lang: string) {
 // This ensures the URL is computed when the request is made, not at bundle time
 function createDynamicFetch() {
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    // Wait for the initial token load to complete before making any request.
-    // Prevents a race where data queries fire before the token is loaded from SecureStore.
-    await _tokenLoadPromise;
+    // Wait for persisted bearer token and active group id to hydrate before
+    // the first request fires. Prevents useSession() / data queries from
+    // racing the boot hydration.
+    await Promise.all([_tokenLoadPromise, _groupIdLoadPromise]);
 
     // Get the original URL from the input
     let originalUrl: string;
@@ -88,6 +96,18 @@ function createDynamicFetch() {
       }
     }
 
+    // Attach the active group id so the server scopes the response to it.
+    // On first launch we have no persisted id — the server auto-picks and
+    // echoes one back in the response, which we persist via the handler below.
+    {
+      const groupId = getActiveGroupId();
+      if (groupId) {
+        const headers = new Headers(fetchInit.headers);
+        headers.set(GROUP_HEADER, groupId);
+        fetchInit.headers = headers;
+      }
+    }
+
     // Handle Request objects specially
     let responsePromise: Promise<Response>;
     if (typeof input !== "string" && !(input instanceof URL)) {
@@ -99,6 +119,9 @@ function createDynamicFetch() {
     // Throw on non-OK responses so React Query treats them as errors
     // instead of passing error payloads as successful data
     return responsePromise.then(async (response) => {
+      // Sync active-group cache with the server's echoed header so the
+      // auto-picked group on first boot (or after a switch) persists.
+      recordGroupIdFromResponse(response);
       if (!response.ok) {
         // Clone the response so we can read the body without consuming it
         const clonedResponse = response.clone();
@@ -107,6 +130,18 @@ function createDynamicFetch() {
           errorData = await clonedResponse.json();
         } catch {
           // Response body is not JSON, ignore
+        }
+        // Stale active group (user left / was kicked): clear the cached id so
+        // the next request omits `X-Group-Id` and the server auto-picks the
+        // user's first remaining membership. Without this the client keeps
+        // sending the dead id and every scoped call 403s.
+        if (
+          response.status === 403 &&
+          typeof errorData === "object" &&
+          errorData !== null &&
+          (errorData as { code?: string }).code === "FORBIDDEN_GROUP"
+        ) {
+          setActiveGroupId(null);
         }
         const error = new Error(`API error: ${response.status} ${response.statusText}`) as Error & {
           response: Response;

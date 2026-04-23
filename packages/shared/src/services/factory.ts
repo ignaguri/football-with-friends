@@ -1,6 +1,7 @@
 // Service factory for dependency injection
 
 import { CourtService } from "./court-service";
+import { GroupService } from "./group-service";
 import { MatchService } from "./match-service";
 import { NotificationService } from "./notification-service";
 import { PlayerStatsService } from "./player-stats-service";
@@ -17,6 +18,7 @@ export class ServiceFactory {
   public readonly playerStatsService: PlayerStatsService;
   public readonly rankingService: RankingService;
   public readonly notificationService: NotificationService;
+  public readonly groupService: GroupService;
 
   constructor(
     repositoryFactory?: AppRepositoryFactory,
@@ -43,6 +45,11 @@ export class ServiceFactory {
     this.notificationService = new NotificationService(
       repos.pushTokens,
       expoAccessToken,
+    );
+    this.groupService = new GroupService(
+      repos.groups,
+      repos.groupMembers,
+      repos.groupSettings,
     );
   }
 }

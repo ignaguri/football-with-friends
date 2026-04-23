@@ -2,39 +2,8 @@
 import { createAuthClient } from "better-auth/react";
 import { usernameClient, phoneNumberClient } from "better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
-import * as SecureStore from "expo-secure-store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
-
-// Storage adapter that works on both web (AsyncStorage) and native (SecureStore).
-// IMPORTANT: getItem and setItem MUST be synchronous on native because the
-// expoClient plugin calls them without await (e.g. getCookie(storage.getItem(key))).
-// Using async here causes getItem to return a Promise (truthy), which silently
-// breaks cookie injection — getCookie(Promise) parses as empty object.
-const storage = {
-  getItem(key: string): string | null {
-    if (Platform.OS === "web") {
-      // expoClient skips cookie injection on web (has `if (isWeb) return` checks),
-      // so this is only called for bearer token loading which handles async separately.
-      return null;
-    }
-    return SecureStore.getItem(key);
-  },
-  setItem(key: string, value: string): void {
-    if (Platform.OS === "web") {
-      AsyncStorage.setItem(key, value);
-      return;
-    }
-    SecureStore.setItem(key, value);
-  },
-  async deleteItem(key: string): Promise<void> {
-    if (Platform.OS === "web") {
-      await AsyncStorage.removeItem(key);
-    } else {
-      await SecureStore.deleteItemAsync(key);
-    }
-  },
-};
+import { hydrateFromStorage, storage } from "./storage";
 
 const BEARER_TOKEN_KEY = "football_auth_bearer_token";
 let _cachedBearerToken: string | undefined;
@@ -62,21 +31,14 @@ function cleanStaleCookieData() {
   }
 }
 
-// Promise that resolves when the initial bearer token load completes.
-// The custom fetch awaits this before the first request to avoid a race condition
-// where useSession() fires getSession() before the token is loaded from storage.
-// storage.getItem is now sync on native, but we keep the Promise wrapper so
-// createDynamicFetch() can still `await _tokenLoadPromise` uniformly.
-export const _tokenLoadPromise: Promise<void> = Promise.resolve().then(() => {
-  try {
-    const token = storage.getItem(BEARER_TOKEN_KEY);
+// Gate the first request on storage hydration so useSession() can't fire
+// before the bearer token is loaded. `storage.getItem` is sync on native
+// but AsyncStorage on web is async — `hydrateFromStorage` unifies both.
+export const _tokenLoadPromise: Promise<void> = hydrateFromStorage(BEARER_TOKEN_KEY)
+  .then((token) => {
     if (token) _cachedBearerToken = token;
-  } catch {
-    // Ignore storage errors on init
-  }
-
-  cleanStaleCookieData();
-});
+    cleanStaleCookieData();
+  });
 
 /**
  * Store a bearer token for authentication.

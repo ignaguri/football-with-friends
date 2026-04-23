@@ -47,31 +47,30 @@ export class MatchService {
   }
 
   /**
-   * Create a new match (admin only)
+   * Create a new match.
+   * Authorization is enforced by the calling route (requireOrganizer). This
+   * layer just validates inputs and scopes the row to the provided group.
    */
   async createMatch(
-    matchData: CreateMatchData,
+    groupId: string,
+    matchData: Omit<CreateMatchData, "groupId" | "createdByUserId">,
     createdBy: User,
   ): Promise<Match> {
-    if (createdBy.role !== "admin") {
-      throw new Error("Only administrators can create matches");
-    }
-
     // Validate match data
     this.validateMatchData(matchData);
 
-    // Ensure location exists first
+    // Ensure location exists first and belongs to the same group.
     const location = await this.locationRepository.findById(
       matchData.locationId,
     );
-    if (!location) {
+    if (!location || location.groupId !== groupId) {
       throw new Error("Location not found");
     }
 
-    // If courtId is provided, validate it belongs to the location
+    // If courtId is provided, validate it belongs to the location AND the group.
     if (matchData.courtId) {
       const court = await this.courtRepository.findById(matchData.courtId);
-      if (!court) {
+      if (!court || court.groupId !== groupId) {
         throw new Error("Court not found");
       }
       if (court.locationId !== matchData.locationId) {
@@ -79,51 +78,51 @@ export class MatchService {
       }
     }
 
-    // Check for duplicate matches on the same date (right before creation)
+    // Check for duplicate matches on the same date within this group.
     const existsOnDate = await this.matchRepository.existsOnDate(
+      groupId,
       matchData.date,
     );
     if (existsOnDate) {
       throw new Error("A match already exists on this date");
     }
 
-    // Create the match immediately after the duplicate check
     return this.matchRepository.create({
       ...matchData,
+      groupId,
       createdByUserId: createdBy.id,
     });
   }
 
   /**
-   * Update a match (admin only)
+   * Update a match. Caller must be organizer of the match's group (enforced
+   * at the route boundary); this method re-validates that the match belongs
+   * to the group it claims to, preventing cross-group writes by id.
    */
   async updateMatch(
+    groupId: string,
     matchId: string,
     updates: UpdateMatchData,
-    updatedBy: User,
   ): Promise<Match> {
-    if (updatedBy.role !== "admin") {
-      throw new Error("Only administrators can update matches");
-    }
-
     const existingMatch = await this.matchRepository.findById(matchId);
-    if (!existingMatch) {
+    if (!existingMatch || existingMatch.groupId !== groupId) {
       throw new Error("Match not found");
     }
 
-    // If updating location, ensure it exists
+    // If updating location, ensure it exists AND belongs to the same group.
     if (updates.locationId) {
       const location = await this.locationRepository.findById(
         updates.locationId,
       );
-      if (!location) {
+      if (!location || location.groupId !== groupId) {
         throw new Error("Location not found");
       }
     }
 
-    // If updating date, check for duplicates (excluding current match)
+    // If updating date, check for duplicates (excluding current match) within group.
     if (updates.date && updates.date !== existingMatch.date) {
       const existsOnDate = await this.matchRepository.existsOnDate(
+        groupId,
         updates.date,
       );
       if (existsOnDate) {
@@ -135,15 +134,12 @@ export class MatchService {
   }
 
   /**
-   * Delete a match (admin only)
+   * Delete a match. Caller must be organizer (route-level); we verify the
+   * match belongs to the caller's group before hard-deleting.
    */
-  async deleteMatch(matchId: string, deletedBy: User): Promise<void> {
-    if (deletedBy.role !== "admin") {
-      throw new Error("Only administrators can delete matches");
-    }
-
+  async deleteMatch(groupId: string, matchId: string): Promise<void> {
     const existingMatch = await this.matchRepository.findById(matchId);
-    if (!existingMatch) {
+    if (!existingMatch || existingMatch.groupId !== groupId) {
       throw new Error("Match not found");
     }
 
@@ -160,6 +156,7 @@ export class MatchService {
    * If match is full but substitute spots are available, user joins as SUBSTITUTE
    */
   async signUpUser(
+    groupId: string,
     matchId: string,
     user: User,
     playerData?: {
@@ -168,9 +165,9 @@ export class MatchService {
       status?: string;
     },
   ): Promise<Signup> {
-    // Validate match exists
+    // Validate match exists and is in the caller's group.
     const match = await this.matchRepository.findById(matchId);
-    if (!match) {
+    if (!match || match.groupId !== groupId) {
       throw new Error("Match not found");
     }
 
@@ -210,6 +207,7 @@ export class MatchService {
     }
 
     const signupData: CreateSignupData = {
+      groupId,
       matchId,
       userId: user.id,
       playerName: playerData?.playerName || user.name,
@@ -227,13 +225,14 @@ export class MatchService {
    * If match is full but substitute spots are available, guest joins as SUBSTITUTE
    */
   async addGuestPlayer(
+    groupId: string,
     matchId: string,
-    guestData: CreateGuestSignupData,
+    guestData: Omit<CreateGuestSignupData, "groupId">,
     addedBy: User,
   ): Promise<Signup> {
-    // Validate match exists
+    // Validate match exists and is in the caller's group.
     const match = await this.matchRepository.findById(matchId);
-    if (!match) {
+    if (!match || match.groupId !== groupId) {
       throw new Error("Match not found");
     }
 
@@ -265,6 +264,7 @@ export class MatchService {
 
     return this.signupRepository.addGuest({
       ...guestData,
+      groupId,
       status: guestStatus as PlayerStatus,
       ownerUserId: addedBy.id,
       ownerName: addedBy.name,
@@ -273,9 +273,12 @@ export class MatchService {
   }
 
   /**
-   * Admin: Add any player to a match (can override capacity)
+   * Organizer: Add any player to a match (can override capacity). Authz is
+   * enforced at the route; this method validates the match belongs to the
+   * caller's group.
    */
-  async addPlayerByAdmin(
+  async addPlayerAsOrganizer(
+    groupId: string,
     matchId: string,
     playerData: {
       userId?: string;
@@ -283,19 +286,13 @@ export class MatchService {
       playerEmail: string;
       status?: string;
     },
-    admin: User,
+    actor: User,
   ): Promise<Signup> {
-    if (admin.role !== "admin") {
-      throw new Error("Only administrators can add players directly");
-    }
-
-    // Validate match exists
     const match = await this.matchRepository.findById(matchId);
-    if (!match) {
+    if (!match || match.groupId !== groupId) {
       throw new Error("Match not found");
     }
 
-    // If userId provided, check if user is already signed up
     if (playerData.userId) {
       const isAlreadySignedUp = await this.signupRepository.isUserSignedUp(
         matchId,
@@ -306,27 +303,29 @@ export class MatchService {
       }
     }
 
-    return this.signupRepository.addPlayerByAdmin(
+    return this.signupRepository.addPlayerAsOrganizer(
+      groupId,
       matchId,
       playerData,
-      admin.id,
+      actor.id,
     );
   }
 
   /**
-   * Admin: Remove a player from a match
+   * Organizer: Remove a player from a match. Authz at route; here we
+   * verify cross-group isolation via the signup's group_id.
    */
-  async removePlayerByAdmin(signupId: string, admin: User): Promise<void> {
-    if (admin.role !== "admin") {
-      throw new Error("Only administrators can remove players");
-    }
-
+  async removePlayerAsOrganizer(
+    groupId: string,
+    signupId: string,
+    actor: User,
+  ): Promise<void> {
     const signup = await this.signupRepository.findById(signupId);
-    if (!signup) {
+    if (!signup || signup.groupId !== groupId) {
       throw new Error("Signup not found");
     }
 
-    await this.signupRepository.removePlayerByAdmin(signupId, admin.id);
+    await this.signupRepository.removePlayerAsOrganizer(signupId, actor.id);
   }
 
   /**
@@ -340,22 +339,25 @@ export class MatchService {
    * Update a signup (for status changes, etc.)
    */
   async updateSignup(
+    groupId: string,
     signupId: string,
     updates: { status?: string; playerName?: string },
     updatedBy: User,
+    isOrganizer: boolean,
   ): Promise<{
     signup: Signup;
     oldStatus: string;
     promotedSubstitute?: { id: string; userId?: string; playerName: string };
   }> {
     const signup = await this.signupRepository.findById(signupId);
-    if (!signup) {
+    if (!signup || signup.groupId !== groupId) {
       throw new Error("Signup not found");
     }
 
-    // Authorization: only admin or the user who added the signup can update it
+    // Authorization: organizer of the current group, the user who added the
+    // signup, or the signup's own user can update it.
     const canUpdate =
-      updatedBy.role === "admin" ||
+      isOrganizer ||
       updatedBy.id === signup.addedByUserId ||
       updatedBy.id === signup.userId;
 
@@ -498,7 +500,9 @@ export class MatchService {
   /**
    * Validate match data
    */
-  private validateMatchData(matchData: CreateMatchData): void {
+  private validateMatchData(
+    matchData: Omit<CreateMatchData, "groupId" | "createdByUserId">,
+  ): void {
     if (!matchData.date || !matchData.time) {
       throw new Error("Date and time are required");
     }

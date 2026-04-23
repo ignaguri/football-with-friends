@@ -1,5 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useSession } from "@repo/api-client";
+import { useCurrentGroup, useSession } from "@repo/api-client";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import {
   Home,
@@ -16,6 +16,7 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { data: session, isPending } = useSession();
+  const { myRole } = useCurrentGroup();
 
   // Must be called before any early returns (Rules of Hooks)
   usePushNotifications();
@@ -39,7 +40,10 @@ export default function TabsLayout() {
     return <Redirect href="/(auth)" />;
   }
 
-  const isAdmin = session?.user?.role === "admin";
+  // Admin tab is gated by group-relative role now. Superadmin retains the
+  // global override so Ignacio can see admin panels on any group.
+  const isSuperadmin = session?.user?.role === "superadmin";
+  const isAdmin = isSuperadmin || myRole === "organizer";
 
   return (
     <Tabs

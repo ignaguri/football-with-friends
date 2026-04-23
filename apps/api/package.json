@@ -16,7 +16,6 @@
   "dependencies": {
     "@better-auth/expo": "^1.5.5",
     "@hono/zod-validator": "^0.7.6",
-    "@orpc/server": "^1.13.7",
     "@repo/shared": "workspace:*",
     "@sentry/cloudflare": "^10.45.0",
     "@vercel/blob": "^2.3.1",

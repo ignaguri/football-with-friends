@@ -1,22 +1,25 @@
 import { Hono } from "hono";
 import { getServiceFactory } from "@repo/shared/services";
-import { auth } from "../auth";
 import type { RankingCriteria } from "@repo/shared/domain";
+import { type AppVariables } from "../middleware/security";
+import {
+  groupContextMiddleware,
+  requireCurrentGroup,
+} from "../middleware/group-context";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", groupContextMiddleware);
 
 const getRankingService = () => getServiceFactory().rankingService;
 
-// Get player rankings by criteria
+// Get player rankings by criteria, scoped to the active group.
 app.get("/", async (c) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
-  if (!session?.user) {
-    return c.json({ error: "Unauthorized" }, 401);
-  }
-
   try {
+    const current = requireCurrentGroup(c);
     const { criteria = "matches", limit = "50" } = c.req.query();
     const rankings = await getRankingService().getPlayerRankings(
+      current.id,
       criteria as RankingCriteria,
       parseInt(limit, 10)
     );

@@ -22,9 +22,9 @@ app.post(
   ),
   async (c) => {
     const user = requireUser(c);
-    if (user.role !== "admin") {
+    if (user.role !== "superadmin") {
       return c.json(
-        { error: "Only administrators can send test notifications" },
+        { error: "Only superadmin can send test notifications" },
         403,
       );
     }

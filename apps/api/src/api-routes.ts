@@ -3,6 +3,7 @@ import type { Hono } from "hono";
 
 import matchesRoute from "./routes/matches";
 import courtsRoute from "./routes/courts";
+import groupsRoute from "./routes/groups";
 import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
@@ -20,6 +21,7 @@ export function registerApiRoutes(app: Hono<any>) {
     .basePath("/api")
     .route("/matches", matchesRoute)
     .route("/courts", courtsRoute)
+    .route("/groups", groupsRoute)
     .route("/locations", locationsRoute)
     .route("/profile", profileRoute)
     .route("/settings", settingsRoute)
