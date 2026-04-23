@@ -72,6 +72,7 @@ export {
   useCreateRosterEntry,
   useUpdateRosterEntry,
   useDeleteRosterEntry,
+  useCopyVenues,
 } from "./groups";
 export type {
   GroupInviteSummary,

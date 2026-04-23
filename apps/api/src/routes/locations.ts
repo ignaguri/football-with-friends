@@ -2,9 +2,10 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getRepositoryFactory } from "@repo/shared/repositories";
-import { type AppVariables } from "../middleware/security";
+import { getServiceFactory } from "@repo/shared/services";
+import { requireUser, type AppVariables } from "../middleware/security";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
-import { requireOrganizer } from "../middleware/authz";
+import { isSuperadmin, requireOrganizer } from "../middleware/authz";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -93,6 +94,49 @@ app.patch(
       return c.json({ error: message }, 400);
     }
   }
+);
+
+app.post(
+  "/copy-from/:sourceGroupId",
+  async (c) => {
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const current = requireCurrentGroup(c);
+    const sourceGroupId = c.req.param("sourceGroupId");
+
+    if (sourceGroupId === current.id) {
+      return c.json(
+        { error: "Source and target group must differ" },
+        400,
+      );
+    }
+
+    if (!isSuperadmin(c)) {
+      const sourceMembership = await getRepositoryFactory().groupMembers.find(
+        sourceGroupId,
+        user.id,
+      );
+      if (!sourceMembership || sourceMembership.role !== "organizer") {
+        return c.json(
+          { error: "Must be an organizer of the source group" },
+          403,
+        );
+      }
+    }
+
+    try {
+      const result = await getServiceFactory().groupService.copyVenues(
+        sourceGroupId,
+        current.id,
+      );
+      return c.json(result, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to copy venues";
+      return c.json({ error: message }, 400);
+    }
+  },
 );
 
 // Delete a location (organizer only)

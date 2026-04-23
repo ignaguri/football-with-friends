@@ -573,6 +573,7 @@ export const NOTIFICATION_TYPES = {
   PAYMENT_REMINDER: "payment_reminder",
   VOTING_OPEN: "voting_open",
   ENGAGEMENT_REMINDER: "engagement_reminder",
+  GROUP_INVITE: "group_invite",
 } as const;
 
 export type NotificationType =

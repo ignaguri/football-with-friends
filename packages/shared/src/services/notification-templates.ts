@@ -93,6 +93,22 @@ export const NotificationTemplates = {
     };
   },
 
+  groupInvite(params: {
+    groupName: string;
+    inviterName: string;
+    token: string;
+  }): NotificationPayload {
+    return {
+      title: "You're invited!",
+      body: `${params.inviterName} invited you to join ${params.groupName}.`,
+      data: {
+        type: NOTIFICATION_TYPES.GROUP_INVITE,
+        token: params.token,
+        screen: `/join/${params.token}`,
+      },
+    };
+  },
+
   engagementReminder(variant: number): NotificationPayload {
     const messages = [
       { title: "Don't Miss Out!", body: "Check out upcoming matches and join your friends!" },
