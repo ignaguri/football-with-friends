@@ -1,7 +1,7 @@
 # Group-Oriented Scoping — Implementation Plan
 
 **Date:** 2026-04-22
-**Status:** Ready to start Phase 0
+**Status:** Phases 0–4 landed; post-implementation `superadmin` → platform `admin` rename applied 2026-04-23 (see design spec's post-implementation note).
 **Design spec:** [`../specs/2026-04-22-group-oriented-scoping-design.md`](../specs/2026-04-22-group-oriented-scoping-design.md)
 
 > **How to use this document.** Each phase below is a coherent deliverable that should land as its own PR (or a small sequence of PRs). Tick checkboxes as work lands. Do not move to the next phase until the **Verification Gate** at the end of the current phase passes. If work inside a phase forces a design change, update the spec doc first, then adjust this checklist.

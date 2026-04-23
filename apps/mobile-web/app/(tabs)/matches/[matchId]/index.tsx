@@ -132,7 +132,7 @@ export default function MatchDetailScreen() {
   const [guestSearch, setGuestSearch] = useState("");
   const { groupId: currentGroupId, myRole } = useCurrentGroup();
   const isOrganizer =
-    myRole === "organizer" || session?.user?.role === "superadmin";
+    myRole === "organizer" || session?.user?.role === "admin";
   // Roster list is organizer-only; don't trigger a 403 for regular members.
   const rosterForGuest = useGroupRoster(
     showGuestDialog && isOrganizer ? currentGroupId : null,

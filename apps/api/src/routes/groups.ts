@@ -19,10 +19,10 @@ import {
 } from "../middleware/group-context";
 import {
   assertInCurrentGroup,
-  isSuperadmin,
+  isPlatformAdmin,
   requireOrganizer,
   requireOwner,
-  requireSuperadmin,
+  requirePlatformAdmin,
 } from "../middleware/authz";
 
 const app = new Hono<{ Variables: AppVariables }>();
@@ -36,7 +36,7 @@ app.get("/me", async (c) => {
   return c.json({ groups });
 });
 
-// Create a new group (superadmin only for now).
+// Create a new group (platform admin only for now).
 app.post(
   "/",
   zValidator(
@@ -51,7 +51,7 @@ app.post(
     }),
   ),
   async (c) => {
-    const denied = requireSuperadmin(c);
+    const denied = requirePlatformAdmin(c);
     if (denied) return denied;
 
     const user = requireUser(c);
@@ -72,7 +72,7 @@ app.post(
 );
 
 // Everything below is group-scoped — we validate :id matches the active
-// group (or the caller is superadmin) so a member of group A can't probe
+// group (or the caller is platform admin) so a member of group A can't probe
 // group B by swapping the path parameter. `/me` and the create endpoint
 // above bypass this because they're the switcher/bootstrap entry points.
 app.use("*", groupContextMiddleware);
@@ -86,7 +86,7 @@ app.get("/:id", async (c) => {
   if (mismatched) return mismatched;
 
   const current = requireCurrentGroup(c);
-  const isOrganizerView = current.role === "organizer" || isSuperadmin(c);
+  const isOrganizerView = current.role === "organizer" || isPlatformAdmin(c);
 
   if (isOrganizerView) {
     const details = await getGroupService().getGroupDetails(id);
@@ -125,11 +125,11 @@ app.patch(
     const denied = requireOrganizer(c);
     if (denied) return denied;
 
-    // Visibility toggling is gated behind superadmin until we ship the
+    // Visibility toggling is gated behind platform admin until we ship the
     // public-directory flow (Phase 5); see the design doc.
     const updates = c.req.valid("json");
-    if (updates.visibility !== undefined && !isSuperadmin(c)) {
-      return c.json({ error: "Only superadmin can change visibility" }, 403);
+    if (updates.visibility !== undefined && !isPlatformAdmin(c)) {
+      return c.json({ error: "Only platform admin can change visibility" }, 403);
     }
 
     try {

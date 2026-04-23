@@ -547,7 +547,7 @@ app.get("/:userId", async (c) => {
 
     // Strip sensitive fields unless requester is the owner or admin
     const requestingUser = requireUser(c);
-    const isOwnerOrAdmin = requestingUser.id === userId || requestingUser.role === "superadmin";
+    const isOwnerOrAdmin = requestingUser.id === userId || requestingUser.role === "admin";
     if (!isOwnerOrAdmin) {
       const { phoneNumber: _, email: __, ...safeUser } = user;
       return c.json(safeUser);

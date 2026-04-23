@@ -31,7 +31,7 @@ export default function GroupDetailScreen() {
   } = useGroupDetail(groupId ?? null);
 
   const isOrganizerView =
-    session?.user?.role === "superadmin" || myRole === "organizer";
+    session?.user?.role === "admin" || myRole === "organizer";
   const members = isOrganizerView ? (group as any)?.members ?? [] : [];
   const leaveMutation = useLeaveGroup();
 

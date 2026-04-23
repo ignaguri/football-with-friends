@@ -757,7 +757,7 @@
       "namePlaceholder": "e.g. Saturday Futsal",
       "cta": "Create",
       "success": "Group created",
-      "superadminOnly": "Only superadmin can create new groups"
+      "adminOnly": "Only the platform admin can create new groups"
     },
     "detail": {
       "title": "Group Details",

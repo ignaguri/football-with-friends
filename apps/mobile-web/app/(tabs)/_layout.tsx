@@ -46,10 +46,10 @@ export default function TabsLayout() {
   // that would 409 on every render. `noGroup` is false while loading.
   if (noGroup) return <NoGroupOnboarding />;
 
-  // Admin tab is gated by group-relative role now. Superadmin retains the
+  // Admin tab is gated by group-relative role. Platform admin retains the
   // global override so Ignacio can see admin panels on any group.
-  const isSuperadmin = session?.user?.role === "superadmin";
-  const isAdmin = isSuperadmin || myRole === "organizer";
+  const isPlatformAdmin = session?.user?.role === "admin";
+  const isAdmin = isPlatformAdmin || myRole === "organizer";
 
   return (
     <YStack flex={1}>

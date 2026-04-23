@@ -13,10 +13,10 @@ export default function CreateGroupScreen() {
   const [name, setName] = useState("");
   const createMutation = useCreateGroup();
 
-  if (session?.user?.role !== "superadmin") {
+  if (session?.user?.role !== "admin") {
     return (
       <YStack flex={1} padding="$4" justifyContent="center" alignItems="center">
-        <Text color="$gray11">{t("groups.create.superadminOnly")}</Text>
+        <Text color="$gray11">{t("groups.create.adminOnly")}</Text>
       </YStack>
     );
   }

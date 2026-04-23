@@ -72,12 +72,8 @@ export async function authMiddleware(c: Context, next: Next) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
-  // Normalize role: pre-migration 'admin' rows are treated as 'superadmin'
-  // so the transition doesn't lock anyone out mid-deploy. Post-migration only
-  // 'user' and 'superadmin' exist in the DB.
   const rawRole = (session.user as any).role as string | undefined;
-  const role: PlatformRole =
-    rawRole === "superadmin" || rawRole === "admin" ? "superadmin" : "user";
+  const role: PlatformRole = rawRole === "admin" ? "admin" : "user";
 
   c.set("user", {
     id: session.user.id,

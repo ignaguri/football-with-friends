@@ -126,16 +126,15 @@ export interface MatchInvitation {
 }
 
 // User type from BetterAuth (extended).
-// Post-Phase-1, the platform-level role is either 'user' (default) or
-// 'superadmin' (only Ignacio). 'admin' is retained as a transitional alias:
-// BetterAuth's admin plugin still accepts it, and legacy rows may linger
-// until the migration has fully propagated.
+// Platform-level role: 'user' (default) or 'admin' (platform admin — only
+// Ignacio today). 'admin' here is the cross-group escape hatch; the
+// group-level role "organizer" (on group_members) is a separate concept.
 export interface User {
   id: string;
   name: string;
   email: string;
   image?: string;
-  role: "user" | "admin" | "superadmin";
+  role: "user" | "admin";
   nationality?: string; // ISO 3166-1 alpha-2 country code (e.g., "US", "AR", "DE")
   username?: string | null;
   displayUsername?: string | null;
@@ -642,10 +641,12 @@ export type MatchMediaFeedGroup = {
 export const MEMBER_ROLES = ["organizer", "member"] as const;
 export type MemberRole = (typeof MEMBER_ROLES)[number];
 
-// Platform-level role on the `user` table. Post-Phase-1 only `user` and
-// `superadmin` exist; `admin` is retained as a transitional alias that
-// BetterAuth's admin plugin also accepts.
-export const PLATFORM_ROLES = ["user", "superadmin"] as const;
+// Platform-level role on the `user` table. Two values:
+//   - "user" (default)
+//   - "admin" (platform admin — Ignacio — cross-group escape hatch)
+// Group-level authority is a separate concept on group_members.role
+// ("organizer" / "member"). Do not conflate.
+export const PLATFORM_ROLES = ["user", "admin"] as const;
 export type PlatformRole = (typeof PLATFORM_ROLES)[number];
 
 // HTTP header carrying the active group id across every authed request.

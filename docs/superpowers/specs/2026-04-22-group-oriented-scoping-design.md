@@ -1,8 +1,16 @@
 # Group-Oriented Scoping — Design Spec
 
 **Date:** 2026-04-22
-**Status:** Approved design, pending implementation plan sign-off
+**Status:** Approved design, implemented through Phase 4.
 **Companion:** [`../plans/2026-04-22-group-oriented-scoping.md`](../plans/2026-04-22-group-oriented-scoping.md)
+
+> **Post-implementation note (2026-04-23):** The platform-role rename from
+> `admin` → `superadmin` proposed below was reverted on-branch because
+> BetterAuth 1.5.6's `admin` plugin validates `adminRoles` against its `roles`
+> config, rejecting any value outside `defaultRoles` (`user`/`admin`). The
+> cross-group escape hatch is now called **"platform admin"** (`user.role ===
+> "admin"`); helpers are `isPlatformAdmin(c)` / `requirePlatformAdmin(c)`.
+> Group-relative `organizer` / `member` is unchanged. See `CLAUDE.md`.
 
 ## Context
 

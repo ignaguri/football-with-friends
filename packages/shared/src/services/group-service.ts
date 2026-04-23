@@ -115,7 +115,7 @@ export class GroupService {
    * Creates a new group and enrolls the caller as owner + organizer.
    * Turso/LibSQL lacks transactions across repos in this codebase, so we
    * insert the group first, then the membership; on failure the caller may
-   * see an orphan group — acceptable at this scale (superadmin-only today).
+   * see an orphan group — acceptable at this scale (platform-admin-only today).
    */
   async createGroup(params: { ownerUserId: string; name: string; slug?: string }): Promise<Group> {
     const group = await this.groupRepo.create({
@@ -536,7 +536,7 @@ export class GroupService {
 
   /**
    * Duplicates all locations and courts from `sourceGroupId` into
-   * `targetGroupId` with fresh ids. Auth (must be organizer/superadmin in
+   * `targetGroupId` with fresh ids. Auth (must be organizer/platform admin in
    * both groups) is enforced at the route boundary; this method trusts its
    * caller. Not transactional across repos — a partial copy may occur if a
    * write fails halfway; organizers can clean up manually. Acceptable at

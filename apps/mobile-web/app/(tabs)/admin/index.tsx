@@ -349,8 +349,8 @@ function MatchesTab() {
           {t("addMatch.title")}
         </Button>
 
-        {/* Create Group — superadmin only */}
-        {session?.user?.role === "superadmin" ? (
+        {/* Create Group — platform admin only */}
+        {session?.user?.role === "admin" ? (
           <Button
             variant="outline"
             onPress={() => router.push("/(tabs)/admin/create-group")}

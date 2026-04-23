@@ -22,12 +22,14 @@ SELECT 'match_votes_unscoped', COUNT(*) FROM match_votes WHERE group_id IS NULL
 UNION ALL
 SELECT 'match_player_stats_unscoped', COUNT(*) FROM match_player_stats WHERE group_id IS NULL;
 
--- 2. Exactly one superadmin, every other former admin is a plain user.
-SELECT 'superadmin_count' AS check_name, COUNT(*) AS expected_one
-FROM user WHERE role = 'superadmin';
-
-SELECT 'residual_admin_count' AS check_name, COUNT(*) AS expected_zero
+-- 2. Exactly one platform admin (Ignacio); every other former admin is a
+-- plain user. (Group-level organizer status is tracked separately in
+-- group_members.role; this check is about the platform escape hatch only.)
+SELECT 'platform_admin_count' AS check_name, COUNT(*) AS expected_one
 FROM user WHERE role = 'admin';
+
+SELECT 'platform_admin_is_ignacio' AS check_name, COUNT(*) AS expected_one
+FROM user WHERE role = 'admin' AND email = 'ignacioguri@gmail.com';
 
 -- 3. Every user has a membership row in the legacy group.
 SELECT 'users_missing_membership' AS check_name, COUNT(*) AS expected_zero

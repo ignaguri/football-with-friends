@@ -3,7 +3,7 @@
 // validate membership. The resolved id is echoed back so the client can sync
 // when we fell back to an auto-picked group (first login, cleared storage).
 //
-// Superadmin shortcut: platform superadmins (only Ignacio) can pin any
+// Platform-admin shortcut: platform admins (only Ignacio today) can pin any
 // existing group via an explicit header, even without a membership row —
 // keeps debugging/impersonation paths simple.
 
@@ -14,7 +14,7 @@ import { requireUser, type CurrentGroup } from "./security";
 
 export async function groupContextMiddleware(c: Context, next: Next) {
   const user = requireUser(c);
-  const isSuperadmin = user.role === "superadmin";
+  const isPlatformAdmin = user.role === "admin";
 
   const factory = getRepositoryFactory();
   const requestedGroupId = c.req.header(GROUP_HEADER)?.trim() || null;
@@ -28,7 +28,7 @@ export async function groupContextMiddleware(c: Context, next: Next) {
     );
     if (membership) {
       current = membership;
-    } else if (isSuperadmin) {
+    } else if (isPlatformAdmin) {
       const group = await factory.groups.findById(requestedGroupId);
       if (!group) {
         return c.json({ error: "Group not found", code: "GROUP_NOT_FOUND" }, 404);

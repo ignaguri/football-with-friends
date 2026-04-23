@@ -175,7 +175,7 @@ app.post("/:matchId", async (c) => {
 
   const participantIds = await repos().signups.getSignedUpUserIds(matchId);
   const isParticipant = participantIds.includes(user.id);
-  const isAdmin = user.role === "superadmin";
+  const isAdmin = user.role === "admin";
   if (!isParticipant && !isAdmin) {
     return c.json({ error: "Only match participants can upload" }, 403);
   }
@@ -320,7 +320,7 @@ app.delete("/:matchId/:mediaId", async (c) => {
   }
 
   const isOwner = media.uploaderUserId === user.id;
-  const isAdmin = user.role === "superadmin";
+  const isAdmin = user.role === "admin";
   if (!isOwner && !isAdmin) {
     return c.json({ error: "Forbidden" }, 403);
   }

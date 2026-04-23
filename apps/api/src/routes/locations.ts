@@ -5,7 +5,7 @@ import { getRepositoryFactory } from "@repo/shared/repositories";
 import { getServiceFactory } from "@repo/shared/services";
 import { requireUser, type AppVariables } from "../middleware/security";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
-import { isSuperadmin, requireOrganizer } from "../middleware/authz";
+import { isPlatformAdmin, requireOrganizer } from "../middleware/authz";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -113,7 +113,7 @@ app.post(
       );
     }
 
-    if (!isSuperadmin(c)) {
+    if (!isPlatformAdmin(c)) {
       const sourceMembership = await getRepositoryFactory().groupMembers.find(
         sourceGroupId,
         user.id,
@@ -125,7 +125,7 @@ app.post(
         );
       }
     } else {
-      // Non-members (including superadmin) bypass the membership check above,
+      // Non-members (including platform admin) bypass the membership check above,
       // so verify the source group actually exists — otherwise a typo would
       // quietly return {0, 0} against an empty non-existent group.
       const sourceGroup = await getRepositoryFactory().groups.findById(

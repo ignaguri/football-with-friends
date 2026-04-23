@@ -9,7 +9,7 @@ import {
   groupContextMiddleware,
   requireCurrentGroup,
 } from "../middleware/group-context";
-import { assertInCurrentGroup, requireSuperadmin } from "../middleware/authz";
+import { assertInCurrentGroup, requirePlatformAdmin } from "../middleware/authz";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -49,7 +49,7 @@ app.get("/criteria", async (c) => {
 // Get all voting criteria including inactive (admin only) - returns full data for editing
 app.get("/criteria/all", async (c) => {
   try {
-    const denied = requireSuperadmin(c);
+    const denied = requirePlatformAdmin(c);
     if (denied) return denied;
     const criteria = await votingService.getAllCriteriaFull();
     return c.json({ criteria });
@@ -80,7 +80,7 @@ app.post(
   zValidator("json", createCriteriaSchema),
   async (c) => {
     try {
-      const denied = requireSuperadmin(c);
+      const denied = requirePlatformAdmin(c);
       if (denied) return denied;
       const data = c.req.valid("json");
       const criteria = await votingService.createCriteria(data);
@@ -117,7 +117,7 @@ app.patch(
   zValidator("json", updateCriteriaSchema),
   async (c) => {
     try {
-      const denied = requireSuperadmin(c);
+      const denied = requirePlatformAdmin(c);
       if (denied) return denied;
       const id = c.req.param("id");
       const data = c.req.valid("json");
@@ -145,7 +145,7 @@ app.patch(
 // Delete criteria (soft delete, admin only)
 app.delete("/criteria/:id", async (c) => {
   try {
-    const denied = requireSuperadmin(c);
+    const denied = requirePlatformAdmin(c);
     if (denied) return denied;
     const id = c.req.param("id");
     await votingService.deleteCriteria(id);

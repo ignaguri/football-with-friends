@@ -760,7 +760,7 @@
       "namePlaceholder": "ej. Fútbol de los sábados",
       "cta": "Crear",
       "success": "Grupo creado",
-      "superadminOnly": "Solo el superadmin puede crear nuevos grupos"
+      "adminOnly": "Solo el administrador puede crear nuevos grupos"
     },
     "detail": {
       "title": "Detalle del grupo",

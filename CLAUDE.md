@@ -82,7 +82,7 @@ Every group-scoped resource (match, location, court, signup, setting, invite, ro
 
 **Platform roles** (`user.role`):
 - `user` — default; no platform-level privileges.
-- `superadmin` — full cross-group access; only one today (Ignacio). `admin` is retained as a transitional alias and may appear on legacy rows.
+- `admin` — full cross-group access; only one today (Ignacio). Acts as the "platform admin" escape hatch.
 
 **Group-relative roles** (`group_members.role`):
 - `member` — default; can view/join matches of the group.
@@ -93,11 +93,11 @@ Every group-scoped resource (match, location, court, signup, setting, invite, ro
 **Active group**: client sends `X-Group-Id: <groupId>` on every scoped request. `apps/api/src/middleware/group-context.ts` resolves it to a `currentGroup: { id, role, isOwner }` via `requireCurrentGroup(c)`. The mobile client persists the active id via `packages/api-client/src/group-storage.ts`; the fetch wrapper in `client.ts` injects the header automatically.
 
 **Authz helpers** (`apps/api/src/middleware/authz.ts`) — use these at the route boundary:
-- `assertInCurrentGroup(c, id)` — 404 if the path `:id` doesn't match the active group (superadmin bypasses).
-- `requireOrganizer(c)` / `requireOwner(c)` / `requireSuperadmin(c)` — return a 403 `Response` or `null`.
-- `isSuperadmin(c)` — boolean check for field-level gating (e.g., `visibility` in PATCH /groups/:id).
+- `assertInCurrentGroup(c, id)` — 404 if the path `:id` doesn't match the active group (platform admin bypasses).
+- `requireOrganizer(c)` / `requireOwner(c)` / `requirePlatformAdmin(c)` — return a 403 `Response` or `null`.
+- `isPlatformAdmin(c)` — boolean check for field-level gating (e.g., `visibility` in PATCH /groups/:id).
 
-**Superadmin escape hatch**: superadmin passes every group-gated check regardless of group membership.
+**Platform-admin escape hatch**: `user.role === "admin"` passes every group-gated check regardless of group membership. Do not conflate with the group-level `organizer` role on `group_members`.
 
 **Ghost roster**: `group_roster` holds named non-users (guests added by organizers). Ghost auto-claims by phone/email when a matching user accepts an invite (`GroupService.acceptInvite`). See `docs/group-visibility.md` for the public/private flag.
 
