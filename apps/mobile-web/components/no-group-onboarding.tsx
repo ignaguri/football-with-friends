@@ -17,6 +17,15 @@ export function NoGroupOnboarding() {
   const insets = useSafeAreaInsets();
 
   async function onSignOut() {
+    // Unregister the Expo push token before clearing the session so the
+    // backend stops targeting this device. Matches the pattern in
+    // `profile/index.tsx`.
+    try {
+      const { unregisterPushToken } = await import(
+        "../lib/use-push-notifications"
+      );
+      await unregisterPushToken();
+    } catch {}
     await signOut();
     router.replace("/(auth)");
   }

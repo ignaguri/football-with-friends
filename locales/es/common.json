@@ -780,7 +780,7 @@
     "noGroup": {
       "title": "Todavía sin grupo",
       "body": "Pedile al organizador un link de invitación y abrilo para entrar.",
-      "hint": "Los grupos son cómo organizamos quién juega con quién — los partidos, la plantilla y las estadísticas viven dentro de un grupo.",
+      "hint": "Los grupos son como organizamos quién juega con quién — los partidos, la plantilla y las estadísticas viven dentro de un grupo.",
       "signOut": "Cerrar sesión"
     },
     "invite": {
