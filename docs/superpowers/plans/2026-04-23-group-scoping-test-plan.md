@@ -1349,7 +1349,7 @@ Phase 5 polish or later follow-ups and are tracked elsewhere.
 
 ---
 
-## Appendix C — Bugs found during the 2026-04-23 QA pass (now fixed)
+## Appendix C — Bugs found during QA (all fixed)
 
 Captured here so future testers don't chase the same regressions on prior
 commits.
@@ -1395,10 +1395,12 @@ previous migration (`20260408120000-add-notification-tracking.ts`) already
 creates the column in camelCase. On any fresh env (new dev box, CI, new
 staging DB) migrations fail at this step. Production works only because
 the column was applied via an earlier variant of the migration that was
-later rewritten. **Not fixed in this pass — scoped to a follow-up PR.**
-The test harness (`apps/api/src/test/helpers/db.ts`) works around it by
-inserting a matching row into `kysely_migration` so the migrator treats
-it as applied.
+later rewritten. **Fix (2026-04-24):** made the rename idempotent — if
+`last_engagement_reminder_at` isn't present (fresh envs where the prior
+migration already created `lastEngagementReminderAt`), skip with a log
+line. `down` is symmetric. The test harness workaround in
+`apps/api/src/test/helpers/db.ts` was removed; migrations now run
+cleanly end-to-end in tests.
 
 ### Bug 4 — `c.executionCtx?.waitUntil(...)` throws in local Bun dev (pre-existing, not group-scoping)
 
@@ -1413,10 +1415,29 @@ did succeed. This was introduced with PR #35 (push-notifications) and pre-dates
 the group-scoping work; it affects `POST /api/matches`, `PATCH /api/matches/:id`
 (when `date`/`time`/`location`/`status=cancelled`), `POST /api/matches/:id/signup`,
 `DELETE /api/matches/:id/signup/:signupId`, and phone-targeted
-`POST /api/groups/:id/invites`. The recommended fix is to wrap the
-`executionCtx` access in a try/catch or gate it on
-`typeof c.executionCtx !== "undefined"` via a feature detector.
-**Not fixed in this pass — scoped to a follow-up PR.**
+`POST /api/groups/:id/invites`. **Fix (2026-04-24):** added
+`apps/api/src/lib/execution.ts#fireAndForget(c, promise)` which
+try/catches the getter and falls back to running the promise with a
+console.error catch on rejection. All 8 call sites in `routes/matches.ts`
+and `routes/groups.ts` migrated to the helper. Verified locally: POST
+`/api/matches` and phone-targeted POST `/api/groups/:id/invites` now
+return 201 in `pnpm dev:api`.
+
+### Bug 5 — Cross-group / not-found mutations returned 400 instead of 404
+
+`PATCH /api/matches/:id`, `POST /api/matches/:id/signup`,
+`POST /api/matches/:id/guest`, `POST /api/matches/:id/admin-add-player`,
+`PATCH /api/matches/:id/signup/:signupId`, `DELETE /api/matches/:id/signup/:signupId`
+all caught `Error("Match not found")` (including the cross-group case)
+and returned 400 with the message. Not a data leak — no row content was
+exposed — but inconsistent with the `GET` pair that returns 404 and
+confusing for clients. **Fix (2026-04-24):** added an `errorJson(c, error, fallback)`
+helper in `apps/api/src/routes/matches.ts` that maps a short allowlist of
+not-found messages (`"Match not found"`, `"Location not found"`,
+`"Court not found"`, `"Roster entry not found"`, `"Signup not found"`)
+to 404 and everything else to 400. Applied to all seven mutation catch
+blocks. Other 400 paths (e.g. `"A match already exists on this date"`)
+remain 400.
 
 ---
 

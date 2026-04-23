@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory, RosterMemberCollisionError } from "@repo/shared/services";
@@ -16,6 +16,21 @@ import {
   notifyPlayerCancelled,
   notifyRemovedFromMatch,
 } from "../lib/notify";
+import { fireAndForget } from "../lib/execution";
+
+const NOT_FOUND_MESSAGES = new Set([
+  "Match not found",
+  "Location not found",
+  "Court not found",
+  "Roster entry not found",
+  "Signup not found",
+]);
+
+function errorJson(c: Context, error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : fallback;
+  const status = NOT_FOUND_MESSAGES.has(message) ? 404 : 400;
+  return c.json({ error: message }, status);
+}
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -162,12 +177,11 @@ app.post(
         user,
       );
 
-      c.executionCtx?.waitUntil(notifyMatchCreated(match, user.id));
+      fireAndForget(c, notifyMatchCreated(match, user.id));
 
       return c.json({ match }, 201);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create match";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to create match");
     }
   }
 );
@@ -210,19 +224,18 @@ app.patch(
       );
 
       if (updates.status === "cancelled") {
-        c.executionCtx?.waitUntil(notifyMatchCancelled(match));
+        fireAndForget(c, notifyMatchCancelled(match));
       } else if (updates.date || updates.time || updates.locationId) {
         const parts: string[] = [];
         if (updates.date) parts.push("date");
         if (updates.time) parts.push("time");
         if (updates.locationId) parts.push("location");
-        c.executionCtx?.waitUntil(notifyMatchUpdated(match, parts.join(", ") + " changed"));
+        fireAndForget(c, notifyMatchUpdated(match, parts.join(", ") + " changed"));
       }
 
       return c.json({ match });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update match";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to update match");
     }
   }
 );
@@ -255,8 +268,7 @@ app.post("/:id/signup", async (c) => {
     const signup = await getMatchService().signUpUser(current.id, matchId, user);
     return c.json({ signup }, 201);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to sign up";
-    return c.json({ error: message }, 400);
+    return errorJson(c, error, "Failed to sign up");
   }
 });
 
@@ -311,8 +323,7 @@ app.post(
       if (error instanceof RosterMemberCollisionError) {
         return c.json({ error: "already_member", userId: error.userId }, 409);
       }
-      const message = error instanceof Error ? error.message : "Failed to add guest";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to add guest");
     }
   }
 );
@@ -348,8 +359,7 @@ app.post(
       );
       return c.json({ signup }, 201);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to add player";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to add player");
     }
   }
 );
@@ -386,20 +396,19 @@ app.patch(
       const match = await getRepositoryFactory().matches.findById(matchId);
       if (match && match.groupId === current.id) {
         if (updates.status === "PAID" && result.oldStatus !== "PAID" && result.signup.userId) {
-          c.executionCtx?.waitUntil(notifyPlayerConfirmed(match, result.signup.userId));
+          fireAndForget(c, notifyPlayerConfirmed(match, result.signup.userId));
         }
         if (result.oldStatus === "PAID" && updates.status === "CANCELLED") {
-          c.executionCtx?.waitUntil(notifyPlayerCancelled(match, result.signup.playerName));
+          fireAndForget(c, notifyPlayerCancelled(match, result.signup.playerName));
         }
         if (result.promotedSubstitute?.userId) {
-          c.executionCtx?.waitUntil(notifySubstitutePromoted(match, result.promotedSubstitute.userId));
+          fireAndForget(c, notifySubstitutePromoted(match, result.promotedSubstitute.userId));
         }
       }
 
       return c.json({ signup: result.signup });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update signup";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to update signup");
     }
   }
 );
@@ -424,13 +433,12 @@ app.delete("/:id/signup/:signupId", async (c) => {
     await getMatchService().removePlayerAsOrganizer(current.id, signupId, user);
 
     if (signup?.userId && match && match.groupId === current.id) {
-      c.executionCtx?.waitUntil(notifyRemovedFromMatch(match, signup.userId));
+      fireAndForget(c, notifyRemovedFromMatch(match, signup.userId));
     }
 
     return c.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to remove player";
-    return c.json({ error: message }, 400);
+    return errorJson(c, error, "Failed to remove player");
   }
 });
 

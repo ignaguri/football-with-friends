@@ -12,6 +12,7 @@ import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
 import { MEMBER_ROLES } from "@repo/shared/domain";
 import { notifyGroupInviteTarget } from "../lib/notify";
+import { fireAndForget } from "../lib/execution";
 import { type AppVariables, requireUser } from "../middleware/security";
 import {
   groupContextMiddleware,
@@ -296,7 +297,7 @@ app.post(
       if (body.targetPhone && group) {
         // Cloudflare Workers terminates background promises once the response
         // returns; `waitUntil` keeps the isolate alive until the push completes.
-        c.executionCtx?.waitUntil(
+        fireAndForget(c, 
           notifyGroupInviteTarget({
             targetPhone: body.targetPhone,
             groupId: id,

@@ -85,36 +85,8 @@ export async function makeTestDb(): Promise<{
     }),
   });
 
-  // Step 1a: migrate up through add-notification-tracking (creates the
-  // `lastEngagementReminderAt` column already in camelCase).
-  const preRename = await migrator.migrateTo(
-    "20260408120000-add-notification-tracking",
-  );
-  if (preRename.error) {
-    throw new Error(
-      `Pre-rename migrations failed: ${
-        preRename.error instanceof Error
-          ? preRename.error.message
-          : String(preRename.error)
-      }`,
-    );
-  }
-
-  // Step 1b: skip 20260408130000-rename-engagement-column. On a fresh DB the
-  // previous migration already wrote the camelCase name, so the rename's `up`
-  // fails with "no such column: last_engagement_reminder_at". (Pre-existing
-  // production migration bug — see docs/docs/superpowers.) We insert a matching
-  // row into kysely_migration so the migrator treats it as applied and moves on.
-  await db
-    .insertInto("kysely_migration" as any)
-    .values({
-      name: "20260408130000-rename-engagement-column",
-      timestamp: new Date().toISOString(),
-    } as any)
-    .execute();
-
-  // Step 1c: run remaining migrations up to the one right before legacy-group
-  // backfill (which needs Ignacio's user row).
+  // Step 1: run migrations up to the one right before legacy-group backfill
+  // (which needs Ignacio's user row to exist).
   const pre = await migrator.migrateTo(LAST_PRE_BACKFILL_MIGRATION);
   if (pre.error) {
     throw new Error(
