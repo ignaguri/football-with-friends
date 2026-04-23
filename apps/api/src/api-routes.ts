@@ -15,6 +15,7 @@ import rankingsRoute from "./routes/rankings";
 import pushTokensRoute from "./routes/push-tokens";
 import notificationsRoute from "./routes/notifications";
 import matchMediaRoute from "./routes/match-media";
+import invitesRoute from "./routes/invites";
 
 export function registerApiRoutes(app: Hono<any>) {
   return app
@@ -32,7 +33,8 @@ export function registerApiRoutes(app: Hono<any>) {
     .route("/voting", votingRoute)
     .route("/push-tokens", pushTokensRoute)
     .route("/notifications", notificationsRoute)
-    .route("/match-media", matchMediaRoute);
+    .route("/match-media", matchMediaRoute)
+    .route("/invites", invitesRoute);
 }
 
 export type ApiRoutes = ReturnType<typeof registerApiRoutes>;

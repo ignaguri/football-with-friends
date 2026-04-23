@@ -341,6 +341,15 @@ export class TursoGroupInviteRepository {
     return rowToInvite(row);
   }
 
+  async findById(id: string): Promise<GroupInvite | null> {
+    const row = await this.db
+      .selectFrom("group_invites")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+    return row ? rowToInvite(row) : null;
+  }
+
   async findByToken(token: string): Promise<GroupInvite | null> {
     const row = await this.db
       .selectFrom("group_invites")

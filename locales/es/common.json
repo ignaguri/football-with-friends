@@ -772,6 +772,31 @@
     "noGroup": {
       "title": "Todavía sin grupo",
       "body": "Pedile al organizador un link de invitación y abrilo para entrar."
+    },
+    "invite": {
+      "sectionTitle": "Invitaciones",
+      "create": "Crear link de invitación",
+      "copy": "Copiar",
+      "revoke": "Revocar",
+      "empty": "Todavía no hay invitaciones activas.",
+      "expiresAt": "Vence el {{date}}",
+      "neverExpires": "Sin vencimiento",
+      "previewTitle": "Te invitaron a {{groupName}}",
+      "invitedBy": "Te invitó {{name}}",
+      "signInToJoin": "Iniciá sesión para unirte",
+      "joining": "Uniéndote…",
+      "invalidTitle": "Esta invitación no es válida",
+      "invalidReason": {
+        "expired": "Esta invitación venció.",
+        "revoked": "El organizador revocó esta invitación.",
+        "exhausted": "Esta invitación ya fue usada.",
+        "target_mismatch": "Esta invitación es para otra cuenta.",
+        "not_found": "No encontramos esta invitación."
+      },
+      "loadErrorTitle": "No se pudo cargar la invitación",
+      "loadErrorBody": "Revisá tu conexión e intentá de nuevo.",
+      "acceptFailedTitle": "No pudimos unirte al grupo",
+      "acceptFailedBody": "Algo salió mal. Intentá de nuevo."
     }
   }
 }

@@ -230,6 +230,80 @@ app.post("/:id/leave", async (c) => {
   }
 });
 
+// Invites ----------------------------------------------------------------
+// Creation and revocation are organizer-only; listing is organizer-only.
+// Public preview/accept endpoints live in `routes/invites.ts` (no group
+// context middleware — the accepter doesn't yet belong to the group).
+
+app.get("/:id/invites", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const invites = await getGroupService().listInvites(id);
+  return c.json({ invites });
+});
+
+app.post(
+  "/:id/invites",
+  zValidator(
+    "json",
+    z.object({
+      expiresInHours: z.number().int().positive().max(24 * 365).optional(),
+      maxUses: z.number().int().positive().max(10_000).optional(),
+      targetPhone: z.string().min(4).max(32).optional(),
+      targetUserId: z.string().min(1).optional(),
+    }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const body = c.req.valid("json");
+
+    try {
+      const invite = await getGroupService().createInvite({
+        groupId: id,
+        createdByUserId: user.id,
+        expiresInHours: body.expiresInHours,
+        maxUses: body.maxUses,
+        targetPhone: body.targetPhone,
+        targetUserId: body.targetUserId,
+      });
+      return c.json({ invite }, 201);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create invite";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.delete("/:id/invites/:inviteId", async (c) => {
+  const id = c.req.param("id");
+  const inviteId = c.req.param("inviteId");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  try {
+    await getGroupService().revokeInvite(id, inviteId);
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to revoke invite";
+    return c.json({ error: message }, 404);
+  }
+});
+
 app.post(
   "/:id/transfer-ownership",
   zValidator("json", z.object({ toUserId: z.string().min(1) })),

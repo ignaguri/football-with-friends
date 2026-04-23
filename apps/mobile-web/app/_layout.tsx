@@ -83,6 +83,12 @@ function AppNavigation() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="join/[token]"
+        options={{
+          headerTitle: "",
+        }}
+      />
     </Stack>
   );
 }

@@ -13,7 +13,7 @@
 - [x] **Phase 0** — Schema foundation (no behavior change)
 - [x] **Phase 1** — Backfill + scoping (core path scoped; staging verification + tests deferred)
 - [ ] **Phase 2** — Group management API + mobile-web switcher
-- [ ] **Phase 3** — Invites (link + accept flow)
+- [x] **Phase 3** — Invites (link + accept flow) *(core path landed; tests + E2E + staging verification deferred)*
 - [ ] **Phase 4** — Ghost roster (full lifecycle + legacy guest conversion)
 - [ ] **Phase 5** — Polish (phone invites, copy-venues helper, public-directory flag, i18n pass)
 
@@ -314,32 +314,32 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — API (`apps/api/src/routes/invites.ts` + extensions to `groups.ts`)
 
-- [ ] `POST /api/groups/:id/invites` → create invite. `requireOrganizer`. Body: `{expiresInHours?, maxUses?, targetPhone?, targetUserId?}`. Generates a 24-char URL-safe token (use the existing crypto RNG from `apps/api/src/crypto/password.ts`).
-- [ ] `GET /api/groups/:id/invites` → list active invites. `requireOrganizer`.
-- [ ] `DELETE /api/groups/:id/invites/:inviteId` → revoke. `requireOrganizer`.
-- [ ] `GET /api/invites/:token` — **PUBLIC** (no auth, no group context). Returns invite preview: `{group: {name}, inviter: {name}, expiresAt, valid: boolean, reason?: 'expired'|'revoked'|'exhausted'}`.
-- [ ] `POST /api/invites/:token/accept` — **authed** but no group context required. Validates invite → creates `group_members` row (ignores duplicate if already member) → attempts ghost auto-claim by user's phone and email.
-- [ ] Add `/api/invites/:token*` to PUBLIC_ROUTES regex in `apps/api/src/middleware/security.ts` for the GET only; accept POST requires a session.
+- [x] `POST /api/groups/:id/invites` → create invite. `requireOrganizer`. Body: `{expiresInHours?, maxUses?, targetPhone?, targetUserId?}`. Uses nanoid(24) for the URL-safe token (already a dep; avoids importing crypto RNG into a different context).
+- [x] `GET /api/groups/:id/invites` → list active invites. `requireOrganizer`.
+- [x] `DELETE /api/groups/:id/invites/:inviteId` → revoke. `requireOrganizer`.
+- [x] `GET /api/invites/:token` — **PUBLIC** (no auth, no group context). Returns invite preview: `{group: {name}, inviter: {name}, expiresAt, valid: boolean, reason?: 'expired'|'revoked'|'exhausted'}`.
+- [x] `POST /api/invites/:token/accept` — **authed** but no group context required. Validates invite → creates `group_members` row (ignores duplicate if already member) → attempts ghost auto-claim by user's phone and email.
+- [x] Added `GET /api/invites/:token` to `PUBLIC_ROUTES` in `apps/api/src/middleware/security.ts`; POST accept still flows through auth.
 
 ### Subtasks — Ghost auto-claim hook
 
-- [ ] In `group-service.ts`, add `acceptInvite({token, userId})`:
-  - [ ] Load invite; validate (not revoked, not expired, uses_count < max_uses, target_phone/user_id matches if set).
-  - [ ] Create membership (upsert).
-  - [ ] Increment `uses_count`.
-  - [ ] Query `group_roster` for rows in this group with `phone = user.phone` OR `email = user.email` AND `claimed_by_user_id IS NULL`. If exactly one match → set `claimed_by_user_id = userId`. If multiple matches → log for organizer review (don't guess).
-- [ ] Expose result `{joined: true, claimedRosterId?: string}` so the client can show a toast "Your history is now linked."
+- [x] In `group-service.ts`, added `acceptInvite({token, userId, userEmail, userPhone})`:
+  - [x] Loads invite; validates (not revoked, not expired, uses_count < max_uses, target_phone/user_id matches if set).
+  - [x] Creates membership (idempotent — skips if already a member).
+  - [x] Increments `uses_count`.
+  - [x] Queries `group_roster` by phone, then by email, dedupes, filters out claimed rows. If exactly one match → sets `claimed_by_user_id`. If multiple → does nothing and reports the count in the response.
+- [x] Returns `{joined: true, groupId, claimedRosterId?, ambiguousRosterMatches?}` so the client can show a toast.
 
 ### Subtasks — Mobile-Web UX
 
-- [ ] New screen `apps/mobile-web/app/(auth)/join/[token].tsx`:
-  - [ ] On mount, call `GET /api/invites/:token` (unauthenticated). Render preview card.
-  - [ ] If invalid → error state with clear message.
-  - [ ] If user is not signed in → CTA "Sign up to join" / "Already have an account? Sign in" — both flows preserve the token via a `redirectTo` query param so post-auth we return to the accept screen.
-  - [ ] If signed in → call `POST /api/invites/:token/accept` → on success, set active group to the joined one, navigate to `/(tabs)/matches`.
-- [ ] In the group detail screen (Phase 2), add an "Invites" section for organizers: list active invites, "Create invite link" button, copy-to-clipboard, revoke.
-- [ ] Web: register the route. Mobile: add `footballwithfriends://join/<token>` scheme in `apps/mobile-web/app.config.ts`; test cold-start deep-link.
-- [ ] i18n: `groups.invite.*` keys (create, copy, revoke, expires, valid, invalid, expired, joined, claimedHistory).
+- [x] New screen `apps/mobile-web/app/join/[token].tsx` (mounted at the root stack, not under `(auth)` — the auth layout redirects signed-in users to `/(tabs)`, which would short-circuit the accept flow for already-signed-in invitees):
+  - [x] Calls `useInvitePreview` on mount; renders preview card.
+  - [x] Invalid invite → dedicated error copy per reason.
+  - [x] Not signed in → CTA "Sign in to join" carrying `redirectTo=/join/<token>` back to this screen.
+  - [x] Signed in → auto-calls `useAcceptInvite` which sets active group on success → navigates to `/(tabs)/matches`.
+- [x] Group detail screen: organizer-only Invites section — list active invites, "Create invite link" (default 7-day expiry), web-clipboard copy / native Share fallback, revoke.
+- [x] Web: registered `join/[token]` in root `_layout.tsx`. Mobile: `scheme: "football-with-friends"` already in `app.config.ts`; Expo Router handles `football-with-friends://join/<token>` automatically.
+- [x] i18n: `groups.invite.*` keys (create/copy/revoke/expiresAt/neverExpires/previewTitle/invitedBy/signInToJoin/joining + invalidReason.* + loadError* + acceptFailed*). EN + ES both landed.
 
 ### Subtasks — Tests
 

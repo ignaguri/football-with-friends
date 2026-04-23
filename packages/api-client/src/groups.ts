@@ -4,7 +4,11 @@
 // active group id) and with the Phase 1 `X-Group-Id` fetch interceptor in
 // `client.ts` (which carries the active group on every request).
 
-import type { GroupVisibility, MemberRole } from "@repo/shared/domain";
+import type {
+  GroupInviteInvalidReason,
+  GroupVisibility,
+  MemberRole,
+} from "@repo/shared/domain";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { client as _client } from "./client";
@@ -31,6 +35,9 @@ export const groupQueryKeys = {
   me: () => [...groupQueryKeys.all, "me"] as const,
   detail: (id: string) => [...groupQueryKeys.all, "detail", id] as const,
   members: (id: string) => [...groupQueryKeys.all, "members", id] as const,
+  invites: (id: string) => [...groupQueryKeys.all, "invites", id] as const,
+  invitePreview: (token: string) =>
+    [...groupQueryKeys.all, "invite-preview", token] as const,
 };
 
 export interface MyGroupSummary {
@@ -210,6 +217,121 @@ export function useLeaveGroup() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
+    },
+  });
+}
+
+// --- Invites -------------------------------------------------------------
+
+export interface GroupInviteSummary {
+  id: string;
+  groupId: string;
+  token: string;
+  createdByUserId: string;
+  expiresAt?: string;
+  maxUses?: number;
+  usesCount: number;
+  targetPhone?: string;
+  targetUserId?: string;
+  revokedAt?: string;
+  createdAt: string;
+}
+
+export interface GroupInvitePreviewResult {
+  valid: boolean;
+  reason?: GroupInviteInvalidReason;
+  group?: { id: string; name: string };
+  inviter?: { id: string; name: string };
+  expiresAt?: string;
+}
+
+export function useGroupInvites(groupId: string | null) {
+  return useQuery({
+    queryKey: groupQueryKeys.invites(groupId ?? ""),
+    enabled: !!groupId,
+    queryFn: async () => {
+      const res = await client.api.groups[":id"].invites.$get({
+        param: { id: groupId! },
+      });
+      const data = (await res.json()) as { invites: GroupInviteSummary[] };
+      return data.invites;
+    },
+  });
+}
+
+export function useCreateInvite(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      expiresInHours?: number;
+      maxUses?: number;
+      targetPhone?: string;
+      targetUserId?: string;
+    }) => {
+      const res = await client.api.groups[":id"].invites.$post({
+        param: { id: groupId },
+        json: input,
+      });
+      const data = (await res.json()) as { invite: GroupInviteSummary };
+      return data.invite;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.invites(groupId) });
+    },
+  });
+}
+
+export function useRevokeInvite(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (inviteId: string) => {
+      const res = await client.api.groups[":id"].invites[":inviteId"].$delete({
+        param: { id: groupId, inviteId },
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.invites(groupId) });
+    },
+  });
+}
+
+// Preview is unauthenticated — still fine to reuse the same fetch interceptor
+// (it attaches Authorization only when a token exists, so anonymous calls work).
+export function useInvitePreview(token: string | null) {
+  return useQuery({
+    queryKey: groupQueryKeys.invitePreview(token ?? ""),
+    enabled: !!token,
+    retry: false,
+    queryFn: async () => {
+      const res = await client.api.invites[":token"].$get({
+        param: { token: token! },
+      });
+      const data = (await res.json()) as GroupInvitePreviewResult;
+      return data;
+    },
+  });
+}
+
+export function useAcceptInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (token: string) => {
+      const res = await client.api.invites[":token"].accept.$post({
+        param: { token },
+      });
+      return (await res.json()) as {
+        joined: true;
+        groupId: string;
+        claimedRosterId?: string;
+        ambiguousRosterMatches?: number;
+      };
+    },
+    onSuccess: (result) => {
+      // Freshly joined → we have a new group. Switch to it and blow away any
+      // previously cached scoped data so the new group's responses drive UI.
+      setActiveGroupId(result.groupId);
+      queryClient.invalidateQueries();
     },
   });
 }

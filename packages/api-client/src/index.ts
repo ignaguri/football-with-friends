@@ -62,7 +62,13 @@ export {
   useKickMember,
   useLeaveGroup,
   useTransferOwnership,
+  useGroupInvites,
+  useCreateInvite,
+  useRevokeInvite,
+  useInvitePreview,
+  useAcceptInvite,
 } from "./groups";
+export type { GroupInviteSummary, GroupInvitePreviewResult } from "./groups";
 
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";
