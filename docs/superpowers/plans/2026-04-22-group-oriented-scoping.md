@@ -323,7 +323,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — Ghost auto-claim hook
 
-- [x] In `group-service.ts`, added `acceptInvite({token, userId, userEmail, userPhone})`:
+- [x] In `group-service.ts`, added `acceptInvite({token, userId})` (service fetches email + phoneNumber itself so routes don't touch the `user` table):
   - [x] Loads invite; validates (not revoked, not expired, uses_count < max_uses, target_phone/user_id matches if set).
   - [x] Creates membership (idempotent — skips if already a member).
   - [x] Increments `uses_count`.

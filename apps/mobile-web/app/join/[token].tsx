@@ -16,7 +16,11 @@ import { Button, Spinner, Text, YStack } from "tamagui";
 
 export default function JoinScreen() {
   const { t } = useTranslation();
-  const { token } = useLocalSearchParams<{ token: string }>();
+  // useLocalSearchParams returns `string | string[] | undefined` — normalize
+  // to a single string before we pass it to the API as a token.
+  const params = useLocalSearchParams<{ token?: string | string[] }>();
+  const rawToken = params.token;
+  const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
   const { data: session, isPending: isSessionPending } = useSession();
 
   const {
@@ -28,12 +32,17 @@ export default function JoinScreen() {
   const acceptMutation = useAcceptInvite();
   const isSignedIn = !!session?.user;
 
-  useEffect(() => {
-    if (!token || !isSignedIn || preview?.valid !== true) return;
-    if (acceptMutation.isPending || acceptMutation.isSuccess || acceptMutation.isError) return;
+  function runAccept() {
+    if (!token) return;
     acceptMutation.mutate(token, {
       onSuccess: () => router.replace("/(tabs)/matches"),
     });
+  }
+
+  useEffect(() => {
+    if (!token || !isSignedIn || preview?.valid !== true) return;
+    if (acceptMutation.isPending || acceptMutation.isSuccess || acceptMutation.isError) return;
+    runAccept();
   }, [token, isSignedIn, preview?.valid]);
 
   if (isSessionPending || isPreviewLoading) {
@@ -106,7 +115,7 @@ export default function JoinScreen() {
         <Text color="$gray11" textAlign="center">
           {t("groups.invite.acceptFailedBody")}
         </Text>
-        <Button onPress={() => acceptMutation.reset()}>{t("shared.tryAgain")}</Button>
+        <Button onPress={runAccept}>{t("shared.tryAgain")}</Button>
       </YStack>
     );
   }

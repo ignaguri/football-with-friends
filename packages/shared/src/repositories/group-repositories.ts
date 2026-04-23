@@ -293,6 +293,31 @@ export class TursoGroupMembershipRepository {
     return rowToMember(row);
   }
 
+  /**
+   * Idempotent membership insert. Uses `UNIQUE(group_id, user_id)` to drop
+   * duplicates server-side instead of read-then-write, which would race
+   * under concurrent accepts of the same invite by the same user. Returns
+   * true iff a new row was created.
+   */
+  async tryAdd(params: {
+    groupId: string;
+    userId: string;
+    role: MemberRole;
+  }): Promise<boolean> {
+    const id = generateId("gm");
+    const result = await this.db
+      .insertInto("group_members")
+      .values({
+        id,
+        group_id: params.groupId,
+        user_id: params.userId,
+        role: params.role,
+      })
+      .onConflict((oc) => oc.columns(["group_id", "user_id"]).doNothing())
+      .executeTakeFirst();
+    return Number(result.numInsertedOrUpdatedRows ?? 0) > 0;
+  }
+
   async updateRole(
     groupId: string,
     userId: string,
@@ -376,6 +401,27 @@ export class TursoGroupInviteRepository {
       .set((eb) => ({ uses_count: eb("uses_count", "+", 1) }))
       .where("id", "=", id)
       .execute();
+  }
+
+  /**
+   * Atomic increment that only succeeds while `uses_count < max_uses` (or
+   * max_uses is null). Returns true iff the use was consumed. Prevents two
+   * concurrent accepters from both passing an optimistic check and pushing
+   * `uses_count` above `max_uses`.
+   */
+  async tryConsumeUse(id: string): Promise<boolean> {
+    const result = await this.db
+      .updateTable("group_invites")
+      .set((eb) => ({ uses_count: eb("uses_count", "+", 1) }))
+      .where("id", "=", id)
+      .where((eb) =>
+        eb.or([
+          eb("max_uses", "is", null),
+          eb("uses_count", "<", eb.ref("max_uses")),
+        ]),
+      )
+      .executeTakeFirst();
+    return Number(result.numUpdatedRows ?? 0) > 0;
   }
 
   async revoke(id: string): Promise<void> {
@@ -467,6 +513,24 @@ export class TursoGroupRosterRepository {
       .deleteFrom("group_roster")
       .where("id", "=", id)
       .execute();
+  }
+
+  /**
+   * Atomic claim that only succeeds while `claimed_by_user_id IS NULL`.
+   * Prevents a late accept from overwriting a claim that landed between the
+   * reader's lookup and write. Returns true iff the row was claimed here.
+   */
+  async tryClaim(id: string, userId: string): Promise<boolean> {
+    const result = await this.db
+      .updateTable("group_roster")
+      .set({
+        claimed_by_user_id: userId,
+        updated_at: new Date().toISOString(),
+      })
+      .where("id", "=", id)
+      .where("claimed_by_user_id", "is", null)
+      .executeTakeFirst();
+    return Number(result.numUpdatedRows ?? 0) > 0;
   }
 }
 

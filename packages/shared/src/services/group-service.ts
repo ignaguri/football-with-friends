@@ -235,11 +235,15 @@ export class GroupService {
 
   /**
    * Consumes an invite for an authenticated user.
-   * - Validates invite (not revoked/expired/exhausted, target matches if set).
-   * - Adds membership if not already a member; only then bumps uses_count so
-   *   a user refreshing a `maxUses: 1` link doesn't consume their own invite.
-   * - Attempts to auto-claim a single matching roster ghost by phone/email.
-   *   Multiple matches → leave alone, report the count (caller can surface).
+   *
+   * Concurrency-safe: membership add is idempotent via UNIQUE(group_id,
+   * user_id), `uses_count` is only bumped via an atomic conditional update
+   * that refuses to cross `max_uses`, and roster claim is conditional on
+   * `claimed_by_user_id IS NULL` so two racing accepters can't both "win"
+   * the same ghost. Under extreme concurrency max_uses may admit one extra
+   * joiner (counter is capped correctly but the member row is already in);
+   * acceptable at small-tenancy scale, would need a row-lock or serializable
+   * txn to close fully.
    */
   async acceptInvite(params: {
     token: string;
@@ -258,6 +262,11 @@ export class GroupService {
       return { joined: false, reason: "target_mismatch" };
     }
 
+    // Reject accepts into a soft-deleted group — `findById` filters on
+    // `deleted_at IS NULL`, so a null result here means the group is gone.
+    const group = await this.groupRepo.findById(invite.groupId);
+    if (!group) return { joined: false, reason: "not_found" };
+
     // Session doesn't carry phoneNumber, so fetch email + phone in a single
     // round-trip for targetPhone validation + roster auto-claim.
     const userRow = await getDatabase()
@@ -275,18 +284,23 @@ export class GroupService {
       return { joined: false, reason: "target_mismatch" };
     }
 
-    const existing = await this.memberRepo.find(invite.groupId, params.userId);
-    if (!existing) {
-      await this.memberRepo.add({
-        groupId: invite.groupId,
-        userId: params.userId,
-        role: "member",
-      });
-      await this.inviteRepo.incrementUsesCount(invite.id);
+    const addedNewMembership = await this.memberRepo.tryAdd({
+      groupId: invite.groupId,
+      userId: params.userId,
+      role: "member",
+    });
+    if (addedNewMembership) {
+      const consumed = await this.inviteRepo.tryConsumeUse(invite.id);
+      if (!consumed && invite.maxUses !== undefined) {
+        // Another accept raced us past max_uses after our optimistic check.
+        // Member is already in; counter stays capped. Log-worthy but not
+        // fatal at current scale.
+      }
     }
 
     // Auto-claim roster ghost if exactly one unclaimed entry matches by
-    // phone or email. Parallel lookups; dedupe via Set of ids.
+    // phone or email. Parallel lookups; dedupe via Set of ids. The final
+    // write uses `tryClaim` so two racing accepts can't both steal the row.
     const [byPhone, byEmail] = await Promise.all([
       userPhone
         ? this.rosterRepo.findByGroupAndPhone(invite.groupId, userPhone)
@@ -304,8 +318,8 @@ export class GroupService {
     if (matchIds.size === 1) {
       const [only] = matchIds;
       if (only) {
-        await this.rosterRepo.update(only, { claimedByUserId: params.userId });
-        claimedRosterId = only;
+        const claimed = await this.rosterRepo.tryClaim(only, params.userId);
+        if (claimed) claimedRosterId = only;
       }
     } else if (matchIds.size > 1) {
       ambiguousRosterMatches = matchIds.size;

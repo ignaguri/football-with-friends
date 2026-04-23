@@ -247,6 +247,11 @@ app.get("/:id/invites", async (c) => {
   return c.json({ invites });
 });
 
+// E.164 per BetterAuth phone-auth + profile routes; targetPhone must match
+// the exact shape we store in `user.phoneNumber` or `acceptInvite` never
+// matches and the organizer has effectively created a dead invite.
+const INVITE_TARGET_PHONE_REGEX = /^\+[1-9]\d{6,14}$/;
+
 app.post(
   "/:id/invites",
   zValidator(
@@ -254,7 +259,11 @@ app.post(
     z.object({
       expiresInHours: z.number().int().positive().max(24 * 365).optional(),
       maxUses: z.number().int().positive().max(10_000).optional(),
-      targetPhone: z.string().min(4).max(32).optional(),
+      targetPhone: z
+        .string()
+        .trim()
+        .regex(INVITE_TARGET_PHONE_REGEX, "targetPhone must be E.164 (e.g. +1234567890)")
+        .optional(),
       targetUserId: z.string().min(1).optional(),
     }),
   ),
