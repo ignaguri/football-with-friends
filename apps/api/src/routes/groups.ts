@@ -294,13 +294,17 @@ app.post(
           : Promise.resolve(null),
       ]);
       if (body.targetPhone && group) {
-        void notifyGroupInviteTarget({
-          targetPhone: body.targetPhone,
-          groupId: id,
-          groupName: group.name,
-          inviterName: user.name,
-          token: invite.token,
-        });
+        // Cloudflare Workers terminates background promises once the response
+        // returns; `waitUntil` keeps the isolate alive until the push completes.
+        c.executionCtx?.waitUntil(
+          notifyGroupInviteTarget({
+            targetPhone: body.targetPhone,
+            groupId: id,
+            groupName: group.name,
+            inviterName: user.name,
+            token: invite.token,
+          }),
+        );
       }
       return c.json({ invite }, 201);
     } catch (error) {

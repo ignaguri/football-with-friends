@@ -802,7 +802,7 @@
       "loadErrorBody": "Check your connection and try again.",
       "acceptFailedTitle": "Couldn't join the group",
       "acceptFailedBody": "Something went wrong. Please try again.",
-      "phonePlaceholder": "+49 151 234 5678",
+      "phonePlaceholder": "+491512345678",
       "phoneHint": "Optional — if they already have an account, they'll get a push notification.",
       "phoneInvalid": "Use international format, e.g. +491512345678."
     },

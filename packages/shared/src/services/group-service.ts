@@ -516,10 +516,27 @@ export class GroupService {
       throw new Error("Source and target group must differ");
     }
 
+    const sourceGroup = await this.groupRepo.findById(sourceGroupId);
+    if (!sourceGroup) {
+      throw new Error("Source group not found");
+    }
+
     const [sourceLocations, sourceCourts] = await Promise.all([
       this.locationRepo.findAll(sourceGroupId),
       this.courtRepo.findAll(sourceGroupId),
     ]);
+
+    // Derive `courtCount` from the actual courts rather than copying the
+    // source location's denormalized counter — source data may be stale, and
+    // a partial write would otherwise leave the target's counter inconsistent
+    // with its real court rows.
+    const courtsByLocationId = new Map<string, number>();
+    for (const court of sourceCourts) {
+      courtsByLocationId.set(
+        court.locationId,
+        (courtsByLocationId.get(court.locationId) ?? 0) + 1,
+      );
+    }
 
     const createdLocations = await Promise.all(
       sourceLocations.map((loc) =>
@@ -528,7 +545,7 @@ export class GroupService {
           name: loc.name,
           address: loc.address,
           coordinates: loc.coordinates,
-          courtCount: loc.courtCount,
+          courtCount: courtsByLocationId.get(loc.id) ?? 0,
         }),
       ),
     );

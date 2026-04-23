@@ -805,7 +805,7 @@
       "loadErrorBody": "Revisá tu conexión e intentá de nuevo.",
       "acceptFailedTitle": "No pudimos unirte al grupo",
       "acceptFailedBody": "Algo salió mal. Intentá de nuevo.",
-      "phonePlaceholder": "+49 151 234 5678",
+      "phonePlaceholder": "+491512345678",
       "phoneHint": "Opcional — si ya tiene cuenta, le llega una notificación push.",
       "phoneInvalid": "Usá formato internacional, ej. +491512345678."
     },

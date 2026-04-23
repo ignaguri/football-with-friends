@@ -821,7 +821,7 @@ function LocationsTab() {
           onOpenChange={setShowCopyDialog}
           title={t("locations.copyFromGroup")}
           onConfirm={() => {
-            if (!copyFromGroupId) return;
+            if (!copyFromGroupId || copyVenuesMutation.isPending) return;
             copyVenuesMutation.mutate(copyFromGroupId, {
               onSuccess: (data) => {
                 setShowCopyDialog(false);

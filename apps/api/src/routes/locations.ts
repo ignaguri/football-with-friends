@@ -124,6 +124,16 @@ app.post(
           403,
         );
       }
+    } else {
+      // Non-members (including superadmin) bypass the membership check above,
+      // so verify the source group actually exists — otherwise a typo would
+      // quietly return {0, 0} against an empty non-existent group.
+      const sourceGroup = await getRepositoryFactory().groups.findById(
+        sourceGroupId,
+      );
+      if (!sourceGroup) {
+        return c.json({ error: "Source group not found" }, 404);
+      }
     }
 
     try {
