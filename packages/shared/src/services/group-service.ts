@@ -27,6 +27,14 @@ import type {
   CourtRepository,
 } from "../repositories/interfaces";
 
+// Structured log line. Cloudflare Workers ingests `console.log` output and
+// indexes on top-level JSON fields, so every event emits a single JSON line.
+function logEvent(event: string, payload: Record<string, unknown>): void {
+  console.log(
+    JSON.stringify({ event, ...payload, ts: new Date().toISOString() }),
+  );
+}
+
 export interface GroupDetails extends Group {
   members: GroupMember[];
   settings: Record<string, string>;
@@ -120,6 +128,12 @@ export class GroupService {
       userId: params.ownerUserId,
       role: "organizer",
     });
+    logEvent("group.created", {
+      groupId: group.id,
+      ownerUserId: params.ownerUserId,
+      name: group.name,
+      slug: group.slug,
+    });
     return group;
   }
 
@@ -208,6 +222,11 @@ export class GroupService {
       throw new Error("Target must be an existing organizer of this group");
     }
     await this.groupRepo.transferOwnership(groupId, toUserId);
+    logEvent("group.ownership_transferred", {
+      groupId,
+      fromUserId,
+      toUserId,
+    });
   }
 
   // --- Invites -----------------------------------------------------------
@@ -366,6 +385,21 @@ export class GroupService {
       }
     } else if (matchIds.size > 1) {
       ambiguousRosterMatches = matchIds.size;
+    }
+
+    logEvent("invite.accepted", {
+      groupId: invite.groupId,
+      userId: params.userId,
+      inviteId: invite.id,
+      newMembership: addedNewMembership,
+    });
+    if (claimedRosterId) {
+      logEvent("ghost.claimed", {
+        groupId: invite.groupId,
+        userId: params.userId,
+        rosterId: claimedRosterId,
+        inviteId: invite.id,
+      });
     }
 
     return {

@@ -779,7 +779,9 @@
     },
     "noGroup": {
       "title": "Todavía sin grupo",
-      "body": "Pedile al organizador un link de invitación y abrilo para entrar."
+      "body": "Pedile al organizador un link de invitación y abrilo para entrar.",
+      "hint": "Los grupos son cómo organizamos quién juega con quién — los partidos, la plantilla y las estadísticas viven dentro de un grupo.",
+      "signOut": "Cerrar sesión"
     },
     "invite": {
       "sectionTitle": "Invitaciones",
@@ -805,6 +807,7 @@
       "loadErrorBody": "Revisá tu conexión e intentá de nuevo.",
       "acceptFailedTitle": "No pudimos unirte al grupo",
       "acceptFailedBody": "Algo salió mal. Intentá de nuevo.",
+      "goHome": "Volver al inicio",
       "phonePlaceholder": "+491512345678",
       "phoneHint": "Opcional — si ya tiene cuenta, le llega una notificación push.",
       "phoneInvalid": "Usá formato internacional, ej. +491512345678."

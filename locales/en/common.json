@@ -776,7 +776,9 @@
     },
     "noGroup": {
       "title": "No group yet",
-      "body": "Ask your organizer for an invite link, then open it to join."
+      "body": "Ask your organizer for an invite link, then open it to join.",
+      "hint": "Groups are how we organize who plays together — matches, rosters and stats all belong to a group.",
+      "signOut": "Sign out"
     },
     "invite": {
       "sectionTitle": "Invites",
@@ -802,6 +804,7 @@
       "loadErrorBody": "Check your connection and try again.",
       "acceptFailedTitle": "Couldn't join the group",
       "acceptFailedBody": "Something went wrong. Please try again.",
+      "goHome": "Back to home",
       "phonePlaceholder": "+491512345678",
       "phoneHint": "Optional — if they already have an account, they'll get a push notification.",
       "phoneInvalid": "Use international format, e.g. +491512345678."

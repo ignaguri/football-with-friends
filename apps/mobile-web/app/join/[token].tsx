@@ -62,6 +62,9 @@ export default function JoinScreen() {
         <Text color="$gray11" textAlign="center">
           {t("groups.invite.loadErrorBody")}
         </Text>
+        <Button onPress={() => router.replace("/(tabs)")}>
+          {t("groups.invite.goHome")}
+        </Button>
       </YStack>
     );
   }
@@ -76,6 +79,9 @@ export default function JoinScreen() {
         <Text color="$gray11" textAlign="center">
           {t(`groups.invite.invalidReason.${reason}`)}
         </Text>
+        <Button onPress={() => router.replace("/(tabs)")}>
+          {t("groups.invite.goHome")}
+        </Button>
       </YStack>
     );
   }
