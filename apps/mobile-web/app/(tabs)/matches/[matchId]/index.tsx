@@ -130,8 +130,13 @@ export default function MatchDetailScreen() {
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
-  const { groupId: currentGroupId } = useCurrentGroup();
-  const rosterForGuest = useGroupRoster(showGuestDialog ? currentGroupId : null);
+  const { groupId: currentGroupId, myRole } = useCurrentGroup();
+  const isOrganizer =
+    myRole === "organizer" || session?.user?.role === "superadmin";
+  // Roster list is organizer-only; don't trigger a 403 for regular members.
+  const rosterForGuest = useGroupRoster(
+    showGuestDialog && isOrganizer ? currentGroupId : null,
+  );
   const filteredRoster = useMemo(() => {
     const entries = rosterForGuest.data ?? [];
     const q = guestSearch.trim().toLowerCase();
@@ -839,9 +844,8 @@ export default function MatchDetailScreen() {
                     {t("players.title")} ({match.signups?.length || 0})
                   </Text>
                   {!isPlayed &&
-                    match.availableSpots > 0 &&
-                    (match.userSignup?.status === "PAID" ||
-                      match.userSignup?.status === "PENDING") && (
+                    isOrganizer &&
+                    match.availableSpots > 0 && (
                       <Button
                         variant="outline"
                         size="$3"

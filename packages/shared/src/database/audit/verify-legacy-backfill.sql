@@ -55,4 +55,7 @@ SELECT 'settings_copied' AS check_name,
 -- 7. Phase 4: every legacy guest signup has a roster_id. Post the
 -- convert-legacy-guests-to-ghosts migration this must be 0.
 SELECT 'unlinked_guest_signups' AS check_name, COUNT(*) AS expected_zero
-FROM signups WHERE user_id IS NULL AND roster_id IS NULL;
+FROM signups
+WHERE group_id = 'grp_legacy'
+  AND user_id IS NULL
+  AND roster_id IS NULL;

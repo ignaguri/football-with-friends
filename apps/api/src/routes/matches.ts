@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { getServiceFactory } from "@repo/shared/services";
+import { getServiceFactory, RosterMemberCollisionError } from "@repo/shared/services";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
 import { INVITE_TARGET_PHONE_REGEX } from "./groups";
@@ -287,6 +287,14 @@ app.post(
   async (c) => {
     const matchId = c.req.param("id");
     const body = c.req.valid("json");
+
+    // Organizer-only: the `rosterId` branch could be safely open to members,
+    // but the `guestName` branch writes to `group_roster`, which is an
+    // organizer-managed table. Gating the whole endpoint keeps roster
+    // authorship consistent with the rest of the roster CRUD.
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
@@ -300,6 +308,9 @@ app.post(
       );
       return c.json({ signup }, 201);
     } catch (error) {
+      if (error instanceof RosterMemberCollisionError) {
+        return c.json({ error: "already_member", userId: error.userId }, 409);
+      }
       const message = error instanceof Error ? error.message : "Failed to add guest";
       return c.json({ error: message }, 400);
     }

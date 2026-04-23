@@ -18,7 +18,10 @@ import type {
   LocationRepository,
   CourtRepository,
 } from "../repositories/interfaces";
-import type { TursoGroupRosterRepository } from "../repositories/group-repositories";
+import type {
+  TursoGroupMembershipRepository,
+  TursoGroupRosterRepository,
+} from "../repositories/group-repositories";
 import { getDatabase } from "../database/connection";
 
 export type AddGuestPlayerInput =
@@ -30,6 +33,21 @@ export type AddGuestPlayerInput =
       status?: PlayerStatus;
     };
 
+/**
+ * Thrown by `addGuestPlayer` when the inline `guestName` branch would create
+ * a ghost whose phone/email matches an existing group member. The route
+ * maps this to a 409 instead of the generic 400 we use for other errors,
+ * so the UI can suggest inviting the member instead.
+ */
+export class RosterMemberCollisionError extends Error {
+  readonly userId: string;
+  constructor(userId: string) {
+    super("already_member");
+    this.name = "RosterMemberCollisionError";
+    this.userId = userId;
+  }
+}
+
 export class MatchService {
   constructor(
     private matchRepository: MatchRepository,
@@ -37,6 +55,7 @@ export class MatchService {
     private locationRepository: LocationRepository,
     private courtRepository: CourtRepository,
     private rosterRepository: TursoGroupRosterRepository,
+    private memberRepository: TursoGroupMembershipRepository,
   ) {}
 
   /**
@@ -277,6 +296,15 @@ export class MatchService {
       rosterId = ghost.id;
       guestName = ghost.displayName;
     } else {
+      // Same collision precheck as GroupService.createRosterEntry so the
+      // inline-create path can't stealth-bypass the "already a member" rule.
+      const collidingMemberId = await this.memberRepository.findMemberByContact(
+        groupId,
+        { phone: input.phone, email: input.email },
+      );
+      if (collidingMemberId) {
+        throw new RosterMemberCollisionError(collidingMemberId);
+      }
       const ghost = await this.rosterRepository.create({
         groupId,
         displayName: input.guestName,

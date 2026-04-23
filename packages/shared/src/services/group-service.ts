@@ -400,28 +400,16 @@ export class GroupService {
    * surfaces the existing userId so the UI can link to an invite flow.
    */
   async createRosterEntry(params: RosterCreateParams): Promise<CreateRosterOutcome> {
-    if (params.phone || params.email) {
-      const existingMember = await getDatabase()
-        .selectFrom("user")
-        .innerJoin("group_members", "group_members.user_id", "user.id")
-        .select("user.id as id")
-        .where("group_members.group_id", "=", params.groupId)
-        .where((eb) => {
-          const clauses = [];
-          if (params.phone)
-            clauses.push(eb("user.phoneNumber", "=", params.phone));
-          if (params.email) clauses.push(eb("user.email", "=", params.email));
-          return eb.or(clauses);
-        })
-        .limit(1)
-        .executeTakeFirst();
-      if (existingMember) {
-        return {
-          created: false,
-          reason: "already_member",
-          userId: existingMember.id,
-        };
-      }
+    const collidingMemberId = await this.memberRepo.findMemberByContact(
+      params.groupId,
+      { phone: params.phone, email: params.email },
+    );
+    if (collidingMemberId) {
+      return {
+        created: false,
+        reason: "already_member",
+        userId: collidingMemberId,
+      };
     }
 
     const entry = await this.rosterRepo.create({
