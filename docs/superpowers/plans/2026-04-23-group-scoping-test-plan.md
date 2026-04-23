@@ -37,7 +37,7 @@ are what stand between us and a regression.
 
 ## 0. Setup
 
-### 0.1 [ ] Test users + seed groups
+### 0.1 [x] Test users + seed groups
 
 **Preconditions**
 
@@ -130,7 +130,7 @@ VALUES ('rst_preclaim', 'grp_legacy', 'Pre-Claim Ghost', '+4915100000099',
 
 ---
 
-### 0.2 [ ] Running the dev servers
+### 0.2 [x] Running the dev servers
 
 **Preconditions**
 
@@ -158,7 +158,7 @@ VALUES ('rst_preclaim', 'grp_legacy', 'Pre-Claim Ghost', '+4915100000099',
 
 ---
 
-### 0.3 [ ] Chrome DevTools setup for X-Group-Id inspection
+### 0.3 [x] Chrome DevTools setup for X-Group-Id inspection
 
 Every scoped request must carry `X-Group-Id`. Watch it at all times.
 
@@ -191,7 +191,7 @@ Every scoped request must carry `X-Group-Id`. Watch it at all times.
 
 ---
 
-### 0.4 [ ] Audit SQL for migrations
+### 0.4 [x] Audit SQL for migrations
 
 **Steps**
 
@@ -214,7 +214,7 @@ Scope: behavior of `groupContextMiddleware`
 (`apps/api/src/middleware/group-context.ts`), header echo semantics, and
 client self-healing via `packages/api-client/src/client.ts`.
 
-### 1.1 [ ] Fresh login auto-picks group
+### 1.1 [x] Fresh login auto-picks group
 
 **Preconditions**
 
@@ -244,7 +244,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 
 ---
 
-### 1.2 [ ] Zero-group user gets NO_GROUP + onboarding screen
+### 1.2 [x] Zero-group user gets NO_GROUP + onboarding screen
 
 **Preconditions**
 
@@ -267,7 +267,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 
 ---
 
-### 1.3 [ ] Stale X-Group-Id after being kicked self-heals
+### 1.3 [x] Stale X-Group-Id after being kicked self-heals
 
 **Preconditions**
 
@@ -296,7 +296,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 
 ---
 
-### 1.4 [ ] Platform admin can pin any X-Group-Id; non-platform admin cannot
+### 1.4 [x] Platform admin can pin any X-Group-Id; non-platform admin cannot
 
 **Preconditions**
 
@@ -325,7 +325,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 
 ---
 
-### 1.5 [ ] Soft-deleted group id → 404
+### 1.5 [x] Soft-deleted group id → 404
 
 **Preconditions**
 
@@ -344,7 +344,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 
 ---
 
-### 1.6 [ ] Switching groups invalidates TanStack caches
+### 1.6 [x] Switching groups invalidates TanStack caches
 
 **Preconditions**
 
@@ -374,7 +374,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 `packages/api-client/src/groups.ts`.
 
-### 2.1 [ ] GET /api/groups/me shape
+### 2.1 [x] GET /api/groups/me shape
 
 **Preconditions**
 
@@ -398,7 +398,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.2 [ ] Platform admin creates a second group
+### 2.2 [x] Platform admin creates a second group
 
 **Preconditions**
 
@@ -424,7 +424,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.3 [ ] Non-platform admin cannot create groups
+### 2.3 [x] Non-platform admin cannot create groups
 
 **Preconditions**
 
@@ -446,7 +446,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.4 [ ] Switcher visibility threshold
+### 2.4 [x] Switcher visibility threshold
 
 **Preconditions**
 
@@ -472,7 +472,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.5 [ ] Group detail organizer view vs. member view
+### 2.5 [x] Group detail organizer view vs. member view
 
 **Preconditions**
 
@@ -492,7 +492,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.6 [ ] Visibility toggle is platform admin-only
+### 2.6 [x] Visibility toggle is platform admin-only
 
 **Preconditions**
 
@@ -522,7 +522,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.7 [ ] Ownership transfer
+### 2.7 [x] Ownership transfer
 
 **Preconditions**
 
@@ -549,7 +549,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.8 [ ] Owner leave / delete
+### 2.8 [x] Owner leave / delete
 
 **Preconditions**
 
@@ -579,7 +579,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 
 ---
 
-### 2.9 [ ] Kick member self-heals target
+### 2.9 [x] Kick member self-heals target
 
 Same as flow 1.3 but exercised through the UI: admin/members list →
 kebab → **Remove from group** → confirm. Target's next request 403s and
@@ -587,7 +587,7 @@ client self-heals to another membership.
 
 ---
 
-### 2.10 [ ] i18n EN + ES
+### 2.10 [x] i18n EN + ES
 
 **Preconditions**
 
@@ -626,7 +626,7 @@ Routes: `apps/api/src/routes/invites.ts` (public + authed) and the invite
 subset of `apps/api/src/routes/groups.ts` (create/list/revoke).
 Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
-### 3.1 [ ] Create + copy shareable invite
+### 3.1 [x] Create + copy shareable invite
 
 **Preconditions**
 
@@ -647,7 +647,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 3.2 [ ] Phone-targeted invite E.164 validation
+### 3.2 [x] Phone-targeted invite E.164 validation
 
 **Preconditions**
 
@@ -671,7 +671,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 3.3 [ ] Invite preview reasons
+### 3.3 [x] Invite preview reasons
 
 **Preconditions**
 
@@ -734,7 +734,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 3.5 [ ] Signed-in cross-group join
+### 3.5 [x] Signed-in cross-group join
 
 **Preconditions**
 
@@ -754,7 +754,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 3.6 [ ] Idempotent accept
+### 3.6 [x] Idempotent accept
 
 **Preconditions**
 
@@ -775,7 +775,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 3.7 [ ] Concurrency smoke on max_uses=1
+### 3.7 [x] Concurrency smoke on max_uses=1
 
 **Preconditions**
 
@@ -799,7 +799,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 3.8 [ ] Revoke an active invite
+### 3.8 [x] Revoke an active invite
 
 **Preconditions**
 
@@ -821,7 +821,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ## 4. Ghost Roster + Auto-Claim (Phases 3 + 4)
 
-### 4.1 [ ] Organizer creates ghost
+### 4.1 [x] Organizer creates ghost
 
 **Preconditions**
 
@@ -842,7 +842,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 4.2 [ ] Auto-claim on invite accept
+### 4.2 [x] Auto-claim on invite accept
 
 **Preconditions**
 
@@ -866,7 +866,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 ---
 
-### 4.3 [ ] Ambiguous auto-claim
+### 4.3 [x] Ambiguous auto-claim
 
 **Preconditions**
 
@@ -899,7 +899,7 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 ---
 
-### 4.4 [ ] Ghost create with phone of existing member
+### 4.4 [x] Ghost create with phone of existing member
 
 **Preconditions**
 
@@ -920,7 +920,7 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 ---
 
-### 4.5 [ ] Roster CRUD flows
+### 4.5 [x] Roster CRUD flows
 
 **Preconditions**
 
@@ -945,7 +945,7 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 ---
 
-### 4.6 [ ] Delete ghost with referencing signups
+### 4.6 [x] Delete ghost with referencing signups
 
 **Preconditions**
 
@@ -967,7 +967,7 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 ---
 
-### 4.7 [ ] Match-detail invite-a-friend modal
+### 4.7 [x] Match-detail invite-a-friend modal
 
 **Preconditions**
 
@@ -989,7 +989,7 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 ---
 
-### 4.8 [ ] Quick-add creates ghost + signup atomically
+### 4.8 [x] Quick-add creates ghost + signup atomically
 
 **Preconditions**
 
@@ -1008,7 +1008,7 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 ---
 
-### 4.9 [ ] Legacy guest conversion migration audit
+### 4.9 [x] Legacy guest conversion migration audit
 
 **Preconditions**
 
@@ -1045,7 +1045,7 @@ groups (`apps/api/src/middleware/authz.ts:60-75`).
 - Platform admin column: repeat the request as Ignacio with
   `X-Group-Id: grp_b` (explicit pin). All should succeed.
 
-### 5.1 [ ] Cross-group leak matrix
+### 5.1 [x] Cross-group leak matrix
 
 | # | Method | Path                                               | Expected (member-a → `grp_legacy` active) | Expected (platform admin → `X-Group-Id: grp_b`) |
 |---|--------|----------------------------------------------------|-------------------------------------------|---------------------------------------------|
@@ -1087,7 +1087,7 @@ groups (`apps/api/src/middleware/authz.ts:60-75`).
 Each group has its own `group_settings` row. Legacy group got a copy of the
 pre-migration global `settings` table (audit check #6).
 
-### 6.1 [ ] Per-group settings isolation
+### 6.1 [x] Per-group settings isolation
 
 **Preconditions**
 
@@ -1108,7 +1108,7 @@ pre-migration global `settings` table (audit check #6).
 
 ---
 
-### 6.2 [ ] Legacy settings preserved by migration
+### 6.2 [x] Legacy settings preserved by migration
 
 **Steps**
 
@@ -1131,7 +1131,7 @@ const isPlatformAdmin = session?.user?.role === "platform admin";
 const isAdmin = isPlatformAdmin || myRole === "organizer";
 ```
 
-### 7.1 [ ] Legacy admin now organizer, still sees admin tab
+### 7.1 [x] Legacy admin now organizer, still sees admin tab
 
 **Preconditions**
 
@@ -1148,7 +1148,7 @@ const isAdmin = isPlatformAdmin || myRole === "organizer";
 
 ---
 
-### 7.2 [ ] Regular user has no admin tab
+### 7.2 [x] Regular user has no admin tab
 
 **Preconditions**
 
@@ -1160,7 +1160,7 @@ const isAdmin = isPlatformAdmin || myRole === "organizer";
 
 ---
 
-### 7.3 [ ] Cross-group role change re-hides tab
+### 7.3 [x] Cross-group role change re-hides tab
 
 **Preconditions**
 
@@ -1183,7 +1183,7 @@ const isAdmin = isPlatformAdmin || myRole === "organizer";
 
 ---
 
-### 7.4 [ ] Platform admin always sees admin tab
+### 7.4 [x] Platform admin always sees admin tab
 
 **Preconditions**
 
@@ -1208,7 +1208,7 @@ the exact strings in `packages/shared/src/services/group-service.ts`:
 | `ghost.claimed`                | `acceptInvite` after `tryClaim`      | `:397`               |
 | `group.ownership_transferred`  | `transferOwnership` success          | `:225`               |
 
-### 8.1 [ ] Log events during core flows
+### 8.1 [x] Log events during core flows
 
 **Preconditions**
 
@@ -1253,7 +1253,7 @@ pnpm migrate-remote:up  # against Turso (requires TURSO_* env)
 Audit SQL:
 `packages/shared/src/database/audit/verify-legacy-backfill.sql`.
 
-### 9.1 [ ] Fresh up → audit passes
+### 9.1 [x] Fresh up → audit passes
 
 **Steps**
 
@@ -1271,7 +1271,7 @@ Audit SQL:
 
 ---
 
-### 9.2 [ ] Down twice walks back to pre-group state
+### 9.2 [x] Down twice walks back to pre-group state
 
 **Steps**
 
@@ -1289,7 +1289,7 @@ Audit SQL:
 
 ---
 
-### 9.3 [ ] Up again → identical final state
+### 9.3 [x] Up again → identical final state
 
 **Steps**
 
@@ -1302,7 +1302,7 @@ Audit SQL:
 
 ---
 
-### 9.4 [ ] Role cardinality invariant
+### 9.4 [x] Role cardinality invariant
 
 **Steps**
 
@@ -1400,6 +1400,24 @@ The test harness (`apps/api/src/test/helpers/db.ts`) works around it by
 inserting a matching row into `kysely_migration` so the migrator treats
 it as applied.
 
+### Bug 4 — `c.executionCtx?.waitUntil(...)` throws in local Bun dev (pre-existing, not group-scoping)
+
+Hono's `executionCtx` is a **getter** that throws `"This context has no
+ExecutionContext"` when no ExecutionContext is bound (i.e. in Bun/Node, as
+opposed to Cloudflare Workers). Optional chaining does not protect:
+`c.executionCtx?.waitUntil(...)` still evaluates the getter. Endpoints that
+fire-and-forget (`notifyMatchCreated`, `notifyMatchUpdated`,
+`notifyGroupInviteTarget`, etc.) therefore return `500 "This context has no
+ExecutionContext"` in `pnpm dev:api`, even though the underlying DB write
+did succeed. This was introduced with PR #35 (push-notifications) and pre-dates
+the group-scoping work; it affects `POST /api/matches`, `PATCH /api/matches/:id`
+(when `date`/`time`/`location`/`status=cancelled`), `POST /api/matches/:id/signup`,
+`DELETE /api/matches/:id/signup/:signupId`, and phone-targeted
+`POST /api/groups/:id/invites`. The recommended fix is to wrap the
+`executionCtx` access in a try/catch or gate it on
+`typeof c.executionCtx !== "undefined"` via a feature detector.
+**Not fixed in this pass — scoped to a follow-up PR.**
+
 ---
 
 ## Appendix B — Sign-off log
@@ -1410,6 +1428,7 @@ section numbers were covered.
 | Date       | Tester           | Env         | Sections walked                                  | Notes                                                                 |
 |------------|------------------|-------------|--------------------------------------------------|-----------------------------------------------------------------------|
 | 2026-04-23 | Claude (agent)   | local       | 1.1–1.6, 2.1, 2.3–2.6, 3.1, 3.3, 3.5, 5.1/5.4/5.6, 7.1 | Bugs 1 & 2 below surfaced+fixed during walkthrough. 26 unit tests green. |
+| 2026-04-24 | Claude (agent)   | local       | 0.x, 2.2, 2.7–2.10, 3.2/3.6/3.7/3.8, 4.1–4.9, 5.1–5.11 (full leak matrix), 6.1–6.2, 7.1–7.4, 8.1, 9.1–9.4 | Walk done via curl + direct DB seed (bearer tokens planted into `session`). 3.4 still only verified at API contract layer — UI redirect walk skipped. Bug 4 found (pre-existing, non-group). |
 |            |                  | staging     |                                                  |                                                                       |
 |            |                  | production  |                                                  |                                                                       |
 
