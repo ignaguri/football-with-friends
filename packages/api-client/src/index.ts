@@ -68,8 +68,18 @@ export {
   useRevokeInvite,
   useInvitePreview,
   useAcceptInvite,
+  useGroupRoster,
+  useCreateRosterEntry,
+  useUpdateRosterEntry,
+  useDeleteRosterEntry,
 } from "./groups";
-export type { GroupInviteSummary, GroupInvitePreviewResult } from "./groups";
+export type {
+  GroupInviteSummary,
+  GroupInvitePreviewResult,
+  GroupRosterEntry,
+  CreateRosterInput,
+  UpdateRosterInput,
+} from "./groups";
 
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

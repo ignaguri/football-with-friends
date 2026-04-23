@@ -38,6 +38,7 @@ export const groupQueryKeys = {
   invites: (id: string) => [...groupQueryKeys.all, "invites", id] as const,
   invitePreview: (token: string) =>
     [...groupQueryKeys.all, "invite-preview", token] as const,
+  roster: (id: string) => [...groupQueryKeys.all, "roster", id] as const,
 };
 
 export interface MyGroupSummary {
@@ -355,6 +356,105 @@ export function useAcceptInvite() {
       // previously cached scoped data so the new group's responses drive UI.
       setActiveGroupId(result.groupId);
       queryClient.invalidateQueries();
+    },
+  });
+}
+
+// --- Roster (ghosts) -----------------------------------------------------
+
+export interface GroupRosterEntry {
+  id: string;
+  groupId: string;
+  displayName: string;
+  phone?: string;
+  email?: string;
+  claimedByUserId?: string;
+  createdByUserId: string;
+  createdAt: string;
+  updatedAt: string;
+  claimedByUser?: { id: string; name: string };
+}
+
+export interface CreateRosterInput {
+  displayName: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface UpdateRosterInput {
+  displayName?: string;
+  phone?: string | null;
+  email?: string | null;
+  claimedByUserId?: string | null;
+}
+
+export function useGroupRoster(groupId: string | null) {
+  return useQuery({
+    queryKey: groupQueryKeys.roster(groupId ?? ""),
+    enabled: !!groupId,
+    queryFn: async () => {
+      const res = await client.api.groups[":id"].roster.$get({
+        param: { id: groupId! },
+      });
+      const data = (await res.json()) as { roster: GroupRosterEntry[] };
+      return data.roster;
+    },
+  });
+}
+
+export function useCreateRosterEntry(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateRosterInput) => {
+      const res = await client.api.groups[":id"].roster.$post({
+        param: { id: groupId },
+        json: input,
+      });
+      const data = (await res.json()) as { entry: GroupRosterEntry };
+      return data.entry;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.roster(groupId) });
+    },
+  });
+}
+
+export function useUpdateRosterEntry(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { rosterId: string; patch: UpdateRosterInput }) => {
+      const res = await client.api.groups[":id"].roster[":rosterId"].$patch({
+        param: { id: groupId, rosterId: input.rosterId },
+        json: input.patch,
+      });
+      const data = (await res.json()) as { entry: GroupRosterEntry };
+      return data.entry;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.roster(groupId) });
+    },
+  });
+}
+
+export function useDeleteRosterEntry(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { rosterId: string; force?: boolean }) => {
+      // Hono RPC doesn't model query params on $delete in this codebase's
+      // client typing; fall through to a raw fetch via the hc-built URL.
+      const res = await client.api.groups[":id"].roster[":rosterId"].$delete({
+        param: { id: groupId, rosterId: input.rosterId },
+        query: input.force ? { force: "true" } : {},
+      });
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.roster(groupId) });
+      if (variables.force) {
+        // Match detail queries may have had signups unlinked from this ghost;
+        // blow the cache so re-fetches pick up the NULL roster_id.
+        queryClient.invalidateQueries();
+      }
     },
   });
 }

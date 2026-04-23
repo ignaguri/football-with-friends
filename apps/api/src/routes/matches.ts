@@ -259,21 +259,33 @@ app.post("/:id/signup", async (c) => {
   }
 });
 
-// Add a guest to a match
+// Add a guest to a match. Accepts either `{rosterId}` (existing ghost) or
+// `{guestName, phone?, email?}` (inline create). The service backs every
+// guest signup with a roster entry — Phase 4.
 app.post(
   "/:id/guest",
   zValidator(
     "json",
-    z.object({
-      matchId: z.string(),
-      guestName: z.string().min(1, "Guest name is required"),
-      guestEmail: z.string().email().optional(),
-      status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
-    })
+    z.union([
+      z.object({
+        rosterId: z.string().min(1),
+        status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+      }),
+      z.object({
+        guestName: z.string().trim().min(1, "Guest name is required"),
+        phone: z
+          .string()
+          .trim()
+          .regex(/^\+[1-9]\d{6,14}$/, "phone must be E.164 (e.g. +1234567890)")
+          .optional(),
+        email: z.string().trim().email().optional(),
+        status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+      }),
+    ])
   ),
   async (c) => {
     const matchId = c.req.param("id");
-    const guestData = c.req.valid("json");
+    const body = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
@@ -282,13 +294,7 @@ app.post(
       const signup = await getMatchService().addGuestPlayer(
         current.id,
         matchId,
-        {
-          ...guestData,
-          matchId,
-          ownerUserId: user.id,
-          ownerName: user.name,
-          ownerEmail: user.email,
-        },
+        body,
         user,
       );
       return c.json({ signup }, 201);

@@ -294,7 +294,11 @@ export interface UpdateSignupData
 export interface CreateGuestSignupData {
   groupId: string;
   matchId: string;
-  guestName?: string;
+  // Required post-Phase-4: every guest signup is backed by a roster entry.
+  // The `rosterId` is the source of truth for identity; `guestName` is the
+  // display snapshot captured at signup time.
+  rosterId: string;
+  guestName: string;
   ownerUserId: string;
   ownerName: string;
   ownerEmail: string;
@@ -767,8 +771,10 @@ export interface CreateGroupRosterData {
 
 export interface UpdateGroupRosterData {
   displayName?: string;
-  phone?: string;
-  email?: string;
+  // Nullable so organizers can clear contact info — the repo distinguishes
+  // `undefined` ("don't touch") from `null` ("set to NULL").
+  phone?: string | null;
+  email?: string | null;
   claimedByUserId?: string | null;
 }
 

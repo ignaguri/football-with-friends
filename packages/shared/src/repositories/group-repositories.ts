@@ -455,6 +455,15 @@ export class TursoGroupRosterRepository {
     return rowToRoster(row);
   }
 
+  async findById(id: string): Promise<GroupRoster | null> {
+    const row = await this.db
+      .selectFrom("group_roster")
+      .selectAll()
+      .where("id", "=", id)
+      .executeTakeFirst();
+    return row ? rowToRoster(row) : null;
+  }
+
   async listByGroup(groupId: string): Promise<GroupRoster[]> {
     const rows = await this.db
       .selectFrom("group_roster")
