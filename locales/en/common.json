@@ -734,7 +734,8 @@
   "groups": {
     "switcher": {
       "label": "Group",
-      "loading": "Loading groups…"
+      "loading": "Loading groups…",
+      "open": "Switch group (current: {{name}})"
     },
     "myGroups": {
       "title": "My Groups",

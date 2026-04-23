@@ -12,7 +12,7 @@
 
 - [x] **Phase 0** — Schema foundation (no behavior change)
 - [x] **Phase 1** — Backfill + scoping (core path scoped; staging verification + tests deferred)
-- [x] **Phase 2** — Group management API + mobile-web switcher *(entry-point screens + tab-gate swap landed; full header switcher component + noGroup onboarding + useDeleteGroup hook deferred)*
+- [x] **Phase 2** — Group management API + mobile-web switcher *(all user-facing items landed; test harness is the only deferred piece, same as Phase 1/3)*
 - [x] **Phase 3** — Invites (link + accept flow) *(core path landed; tests + E2E + staging verification deferred)*
 - [ ] **Phase 4** — Ghost roster (full lifecycle + legacy guest conversion)
 - [ ] **Phase 5** — Polish (phone invites, copy-venues helper, public-directory flag, i18n pass)
@@ -272,24 +272,23 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 - [x] `useCurrentGroup()` — exposes `{groupId, group, myRole, amIOwner, myGroups, isLoading, noGroup, switchGroup}`. `switchGroup` persists via `group-storage.ts` and calls `queryClient.invalidateQueries()` (no filter — active group change invalidates everything transitively).
 - [x] `useGroupDetail(groupId)` — plan's `useGroup`, renamed for consistency with other `*Detail` hooks in the codebase.
 - [x] `useGroupMembers(groupId)`.
-- [x] `useCreateGroup()`, `useUpdateGroup()`, `useUpdateMemberRole()` (plan's `usePromoteMember`; one hook handles both directions via body.role), `useKickMember()`, `useLeaveGroup()`, `useTransferOwnership()`.
-- [ ] `useDeleteGroup()` — **deferred**. API endpoint exists; no UI consumer yet so no client hook shipped.
+- [x] `useCreateGroup()`, `useUpdateGroup()`, `useDeleteGroup()`, `useUpdateMemberRole()` (plan's `usePromoteMember`; one hook handles both directions via body.role), `useKickMember()`, `useLeaveGroup()`, `useTransferOwnership()`. `useDeleteGroup` clears the active group id on success when the caller just deleted their active one, so the next scoped request auto-picks a remaining membership.
 - [x] Query-key convention: every scoped key lives under `groupQueryKeys.*`. Switching invalidates globally (see `switchGroup`), which is a simpler correctness guarantee than threading `groupId` through every key.
 
 ### Subtasks — Mobile-Web UX
 
 - [x] `apps/mobile-web/app/(tabs)/_layout.tsx`: admin-tab visibility swapped from `user.role === "admin"` to `isSuperadmin || myRole === "organizer"`.
-- [ ] Header group switcher component (bottom sheet at ≥2 groups) — **deferred**. Not needed for single-tenant launch; entry point is the Profile → My Groups list which serves the same purpose.
+- [x] Header group switcher component (`apps/mobile-web/components/group-switcher.tsx`) — only renders when `myGroups.length >= 2`, shows current group name + chevron, tap opens a Tamagui Sheet listing all memberships. Hidden on single-group accounts so the legacy chrome is unchanged.
 - [x] New screen `apps/mobile-web/app/(tabs)/profile/groups/index.tsx` — "My Groups" list.
 - [x] New screen `apps/mobile-web/app/(tabs)/profile/groups/[groupId].tsx` — group detail (members list + leave button; invites section added in Phase 3).
 - [x] New screen `apps/mobile-web/app/(tabs)/admin/create-group.tsx` — superadmin-only.
 - [x] Match/admin screens: no direct changes needed. Global `invalidateQueries()` on `switchGroup` ensures correctness without keying every query by groupId.
-- [ ] "No group yet" screen for `useCurrentGroup().noGroup` — **deferred**. The API returns `409 NO_GROUP` and the fetch interceptor bubbles the error; formal onboarding screen lands with Phase 5 polish.
+- [x] "No group yet" screen (`apps/mobile-web/components/no-group-onboarding.tsx`) — rendered in place of `<Tabs>` when `useCurrentGroup().noGroup` resolves true, so matches/admin tabs don't mount scoped queries that 409 on every render. CTA is passive (invites arrive as links) — matches how Phase 3 models the join flow.
 
 ### Subtasks — i18n
 
 - [x] Keys added to `locales/en/common.json` and `locales/es/common.json`:
-  - [x] `groups.switcher.label`, `groups.switcher.loading`
+  - [x] `groups.switcher.label`, `groups.switcher.loading`, `groups.switcher.open`
   - [x] `groups.myGroups.title`, `groups.myGroups.empty`, `groups.myGroups.owner|organizer|member`
   - [x] `groups.create.title`, `groups.create.nameLabel`, `groups.create.namePlaceholder`, `groups.create.cta`, `groups.create.success`, `groups.create.superadminOnly`
   - [x] `groups.detail.title`, `groups.detail.members`, `groups.detail.settings`, `groups.detail.leave`, `groups.detail.transfer`, `groups.detail.delete`, `groups.detail.deleteConfirm`, `groups.detail.loadError`

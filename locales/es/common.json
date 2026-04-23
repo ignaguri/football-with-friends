@@ -737,7 +737,8 @@
   "groups": {
     "switcher": {
       "label": "Grupo",
-      "loading": "Cargando grupos…"
+      "loading": "Cargando grupos…",
+      "open": "Cambiar de grupo (actual: {{name}})"
     },
     "myGroups": {
       "title": "Mis grupos",
