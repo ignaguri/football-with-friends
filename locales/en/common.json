@@ -769,6 +769,31 @@
     "noGroup": {
       "title": "No group yet",
       "body": "Ask your organizer for an invite link, then open it to join."
+    },
+    "invite": {
+      "sectionTitle": "Invites",
+      "create": "Create invite link",
+      "copy": "Copy",
+      "revoke": "Revoke",
+      "empty": "No active invites yet.",
+      "expiresAt": "Expires {{date}}",
+      "neverExpires": "Never expires",
+      "previewTitle": "You've been invited to {{groupName}}",
+      "invitedBy": "Invited by {{name}}",
+      "signInToJoin": "Sign in to join",
+      "joining": "Joining…",
+      "invalidTitle": "This invite isn't valid",
+      "invalidReason": {
+        "expired": "This invite has expired.",
+        "revoked": "This invite was revoked by the organizer.",
+        "exhausted": "This invite has been used up.",
+        "target_mismatch": "This invite was issued for a different account.",
+        "not_found": "We couldn't find this invite."
+      },
+      "loadErrorTitle": "Couldn't load invite",
+      "loadErrorBody": "Check your connection and try again.",
+      "acceptFailedTitle": "Couldn't join the group",
+      "acceptFailedBody": "Something went wrong. Please try again."
     }
   }
 }

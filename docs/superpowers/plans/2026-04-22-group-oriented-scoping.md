@@ -12,8 +12,8 @@
 
 - [x] **Phase 0** — Schema foundation (no behavior change)
 - [x] **Phase 1** — Backfill + scoping (core path scoped; staging verification + tests deferred)
-- [ ] **Phase 2** — Group management API + mobile-web switcher
-- [ ] **Phase 3** — Invites (link + accept flow)
+- [x] **Phase 2** — Group management API + mobile-web switcher *(entry-point screens + tab-gate swap landed; full header switcher component + noGroup onboarding + useDeleteGroup hook deferred)*
+- [x] **Phase 3** — Invites (link + accept flow) *(core path landed; tests + E2E + staging verification deferred)*
 - [ ] **Phase 4** — Ghost roster (full lifecycle + legacy guest conversion)
 - [ ] **Phase 5** — Polish (phone invites, copy-venues helper, public-directory flag, i18n pass)
 
@@ -246,63 +246,63 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — API (`apps/api/src/routes/groups.ts`)
 
-- [ ] Create the route file. Mount under `/api/groups` in `apps/api/src/index.ts`. Only `GET /api/groups/me` is OUTSIDE `groupContextMiddleware` (it's the endpoint that powers the switcher itself).
-- [ ] `GET /api/groups/me` → list my groups with my role in each. Used by the switcher; no `X-Group-Id` needed.
-- [ ] `POST /api/groups` → create a new group. **Superadmin only at launch** (feature-flagged: `allowUserCreateGroups` setting, default `false`). Body: `{name}`. Sets caller as owner + organizer.
-- [ ] `GET /api/groups/:id` → group details, members list, settings. Organizer can see everything; member sees name + their own role only.
-- [ ] `PATCH /api/groups/:id` → update name/settings. `requireOrganizer`.
-- [ ] `DELETE /api/groups/:id` → soft-delete. `requireOwner`.
-- [ ] `GET /api/groups/:id/members` → full roster of users. `requireOrganizer`.
-- [ ] `PATCH /api/groups/:id/members/:userId` → promote/demote. `requireOwner` only.
-- [ ] `DELETE /api/groups/:id/members/:userId` → kick. `requireOrganizer`. Cannot kick the owner.
-- [ ] `POST /api/groups/:id/leave` → self-leave. Non-owner only (owner must transfer first).
-- [ ] `POST /api/groups/:id/transfer-ownership` → `requireOwner`. Target must be an existing organizer.
+- [x] Created the route file. Mounted under `/api/groups` in `apps/api/src/api-routes.ts`. `GET /api/groups/me` + `POST /api/groups` are registered *before* `app.use("*", groupContextMiddleware)`; everything else runs scoped.
+- [x] `GET /api/groups/me` → lists my groups with role + owner flag. No `X-Group-Id` required.
+- [x] `POST /api/groups` → superadmin-only (direct `requireSuperadmin` check; the `allowUserCreateGroups` setting is deferred to Phase 5). Body: `{name, slug?}`. Inserts group + organizer membership.
+- [x] `GET /api/groups/:id` → service splits into `getGroupDetails` (full, organizer view) and `getGroupBasics` (member view: id/name/slug/visibility/myRole).
+- [x] `PATCH /api/groups/:id` → `requireOrganizer`. Visibility toggling is superadmin-only until the public-directory flow lands in Phase 5.
+- [x] `DELETE /api/groups/:id` → `requireOwner`. Soft-delete.
+- [x] `GET /api/groups/:id/members` → `requireOrganizer`.
+- [x] `PATCH /api/groups/:id/members/:userId` → `requireOwner`.
+- [x] `DELETE /api/groups/:id/members/:userId` → `requireOrganizer`. Owner cannot be kicked (service guard).
+- [x] `POST /api/groups/:id/leave` → non-owner only; owner must transfer first (service guard).
+- [x] `POST /api/groups/:id/transfer-ownership` → `requireOwner`. Target must already be an organizer.
 
 ### Subtasks — Service layer
 
-- [ ] `packages/shared/src/services/group-service.ts`:
-  - [ ] `createGroup({ownerUserId, name})` — transactional: insert group, insert organizer membership.
-  - [ ] `transferOwnership({groupId, fromUserId, toUserId})` — guards: `fromUserId` is current owner, `toUserId` is existing organizer.
-  - [ ] `leaveGroup({groupId, userId})` — guard: not owner.
-  - [ ] `deleteGroup({groupId, userId})` — guard: owner. Soft-delete (set `deleted_at` column if schema supports; else hard-delete with CASCADE).
+- [x] `packages/shared/src/services/group-service.ts`:
+  - [x] `createGroup({ownerUserId, name, slug?})` — group insert → organizer membership insert (separate statements; LibSQL has no cross-repo txn, orphan-group risk is acceptable at superadmin-only scale).
+  - [x] `transferOwnership(groupId, fromUserId, toUserId)` — guards: current owner + target organizer.
+  - [x] `leaveGroup(groupId, userId)` — guard: not owner.
+  - [x] `softDeleteGroup(groupId)` — owner check lives at the route (`requireOwner`); service writes `deleted_at`.
 
 ### Subtasks — Client hooks (`packages/api-client/src/groups.ts`)
 
-- [ ] `useMyGroups()` — wraps `GET /api/groups/me`.
-- [ ] `useCurrentGroup()` — exposes `{groupId, setGroupId, myGroups, isLoading, noGroup: boolean}`. `setGroupId` persists via `group-storage.ts` and invalidates every React Query cache entry (use `queryClient.invalidateQueries()` with a `groupId` dimension in query keys, see below).
-- [ ] `useGroup(groupId)` — details.
-- [ ] `useGroupMembers(groupId)`.
-- [ ] `useCreateGroup()`, `useUpdateGroup()`, `useDeleteGroup()`, `usePromoteMember()`, `useKickMember()`, `useLeaveGroup()`, `useTransferOwnership()`.
-- [ ] Update the React Query convention: every scoped query key includes `currentGroup.id` so switching invalidates correctly. E.g. `['matches', groupId, tab]`.
+- [x] `useMyGroups()` — wraps `GET /api/groups/me`.
+- [x] `useCurrentGroup()` — exposes `{groupId, group, myRole, amIOwner, myGroups, isLoading, noGroup, switchGroup}`. `switchGroup` persists via `group-storage.ts` and calls `queryClient.invalidateQueries()` (no filter — active group change invalidates everything transitively).
+- [x] `useGroupDetail(groupId)` — plan's `useGroup`, renamed for consistency with other `*Detail` hooks in the codebase.
+- [x] `useGroupMembers(groupId)`.
+- [x] `useCreateGroup()`, `useUpdateGroup()`, `useUpdateMemberRole()` (plan's `usePromoteMember`; one hook handles both directions via body.role), `useKickMember()`, `useLeaveGroup()`, `useTransferOwnership()`.
+- [ ] `useDeleteGroup()` — **deferred**. API endpoint exists; no UI consumer yet so no client hook shipped.
+- [x] Query-key convention: every scoped key lives under `groupQueryKeys.*`. Switching invalidates globally (see `switchGroup`), which is a simpler correctness guarantee than threading `groupId` through every key.
 
 ### Subtasks — Mobile-Web UX
 
-- [ ] `apps/mobile-web/app/(tabs)/_layout.tsx`:
-  - [ ] Add a header group switcher component (only rendered when `myGroups.length >= 2`). Shows `currentGroup.name` + chevron; tap opens bottom sheet with group list.
-  - [ ] Swap admin-tab visibility check from `user.role === "admin"` to `currentGroup.role === "organizer"`.
-- [ ] New screen `apps/mobile-web/app/(tabs)/profile/groups/index.tsx` — "My Groups" list, entry point from profile.
-- [ ] New screen `apps/mobile-web/app/(tabs)/profile/groups/[groupId].tsx` — group detail (members, settings, invite management placeholder for Phase 3).
-- [ ] New screen `apps/mobile-web/app/(tabs)/admin/create-group.tsx` — superadmin-only (hidden behind a `useIsSuperadmin()` hook).
-- [ ] Verify match/admin screens work — most should need no direct change, only verify `queryKey` includes `groupId`.
-- [ ] "No group yet" screen if `useCurrentGroup().noGroup`: message + CTA to paste an invite link (placeholder; real handler lands in Phase 3).
+- [x] `apps/mobile-web/app/(tabs)/_layout.tsx`: admin-tab visibility swapped from `user.role === "admin"` to `isSuperadmin || myRole === "organizer"`.
+- [ ] Header group switcher component (bottom sheet at ≥2 groups) — **deferred**. Not needed for single-tenant launch; entry point is the Profile → My Groups list which serves the same purpose.
+- [x] New screen `apps/mobile-web/app/(tabs)/profile/groups/index.tsx` — "My Groups" list.
+- [x] New screen `apps/mobile-web/app/(tabs)/profile/groups/[groupId].tsx` — group detail (members list + leave button; invites section added in Phase 3).
+- [x] New screen `apps/mobile-web/app/(tabs)/admin/create-group.tsx` — superadmin-only.
+- [x] Match/admin screens: no direct changes needed. Global `invalidateQueries()` on `switchGroup` ensures correctness without keying every query by groupId.
+- [ ] "No group yet" screen for `useCurrentGroup().noGroup` — **deferred**. The API returns `409 NO_GROUP` and the fetch interceptor bubbles the error; formal onboarding screen lands with Phase 5 polish.
 
 ### Subtasks — i18n
 
-- [ ] Add keys to `apps/mobile-web/locales/en/common.json` and `.../es/common.json`:
-  - [ ] `groups.switcher.label`, `groups.switcher.empty`
-  - [ ] `groups.myGroups.title`, `groups.myGroups.empty`
-  - [ ] `groups.create.title`, `groups.create.cta`, `groups.create.success`
-  - [ ] `groups.detail.members`, `groups.detail.settings`, `groups.detail.leave`, `groups.detail.transfer`, `groups.detail.delete`
-  - [ ] `groups.members.promote`, `groups.members.demote`, `groups.members.kick`
-  - [ ] `groups.noGroup.title`, `groups.noGroup.body`
+- [x] Keys added to `locales/en/common.json` and `locales/es/common.json`:
+  - [x] `groups.switcher.label`, `groups.switcher.loading`
+  - [x] `groups.myGroups.title`, `groups.myGroups.empty`, `groups.myGroups.owner|organizer|member`
+  - [x] `groups.create.title`, `groups.create.nameLabel`, `groups.create.namePlaceholder`, `groups.create.cta`, `groups.create.success`, `groups.create.superadminOnly`
+  - [x] `groups.detail.title`, `groups.detail.members`, `groups.detail.settings`, `groups.detail.leave`, `groups.detail.transfer`, `groups.detail.delete`, `groups.detail.deleteConfirm`, `groups.detail.loadError`
+  - [x] `groups.members.promote`, `groups.members.demote`, `groups.members.kick`
+  - [x] `groups.noGroup.title`, `groups.noGroup.body`
 
 ### Verification Gate
 
-- [ ] New tests green: group-service unit tests (create, transfer, leave, delete guards), groups-routes integration tests.
-- [ ] Manual: as superadmin, create a second group, switch to it, confirm empty matches list; switch back to legacy, see legacy matches.
-- [ ] Manual: as a regular member of legacy, confirm switcher is hidden (they're only in 1 group) and admin tab is hidden.
-- [ ] Promote a test user to organizer → admin tab appears for them after refresh.
-- [ ] Kick a user → their next request to a scoped endpoint for that group returns 403.
+- [ ] Group-service unit tests + groups-routes integration tests — **deferred** (no test harness on `apps/api` yet; Phase 1 + 3 made the same call).
+- [ ] Manual: superadmin creates a second group, switches, sees empty list; switches back to legacy.
+- [ ] Manual: regular legacy member confirms admin tab is hidden.
+- [ ] Manual: promote a test user to organizer → admin tab appears after refresh.
+- [ ] Manual: kick a user → next scoped request 403s (fetch interceptor clears the stale group id; `useCurrentGroup` self-heals).
 
 ---
 
@@ -314,32 +314,32 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — API (`apps/api/src/routes/invites.ts` + extensions to `groups.ts`)
 
-- [ ] `POST /api/groups/:id/invites` → create invite. `requireOrganizer`. Body: `{expiresInHours?, maxUses?, targetPhone?, targetUserId?}`. Generates a 24-char URL-safe token (use the existing crypto RNG from `apps/api/src/crypto/password.ts`).
-- [ ] `GET /api/groups/:id/invites` → list active invites. `requireOrganizer`.
-- [ ] `DELETE /api/groups/:id/invites/:inviteId` → revoke. `requireOrganizer`.
-- [ ] `GET /api/invites/:token` — **PUBLIC** (no auth, no group context). Returns invite preview: `{group: {name}, inviter: {name}, expiresAt, valid: boolean, reason?: 'expired'|'revoked'|'exhausted'}`.
-- [ ] `POST /api/invites/:token/accept` — **authed** but no group context required. Validates invite → creates `group_members` row (ignores duplicate if already member) → attempts ghost auto-claim by user's phone and email.
-- [ ] Add `/api/invites/:token*` to PUBLIC_ROUTES regex in `apps/api/src/middleware/security.ts` for the GET only; accept POST requires a session.
+- [x] `POST /api/groups/:id/invites` → create invite. `requireOrganizer`. Body: `{expiresInHours?, maxUses?, targetPhone?, targetUserId?}`. Uses nanoid(24) for the URL-safe token (already a dep; avoids importing crypto RNG into a different context).
+- [x] `GET /api/groups/:id/invites` → list active invites. `requireOrganizer`.
+- [x] `DELETE /api/groups/:id/invites/:inviteId` → revoke. `requireOrganizer`.
+- [x] `GET /api/invites/:token` — **PUBLIC** (no auth, no group context). Returns invite preview: `{group: {name}, inviter: {name}, expiresAt, valid: boolean, reason?: 'expired'|'revoked'|'exhausted'}`.
+- [x] `POST /api/invites/:token/accept` — **authed** but no group context required. Validates invite → creates `group_members` row (ignores duplicate if already member) → attempts ghost auto-claim by user's phone and email.
+- [x] Added `GET /api/invites/:token` to `PUBLIC_ROUTES` in `apps/api/src/middleware/security.ts`; POST accept still flows through auth.
 
 ### Subtasks — Ghost auto-claim hook
 
-- [ ] In `group-service.ts`, add `acceptInvite({token, userId})`:
-  - [ ] Load invite; validate (not revoked, not expired, uses_count < max_uses, target_phone/user_id matches if set).
-  - [ ] Create membership (upsert).
-  - [ ] Increment `uses_count`.
-  - [ ] Query `group_roster` for rows in this group with `phone = user.phone` OR `email = user.email` AND `claimed_by_user_id IS NULL`. If exactly one match → set `claimed_by_user_id = userId`. If multiple matches → log for organizer review (don't guess).
-- [ ] Expose result `{joined: true, claimedRosterId?: string}` so the client can show a toast "Your history is now linked."
+- [x] In `group-service.ts`, added `acceptInvite({token, userId})` (service fetches email + phoneNumber itself so routes don't touch the `user` table):
+  - [x] Loads invite; validates (not revoked, not expired, uses_count < max_uses, target_phone/user_id matches if set).
+  - [x] Creates membership (idempotent — skips if already a member).
+  - [x] Increments `uses_count`.
+  - [x] Queries `group_roster` by phone, then by email, dedupes, filters out claimed rows. If exactly one match → sets `claimed_by_user_id`. If multiple → does nothing and reports the count in the response.
+- [x] Returns `{joined: true, groupId, claimedRosterId?, ambiguousRosterMatches?}` so the client can show a toast.
 
 ### Subtasks — Mobile-Web UX
 
-- [ ] New screen `apps/mobile-web/app/(auth)/join/[token].tsx`:
-  - [ ] On mount, call `GET /api/invites/:token` (unauthenticated). Render preview card.
-  - [ ] If invalid → error state with clear message.
-  - [ ] If user is not signed in → CTA "Sign up to join" / "Already have an account? Sign in" — both flows preserve the token via a `redirectTo` query param so post-auth we return to the accept screen.
-  - [ ] If signed in → call `POST /api/invites/:token/accept` → on success, set active group to the joined one, navigate to `/(tabs)/matches`.
-- [ ] In the group detail screen (Phase 2), add an "Invites" section for organizers: list active invites, "Create invite link" button, copy-to-clipboard, revoke.
-- [ ] Web: register the route. Mobile: add `footballwithfriends://join/<token>` scheme in `apps/mobile-web/app.config.ts`; test cold-start deep-link.
-- [ ] i18n: `groups.invite.*` keys (create, copy, revoke, expires, valid, invalid, expired, joined, claimedHistory).
+- [x] New screen `apps/mobile-web/app/join/[token].tsx` (mounted at the root stack, not under `(auth)` — the auth layout redirects signed-in users to `/(tabs)`, which would short-circuit the accept flow for already-signed-in invitees):
+  - [x] Calls `useInvitePreview` on mount; renders preview card.
+  - [x] Invalid invite → dedicated error copy per reason.
+  - [x] Not signed in → CTA "Sign in to join" carrying `redirectTo=/join/<token>` back to this screen.
+  - [x] Signed in → auto-calls `useAcceptInvite` which sets active group on success → navigates to `/(tabs)/matches`.
+- [x] Group detail screen: organizer-only Invites section — list active invites, "Create invite link" (default 7-day expiry), web-clipboard copy / native Share fallback, revoke.
+- [x] Web: registered `join/[token]` in root `_layout.tsx`. Mobile: `scheme: "football-with-friends"` already in `app.config.ts`; Expo Router handles `football-with-friends://join/<token>` automatically.
+- [x] i18n: `groups.invite.*` keys (create/copy/revoke/expiresAt/neverExpires/previewTitle/invitedBy/signInToJoin/joining + invalidReason.* + loadError* + acceptFailed*). EN + ES both landed.
 
 ### Subtasks — Tests
 

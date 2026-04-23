@@ -48,6 +48,7 @@ export const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/auth\// },                                      // BetterAuth
   { path: /^\/api\/phone-auth\// },                                 // Phone auth
   { path: /^\/api\/matches\/[^/]+\/preview$/, method: "GET" },      // OG metadata preview
+  { path: /^\/api\/invites\/[^/]+$/, method: "GET" },               // Invite preview (POST accept requires auth)
   { path: /^\/api\/profile\/picture\//, method: "GET" },            // Served images
   { path: /^\/health$/ },                                           // Health check
   { path: /^\/api\/cron\/update-matches$/, method: "POST" },        // Cron (has own secret check)

@@ -50,6 +50,8 @@ export class ServiceFactory {
       repos.groups,
       repos.groupMembers,
       repos.groupSettings,
+      repos.groupInvites,
+      repos.groupRoster,
     );
   }
 }

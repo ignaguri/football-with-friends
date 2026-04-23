@@ -1,14 +1,19 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import {
+  type GroupInviteSummary,
+  getWebAppUrl,
+  useCreateInvite,
   useCurrentGroup,
   useGroupDetail,
+  useGroupInvites,
   useLeaveGroup,
+  useRevokeInvite,
   useSession,
 } from "@repo/api-client";
 import { router, useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ScrollView } from "react-native";
-import { Button, Spinner, Text, YStack } from "tamagui";
+import { Platform, ScrollView, Share } from "react-native";
+import { Button, Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function GroupDetailScreen() {
   const { t } = useTranslation();
@@ -22,13 +27,14 @@ export default function GroupDetailScreen() {
     refetch,
   } = useGroupDetail(groupId ?? null);
 
-  // The server already returns `members` inlined on the detail response for
-  // organizers/superadmin, so we read from there rather than firing a
-  // separate /members query.
   const isOrganizerView =
     session?.user?.role === "superadmin" || myRole === "organizer";
   const members = isOrganizerView ? (group as any)?.members ?? [] : [];
   const leaveMutation = useLeaveGroup();
+
+  const invitesQuery = useGroupInvites(isOrganizerView ? groupId ?? null : null);
+  const createInviteMutation = useCreateInvite(groupId ?? "");
+  const revokeInviteMutation = useRevokeInvite(groupId ?? "");
 
   if (isLoading) {
     return (
@@ -55,6 +61,25 @@ export default function GroupDetailScreen() {
     router.replace("/(tabs)/profile/groups");
   }
 
+  function inviteLink(token: string): string {
+    return `${getWebAppUrl().replace(/\/$/, "")}/join/${token}`;
+  }
+
+  async function onCopyInvite(token: string) {
+    const link = inviteLink(token);
+    if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(link);
+      return;
+    }
+    await Share.share({ message: link });
+  }
+
+  async function onCreateInvite() {
+    await createInviteMutation.mutateAsync({
+      expiresInHours: 24 * 7,
+    });
+  }
+
   return (
     <ScrollView>
       <YStack padding="$4" gap="$4">
@@ -75,6 +100,69 @@ export default function GroupDetailScreen() {
                 {m.userId} — {m.role}
               </Text>
             ))}
+          </YStack>
+        ) : null}
+
+        {isOrganizerView ? (
+          <YStack gap="$2">
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text fontSize="$5" fontWeight="600">
+                {t("groups.invite.sectionTitle")}
+              </Text>
+              <Button
+                size="$3"
+                theme="active"
+                onPress={onCreateInvite}
+                disabled={createInviteMutation.isPending}
+              >
+                {t("groups.invite.create")}
+              </Button>
+            </XStack>
+
+            {invitesQuery.isLoading ? (
+              <Spinner />
+            ) : (invitesQuery.data ?? []).length === 0 ? (
+              <Text color="$gray11">{t("groups.invite.empty")}</Text>
+            ) : (
+              (invitesQuery.data ?? []).map((inv: GroupInviteSummary) => (
+                <YStack
+                  key={inv.id}
+                  padding="$3"
+                  borderRadius="$3"
+                  backgroundColor="$background"
+                  borderWidth={1}
+                  borderColor="$gray6"
+                  gap="$2"
+                >
+                  <Text fontSize="$3" color="$gray11" numberOfLines={1}>
+                    {inviteLink(inv.token)}
+                  </Text>
+                  <Text fontSize="$2" color="$gray10">
+                    {inv.expiresAt
+                      ? t("groups.invite.expiresAt", {
+                          date: new Date(inv.expiresAt).toLocaleString(),
+                        })
+                      : t("groups.invite.neverExpires")}
+                    {typeof inv.maxUses === "number"
+                      ? `  ·  ${inv.usesCount}/${inv.maxUses}`
+                      : ""}
+                  </Text>
+                  <XStack gap="$2">
+                    <Button size="$2" onPress={() => onCopyInvite(inv.token)}>
+                      {t("groups.invite.copy")}
+                    </Button>
+                    <Button
+                      size="$2"
+                      theme="red"
+                      onPress={() => revokeInviteMutation.mutate(inv.id)}
+                      disabled={revokeInviteMutation.isPending}
+                    >
+                      {t("groups.invite.revoke")}
+                    </Button>
+                  </XStack>
+                </YStack>
+              ))
+            )}
           </YStack>
         ) : null}
 
