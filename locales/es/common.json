@@ -511,7 +511,14 @@
     "updateError": "No se pudo actualizar el predio",
     "deleteSuccess": "Predio eliminado exitosamente",
     "deleteError": "No se pudo eliminar la ubicación",
-    "error": "No se pudieron cargar los predios: {message}"
+    "error": "No se pudieron cargar los predios: {message}",
+    "copyFromGroup": "Copiar desde otro grupo",
+    "copyFromGroupHint": "Duplica todos los predios y canchas del grupo seleccionado en éste. Los predios actuales se conservan.",
+    "sourceGroup": "Grupo de origen",
+    "selectSourceGroup": "Elegí un grupo",
+    "copy": "Copiar",
+    "copying": "Copiando…",
+    "copySuccess": "Se copiaron {{locations}} predios y {{courts}} canchas."
   },
   "courts": {
     "title": "Canchas",
@@ -797,7 +804,10 @@
       "loadErrorTitle": "No se pudo cargar la invitación",
       "loadErrorBody": "Revisá tu conexión e intentá de nuevo.",
       "acceptFailedTitle": "No pudimos unirte al grupo",
-      "acceptFailedBody": "Algo salió mal. Intentá de nuevo."
+      "acceptFailedBody": "Algo salió mal. Intentá de nuevo.",
+      "phonePlaceholder": "+491512345678",
+      "phoneHint": "Opcional — si ya tiene cuenta, le llega una notificación push.",
+      "phoneInvalid": "Usá formato internacional, ej. +491512345678."
     },
     "roster": {
       "title": "Plantel",

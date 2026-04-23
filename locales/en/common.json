@@ -508,7 +508,14 @@
     "updateError": "Failed to update location",
     "deleteSuccess": "Location deleted successfully",
     "deleteError": "Failed to delete location",
-    "error": "Failed to load locations: {message}"
+    "error": "Failed to load locations: {message}",
+    "copyFromGroup": "Copy from another group",
+    "copyFromGroupHint": "Duplicates all locations and courts from the selected group into this one. Existing venues here are kept.",
+    "sourceGroup": "Source group",
+    "selectSourceGroup": "Select a group",
+    "copy": "Copy",
+    "copying": "Copying…",
+    "copySuccess": "Copied {{locations}} locations and {{courts}} courts."
   },
   "courts": {
     "title": "Courts",
@@ -794,7 +801,10 @@
       "loadErrorTitle": "Couldn't load invite",
       "loadErrorBody": "Check your connection and try again.",
       "acceptFailedTitle": "Couldn't join the group",
-      "acceptFailedBody": "Something went wrong. Please try again."
+      "acceptFailedBody": "Something went wrong. Please try again.",
+      "phonePlaceholder": "+491512345678",
+      "phoneHint": "Optional — if they already have an account, they'll get a push notification.",
+      "phoneInvalid": "Use international format, e.g. +491512345678."
     },
     "roster": {
       "title": "Roster",

@@ -455,6 +455,29 @@ export function useDeleteRosterEntry(groupId: string) {
   });
 }
 
+// Copies all locations + courts from `sourceGroupId` into the current group
+// (the X-Group-Id interceptor sets the target). Invalidates the locations and
+// courts query caches on success so the admin screen reflects the new rows.
+export function useCopyVenues() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sourceGroupId: string) => {
+      const res = await client.api.locations["copy-from"][":sourceGroupId"].$post({
+        param: { sourceGroupId },
+      });
+      const data = (await res.json()) as {
+        locationsCopied: number;
+        courtsCopied: number;
+      };
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["locations"] });
+      queryClient.invalidateQueries({ queryKey: ["courts"] });
+    },
+  });
+}
+
 export function useTransferOwnership(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({

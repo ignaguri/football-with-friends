@@ -11,12 +11,12 @@ import {
   useRevokeInvite,
   useSession,
 } from "@repo/api-client";
-import { AlertDialog } from "@repo/ui";
+import { AlertDialog, isValidPhoneNumber } from "@repo/ui";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert, Platform, ScrollView, Share } from "react-native";
-import { Button, Spinner, Text, XStack, YStack } from "tamagui";
+import { Button, Input, Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function GroupDetailScreen() {
   const { t } = useTranslation();
@@ -40,6 +40,8 @@ export default function GroupDetailScreen() {
   const revokeInviteMutation = useRevokeInvite(groupId ?? "");
   const deleteMutation = useDeleteGroup();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [invitePhone, setInvitePhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -95,9 +97,17 @@ export default function GroupDetailScreen() {
   }
 
   async function onCreateInvite() {
+    setPhoneError(null);
+    const phone = invitePhone.trim();
+    if (phone && !isValidPhoneNumber(phone)) {
+      setPhoneError(t("groups.invite.phoneInvalid"));
+      return;
+    }
     await createInviteMutation.mutateAsync({
       expiresInHours: 24 * 7,
+      ...(phone ? { targetPhone: phone } : {}),
     });
+    setInvitePhone("");
   }
 
   return (
@@ -125,9 +135,24 @@ export default function GroupDetailScreen() {
 
         {isOrganizerView ? (
           <YStack gap="$2">
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$5" fontWeight="600">
-                {t("groups.invite.sectionTitle")}
+            <Text fontSize="$5" fontWeight="600">
+              {t("groups.invite.sectionTitle")}
+            </Text>
+
+            <YStack gap="$2">
+              <Input
+                value={invitePhone}
+                onChangeText={(v) => {
+                  setInvitePhone(v);
+                  if (phoneError) setPhoneError(null);
+                }}
+                placeholder={t("groups.invite.phonePlaceholder")}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <Text fontSize="$2" color={phoneError ? "$red10" : "$gray10"}>
+                {phoneError ?? t("groups.invite.phoneHint")}
               </Text>
               <Button
                 size="$3"
@@ -137,7 +162,7 @@ export default function GroupDetailScreen() {
               >
                 {t("groups.invite.create")}
               </Button>
-            </XStack>
+            </YStack>
 
             {invitesQuery.isLoading ? (
               <Spinner />

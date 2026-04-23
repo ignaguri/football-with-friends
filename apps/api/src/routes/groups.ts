@@ -11,6 +11,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
 import { MEMBER_ROLES } from "@repo/shared/domain";
+import { notifyGroupInviteTarget } from "../lib/notify";
 import { type AppVariables, requireUser } from "../middleware/security";
 import {
   groupContextMiddleware,
@@ -279,14 +280,32 @@ app.post(
     const body = c.req.valid("json");
 
     try {
-      const invite = await getGroupService().createInvite({
-        groupId: id,
-        createdByUserId: user.id,
-        expiresInHours: body.expiresInHours,
-        maxUses: body.maxUses,
-        targetPhone: body.targetPhone,
-        targetUserId: body.targetUserId,
-      });
+      const [invite, group] = await Promise.all([
+        getGroupService().createInvite({
+          groupId: id,
+          createdByUserId: user.id,
+          expiresInHours: body.expiresInHours,
+          maxUses: body.maxUses,
+          targetPhone: body.targetPhone,
+          targetUserId: body.targetUserId,
+        }),
+        body.targetPhone
+          ? getGroupService().getGroupBasics(id)
+          : Promise.resolve(null),
+      ]);
+      if (body.targetPhone && group) {
+        // Cloudflare Workers terminates background promises once the response
+        // returns; `waitUntil` keeps the isolate alive until the push completes.
+        c.executionCtx?.waitUntil(
+          notifyGroupInviteTarget({
+            targetPhone: body.targetPhone,
+            groupId: id,
+            groupName: group.name,
+            inviterName: user.name,
+            token: invite.token,
+          }),
+        );
+      }
       return c.json({ invite }, 201);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to create invite";

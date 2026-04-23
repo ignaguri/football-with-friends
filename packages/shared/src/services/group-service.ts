@@ -22,6 +22,10 @@ import type {
   TursoGroupRosterRepository,
   TursoGroupSettingsRepository,
 } from "../repositories/group-repositories";
+import type {
+  LocationRepository,
+  CourtRepository,
+} from "../repositories/interfaces";
 
 export interface GroupDetails extends Group {
   members: GroupMember[];
@@ -79,6 +83,11 @@ export type RosterListEntry = Omit<
   claimedByUser?: { id: string; name: string };
 };
 
+export interface CopyVenuesOutcome {
+  locationsCopied: number;
+  courtsCopied: number;
+}
+
 export class GroupService {
   constructor(
     private groupRepo: TursoGroupRepository,
@@ -86,6 +95,8 @@ export class GroupService {
     private settingsRepo: TursoGroupSettingsRepository,
     private inviteRepo: TursoGroupInviteRepository,
     private rosterRepo: TursoGroupRosterRepository,
+    private locationRepo: LocationRepository,
+    private courtRepo: CourtRepository,
   ) {}
 
   async listMyGroups(userId: string) {
@@ -485,5 +496,83 @@ export class GroupService {
     }
     await this.rosterRepo.delete(rosterId);
     return { deleted: true };
+  }
+
+  // --- Venues (cross-group) ---------------------------------------------
+
+  /**
+   * Duplicates all locations and courts from `sourceGroupId` into
+   * `targetGroupId` with fresh ids. Auth (must be organizer/superadmin in
+   * both groups) is enforced at the route boundary; this method trusts its
+   * caller. Not transactional across repos — a partial copy may occur if a
+   * write fails halfway; organizers can clean up manually. Acceptable at
+   * current scale (setup-time tool, low frequency).
+   */
+  async copyVenues(
+    sourceGroupId: string,
+    targetGroupId: string,
+  ): Promise<CopyVenuesOutcome> {
+    if (sourceGroupId === targetGroupId) {
+      throw new Error("Source and target group must differ");
+    }
+
+    const sourceGroup = await this.groupRepo.findById(sourceGroupId);
+    if (!sourceGroup) {
+      throw new Error("Source group not found");
+    }
+
+    const [sourceLocations, sourceCourts] = await Promise.all([
+      this.locationRepo.findAll(sourceGroupId),
+      this.courtRepo.findAll(sourceGroupId),
+    ]);
+
+    // Derive `courtCount` from the actual courts rather than copying the
+    // source location's denormalized counter — source data may be stale, and
+    // a partial write would otherwise leave the target's counter inconsistent
+    // with its real court rows.
+    const courtsByLocationId = new Map<string, number>();
+    for (const court of sourceCourts) {
+      courtsByLocationId.set(
+        court.locationId,
+        (courtsByLocationId.get(court.locationId) ?? 0) + 1,
+      );
+    }
+
+    const createdLocations = await Promise.all(
+      sourceLocations.map((loc) =>
+        this.locationRepo.create({
+          groupId: targetGroupId,
+          name: loc.name,
+          address: loc.address,
+          coordinates: loc.coordinates,
+          courtCount: courtsByLocationId.get(loc.id) ?? 0,
+        }),
+      ),
+    );
+    const locationIdMap = new Map<string, string>();
+    sourceLocations.forEach((loc, i) => {
+      const created = createdLocations[i];
+      if (created) locationIdMap.set(loc.id, created.id);
+    });
+
+    const courtsToCreate = sourceCourts.flatMap((court) => {
+      const newLocationId = locationIdMap.get(court.locationId);
+      if (!newLocationId) return [];
+      return [
+        this.courtRepo.create({
+          groupId: targetGroupId,
+          locationId: newLocationId,
+          name: court.name,
+          description: court.description,
+          isActive: court.isActive,
+        }),
+      ];
+    });
+    const createdCourts = await Promise.all(courtsToCreate);
+
+    return {
+      locationsCopied: locationIdMap.size,
+      courtsCopied: createdCourts.length,
+    };
   }
 }
