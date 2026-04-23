@@ -58,6 +58,7 @@ export {
   useGroupMembers,
   useCreateGroup,
   useUpdateGroup,
+  useDeleteGroup,
   useUpdateMemberRole,
   useKickMember,
   useLeaveGroup,

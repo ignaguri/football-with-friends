@@ -1,5 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useCurrentGroup, useSession } from "@repo/api-client";
+import { GroupSwitcher } from "../../components/group-switcher";
+import { NoGroupOnboarding } from "../../components/no-group-onboarding";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import {
   Home,
@@ -16,7 +18,7 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { data: session, isPending } = useSession();
-  const { myRole } = useCurrentGroup();
+  const { myRole, noGroup } = useCurrentGroup();
 
   // Must be called before any early returns (Rules of Hooks)
   usePushNotifications();
@@ -40,13 +42,19 @@ export default function TabsLayout() {
     return <Redirect href="/(auth)" />;
   }
 
+  // Short-circuit to onboarding so matches/admin don't mount scoped queries
+  // that would 409 on every render. `noGroup` is false while loading.
+  if (noGroup) return <NoGroupOnboarding />;
+
   // Admin tab is gated by group-relative role now. Superadmin retains the
   // global override so Ignacio can see admin panels on any group.
   const isSuperadmin = session?.user?.role === "superadmin";
   const isAdmin = isSuperadmin || myRole === "organizer";
 
   return (
-    <Tabs
+    <YStack flex={1}>
+      <GroupSwitcher />
+      <Tabs
       sceneContainerStyle={{
         backgroundColor: theme.background?.val,
       }}
@@ -127,6 +135,7 @@ export default function TabsLayout() {
           href: isAdmin ? undefined : null, // Hide tab if not admin
         }}
       />
-    </Tabs>
+      </Tabs>
+    </YStack>
   );
 }

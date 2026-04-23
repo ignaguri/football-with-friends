@@ -175,6 +175,29 @@ export function useUpdateGroup(groupId: string) {
   });
 }
 
+export function useDeleteGroup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const res = await client.api.groups[":id"].$delete({
+        param: { id: groupId },
+      });
+      return res.json();
+    },
+    onSuccess: (_, groupId) => {
+      // If the caller just deleted their own active group, drop the stored
+      // id so the next scoped request lets the server auto-pick a remaining
+      // membership (same path we take on FORBIDDEN_GROUP in the fetch
+      // interceptor). Invalidate everything: queries carry X-Group-Id via
+      // the interceptor, not in the key, so no scoped filter would match.
+      if (getActiveGroupId() === groupId) {
+        setActiveGroupId(null);
+      }
+      queryClient.invalidateQueries();
+    },
+  });
+}
+
 export function useUpdateMemberRole(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({

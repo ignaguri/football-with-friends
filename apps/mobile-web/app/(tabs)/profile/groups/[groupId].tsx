@@ -4,15 +4,18 @@ import {
   getWebAppUrl,
   useCreateInvite,
   useCurrentGroup,
+  useDeleteGroup,
   useGroupDetail,
   useGroupInvites,
   useLeaveGroup,
   useRevokeInvite,
   useSession,
 } from "@repo/api-client";
+import { AlertDialog } from "@repo/ui";
 import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, ScrollView, Share } from "react-native";
+import { Alert, Platform, ScrollView, Share } from "react-native";
 import { Button, Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function GroupDetailScreen() {
@@ -35,6 +38,8 @@ export default function GroupDetailScreen() {
   const invitesQuery = useGroupInvites(isOrganizerView ? groupId ?? null : null);
   const createInviteMutation = useCreateInvite(groupId ?? "");
   const revokeInviteMutation = useRevokeInvite(groupId ?? "");
+  const deleteMutation = useDeleteGroup();
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (isLoading) {
     return (
@@ -59,6 +64,21 @@ export default function GroupDetailScreen() {
     if (!groupId) return;
     await leaveMutation.mutateAsync(groupId);
     router.replace("/(tabs)/profile/groups");
+  }
+
+  // AlertDialog's onConfirm doesn't await the callback, so the mutation is
+  // fired-and-tracked via onSuccess/onError callbacks — awaiting here would
+  // turn any rejection into an unhandled promise and swallow user feedback.
+  function onDelete() {
+    if (!groupId) return;
+    deleteMutation.mutate(groupId, {
+      onSuccess: () => router.replace("/(tabs)/profile/groups"),
+      onError: (err) =>
+        Alert.alert(
+          t("groups.detail.delete"),
+          err instanceof Error ? err.message : String(err),
+        ),
+    });
   }
 
   function inviteLink(token: string): string {
@@ -174,6 +194,28 @@ export default function GroupDetailScreen() {
           >
             {t("groups.detail.leave")}
           </Button>
+        ) : null}
+
+        {amIOwner ? (
+          <>
+            <Button
+              theme="red"
+              onPress={() => setConfirmDelete(true)}
+              disabled={deleteMutation.isPending}
+            >
+              {t("groups.detail.delete")}
+            </Button>
+            <AlertDialog
+              open={confirmDelete}
+              onOpenChange={setConfirmDelete}
+              title={t("groups.detail.delete")}
+              description={t("groups.detail.deleteConfirm")}
+              confirmText={t("groups.detail.delete")}
+              cancelText={t("shared.cancel")}
+              variant="destructive"
+              onConfirm={onDelete}
+            />
+          </>
         ) : null}
       </YStack>
     </ScrollView>
