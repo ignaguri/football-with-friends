@@ -64,6 +64,21 @@ export default function AdminLayout() {
           title: t("groups.create.title"),
         }}
       />
+      <Stack.Screen
+        name="roster"
+        options={{
+          title: t("groups.roster.title"),
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.navigate("/(tabs)/admin")}
+              style={{ marginLeft: 8 }}
+            >
+              <ChevronLeft size={28} color={theme.color?.val} />
+            </Pressable>
+          ),
+        }}
+      />
     </Stack>
   );
 }

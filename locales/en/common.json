@@ -795,6 +795,33 @@
       "loadErrorBody": "Check your connection and try again.",
       "acceptFailedTitle": "Couldn't join the group",
       "acceptFailedBody": "Something went wrong. Please try again."
+    },
+    "roster": {
+      "title": "Roster",
+      "add": "Add ghost",
+      "empty": "No ghosts yet — add one to bring guests to matches.",
+      "displayName": "Display name",
+      "phone": "Phone (optional)",
+      "email": "Email (optional)",
+      "claimed": "Claimed",
+      "unclaimed": "Unclaimed",
+      "linkedTo": "Linked to {{name}}",
+      "linkToMember": "Link to existing member",
+      "unlinkFromMember": "Unlink from {{name}}",
+      "searchMembers": "Search members…",
+      "noMembersFound": "No members match your search.",
+      "editTitle": "Edit ghost",
+      "deleteTitle": "Delete ghost",
+      "deleteCta": "Delete",
+      "deleteConfirm": "Permanently delete \"{{name}}\" from this group's roster?",
+      "forceDeleteCta": "Delete anyway",
+      "forceDeleteConfirm": "\"{{name}}\" is still linked to {{count}} signup(s). Deleting will keep the signup history but unlink it from this ghost. Continue?",
+      "alreadyMemberError": "A member with that phone or email is already in this group — invite them directly instead of adding a ghost.",
+      "guestPickerTitle": "Pick a guest",
+      "guestPickerSearch": "Search roster…",
+      "guestPickerEmpty": "No roster entries yet.",
+      "quickAddTitle": "Quick add + sign up",
+      "quickAddHint": "Name-only. Phone/email optional. A ghost will be created in this group and signed up for the match."
     }
   }
 }
