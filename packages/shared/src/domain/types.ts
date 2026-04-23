@@ -294,9 +294,8 @@ export interface UpdateSignupData
 export interface CreateGuestSignupData {
   groupId: string;
   matchId: string;
-  // Required post-Phase-4: every guest signup is backed by a roster entry.
-  // The `rosterId` is the source of truth for identity; `guestName` is the
-  // display snapshot captured at signup time.
+  // Every guest signup is backed by a roster entry: `rosterId` is the
+  // identity source; `guestName` is the display snapshot at signup time.
   rosterId: string;
   guestName: string;
   ownerUserId: string;

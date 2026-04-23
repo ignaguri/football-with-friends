@@ -41,7 +41,7 @@ import {
   ChevronRight,
 } from "@tamagui/lucide-icons";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
 import {
   Platform,
@@ -132,6 +132,15 @@ export default function MatchDetailScreen() {
   const [guestSearch, setGuestSearch] = useState("");
   const { groupId: currentGroupId } = useCurrentGroup();
   const rosterForGuest = useGroupRoster(showGuestDialog ? currentGroupId : null);
+  const filteredRoster = useMemo(() => {
+    const entries = rosterForGuest.data ?? [];
+    const q = guestSearch.trim().toLowerCase();
+    return q
+      ? entries.filter((e: GroupRosterEntry) =>
+          e.displayName.toLowerCase().includes(q),
+        )
+      : entries;
+  }, [rosterForGuest.data, guestSearch]);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [signupToCancel, setSignupToCancel] = useState<{
@@ -1001,7 +1010,7 @@ export default function MatchDetailScreen() {
         </YStack>
       </Dialog>
 
-      {/* Guest Signup Dialog — Phase 4: pick from roster OR quick-add ghost */}
+      {/* Guest Signup Dialog: pick from group roster OR quick-add a ghost */}
       <Dialog
         open={showGuestDialog}
         onOpenChange={(open) => {
@@ -1046,27 +1055,18 @@ export default function MatchDetailScreen() {
               />
               <ScrollView style={{ maxHeight: 320 }}>
                 <YStack gap="$2">
-                  {(rosterForGuest.data ?? [])
-                    .filter((e: GroupRosterEntry) =>
-                      guestSearch.trim()
-                        ? e.displayName
-                            .toLowerCase()
-                            .includes(guestSearch.trim().toLowerCase())
-                        : true,
-                    )
-                    .map((e: GroupRosterEntry) => (
-                      <Button
-                        key={e.id}
-                        variant="outline"
-                        onPress={() => addGuestMutation.mutate({ rosterId: e.id })}
-                        disabled={addGuestMutation.isPending}
-                        testID={`guest-roster-pick-${e.id}`}
-                      >
-                        {e.displayName}
-                      </Button>
-                    ))}
-                  {(rosterForGuest.data ?? []).length === 0 &&
-                  !rosterForGuest.isLoading ? (
+                  {filteredRoster.map((e: GroupRosterEntry) => (
+                    <Button
+                      key={e.id}
+                      variant="outline"
+                      onPress={() => addGuestMutation.mutate({ rosterId: e.id })}
+                      disabled={addGuestMutation.isPending}
+                      testID={`guest-roster-pick-${e.id}`}
+                    >
+                      {e.displayName}
+                    </Button>
+                  ))}
+                  {filteredRoster.length === 0 && !rosterForGuest.isLoading ? (
                     <Text color="$gray11" textAlign="center">
                       {t("groups.roster.guestPickerEmpty")}
                     </Text>

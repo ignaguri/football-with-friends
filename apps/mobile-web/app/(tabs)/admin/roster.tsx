@@ -71,10 +71,11 @@ export default function AdminRosterScreen() {
   const [editPhone, setEditPhone] = useState("");
   const [editEmail, setEditEmail] = useState("");
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<GroupRosterEntry | null>(null);
-  const [forcePrompt, setForcePrompt] = useState<{
+  // `referencingSignupCount` present ⇒ we already hit the 409 and the user
+  // is confirming the force-delete path; absent ⇒ first-time confirm.
+  const [deleteState, setDeleteState] = useState<{
     entry: GroupRosterEntry;
-    referencingSignupCount: number;
+    referencingSignupCount?: number;
   } | null>(null);
 
   const [linkingEntry, setLinkingEntry] = useState<GroupRosterEntry | null>(null);
@@ -141,19 +142,17 @@ export default function AdminRosterScreen() {
 
   function requestDelete(entry: GroupRosterEntry) {
     setEditing(null);
-    setShowDeleteConfirm(entry);
+    setDeleteState({ entry });
   }
 
   async function runDelete(entry: GroupRosterEntry, force: boolean) {
     try {
       await deleteMutation.mutateAsync({ rosterId: entry.id, force });
-      setShowDeleteConfirm(null);
-      setForcePrompt(null);
+      setDeleteState(null);
     } catch (err) {
       const info = apiErrorInfo(err);
       if (info.reason === "referenced" && typeof info.referencingSignupCount === "number") {
-        setShowDeleteConfirm(null);
-        setForcePrompt({
+        setDeleteState({
           entry,
           referencingSignupCount: info.referencingSignupCount,
         });
@@ -394,43 +393,36 @@ export default function AdminRosterScreen() {
         </YStack>
       </Dialog>
 
-      {/* Plain delete confirm (no signups referencing) */}
       <AlertDialog
-        open={!!showDeleteConfirm}
-        onOpenChange={(open) => !open && setShowDeleteConfirm(null)}
+        open={!!deleteState}
+        onOpenChange={(open) => !open && setDeleteState(null)}
         title={t("groups.roster.deleteTitle")}
         description={
-          showDeleteConfirm
-            ? t("groups.roster.deleteConfirm", {
-                name: showDeleteConfirm.displayName,
-              })
+          deleteState
+            ? deleteState.referencingSignupCount !== undefined
+              ? t("groups.roster.forceDeleteConfirm", {
+                  name: deleteState.entry.displayName,
+                  count: deleteState.referencingSignupCount,
+                })
+              : t("groups.roster.deleteConfirm", {
+                  name: deleteState.entry.displayName,
+                })
             : undefined
         }
-        confirmText={t("groups.roster.deleteCta")}
+        confirmText={
+          deleteState?.referencingSignupCount !== undefined
+            ? t("groups.roster.forceDeleteCta")
+            : t("groups.roster.deleteCta")
+        }
         cancelText={t("shared.cancel")}
         variant="destructive"
         onConfirm={() =>
-          showDeleteConfirm && runDelete(showDeleteConfirm, false)
+          deleteState &&
+          runDelete(
+            deleteState.entry,
+            deleteState.referencingSignupCount !== undefined,
+          )
         }
-      />
-
-      {/* Force-delete confirm (signups still reference this ghost) */}
-      <AlertDialog
-        open={!!forcePrompt}
-        onOpenChange={(open) => !open && setForcePrompt(null)}
-        title={t("groups.roster.deleteTitle")}
-        description={
-          forcePrompt
-            ? t("groups.roster.forceDeleteConfirm", {
-                name: forcePrompt.entry.displayName,
-                count: forcePrompt.referencingSignupCount,
-              })
-            : undefined
-        }
-        confirmText={t("groups.roster.forceDeleteCta")}
-        cancelText={t("shared.cancel")}
-        variant="destructive"
-        onConfirm={() => forcePrompt && runDelete(forcePrompt.entry, true)}
       />
     </Container>
   );

@@ -1,11 +1,11 @@
 // Migration: convert-legacy-guests-to-ghosts
-// Phase 4 data migration. For every legacy no-user signup in grp_legacy —
-// identified by `signups.user_id IS NULL AND roster_id IS NULL` — create a
-// corresponding `group_roster` entry (deduplicated per
-// `(owner_id, player_name)` tuple, where owner_id =
-// COALESCE(guest_owner_id, added_by_user_id)) and point `signups.roster_id`
-// at it. Covers both `guest` signups and `admin_added` signups that don't
-// link to a real user. `guest_owner_id` is retained as an audit column.
+// For every legacy no-user signup in grp_legacy — identified by
+// `signups.user_id IS NULL AND roster_id IS NULL` — create a corresponding
+// `group_roster` entry (deduplicated per `(owner_id, player_name)` tuple,
+// where owner_id = COALESCE(guest_owner_id, added_by_user_id)) and point
+// `signups.roster_id` at it. Covers both `guest` signups and `admin_added`
+// signups that don't link to a real user. `guest_owner_id` is retained as
+// an audit column.
 //
 // Idempotency: existence checks on both the ghost insert and the signup
 // update let this migration be re-run safely. The down migration undoes
@@ -13,8 +13,6 @@
 // `phone IS NULL AND email IS NULL AND group_id = 'grp_legacy'` plus
 // matching `(display_name, created_by_user_id)` — guests migrated from
 // legacy data never carry contact info.
-//
-// See docs/superpowers/plans/2026-04-22-group-oriented-scoping.md Phase 4.
 
 import { sql } from "kysely";
 import type { Kysely, Migration } from "kysely";

@@ -250,7 +250,7 @@ app.get("/:id/invites", async (c) => {
 // E.164 per BetterAuth phone-auth + profile routes; targetPhone must match
 // the exact shape we store in `user.phoneNumber` or `acceptInvite` never
 // matches and the organizer has effectively created a dead invite.
-const INVITE_TARGET_PHONE_REGEX = /^\+[1-9]\d{6,14}$/;
+export const INVITE_TARGET_PHONE_REGEX = /^\+[1-9]\d{6,14}$/;
 
 app.post(
   "/:id/invites",
@@ -314,9 +314,8 @@ app.delete("/:id/invites/:inviteId", async (c) => {
 });
 
 // Roster (ghosts) ---------------------------------------------------------
-// Ghosts are organizer-managed player profiles that may be claimed by a real
-// user via invite accept (Phase 3 auto-claim) or organizer-driven linking.
-// All routes are organizer-only.
+// Organizer-only. Ghosts are managed player profiles that may be claimed
+// by a real user via invite accept or organizer-driven linking.
 
 app.get("/:id/roster", async (c) => {
   const id = c.req.param("id");

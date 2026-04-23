@@ -57,13 +57,20 @@ export interface RosterCreateParams {
   createdByUserId: string;
 }
 
+export type RosterCreateErrorReason = "already_member";
+export type RosterDeleteErrorReason = "referenced";
+
 export type CreateRosterOutcome =
   | { created: true; entry: GroupRoster }
-  | { created: false; reason: "already_member"; userId: string };
+  | { created: false; reason: RosterCreateErrorReason; userId: string };
 
 export type DeleteRosterOutcome =
   | { deleted: true }
-  | { deleted: false; reason: "referenced"; referencingSignupCount: number };
+  | {
+      deleted: false;
+      reason: RosterDeleteErrorReason;
+      referencingSignupCount: number;
+    };
 
 export type RosterListEntry = Omit<
   GroupRoster,
@@ -394,26 +401,26 @@ export class GroupService {
    */
   async createRosterEntry(params: RosterCreateParams): Promise<CreateRosterOutcome> {
     if (params.phone || params.email) {
-      const db = getDatabase();
-      let q = db.selectFrom("user").select(["id"]);
-      if (params.phone && params.email) {
-        q = q.where((eb) =>
-          eb.or([
-            eb("phoneNumber", "=", params.phone!),
-            eb("email", "=", params.email!),
-          ]),
-        );
-      } else if (params.phone) {
-        q = q.where("phoneNumber", "=", params.phone);
-      } else if (params.email) {
-        q = q.where("email", "=", params.email);
-      }
-      const candidates = await q.execute();
-      for (const u of candidates) {
-        const membership = await this.memberRepo.find(params.groupId, u.id);
-        if (membership) {
-          return { created: false, reason: "already_member", userId: u.id };
-        }
+      const existingMember = await getDatabase()
+        .selectFrom("user")
+        .innerJoin("group_members", "group_members.user_id", "user.id")
+        .select("user.id as id")
+        .where("group_members.group_id", "=", params.groupId)
+        .where((eb) => {
+          const clauses = [];
+          if (params.phone)
+            clauses.push(eb("user.phoneNumber", "=", params.phone));
+          if (params.email) clauses.push(eb("user.email", "=", params.email));
+          return eb.or(clauses);
+        })
+        .limit(1)
+        .executeTakeFirst();
+      if (existingMember) {
+        return {
+          created: false,
+          reason: "already_member",
+          userId: existingMember.id,
+        };
       }
     }
 
@@ -490,37 +497,5 @@ export class GroupService {
     }
     await this.rosterRepo.delete(rosterId);
     return { deleted: true };
-  }
-
-  /**
-   * Resolve a ghost to the signup shape used by `addGuestPlayer`. Used by
-   * the match-service when the organizer picks an existing ghost instead
-   * of typing a new name — keeps the "signup row mirrors ghost identity"
-   * invariant in one place.
-   */
-  async getRosterEntryForGroup(
-    rosterId: string,
-    groupId: string,
-  ): Promise<GroupRoster> {
-    const entry = await this.rosterRepo.findById(rosterId);
-    if (!entry || entry.groupId !== groupId) {
-      throw new Error("Roster entry not found");
-    }
-    return entry;
-  }
-
-  /**
-   * Convenience path for the "quick add guest + create ghost in one step"
-   * flow from match detail. No member-collision precheck here — the caller
-   * typed a name inline, not a contact, so we wouldn't catch anything.
-   */
-  async createQuickRosterEntry(params: {
-    groupId: string;
-    displayName: string;
-    phone?: string;
-    email?: string;
-    createdByUserId: string;
-  }): Promise<GroupRoster> {
-    return this.rosterRepo.create(params);
   }
 }

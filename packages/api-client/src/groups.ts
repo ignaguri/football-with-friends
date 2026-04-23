@@ -8,6 +8,7 @@ import type {
   GroupInviteInvalidReason,
   GroupVisibility,
   MemberRole,
+  UpdateGroupRosterData,
 } from "@repo/shared/domain";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -381,12 +382,7 @@ export interface CreateRosterInput {
   email?: string;
 }
 
-export interface UpdateRosterInput {
-  displayName?: string;
-  phone?: string | null;
-  email?: string | null;
-  claimedByUserId?: string | null;
-}
+export type UpdateRosterInput = UpdateGroupRosterData;
 
 export function useGroupRoster(groupId: string | null) {
   return useQuery({
@@ -440,8 +436,6 @@ export function useDeleteRosterEntry(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: { rosterId: string; force?: boolean }) => {
-      // Hono RPC doesn't model query params on $delete in this codebase's
-      // client typing; fall through to a raw fetch via the hc-built URL.
       const res = await client.api.groups[":id"].roster[":rosterId"].$delete({
         param: { id: groupId, rosterId: input.rosterId },
         query: input.force ? { force: "true" } : {},
@@ -449,11 +443,13 @@ export function useDeleteRosterEntry(groupId: string) {
       return res.json();
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: groupQueryKeys.roster(groupId) });
+      // Force path may have nulled signup.roster_id on linked matches; blow
+      // the entire cache so match detail queries re-fetch. Non-force path
+      // only touched the roster list.
       if (variables.force) {
-        // Match detail queries may have had signups unlinked from this ghost;
-        // blow the cache so re-fetches pick up the NULL roster_id.
         queryClient.invalidateQueries();
+      } else {
+        queryClient.invalidateQueries({ queryKey: groupQueryKeys.roster(groupId) });
       }
     },
   });

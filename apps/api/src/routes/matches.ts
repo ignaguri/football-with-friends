@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
+import { INVITE_TARGET_PHONE_REGEX } from "./groups";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import { isCurrentOrganizer, requireOrganizer } from "../middleware/authz";
 import {
@@ -261,7 +262,7 @@ app.post("/:id/signup", async (c) => {
 
 // Add a guest to a match. Accepts either `{rosterId}` (existing ghost) or
 // `{guestName, phone?, email?}` (inline create). The service backs every
-// guest signup with a roster entry — Phase 4.
+// guest signup with a roster entry.
 app.post(
   "/:id/guest",
   zValidator(
@@ -276,7 +277,7 @@ app.post(
         phone: z
           .string()
           .trim()
-          .regex(/^\+[1-9]\d{6,14}$/, "phone must be E.164 (e.g. +1234567890)")
+          .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
           .optional(),
         email: z.string().trim().email().optional(),
         status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
