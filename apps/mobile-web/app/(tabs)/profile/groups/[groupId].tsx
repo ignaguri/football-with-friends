@@ -15,7 +15,7 @@ import { AlertDialog } from "@repo/ui";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, ScrollView, Share } from "react-native";
+import { Alert, Platform, ScrollView, Share } from "react-native";
 import { Button, Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function GroupDetailScreen() {
@@ -66,10 +66,19 @@ export default function GroupDetailScreen() {
     router.replace("/(tabs)/profile/groups");
   }
 
-  async function onDelete() {
+  // AlertDialog's onConfirm doesn't await the callback, so the mutation is
+  // fired-and-tracked via onSuccess/onError callbacks — awaiting here would
+  // turn any rejection into an unhandled promise and swallow user feedback.
+  function onDelete() {
     if (!groupId) return;
-    await deleteMutation.mutateAsync(groupId);
-    router.replace("/(tabs)/profile/groups");
+    deleteMutation.mutate(groupId, {
+      onSuccess: () => router.replace("/(tabs)/profile/groups"),
+      onError: (err) =>
+        Alert.alert(
+          t("groups.detail.delete"),
+          err instanceof Error ? err.message : String(err),
+        ),
+    });
   }
 
   function inviteLink(token: string): string {
