@@ -35,7 +35,14 @@ export default function JoinScreen() {
   function runAccept() {
     if (!token) return;
     acceptMutation.mutate(token, {
-      onSuccess: () => router.replace("/(tabs)/matches"),
+      onSuccess: (result) => {
+        // Only auto-navigate freshly joined users. If they were already in
+        // the group, render the already-member screen instead of silently
+        // dumping them into /matches with no context.
+        if (result.newMembership) {
+          router.replace("/(tabs)/matches");
+        }
+      },
     });
   }
 
@@ -122,6 +129,26 @@ export default function JoinScreen() {
           {t("groups.invite.acceptFailedBody")}
         </Text>
         <Button onPress={runAccept}>{t("shared.tryAgain")}</Button>
+      </YStack>
+    );
+  }
+
+  // Already-a-member path: the accept call succeeded but didn't add a new
+  // membership. Surface the outcome instead of silently redirecting.
+  if (acceptMutation.isSuccess && acceptMutation.data.newMembership === false) {
+    return (
+      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
+        <Text fontSize="$7" fontWeight="700" textAlign="center">
+          {t("groups.invite.alreadyMemberTitle", {
+            groupName: preview.group?.name ?? "",
+          })}
+        </Text>
+        <Text color="$gray11" textAlign="center">
+          {t("groups.invite.alreadyMemberBody")}
+        </Text>
+        <Button theme="active" onPress={() => router.replace("/(tabs)/matches")}>
+          {t("groups.invite.goToMatches")}
+        </Button>
       </YStack>
     );
   }

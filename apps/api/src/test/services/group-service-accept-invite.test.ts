@@ -119,6 +119,8 @@ describe("acceptInvite — idempotency", () => {
 
     expect(first.joined).toBe(true);
     expect(second.joined).toBe(true);
+    if (first.joined) expect(first.newMembership).toBe(true);
+    if (second.joined) expect(second.newMembership).toBe(false);
 
     const memberships = await db
       .selectFrom("group_members")

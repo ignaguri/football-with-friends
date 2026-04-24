@@ -53,6 +53,10 @@ export type InviteAcceptOutcome =
   | {
       joined: true;
       groupId: string;
+      // false when the user was already a member; the /join screen uses this
+      // to show a "welcome back" state instead of silently dumping the user
+      // into the app.
+      newMembership: boolean;
       claimedRosterId?: string;
       ambiguousRosterMatches?: number;
     }
@@ -405,6 +409,7 @@ export class GroupService {
     return {
       joined: true,
       groupId: invite.groupId,
+      newMembership: addedNewMembership,
       claimedRosterId,
       ambiguousRosterMatches,
     };

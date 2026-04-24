@@ -383,13 +383,14 @@ export function useAcceptInvite() {
       return (await res.json()) as {
         joined: true;
         groupId: string;
+        newMembership: boolean;
         claimedRosterId?: string;
         ambiguousRosterMatches?: number;
       };
     },
     onSuccess: (result) => {
-      // Freshly joined → we have a new group. Switch to it and blow away any
-      // previously cached scoped data so the new group's responses drive UI.
+      // Switch to the target group (freshly joined or re-entered via invite)
+      // and blow away cached scoped data so the group's responses drive UI.
       setActiveGroupId(result.groupId);
       queryClient.invalidateQueries();
     },
