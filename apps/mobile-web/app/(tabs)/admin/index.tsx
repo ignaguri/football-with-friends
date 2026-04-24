@@ -220,6 +220,7 @@ export default function OrganizerScreen() {
 // ============ MATCHES TAB ============
 function MatchesTab() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const toast = useToastController();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
