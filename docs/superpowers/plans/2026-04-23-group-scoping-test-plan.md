@@ -1461,6 +1461,52 @@ queries use `selectAll()` or don't route through `dbSignupToSignup`, so
 no other spots were affected. Verified via staging curl + UI match
 detail render.
 
+### Bug 7 — Organizer tab visible but admin screens rejected organizers
+
+The `(tabs)/_layout.tsx` correctly gated the Admin tab as
+`isPlatformAdmin || myRole === "organizer"`, but the downstream admin
+screens (`admin/index.tsx`, `admin/add-match.tsx`,
+`admin/edit-match.tsx`), the matches-list FAB
+(`matches/index.tsx:213`), and the per-player organizer actions on
+`matches/[matchId]/index.tsx` all still hard-coded
+`session?.user?.role === "admin"`. Effect: a group organizer saw the
+Admin tab, clicked it, and hit "You are not authorized to view this
+page." Same for add-match / edit-match direct routes.
+
+Server-side authz was untouched and correctly accepted organizers for
+`POST /api/matches`, invites, roster, and settings — verified on
+staging via curl. This was purely a client-side stale-check regression
+from the group-scoping refactor.
+
+**Fix (2026-04-24):** widened each gate to
+`isPlatformAdmin || myRole === "organizer"` via `useCurrentGroup()`.
+Platform-admin-only affordances (e.g. "Create Group" button, cross-
+group "Copy venues" helper) intentionally kept their narrow gate.
+Verified on staging with a freshly-seeded organizer user: Admin tab →
+Organizer Dashboard loads; Matches/Locations/Courts/Settings/Roster
+all open; add-match form renders; FAB visible from Matches tab.
+
+### Bug 8 — `ReferenceError: session is not defined` in admin MatchesTab
+
+Pre-existing bug hidden because until Bug 7 was fixed no organizer ever
+reached this render path. The `MatchesTab()` sub-component in
+`admin/index.tsx` (line 221) referenced
+`session?.user?.role === "admin"` at line 355 (to gate the "Create
+Group" button) but never called `useSession()` inside that function —
+`session` was only declared in the parent `OrganizerScreen()` via
+closure of a differently-named identifier. At render time in
+production-minified code this threw `ReferenceError: session is not
+defined`, which was swallowed by the app-level `ErrorBoundary` and
+surfaced as "An error occurred · Something went wrong while loading
+this page."
+
+**Fix (2026-04-24):** added
+`const { data: session } = useSession();` at the top of `MatchesTab()`.
+One-line change. Verified on staging: Organizer Dashboard Matches tab
+renders the full match list with Edit / Cancel / Delete per row, and
+the "Create Group" button is (correctly) not shown for a non-platform-
+admin organizer.
+
 ---
 
 ## Appendix B — Sign-off log
@@ -1473,6 +1519,7 @@ section numbers were covered.
 | 2026-04-23 | Claude (agent)   | local       | 1.1–1.6, 2.1, 2.3–2.6, 3.1, 3.3, 3.5, 5.1/5.4/5.6, 7.1 | Bugs 1 & 2 below surfaced+fixed during walkthrough. 26 unit tests green. |
 | 2026-04-24 | Claude (agent)   | local       | 0.x, 2.2, 2.7–2.10, 3.2/3.6/3.7/3.8, 4.1–4.9, 5.1–5.11 (full leak matrix), 6.1–6.2, 7.1–7.4, 8.1, 9.1–9.4 | Walk done via curl + direct DB seed (bearer tokens planted into `session`). 3.4 still only verified at API contract layer — UI redirect walk skipped. Bug 4 found (pre-existing, non-group). |
 | 2026-04-24 | Claude (agent)   | staging     | Migrations + deploy + 1.1/1.4 (auto-pick + header echo), 2.1, 2.3, 5.1/5.2/5.6 (leak probes), match-detail smoke | Bug 6 surfaced + fixed + re-verified on staging. Backfill stats: 52 signups, 31 player stats, 10 voting criteria, 8 match votes, 11 courts, 5 settings, 3 admins demoted, 1 ghost linked. |
+| 2026-04-24 | Claude (agent)   | staging     | 1.2 (zero-group NO_GROUP), 2.2 (backfill member add → organizer), 3.1/3.2 (invite create default + phone), 4.1/4.4 (ghost create, already_member collision), 7.1/7.3 (organizer Admin tab + full dashboard: Matches/Settings/Roster/Group-detail) | Fresh phone-auth signup via password-as-OTP + direct SQL promotion to organizer of grp_legacy. Bugs 7 & 8 surfaced + fixed + re-verified (5 files across 2 commits: f21343f, 572ec95). |
 |            |                  | production  |                                                  |                                                                       |
 
 Legend:
