@@ -80,6 +80,9 @@ export type {
   GroupRosterEntry,
   CreateRosterInput,
   UpdateRosterInput,
+  GroupMemberSummary,
+  GroupDetailPayload,
+  MyGroupSummary,
 } from "./groups";
 
 // Re-export the API routes type for convenience

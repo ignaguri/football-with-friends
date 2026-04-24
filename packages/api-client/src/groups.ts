@@ -54,6 +54,37 @@ export interface MyGroupSummary {
   updatedAt: string;
 }
 
+// Shape of each entry returned by `GET /api/groups/:id` (organizer view) and
+// `GET /api/groups/:id/members`. Mirrors `GroupMemberWithUser` from
+// `@repo/shared/domain` but uses ISO strings for dates since JSON doesn't
+// preserve Date objects.
+export interface GroupMemberSummary {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: MemberRole;
+  joinedAt: string;
+  name: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  username: string | null;
+  displayUsername: string | null;
+}
+
+export interface GroupDetailPayload {
+  id: string;
+  name: string;
+  slug: string;
+  ownerUserId: string;
+  visibility: GroupVisibility;
+  createdAt: string;
+  updatedAt: string;
+  // Present in the organizer response only; members get a thinner payload
+  // without these fields.
+  members?: GroupMemberSummary[];
+  settings?: Record<string, string>;
+}
+
 async function fetchMyGroups(): Promise<MyGroupSummary[]> {
   const res = await client.api.groups.me.$get();
   const data = (await res.json()) as { groups: MyGroupSummary[] };
@@ -120,7 +151,7 @@ export function useGroupDetail(groupId: string | null) {
     enabled: !!groupId,
     queryFn: async () => {
       const res = await client.api.groups[":id"].$get({ param: { id: groupId! } });
-      const data = (await res.json()) as { group: unknown };
+      const data = (await res.json()) as { group: GroupDetailPayload };
       return data.group;
     },
   });
@@ -134,7 +165,7 @@ export function useGroupMembers(groupId: string | null) {
       const res = await client.api.groups[":id"].members.$get({
         param: { id: groupId! },
       });
-      const data = (await res.json()) as { members: unknown[] };
+      const data = (await res.json()) as { members: GroupMemberSummary[] };
       return data.members;
     },
   });
@@ -212,6 +243,8 @@ export function useUpdateMemberRole(groupId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.members(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
     },
   });
 }
@@ -227,6 +260,8 @@ export function useKickMember(groupId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.members(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
     },
   });
 }
@@ -490,6 +525,7 @@ export function useTransferOwnership(groupId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.detail(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.members(groupId) });
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
     },
   });
