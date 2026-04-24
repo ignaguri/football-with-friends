@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Football with Friends",
   slug: "football-with-friends",
   owner: "pepegrillo",
-  version: "1.0.2",
+  version: "1.1.0",
   scheme: "football-with-friends",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -70,7 +70,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: false,
     bundleIdentifier: "com.pepegrillo.football-with-friends",
     usesAppleSignIn: true,
-    buildNumber: "17",
+    buildNumber: "18",
     infoPlist: {
       NSPhotoLibraryUsageDescription:
         "Football with Friends uses your photo library to update your profile picture.",
@@ -81,7 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.pepegrillo.footballwithfriends",
-    versionCode: 3,
+    versionCode: 4,
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff",
