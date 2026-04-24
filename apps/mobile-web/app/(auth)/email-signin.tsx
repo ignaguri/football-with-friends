@@ -15,7 +15,7 @@ import {
   Button,
   Spinner,
 } from "@repo/ui";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -34,6 +34,16 @@ export default function EmailSignInScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Honor ?redirectTo=/path from deep-link entry points (e.g. /join/:token).
+  const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
+  const rawRedirect = Array.isArray(params.redirectTo)
+    ? params.redirectTo[0]
+    : params.redirectTo;
+  const postSignInPath =
+    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/(tabs)";
 
   const emailForm = useForm<SignInFormData>({
     resolver: zodResolver(signInSchema),
@@ -64,7 +74,7 @@ export default function EmailSignInScreen() {
         return;
       }
 
-      router.replace("/(tabs)");
+      router.replace(postSignInPath);
     } catch (err) {
       setServerError(t("auth.unexpectedError"));
     } finally {
@@ -96,7 +106,7 @@ export default function EmailSignInScreen() {
       try {
         const result = await signIn.email({ email, password: newPassword });
         if (result.error) throw new Error(result.error.message);
-        router.replace("/(tabs)");
+        router.replace(postSignInPath);
       } catch {
         setResetSuccess(false);
         setShowPasswordReset(false);

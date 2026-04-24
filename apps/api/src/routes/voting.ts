@@ -1,36 +1,35 @@
+import type { Context } from "hono";
 import { Hono } from "hono";
 import { votingService, getServiceFactory } from "@repo/shared/services";
-import { auth } from "../auth";
+import { getRepositoryFactory } from "@repo/shared/repositories";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
+import { type AppVariables, requireUser } from "../middleware/security";
+import {
+  groupContextMiddleware,
+  requireCurrentGroup,
+} from "../middleware/group-context";
+import { assertInCurrentGroup, requirePlatformAdmin } from "../middleware/authz";
 
-const app = new Hono();
+const app = new Hono<{ Variables: AppVariables }>();
 
-// Helper to get language from Accept-Language header
+app.use("*", groupContextMiddleware);
+
 function getLanguage(acceptLanguage: string | null | undefined): "en" | "es" {
   if (!acceptLanguage) return "en";
   return acceptLanguage.toLowerCase().startsWith("es") ? "es" : "en";
 }
 
-// Helper to check admin role
-async function requireAdmin(headers: Headers): Promise<{ user: any }> {
-  const session = await auth.api.getSession({ headers });
-  if (!session?.user) {
-    throw new Error("Not authenticated");
-  }
-  if ((session.user as any).role !== "admin") {
-    throw new Error("Admin access required");
-  }
-  return session;
-}
-
-// Helper to get authenticated user
-async function requireAuth(headers: Headers): Promise<{ user: any }> {
-  const session = await auth.api.getSession({ headers });
-  if (!session?.user) {
-    throw new Error("Not authenticated");
-  }
-  return session;
+// Voting criteria are global (shared across groups) by design. Per-group
+// leaderboards and match-specific endpoints are scoped via `currentGroup.id`
+// (filtered by `match_votes.group_id`) and `assertMatchInCurrentGroup`
+// respectively — cross-group matchIds 404, other groups' votes never surface.
+async function assertMatchInCurrentGroup(
+  c: Context,
+  matchId: string,
+): Promise<Response | null> {
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  return assertInCurrentGroup(c, match, "Match not found");
 }
 
 // ==================== VOTING CRITERIA ====================
@@ -50,7 +49,8 @@ app.get("/criteria", async (c) => {
 // Get all voting criteria including inactive (admin only) - returns full data for editing
 app.get("/criteria/all", async (c) => {
   try {
-    await requireAdmin(c.req.raw.headers);
+    const denied = requirePlatformAdmin(c);
+    if (denied) return denied;
     const criteria = await votingService.getAllCriteriaFull();
     return c.json({ criteria });
   } catch (error: any) {
@@ -80,7 +80,8 @@ app.post(
   zValidator("json", createCriteriaSchema),
   async (c) => {
     try {
-      await requireAdmin(c.req.raw.headers);
+      const denied = requirePlatformAdmin(c);
+      if (denied) return denied;
       const data = c.req.valid("json");
       const criteria = await votingService.createCriteria(data);
       return c.json({ criteria }, 201);
@@ -116,7 +117,8 @@ app.patch(
   zValidator("json", updateCriteriaSchema),
   async (c) => {
     try {
-      await requireAdmin(c.req.raw.headers);
+      const denied = requirePlatformAdmin(c);
+      if (denied) return denied;
       const id = c.req.param("id");
       const data = c.req.valid("json");
       const criteria = await votingService.updateCriteria(id, data);
@@ -143,7 +145,8 @@ app.patch(
 // Delete criteria (soft delete, admin only)
 app.delete("/criteria/:id", async (c) => {
   try {
-    await requireAdmin(c.req.raw.headers);
+    const denied = requirePlatformAdmin(c);
+    if (denied) return denied;
     const id = c.req.param("id");
     await votingService.deleteCriteria(id);
     return c.json({ success: true });
@@ -167,11 +170,13 @@ app.delete("/criteria/:id", async (c) => {
 // Get user's votes for a match
 app.get("/matches/:matchId", async (c) => {
   try {
-    const session = await requireAuth(c.req.raw.headers);
+    const user = requireUser(c);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     const votes = await votingService.getUserVotesForMatch(
       matchId,
-      session.user.id
+      user.id
     );
     return c.json(votes);
   } catch (error: any) {
@@ -198,13 +203,15 @@ app.post(
   zValidator("json", submitVotesSchema),
   async (c) => {
     try {
-      const session = await requireAuth(c.req.raw.headers);
+      const user = requireUser(c);
       const matchId = c.req.param("matchId");
+      const notFound = await assertMatchInCurrentGroup(c, matchId);
+      if (notFound) return notFound;
       const { votes } = c.req.valid("json");
 
       const submittedVotes = await votingService.submitVotes(
         matchId,
-        session.user.id,
+        user.id,
         votes
       );
 
@@ -229,8 +236,10 @@ app.post(
 // Get voting results for a match
 app.get("/matches/:matchId/results", async (c) => {
   try {
-    await requireAuth(c.req.raw.headers);
+    requireUser(c);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     const language = getLanguage(c.req.header("Accept-Language"));
     const results = await votingService.getMatchVotingResults(matchId, language);
     return c.json(results);
@@ -246,9 +255,11 @@ app.get("/matches/:matchId/results", async (c) => {
 // Clear user's votes for a match (allows re-voting)
 app.delete("/matches/:matchId", async (c) => {
   try {
-    const session = await requireAuth(c.req.raw.headers);
+    const user = requireUser(c);
     const matchId = c.req.param("matchId");
-    await votingService.clearUserVotesForMatch(matchId, session.user.id);
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
+    await votingService.clearUserVotesForMatch(matchId, user.id);
     return c.json({ success: true });
   } catch (error: any) {
     console.error("Clear votes error:", error);
@@ -262,11 +273,13 @@ app.delete("/matches/:matchId", async (c) => {
 // Check if user has voted for a match
 app.get("/matches/:matchId/has-voted", async (c) => {
   try {
-    const session = await requireAuth(c.req.raw.headers);
+    const user = requireUser(c);
     const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
     const hasVoted = await votingService.hasUserVotedForMatch(
       matchId,
-      session.user.id
+      user.id
     );
     return c.json({ hasVoted });
   } catch (error: any) {
@@ -278,14 +291,16 @@ app.get("/matches/:matchId/has-voted", async (c) => {
   }
 });
 
-// Get voting leaderboard (top N players per criteria across all matches)
+// Get voting leaderboard (top N players per criteria) for the active group.
 app.get("/leaderboard", async (c) => {
   try {
-    await requireAuth(c.req.raw.headers);
+    requireUser(c);
+    const current = requireCurrentGroup(c);
     const { topN = "3" } = c.req.query();
     const language = getLanguage(c.req.header("Accept-Language"));
     const rankingService = getServiceFactory().rankingService;
     const leaderboard = await rankingService.getVotingLeaderboard(
+      current.id,
       language,
       parseInt(topN, 10)
     );

@@ -178,6 +178,10 @@ function createAuthInstance() {
     },
     plugins: [
       bearer(),
+      // BetterAuth's admin plugin defaults adminRoles to ["admin"], which
+      // matches our platform role. No need to override adminRoles — the
+      // plugin rejects any value not listed in its `roles` config
+      // (see better-auth/src/plugins/admin/admin.ts).
       admin(),
       username({
         minUsernameLength: 3,

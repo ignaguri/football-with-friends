@@ -21,8 +21,8 @@ app.use(
       "http://localhost:3000",
     ],
     credentials: true,
-    allowHeaders: ["Content-Type", "Authorization"],
-    exposeHeaders: ["set-auth-token"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Group-Id"],
+    exposeHeaders: ["set-auth-token", "X-Group-Id"],
   })
 );
 

@@ -16,6 +16,7 @@ export interface LocationsTable {
   address: string | null;
   coordinates: string | null;
   court_count: number;
+  group_id: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -33,6 +34,8 @@ export interface MatchesTable {
   same_day_cost: string | null;
   created_by_user_id: string;
   reminder_sent: Generated<number>;
+  // Group scoping — nullable through Phase 0, backfilled and tightened to NOT NULL in Phase 1.
+  group_id: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -45,8 +48,10 @@ export interface SignupsTable {
   player_email: string;
   status: "PAID" | "PENDING" | "CANCELLED" | "SUBSTITUTE";
   signup_type: "self" | "guest" | "admin_added" | "invitation";
-  guest_owner_id: string | null; // for guest signups
+  guest_owner_id: string | null; // for guest signups (legacy; supplanted by roster_id)
   added_by_user_id: string;
+  group_id: string | null;
+  roster_id: string | null; // points to group_roster; replaces guest_owner_id long-term
   signed_up_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -57,6 +62,7 @@ export interface CourtsTable {
   name: string;
   description: string | null;
   is_active: boolean;
+  group_id: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -106,6 +112,7 @@ export interface VotingCriteriaTable {
   description_es: string | null;
   is_active: number; // 0 or 1 (SQLite boolean)
   sort_order: number;
+  group_id: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -116,6 +123,7 @@ export interface MatchVotesTable {
   voter_user_id: string;
   criteria_id: string;
   voted_for_user_id: string;
+  group_id: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -151,6 +159,7 @@ export interface MatchPlayerStatsTable {
   third_time_attended: number; // 0 or 1 (SQLite boolean)
   third_time_beers: number;
   confirmed: number; // 0 or 1 (SQLite boolean)
+  group_id: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }
@@ -195,6 +204,60 @@ export interface VerificationTable {
   updatedAt: number;
 }
 
+// Group-oriented scoping (see docs/superpowers/specs/2026-04-22-group-oriented-scoping-design.md)
+
+export interface GroupsTable {
+  id: string;
+  name: string;
+  slug: string;
+  owner_user_id: string;
+  visibility: "private" | "public";
+  deleted_at: ColumnType<Date, string | undefined, string> | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
+export interface GroupMembersTable {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: "organizer" | "member";
+  joined_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface GroupInvitesTable {
+  id: string;
+  group_id: string;
+  token: string;
+  created_by_user_id: string;
+  expires_at: ColumnType<Date, string | undefined, string> | null;
+  max_uses: number | null;
+  uses_count: Generated<number>;
+  target_phone: string | null;
+  target_user_id: string | null;
+  revoked_at: ColumnType<Date, string | undefined, string> | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
+export interface GroupRosterTable {
+  id: string;
+  group_id: string;
+  display_name: string;
+  phone: string | null;
+  email: string | null;
+  claimed_by_user_id: string | null;
+  created_by_user_id: string;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
+export interface GroupSettingsTable {
+  group_id: string;
+  key: string;
+  value: string;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -212,6 +275,11 @@ export interface Database {
   match_votes: MatchVotesTable;
   push_tokens: PushTokensTable;
   verification: VerificationTable;
+  groups: GroupsTable;
+  group_members: GroupMembersTable;
+  group_invites: GroupInvitesTable;
+  group_roster: GroupRosterTable;
+  group_settings: GroupSettingsTable;
 }
 
 // SQLite system tables used by migrations and database introspection
@@ -275,3 +343,23 @@ export type MatchVoteUpdate = Updateable<MatchVotesTable>;
 export type PushToken = Selectable<PushTokensTable>;
 export type NewPushToken = Insertable<PushTokensTable>;
 export type PushTokenUpdate = Updateable<PushTokensTable>;
+
+export type Group = Selectable<GroupsTable>;
+export type NewGroup = Insertable<GroupsTable>;
+export type GroupUpdate = Updateable<GroupsTable>;
+
+export type GroupMember = Selectable<GroupMembersTable>;
+export type NewGroupMember = Insertable<GroupMembersTable>;
+export type GroupMemberUpdate = Updateable<GroupMembersTable>;
+
+export type GroupInvite = Selectable<GroupInvitesTable>;
+export type NewGroupInvite = Insertable<GroupInvitesTable>;
+export type GroupInviteUpdate = Updateable<GroupInvitesTable>;
+
+export type GroupRoster = Selectable<GroupRosterTable>;
+export type NewGroupRoster = Insertable<GroupRosterTable>;
+export type GroupRosterUpdate = Updateable<GroupRosterTable>;
+
+export type GroupSettingRow = Selectable<GroupSettingsTable>;
+export type NewGroupSettingRow = Insertable<GroupSettingsTable>;
+export type GroupSettingRowUpdate = Updateable<GroupSettingsTable>;

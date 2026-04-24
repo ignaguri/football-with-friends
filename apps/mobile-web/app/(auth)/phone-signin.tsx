@@ -16,7 +16,7 @@ import {
   Spinner,
   PhoneInput,
 } from "@repo/ui";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,17 @@ export default function PhoneSignInScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  // Honor ?redirectTo=/path set by deep-link entry points (e.g. /join/:token).
+  // Only internal paths are allowed — anything else falls back to /(tabs).
+  const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
+  const rawRedirect = Array.isArray(params.redirectTo)
+    ? params.redirectTo[0]
+    : params.redirectTo;
+  const postSignInPath =
+    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : "/(tabs)";
+
   const phoneForm = useForm<PhoneSignInFormData>({
     resolver: zodResolver(phoneSignInSchema),
     defaultValues: {
@@ -54,7 +65,7 @@ export default function PhoneSignInScreen() {
         password: data.password,
       });
 
-      router.replace("/(tabs)");
+      router.replace(postSignInPath);
     } catch (err: any) {
       // Check if user needs password reset (old scrypt hash)
       const needs = await needsPasswordReset({
@@ -96,7 +107,7 @@ export default function PhoneSignInScreen() {
       // Auto sign-in with the new password
       try {
         await signInWithPhone({ phoneNumber, password: newPassword });
-        router.replace("/(tabs)");
+        router.replace(postSignInPath);
       } catch {
         setResetSuccess(false);
         setShowPasswordReset(false);

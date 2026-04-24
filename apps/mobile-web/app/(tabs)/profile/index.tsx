@@ -555,6 +555,12 @@ export default function ProfileScreen() {
                   >
                     {t("profile.openStatsVoting")}
                   </Button>
+                  <Button
+                    variant="outline"
+                    onPress={() => router.push("/(tabs)/profile/groups")}
+                  >
+                    {t("groups.myGroups.title")}
+                  </Button>
                 </YStack>
               )}
             </YStack>

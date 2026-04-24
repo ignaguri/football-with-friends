@@ -53,10 +53,23 @@ function generateId(): string {
   return nanoid();
 }
 
-// Helper function to convert database row to domain object
+// Post-Phase-1 every scoped row has group_id set. We assert here rather than
+// widening the domain type because any legacy NULL would indicate a migration
+// slip we want to catch loudly instead of silently propagating `null` as a
+// string-typed `groupId` (would bypass cross-group checks downstream).
+function assertGroupId(value: unknown, table: string, id: unknown): string {
+  if (typeof value !== "string" || value.length === 0) {
+    throw new Error(
+      `Invariant violation: ${table} row ${String(id) || "(unknown id)"} has a missing group_id; check Phase 1 backfill.`,
+    );
+  }
+  return value;
+}
+
 function dbLocationToLocation(row: any): Location {
   return {
     id: row.id,
+    groupId: assertGroupId(row.group_id, "locations", row.id),
     name: row.name,
     address: row.address || "",
     coordinates: row.coordinates || "",
@@ -66,10 +79,10 @@ function dbLocationToLocation(row: any): Location {
   };
 }
 
-// Helper function to convert database row to court domain object
 function dbCourtToCourt(row: any): Court {
   return {
     id: row.id,
+    groupId: assertGroupId(row.group_id, "courts", row.id),
     locationId: row.location_id,
     name: row.name,
     description: row.description || "",
@@ -82,6 +95,7 @@ function dbCourtToCourt(row: any): Court {
 function dbMatchToMatch(row: any): Match {
   return {
     id: row.id,
+    groupId: assertGroupId(row.group_id, "matches", row.id),
     locationId: row.location_id,
     courtId: row.court_id || undefined,
     date: row.date,
@@ -101,10 +115,10 @@ function dbMatchToMatch(row: any): Match {
 function dbMatchWithCourtToMatch(row: any): Match {
   const match = dbMatchToMatch(row);
 
-  // Add court information if it exists
   if (row.court_name) {
     match.court = {
       id: row.court_id,
+      groupId: assertGroupId(row.court_group_id, "courts", row.court_id),
       locationId: row.location_id,
       name: row.court_name,
       description: row.court_description || "",
@@ -114,10 +128,10 @@ function dbMatchWithCourtToMatch(row: any): Match {
     };
   }
 
-  // Add location information if it exists
   if (row.location_name) {
     match.location = {
       id: row.location_id,
+      groupId: assertGroupId(row.location_group_id, "locations", row.location_id),
       name: row.location_name,
       address: row.location_address || "",
       coordinates: row.location_coordinates || "",
@@ -133,6 +147,7 @@ function dbMatchWithCourtToMatch(row: any): Match {
 function dbSignupToSignup(row: any): Signup {
   return {
     id: row.id,
+    groupId: assertGroupId(row.group_id, "signups", row.id),
     matchId: row.match_id,
     userId: row.user_id,
     playerName: row.player_name,
@@ -140,6 +155,7 @@ function dbSignupToSignup(row: any): Signup {
     status: row.status as PlayerStatus,
     signupType: row.signup_type,
     guestOwnerId: row.guest_owner_id,
+    rosterId: row.roster_id ?? undefined,
     addedByUserId: row.added_by_user_id,
     signedUpAt: new Date(row.signed_up_at),
     updatedAt: new Date(row.updated_at),
@@ -162,10 +178,11 @@ function dbInvitationToInvitation(row: any): MatchInvitation {
 export class TursoLocationRepository implements LocationRepository {
   private db = getDatabase();
 
-  async findAll(): Promise<Location[]> {
+  async findAll(groupId: string): Promise<Location[]> {
     const rows = await this.db
       .selectFrom("locations")
       .selectAll()
+      .where("group_id", "=", groupId)
       .orderBy("name", "asc")
       .execute();
 
@@ -188,6 +205,7 @@ export class TursoLocationRepository implements LocationRepository {
 
     const newLocation = {
       id,
+      group_id: locationData.groupId,
       name: locationData.name,
       address: locationData.address || null,
       coordinates: locationData.coordinates || null,
@@ -237,10 +255,11 @@ export class TursoLocationRepository implements LocationRepository {
 export class TursoCourtRepository implements CourtRepository {
   private db = getDatabase();
 
-  async findAll(): Promise<Court[]> {
+  async findAll(groupId: string): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
+      .where("group_id", "=", groupId)
       .orderBy("location_id", "asc")
       .orderBy("name", "asc")
       .execute();
@@ -248,10 +267,11 @@ export class TursoCourtRepository implements CourtRepository {
     return rows.map(dbCourtToCourt);
   }
 
-  async findByLocationId(locationId: string): Promise<Court[]> {
+  async findByLocationId(groupId: string, locationId: string): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
+      .where("group_id", "=", groupId)
       .where("location_id", "=", locationId)
       .orderBy("name", "asc")
       .execute();
@@ -259,10 +279,11 @@ export class TursoCourtRepository implements CourtRepository {
     return rows.map(dbCourtToCourt);
   }
 
-  async findActiveByLocationId(locationId: string): Promise<Court[]> {
+  async findActiveByLocationId(groupId: string, locationId: string): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
+      .where("group_id", "=", groupId)
       .where("location_id", "=", locationId)
       .where("is_active", "=", true)
       .orderBy("name", "asc")
@@ -287,6 +308,7 @@ export class TursoCourtRepository implements CourtRepository {
       .leftJoin("locations", "courts.location_id", "locations.id")
       .select([
         "courts.id",
+        "courts.group_id",
         "courts.location_id",
         "courts.name",
         "courts.description",
@@ -294,6 +316,7 @@ export class TursoCourtRepository implements CourtRepository {
         "courts.created_at",
         "courts.updated_at",
         "locations.id as location_id",
+        "locations.group_id as location_group_id",
         "locations.name as location_name",
         "locations.address as location_address",
         "locations.coordinates as location_coordinates",
@@ -310,6 +333,10 @@ export class TursoCourtRepository implements CourtRepository {
     if (row.location_id) {
       court.location = {
         id: row.location_id,
+        // group_id is nullable in the schema (see Phase 1 NOT NULL tightening
+        // deferral in the plan doc) but always populated post-backfill;
+        // fall back to the court's group if somehow missing.
+        groupId: row.location_group_id ?? court.groupId,
         name: row.location_name || "Unknown Location",
         address: row.location_address || "",
         coordinates: row.location_coordinates || "",
@@ -328,6 +355,7 @@ export class TursoCourtRepository implements CourtRepository {
 
     const newCourt = {
       id,
+      group_id: court.groupId,
       location_id: court.locationId,
       name: court.name,
       description: court.description || null,
@@ -408,6 +436,10 @@ export class TursoMatchRepository implements MatchRepository {
     // Build the base query for filtering and counting
     let baseQuery = this.db.selectFrom("matches");
 
+    if (filters?.groupId) {
+      baseQuery = baseQuery.where("matches.group_id", "=", filters.groupId);
+    }
+
     if (filters?.status) {
       baseQuery = baseQuery.where("matches.status", "=", filters.status);
     }
@@ -452,6 +484,7 @@ export class TursoMatchRepository implements MatchRepository {
       .leftJoin("locations", "matches.location_id", "locations.id")
       .select([
         "matches.id",
+        "matches.group_id",
         "matches.location_id",
         "matches.court_id",
         "matches.date",
@@ -465,12 +498,14 @@ export class TursoMatchRepository implements MatchRepository {
         "matches.created_at",
         "matches.updated_at",
         "courts.id as court_id",
+        "courts.group_id as court_group_id",
         "courts.name as court_name",
         "courts.description as court_description",
         "courts.is_active as court_is_active",
         "courts.created_at as court_created_at",
         "courts.updated_at as court_updated_at",
         "locations.id as location_id",
+        "locations.group_id as location_group_id",
         "locations.name as location_name",
         "locations.address as location_address",
         "locations.coordinates as location_coordinates",
@@ -577,6 +612,7 @@ export class TursoMatchRepository implements MatchRepository {
       )
       .select([
         "signups.id",
+        "signups.group_id",
         "signups.match_id",
         "signups.user_id",
         "signups.player_name",
@@ -584,6 +620,7 @@ export class TursoMatchRepository implements MatchRepository {
         "signups.status",
         "signups.signup_type",
         "signups.guest_owner_id",
+        "signups.roster_id",
         "signups.added_by_user_id",
         "signups.signed_up_at",
         "signups.updated_at",
@@ -641,6 +678,7 @@ export class TursoMatchRepository implements MatchRepository {
 
     const newMatch = {
       id,
+      group_id: matchData.groupId,
       location_id: matchData.locationId,
       court_id: matchData.courtId || null,
       date: matchData.date,
@@ -701,10 +739,11 @@ export class TursoMatchRepository implements MatchRepository {
     await this.db.deleteFrom("matches").where("id", "=", id).execute();
   }
 
-  async existsOnDate(date: string): Promise<boolean> {
+  async existsOnDate(groupId: string, date: string): Promise<boolean> {
     const result = await this.db
       .selectFrom("matches")
       .select(sql`1`.as("exists"))
+      .where("group_id", "=", groupId)
       .where("date", "=", date)
       .executeTakeFirst();
 
@@ -721,6 +760,10 @@ export class TursoSignupRepository implements SignupRepository {
       .selectFrom("signups")
       .selectAll()
       .orderBy("signed_up_at", "asc");
+
+    if (filters?.groupId) {
+      query = query.where("group_id", "=", filters.groupId);
+    }
 
     if (filters?.matchId) {
       query = query.where("match_id", "=", filters.matchId);
@@ -843,6 +886,7 @@ export class TursoSignupRepository implements SignupRepository {
 
     const newSignup = {
       id,
+      group_id: signupData.groupId,
       match_id: signupData.matchId,
       user_id: signupData.userId || null,
       player_name: signupData.playerName,
@@ -850,6 +894,7 @@ export class TursoSignupRepository implements SignupRepository {
       status: signupData.status || "PENDING",
       signup_type: signupData.signupType,
       guest_owner_id: signupData.guestOwnerId || null,
+      roster_id: signupData.rosterId ?? null,
       added_by_user_id: signupData.addedByUserId,
       signed_up_at: now,
       updated_at: now,
@@ -894,25 +939,20 @@ export class TursoSignupRepository implements SignupRepository {
   async addGuest(guestData: CreateGuestSignupData): Promise<Signup> {
     const id = generateId();
     const now = new Date().toISOString();
-
-    // Compose guest display name
-    const name = guestData.guestName
-      ? `${guestData.guestName} (Guest of ${guestData.ownerName})`
-      : `Guest of ${guestData.ownerName}`;
-
-    // Generate unique guest email
     const playerEmail = `guest-${generateId()}@local`;
 
     const newSignup = {
       id,
+      group_id: guestData.groupId,
       match_id: guestData.matchId,
       user_id: null,
-      player_name: name,
+      player_name: guestData.guestName,
       player_email: playerEmail,
       status: guestData.status || "PENDING",
       signup_type: "guest" as const,
       guest_owner_id: guestData.ownerUserId,
       added_by_user_id: guestData.ownerUserId,
+      roster_id: guestData.rosterId,
       signed_up_at: now,
       updated_at: now,
     };
@@ -922,7 +962,8 @@ export class TursoSignupRepository implements SignupRepository {
     return dbSignupToSignup(newSignup);
   }
 
-  async addPlayerByAdmin(
+  async addPlayerAsOrganizer(
+    groupId: string,
     matchId: string,
     playerData: {
       userId?: string;
@@ -930,22 +971,24 @@ export class TursoSignupRepository implements SignupRepository {
       playerEmail: string;
       status?: string;
     },
-    adminId: string,
+    actorId: string,
   ): Promise<Signup> {
     return this.create({
+      groupId,
       matchId,
       userId: playerData.userId,
       playerName: playerData.playerName,
       playerEmail: playerData.playerEmail,
       status: (playerData.status as PlayerStatus) || "PENDING",
+      // DB-stored enum value kept as-is to avoid a migration; only callers
+      // renamed to reflect the new organizer-scoped authorization model.
       signupType: "admin_added",
-      addedByUserId: adminId,
+      addedByUserId: actorId,
     });
   }
 
-  async removePlayerByAdmin(signupId: string, adminId: string): Promise<void> {
-    // You might want to log this action for audit purposes
-    console.log(`Admin ${adminId} removing signup ${signupId}`);
+  async removePlayerAsOrganizer(signupId: string, actorId: string): Promise<void> {
+    console.log(`Organizer ${actorId} removing signup ${signupId}`);
     await this.delete(signupId);
   }
 
@@ -1089,6 +1132,7 @@ export class TursoMatchInvitationRepository
 function dbStatsToMatchPlayerStats(row: any): MatchPlayerStats {
   return {
     id: row.id,
+    groupId: assertGroupId(row.group_id, "match_player_stats", row.id),
     matchId: row.match_id,
     userId: row.user_id,
     goals: row.goals,
@@ -1134,6 +1178,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       .innerJoin("matches", "matches.id", "match_player_stats.match_id")
       .select([
         "match_player_stats.id",
+        "match_player_stats.group_id",
         "match_player_stats.match_id",
         "match_player_stats.user_id",
         "match_player_stats.goals",
@@ -1143,6 +1188,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         "match_player_stats.created_at",
         "match_player_stats.updated_at",
         "matches.id as match_id",
+        "matches.group_id as match_group_id",
         "matches.date as match_date",
         "matches.time as match_time",
         "matches.location_id as match_location_id",
@@ -1164,6 +1210,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       ...dbStatsToMatchPlayerStats(row),
       match: {
         id: row.match_id,
+        groupId: row.match_group_id,
         date: row.match_date,
         time: row.match_time,
         locationId: row.match_location_id,
@@ -1196,6 +1243,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
 
     const newStats = {
       id,
+      group_id: data.groupId,
       match_id: data.matchId,
       user_id: data.userId,
       goals: data.goals ?? 0,
@@ -1360,7 +1408,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     };
   }
 
-  async getRankingsByMatches(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByMatches(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1383,7 +1431,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COUNT(DISTINCT s.match_id) as value,
         ROW_NUMBER() OVER (ORDER BY COUNT(DISTINCT s.match_id) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
       GROUP BY u.id
       ORDER BY rank ASC
       LIMIT ${limit}
@@ -1406,7 +1454,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByThirdTimes(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByThirdTimes(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1429,8 +1477,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.third_time_attended), 0) as value,
         ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_attended), 0) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
       GROUP BY u.id
       HAVING value > 0
       ORDER BY rank ASC
@@ -1454,7 +1502,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByBeers(limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByBeers(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1477,8 +1525,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         COALESCE(SUM(mps.third_time_beers), 0) as value,
         ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_beers), 0) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
+      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
+      LEFT JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
       GROUP BY u.id
       HAVING value > 0
       ORDER BY rank ASC
@@ -1786,9 +1834,11 @@ export class TursoMatchMediaRepository {
   /**
    * Returns a page of matches (ordered by most-recent-upload per match), with up to
    * `itemsPerMatch` media items each. Cursor is the `createdAt` of the last match's
-   * latest item (ISO string). Empty cursor = first page.
+   * latest item (ISO string). Empty cursor = first page. Scoped to `groupId` — the
+   * match row is the scoping anchor since match_media itself has no group column.
    */
   async feed(options: {
+    groupId: string;
     cursor: string | null;
     matchesPerPage: number;
     itemsPerMatch: number;
@@ -1803,7 +1853,7 @@ export class TursoMatchMediaRepository {
     }>;
     nextCursor: string | null;
   }> {
-    const { cursor, matchesPerPage, itemsPerMatch } = options;
+    const { groupId, cursor, matchesPerPage, itemsPerMatch } = options;
 
     // Step 1: Get distinct matches ordered by their most recent upload, after cursor.
     let matchQuery = this.db
@@ -1817,6 +1867,7 @@ export class TursoMatchMediaRepository {
         eb.fn.max<string>("m.created_at").as("lastUploadAt"),
         eb.fn.countAll<number>().as("totalCount"),
       ])
+      .where("mt.group_id", "=", groupId)
       .groupBy((eb) => [
         sql`m.match_id`,
         sql`mt.date`,

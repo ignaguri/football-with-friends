@@ -5,6 +5,9 @@ import {
   useQueryClient,
   client,
   useSession,
+  useCurrentGroup,
+  useGroupRoster,
+  type GroupRosterEntry,
 } from "@repo/api-client";
 import {
   Container,
@@ -38,7 +41,7 @@ import {
   ChevronRight,
 } from "@tamagui/lucide-icons";
 import { useLocalSearchParams, router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
 import {
   Platform,
@@ -122,7 +125,27 @@ export default function MatchDetailScreen() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showGuestDialog, setShowGuestDialog] = useState(false);
+  const [guestMode, setGuestMode] = useState<"pick" | "quick">("pick");
   const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestSearch, setGuestSearch] = useState("");
+  const { groupId: currentGroupId, myRole } = useCurrentGroup();
+  const isOrganizer =
+    myRole === "organizer" || session?.user?.role === "admin";
+  // Roster list is organizer-only; don't trigger a 403 for regular members.
+  const rosterForGuest = useGroupRoster(
+    showGuestDialog && isOrganizer ? currentGroupId : null,
+  );
+  const filteredRoster = useMemo(() => {
+    const entries = rosterForGuest.data ?? [];
+    const q = guestSearch.trim().toLowerCase();
+    return q
+      ? entries.filter((e: GroupRosterEntry) =>
+          e.displayName.toLowerCase().includes(q),
+        )
+      : entries;
+  }, [rosterForGuest.data, guestSearch]);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [signupToCancel, setSignupToCancel] = useState<{
@@ -139,7 +162,11 @@ export default function MatchDetailScreen() {
   const [signupToRemove, setSignupToRemove] = useState<string | null>(null);
 
   const userId = session?.user?.id;
-  const isAdmin = session?.user?.role === "admin";
+  // Historically `isAdmin` gated organizer actions (edit name, remove player,
+  // guest quick-add). Keep the name but widen it to the group-relative role
+  // so organizers of the active group get the same affordances as the
+  // platform admin.
+  const isAdmin = isOrganizer;
 
   const {
     data: match,
@@ -232,14 +259,14 @@ export default function MatchDetailScreen() {
   });
 
   const addGuestMutation = useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async (
+      input:
+        | { rosterId: string }
+        | { guestName: string; phone?: string; email?: string },
+    ) => {
       const res = await client.api.matches[":id"].guest.$post({
         param: { id: matchId! },
-        json: {
-          matchId: matchId!,
-          guestName: name,
-          status: "PENDING",
-        },
+        json: { ...input, status: "PENDING" },
       });
       if (!res.ok) {
         const data = await res.json();
@@ -253,6 +280,8 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
       setShowGuestDialog(false);
       setGuestName("");
+      setGuestPhone("");
+      setGuestEmail("");
       toast.show(t("matchDetail.guestAddSuccess"), { duration: 3000, customData: { variant: "success" } });
     },
     onError: (err: Error) => {
@@ -819,9 +848,8 @@ export default function MatchDetailScreen() {
                     {t("players.title")} ({match.signups?.length || 0})
                   </Text>
                   {!isPlayed &&
-                    match.availableSpots > 0 &&
-                    (match.userSignup?.status === "PAID" ||
-                      match.userSignup?.status === "PENDING") && (
+                    isOrganizer &&
+                    match.availableSpots > 0 && (
                       <Button
                         variant="outline"
                         size="$3"
@@ -990,41 +1018,114 @@ export default function MatchDetailScreen() {
         </YStack>
       </Dialog>
 
-      {/* Guest Signup Dialog */}
+      {/* Guest Signup Dialog: pick from group roster OR quick-add a ghost */}
       <Dialog
         open={showGuestDialog}
-        onOpenChange={setShowGuestDialog}
+        onOpenChange={(open) => {
+          setShowGuestDialog(open);
+          if (!open) {
+            setGuestMode("pick");
+            setGuestName("");
+            setGuestPhone("");
+            setGuestEmail("");
+            setGuestSearch("");
+          }
+        }}
         title={t("guest.title")}
         showActions={false}
       >
-        <YStack gap="$4" padding="$4">
-          <Input
-            label={t("guest.label")}
-            placeholder={t("guest.placeholder")}
-            value={guestName}
-            onChangeText={setGuestName}
-          />
+        <YStack gap="$3" padding="$4" maxHeight={560}>
           <XStack gap="$2">
             <Button
-              variant="outline"
               flex={1}
-              onPress={() => setShowGuestDialog(false)}
+              variant={guestMode === "pick" ? "primary" : "outline"}
+              onPress={() => setGuestMode("pick")}
+              testID="guest-mode-pick"
             >
-              {t("shared.cancel")}
+              {t("groups.roster.guestPickerTitle")}
             </Button>
             <Button
-              variant="primary"
               flex={1}
-              onPress={() => {
-                if (guestName.trim()) {
-                  addGuestMutation.mutate(guestName.trim());
-                }
-              }}
-              disabled={!guestName.trim() || addGuestMutation.isPending}
+              variant={guestMode === "quick" ? "primary" : "outline"}
+              onPress={() => setGuestMode("quick")}
+              testID="guest-mode-quick"
             >
-              {addGuestMutation.isPending ? t("guest.adding") : t("guest.add")}
+              {t("groups.roster.quickAddTitle")}
             </Button>
           </XStack>
+
+          {guestMode === "pick" ? (
+            <>
+              <Input
+                placeholder={t("groups.roster.guestPickerSearch")}
+                value={guestSearch}
+                onChangeText={setGuestSearch}
+              />
+              <ScrollView style={{ maxHeight: 320 }}>
+                <YStack gap="$2">
+                  {filteredRoster.map((e: GroupRosterEntry) => (
+                    <Button
+                      key={e.id}
+                      variant="outline"
+                      onPress={() => addGuestMutation.mutate({ rosterId: e.id })}
+                      disabled={addGuestMutation.isPending}
+                      testID={`guest-roster-pick-${e.id}`}
+                    >
+                      {e.displayName}
+                    </Button>
+                  ))}
+                  {filteredRoster.length === 0 && !rosterForGuest.isLoading ? (
+                    <Text color="$gray11" textAlign="center">
+                      {t("groups.roster.guestPickerEmpty")}
+                    </Text>
+                  ) : null}
+                </YStack>
+              </ScrollView>
+            </>
+          ) : (
+            <YStack gap="$3">
+              <Text fontSize="$2" color="$gray11">
+                {t("groups.roster.quickAddHint")}
+              </Text>
+              <Input
+                label={t("guest.label")}
+                placeholder={t("guest.placeholder")}
+                value={guestName}
+                onChangeText={setGuestName}
+              />
+              <Input
+                label={t("groups.roster.phone")}
+                value={guestPhone}
+                onChangeText={setGuestPhone}
+                placeholder="+1234567890"
+                keyboardType="phone-pad"
+              />
+              <Input
+                label={t("groups.roster.email")}
+                value={guestEmail}
+                onChangeText={setGuestEmail}
+                placeholder="name@example.com"
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+              <Button
+                variant="primary"
+                onPress={() =>
+                  addGuestMutation.mutate({
+                    guestName: guestName.trim(),
+                    phone: guestPhone.trim() || undefined,
+                    email: guestEmail.trim() || undefined,
+                  })
+                }
+                disabled={!guestName.trim() || addGuestMutation.isPending}
+              >
+                {addGuestMutation.isPending ? t("guest.adding") : t("guest.add")}
+              </Button>
+            </YStack>
+          )}
+          <Button variant="outline" onPress={() => setShowGuestDialog(false)}>
+            {t("shared.cancel")}
+          </Button>
         </YStack>
       </Dialog>
 

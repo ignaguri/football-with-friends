@@ -1,18 +1,20 @@
-import { ComponentType, Fragment } from "react";
-import { XStack, YStack, Text, View as TView } from "tamagui";
+import { YStack, Text } from "tamagui";
 import { View } from "react-native";
 import { StatusBadge, type PlayerStatusType } from "./StatusBadge";
-import { Button } from "./Button";
 import { getCountryFlag } from "../utils/country-flags";
 import { getPlayerDisplayParts } from "../utils/display-name";
+import {
+  RosterRow,
+  RosterRowActions,
+  RosterSection,
+  RosterSeparator,
+  renderWithSeparators,
+  type RosterAction,
+} from "./roster";
 
-export interface PlayerAction {
-  icon: ComponentType<{ size?: number }>;
-  label: string;
-  onPress: () => void;
-  variant?: "primary" | "outline" | "danger" | "danger-outline" | "ghost";
-  testID?: string;
-}
+// Existing callers use `PlayerAction`; keep it as an alias for the shared
+// type so imports don't break.
+export type PlayerAction = RosterAction;
 
 export interface PlayerRow {
   id: string;
@@ -53,143 +55,107 @@ export function PlayersTable({
     );
   }
 
-  const canShowActions = (player: PlayerRow) => {
-    return isAdmin || player.isCurrentUser;
-  };
+  const canShowActions = (player: PlayerRow) => isAdmin || !!player.isCurrentUser;
 
-  const getStatusLabel = (status: PlayerStatusType) => {
-    if (statusLabels && statusLabels[status]) {
-      return statusLabels[status];
-    }
-    return status;
-  };
+  const getStatusLabel = (status: PlayerStatusType) =>
+    statusLabels?.[status] ?? status;
 
-  // Group players by status for better organization
   const paidPlayers = players.filter((p) => p.status === "PAID");
   const pendingPlayers = players.filter((p) => p.status === "PENDING");
   const cancelledPlayers = players.filter((p) => p.status === "CANCELLED");
 
-  const renderPlayerRow = (player: PlayerRow) => {
+  const renderPrimary = (player: PlayerRow) => {
+    if (player.isGuest) {
+      return (
+        <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
+          {player.addedByName
+            ? `${player.name} (${player.addedByName})`
+            : player.name}
+        </Text>
+      );
+    }
     const { primary, secondary } = getPlayerDisplayParts(player);
     return (
-    <XStack
-      key={player.id}
-      testID={player.testID}
-      justifyContent="space-between"
-      alignItems="center"
-      paddingVertical="$2"
-      paddingHorizontal="$3"
-      opacity={player.status === "CANCELLED" ? 0.6 : 1}
-      backgroundColor={player.isCurrentUser ? "$blue2" : "transparent"}
-      borderRadius={player.isCurrentUser ? "$2" : 0}
-    >
-      <YStack flex={1} gap="$1">
-        <XStack gap="$2" alignItems="center">
-          {player.nationality && (
-            <Text fontSize="$5">{getCountryFlag(player.nationality)}</Text>
-          )}
-          {player.isGuest ? (
-            <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
-              {player.addedByName ? `${player.name} (${player.addedByName})` : player.name}
-            </Text>
-          ) : (
-            <YStack>
-              <Text fontWeight={player.isCurrentUser ? "600" : "500"}>{primary}</Text>
-              {secondary && (
-                <Text fontSize="$2" color="$gray10" fontWeight="400">({secondary})</Text>
-              )}
-            </YStack>
-          )}
-        </XStack>
-        {player.isGuest && (
-          <Text fontSize="$2" color="$gray10">
-            {guestLabel}
+      <YStack>
+        <Text fontWeight={player.isCurrentUser ? "600" : "500"}>{primary}</Text>
+        {secondary && (
+          <Text fontSize="$2" color="$gray10" fontWeight="400">
+            ({secondary})
           </Text>
         )}
       </YStack>
+    );
+  };
 
-      <View style={{ alignItems: 'flex-end' }}>
+  const renderPlayerRow = (player: PlayerRow) => {
+    const actions =
+      canShowActions(player) && player.actions && player.actions.length > 0
+        ? player.actions
+        : undefined;
+
+    const trailing = (
+      <>
         <StatusBadge
           status={player.status}
           type="player"
           label={getStatusLabel(player.status)}
         />
-
-        {canShowActions(player) && player.actions && player.actions.length > 0 && (
+        {actions ? (
           <>
             <View style={{ height: 4 }} />
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {player.actions.map((action, idx) => {
-                const IconComponent = action.icon;
-                return (
-                  <Button
-                    key={idx}
-                    variant={action.variant || "ghost"}
-                    size="$2"
-                    circular
-                    width={28}
-                    height={28}
-                    onPress={action.onPress}
-                    aria-label={action.label}
-                    testID={action.testID}
-                  >
-                    <IconComponent size={16} />
-                  </Button>
-                );
-              })}
-            </View>
+            <RosterRowActions actions={actions} />
           </>
-        )}
-      </View>
-    </XStack>
-  );
+        ) : null}
+      </>
+    );
+
+    return (
+      <RosterRow
+        key={player.id}
+        testID={player.testID}
+        leading={
+          player.nationality ? (
+            <Text fontSize="$5">{getCountryFlag(player.nationality)}</Text>
+          ) : undefined
+        }
+        primary={renderPrimary(player)}
+        secondary={
+          player.isGuest ? (
+            <Text fontSize="$2" color="$gray10">
+              {guestLabel}
+            </Text>
+          ) : undefined
+        }
+        trailing={trailing}
+        highlighted={player.isCurrentUser}
+        dimmed={player.status === "CANCELLED"}
+      />
+    );
   };
 
-  // Tamagui's <Separator> renders as zero-height on native (no default CSS),
-  // so we use a 1px colored View instead — theme-aware via backgroundColor.
-  const RowSeparator = () => (
-    <TView
-      backgroundColor="$borderColor"
-      height={1}
-      marginHorizontal="$3"
-      marginVertical="$1.5"
-    />
-  );
-
-  const renderWithSeparators = (list: PlayerRow[]) =>
-    list.map((player, i) => (
-      <Fragment key={player.id}>
-        {i > 0 && <RowSeparator />}
-        {renderPlayerRow(player)}
-      </Fragment>
-    ));
+  const renderSectionBody = (list: PlayerRow[]) =>
+    renderWithSeparators(list, renderPlayerRow);
 
   return (
     <YStack>
       {/* Paid players first */}
-      {renderWithSeparators(paidPlayers)}
+      {renderSectionBody(paidPlayers)}
 
-      {/* Pending players second */}
-      {pendingPlayers.length > 0 && paidPlayers.length > 0 && <RowSeparator />}
-      {renderWithSeparators(pendingPlayers)}
+      {/* Pending players second — with a separator if both lists are non-empty */}
+      {pendingPlayers.length > 0 && paidPlayers.length > 0 && <RosterSeparator />}
+      {renderSectionBody(pendingPlayers)}
 
-      {/* Cancelled players last (with visual separation) */}
+      {/* Cancelled players last, under a visible header once there's anything above */}
       {cancelledPlayers.length > 0 && (
-        <>
-          {(paidPlayers.length > 0 || pendingPlayers.length > 0) && (
-            <XStack
-              paddingVertical="$2"
-              paddingHorizontal="$3"
-              backgroundColor="$gray2"
-              marginTop="$2"
-            >
-              <Text fontSize="$2" color="$gray10" fontWeight="500">
-                {cancelledLabel}
-              </Text>
-            </XStack>
-          )}
-          {renderWithSeparators(cancelledPlayers)}
-        </>
+        <RosterSection
+          label={
+            paidPlayers.length > 0 || pendingPlayers.length > 0
+              ? cancelledLabel
+              : undefined
+          }
+        >
+          {renderSectionBody(cancelledPlayers)}
+        </RosterSection>
       )}
     </YStack>
   );

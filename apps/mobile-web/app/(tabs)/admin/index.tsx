@@ -5,6 +5,8 @@ import {
   useQueryClient,
   client,
   getAdminResetCodes,
+  useCopyVenues,
+  useCurrentGroup,
 } from "@repo/api-client";
 import {
   Container,
@@ -110,7 +112,9 @@ export default function OrganizerScreen() {
   const { data: session, isPending: isSessionPending } = useSession();
   const [activeTab, setActiveTab] = useState<Tab>("matches");
 
-  const isAdmin = session?.user?.role === "admin";
+  const { myRole } = useCurrentGroup();
+  const isPlatformAdmin = session?.user?.role === "admin";
+  const canManage = isPlatformAdmin || myRole === "organizer";
 
   // Loading state
   if (isSessionPending) {
@@ -126,8 +130,8 @@ export default function OrganizerScreen() {
     );
   }
 
-  // Auth check
-  if (!session?.user || !isAdmin) {
+  // Auth check — organizer role in the active group OR platform admin.
+  if (!session?.user || !canManage) {
     return (
       <Container variant="padded">
         <YStack flex={1} alignItems="center" justifyContent="center">
@@ -190,6 +194,15 @@ export default function OrganizerScreen() {
             >
               {t("settings.title")}
             </Button>
+            <Button
+              flex={1}
+              size="$3"
+              variant="outline"
+              onPress={() => router.push("/(tabs)/admin/roster")}
+              testID="admin-tab-roster"
+            >
+              {t("groups.roster.title")}
+            </Button>
           </XStack>
         </YStack>
 
@@ -207,6 +220,7 @@ export default function OrganizerScreen() {
 // ============ MATCHES TAB ============
 function MatchesTab() {
   const { t } = useTranslation();
+  const { data: session } = useSession();
   const queryClient = useQueryClient();
   const toast = useToastController();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -337,6 +351,17 @@ function MatchesTab() {
         >
           {t("addMatch.title")}
         </Button>
+
+        {/* Create Group — platform admin only */}
+        {session?.user?.role === "admin" ? (
+          <Button
+            variant="outline"
+            onPress={() => router.push("/(tabs)/admin/create-group")}
+            testID="admin-groups-create-btn"
+          >
+            {t("groups.create.title")}
+          </Button>
+        ) : null}
 
         {/* Matches List */}
         {!matches || matches.length === 0 ? (
@@ -501,6 +526,15 @@ function LocationsTab() {
   const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const [copyFromGroupId, setCopyFromGroupId] = useState<string>("");
+
+  const { groupId: currentGroupId, myGroups } = useCurrentGroup();
+  const copyVenuesMutation = useCopyVenues();
+
+  const copyableGroups = myGroups.filter(
+    (g) => g.id !== currentGroupId && g.myRole === "organizer",
+  );
 
   const {
     data: locations = [],
@@ -644,6 +678,19 @@ function LocationsTab() {
           {t("locations.addLocation")}
         </Button>
 
+        {copyableGroups.length > 0 ? (
+          <Button
+            variant="outline"
+            onPress={() => {
+              setCopyFromGroupId(copyableGroups[0]?.id ?? "");
+              setShowCopyDialog(true);
+            }}
+            testID="admin-locations-copy-btn"
+          >
+            {t("locations.copyFromGroup")}
+          </Button>
+        ) : null}
+
         {/* Locations List */}
         {locations.length === 0 ? (
           <Card variant="outlined">
@@ -771,6 +818,54 @@ function LocationsTab() {
             }
           }}
         />
+
+        <Dialog
+          open={showCopyDialog}
+          onOpenChange={setShowCopyDialog}
+          title={t("locations.copyFromGroup")}
+          onConfirm={() => {
+            if (!copyFromGroupId || copyVenuesMutation.isPending) return;
+            copyVenuesMutation.mutate(copyFromGroupId, {
+              onSuccess: (data) => {
+                setShowCopyDialog(false);
+                toast.show(
+                  t("locations.copySuccess", {
+                    locations: data.locationsCopied,
+                    courts: data.courtsCopied,
+                  }),
+                  { duration: 4000, customData: { variant: "success" } },
+                );
+              },
+              onError: (error: Error) => {
+                toast.show(getLocalizedError(error.message, t), {
+                  duration: 4000,
+                  customData: { variant: "error" },
+                });
+              },
+            });
+          }}
+          onCancel={() => setShowCopyDialog(false)}
+          confirmText={
+            copyVenuesMutation.isPending
+              ? t("locations.copying")
+              : t("locations.copy")
+          }
+          cancelText={t("shared.cancel")}
+        >
+          <YStack gap="$3" padding="$4">
+            <Text color="$gray11">{t("locations.copyFromGroupHint")}</Text>
+            <Select
+              value={copyFromGroupId}
+              onValueChange={setCopyFromGroupId}
+              label={t("locations.sourceGroup")}
+              placeholder={t("locations.selectSourceGroup")}
+              options={copyableGroups.map((g) => ({
+                label: g.name,
+                value: g.id,
+              }))}
+            />
+          </YStack>
+        </Dialog>
       </YStack>
     </ScrollView>
   );

@@ -1,9 +1,12 @@
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { getServiceFactory } from "@repo/shared/services";
+import { getServiceFactory, RosterMemberCollisionError } from "@repo/shared/services";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
+import { INVITE_TARGET_PHONE_REGEX } from "./groups";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
+import { isCurrentOrganizer, requireOrganizer } from "../middleware/authz";
 import {
   notifyMatchCreated,
   notifyMatchUpdated,
@@ -13,6 +16,21 @@ import {
   notifyPlayerCancelled,
   notifyRemovedFromMatch,
 } from "../lib/notify";
+import { fireAndForget } from "../lib/execution";
+
+const NOT_FOUND_MESSAGES = new Set([
+  "Match not found",
+  "Location not found",
+  "Court not found",
+  "Roster entry not found",
+  "Signup not found",
+]);
+
+function errorJson(c: Context, error: unknown, fallback: string) {
+  const message = error instanceof Error ? error.message : fallback;
+  const status = NOT_FOUND_MESSAGES.has(message) ? 404 : 400;
+  return c.json({ error: message }, status);
+}
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -20,48 +38,10 @@ const app = new Hono<{ Variables: AppVariables }>();
 const getMatchService = () => getServiceFactory().matchService;
 const getPlayerStatsService = () => getServiceFactory().playerStatsService;
 
-// Get all matches (with pagination)
-app.get(
-  "/",
-  zValidator(
-    "query",
-    z.object({
-      type: z.enum(["upcoming", "past", "all"]).optional(),
-      limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 5),
-      offset: z.string().optional().transform((val) => val ? parseInt(val, 10) : 0),
-    })
-  ),
-  async (c) => {
-    const { type, limit, offset } = c.req.valid("query");
-
-    // Get user from global auth middleware
-    const userId = requireUser(c).id;
-
-    const status = type === "past"
-      ? "completed"
-      : type === "all"
-        ? undefined
-        : "upcoming";
-
-    const result = await getMatchService().getAllMatches({
-      status,
-      sortDirection: type === "past" ? "desc" : "asc",
-      limit,
-      offset,
-      userId, // Pass userId to get user's signup status
-    });
-
-    // Return paginated response
-    return c.json({
-      matches: result.matches,
-      total: result.total,
-      hasMore: offset + result.matches.length < result.total,
-      page: Math.floor(offset / limit),
-    });
-  }
-);
-
-// Public preview for OG metadata — returns minimal match info only
+// Public preview for OG metadata — registered BEFORE the group-context
+// middleware so link previews work without auth. The preview payload is
+// intentionally minimal (date/time/location-name) so there's nothing
+// cross-group-sensitive to leak.
 app.get("/:id/preview", async (c) => {
   const id = c.req.param("id");
   try {
@@ -80,14 +60,58 @@ app.get("/:id/preview", async (c) => {
   }
 });
 
+// Everything below requires an active group.
+app.use("*", groupContextMiddleware);
+
+// Get all matches (with pagination), scoped to current group.
+app.get(
+  "/",
+  zValidator(
+    "query",
+    z.object({
+      type: z.enum(["upcoming", "past", "all"]).optional(),
+      limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 5),
+      offset: z.string().optional().transform((val) => val ? parseInt(val, 10) : 0),
+    })
+  ),
+  async (c) => {
+    const { type, limit, offset } = c.req.valid("query");
+    const userId = requireUser(c).id;
+    const current = requireCurrentGroup(c);
+
+    const status = type === "past"
+      ? "completed"
+      : type === "all"
+        ? undefined
+        : "upcoming";
+
+    const result = await getMatchService().getAllMatches({
+      groupId: current.id,
+      status,
+      sortDirection: type === "past" ? "desc" : "asc",
+      limit,
+      offset,
+      userId, // Pass userId to get user's signup status
+    });
+
+    return c.json({
+      matches: result.matches,
+      total: result.total,
+      hasMore: offset + result.matches.length < result.total,
+      page: Math.floor(offset / limit),
+    });
+  }
+);
+
 // Get single match by ID
 app.get(
   "/:id",
   async (c) => {
     const id = c.req.param("id");
     const userId = requireUser(c).id;
+    const current = requireCurrentGroup(c);
     const match = await getMatchService().getMatchDetails(id, userId);
-    if (!match) {
+    if (!match || match.groupId !== current.id) {
       return c.json({ error: "Match not found" }, 404);
     }
     return c.json(match);
@@ -97,19 +121,19 @@ app.get(
 // Get players for a match (for voting)
 app.get("/:matchId/players", async (c) => {
   const matchId = c.req.param("matchId");
+  const current = requireCurrentGroup(c);
   const match = await getMatchService().getMatchDetails(matchId);
 
-  if (!match) {
+  if (!match || match.groupId !== current.id) {
     return c.json({ error: "Match not found" }, 404);
   }
 
-  // Format players from signups
   const players = match.signups
     .filter((signup) => signup.status === "PAID")
     .map((signup) => ({
       id: signup.id,
       signupId: signup.id,
-      userId: signup.userId || signup.id, // Use signup ID for guests
+      userId: signup.userId || signup.id,
       name: signup.playerName,
       username: signup.user?.username || null,
       displayUsername: signup.user?.displayUsername || null,
@@ -121,7 +145,7 @@ app.get("/:matchId/players", async (c) => {
   return c.json({ players });
 });
 
-// Create a new match (admin only)
+// Create a new match (organizer only)
 app.post(
   "/",
   zValidator(
@@ -138,32 +162,31 @@ app.post(
     })
   ),
   async (c) => {
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
-    if (user.role !== "admin") {
-      return c.json({ error: "Only administrators can create matches" }, 403);
-    }
-
+    const current = requireCurrentGroup(c);
     const matchData = c.req.valid("json");
 
     try {
       const match = await getMatchService().createMatch(
-        { ...matchData, createdByUserId: user.id },
-        user
+        current.id,
+        matchData,
+        user,
       );
 
-      // Notify all users about new match (non-blocking)
-      c.executionCtx?.waitUntil(notifyMatchCreated(match, user.id));
+      fireAndForget(c, notifyMatchCreated(match, user.id));
 
       return c.json({ match }, 201);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to create match";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to create match");
     }
   }
 );
 
-// Update a match (admin only)
+// Update a match (organizer only)
 app.patch(
   "/:id",
   zValidator(
@@ -181,17 +204,16 @@ app.patch(
     })
   ),
   async (c) => {
-    const sessionUser = requireUser(c);
-    const user = sessionUserToUser(sessionUser);
-    if (user.role !== "admin") {
-      return c.json({ error: "Only administrators can update matches" }, 403);
-    }
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
 
+    const current = requireCurrentGroup(c);
     const matchId = c.req.param("id");
     const updates = c.req.valid("json");
 
     try {
       const match = await getMatchService().updateMatch(
+        current.id,
         matchId,
         {
           ...updates,
@@ -199,40 +221,35 @@ app.patch(
           costPerPlayer: updates.costPerPlayer === null ? undefined : updates.costPerPlayer,
           sameDayCost: updates.sameDayCost === null ? undefined : updates.sameDayCost,
         },
-        user
       );
 
-      // Notify signed-up players (non-blocking)
       if (updates.status === "cancelled") {
-        c.executionCtx?.waitUntil(notifyMatchCancelled(match));
+        fireAndForget(c, notifyMatchCancelled(match));
       } else if (updates.date || updates.time || updates.locationId) {
         const parts: string[] = [];
         if (updates.date) parts.push("date");
         if (updates.time) parts.push("time");
         if (updates.locationId) parts.push("location");
-        c.executionCtx?.waitUntil(notifyMatchUpdated(match, parts.join(", ") + " changed"));
+        fireAndForget(c, notifyMatchUpdated(match, parts.join(", ") + " changed"));
       }
 
       return c.json({ match });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update match";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to update match");
     }
   }
 );
 
-// Delete a match (admin only)
+// Delete a match (organizer only)
 app.delete("/:id", async (c) => {
-  const sessionUser = requireUser(c);
-  const user = sessionUserToUser(sessionUser);
-  if (user.role !== "admin") {
-    return c.json({ error: "Only administrators can delete matches" }, 403);
-  }
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
 
+  const current = requireCurrentGroup(c);
   const matchId = c.req.param("id");
 
   try {
-    await getMatchService().deleteMatch(matchId, user);
+    await getMatchService().deleteMatch(current.id, matchId);
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete match";
@@ -245,55 +262,73 @@ app.post("/:id/signup", async (c) => {
   const matchId = c.req.param("id");
   const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
+  const current = requireCurrentGroup(c);
 
   try {
-    const signup = await getMatchService().signUpUser(matchId, user);
+    const signup = await getMatchService().signUpUser(current.id, matchId, user);
     return c.json({ signup }, 201);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to sign up";
-    return c.json({ error: message }, 400);
+    return errorJson(c, error, "Failed to sign up");
   }
 });
 
-// Add a guest to a match
+// Add a guest to a match. Accepts either `{rosterId}` (existing ghost) or
+// `{guestName, phone?, email?}` (inline create). The service backs every
+// guest signup with a roster entry.
 app.post(
   "/:id/guest",
   zValidator(
     "json",
-    z.object({
-      matchId: z.string(),
-      guestName: z.string().min(1, "Guest name is required"),
-      guestEmail: z.string().email().optional(),
-      status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
-    })
+    z.union([
+      z.object({
+        rosterId: z.string().min(1),
+        status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+      }),
+      z.object({
+        guestName: z.string().trim().min(1, "Guest name is required"),
+        phone: z
+          .string()
+          .trim()
+          .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
+          .optional(),
+        email: z.string().trim().email().optional(),
+        status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
+      }),
+    ])
   ),
   async (c) => {
     const matchId = c.req.param("id");
-    const guestData = c.req.valid("json");
+    const body = c.req.valid("json");
+
+    // Organizer-only: the `rosterId` branch could be safely open to members,
+    // but the `guestName` branch writes to `group_roster`, which is an
+    // organizer-managed table. Gating the whole endpoint keeps roster
+    // authorship consistent with the rest of the roster CRUD.
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
+    const current = requireCurrentGroup(c);
 
     try {
       const signup = await getMatchService().addGuestPlayer(
+        current.id,
         matchId,
-        {
-          ...guestData,
-          matchId,
-          ownerUserId: user.id,
-          ownerName: user.name,
-          ownerEmail: user.email,
-        },
-        user
+        body,
+        user,
       );
       return c.json({ signup }, 201);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to add guest";
-      return c.json({ error: message }, 400);
+      if (error instanceof RosterMemberCollisionError) {
+        return c.json({ error: "already_member", userId: error.userId }, 409);
+      }
+      return errorJson(c, error, "Failed to add guest");
     }
   }
 );
 
-// Admin: Add a player to a match
+// Organizer: Add a player to a match
 app.post(
   "/:id/admin-add-player",
   zValidator(
@@ -306,26 +341,31 @@ app.post(
     })
   ),
   async (c) => {
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
     const matchId = c.req.param("id");
     const playerData = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
+    const current = requireCurrentGroup(c);
 
     try {
-      const signup = await getMatchService().addPlayerByAdmin(
+      const signup = await getMatchService().addPlayerAsOrganizer(
+        current.id,
         matchId,
         playerData,
-        user
+        user,
       );
       return c.json({ signup }, 201);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to add player";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to add player");
     }
   }
 );
 
-// Update a signup (status change)
+// Update a signup (status change). Organizers can update anyone's signup;
+// non-organizers can update their own or one they added.
 app.patch(
   "/:id/signup/:signupId",
   zValidator(
@@ -340,65 +380,78 @@ app.patch(
     const updates = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
+    const current = requireCurrentGroup(c);
+    const isOrganizer = isCurrentOrganizer(c);
 
     try {
       const matchId = c.req.param("id");
-      const result = await getMatchService().updateSignup(signupId, updates, user);
+      const result = await getMatchService().updateSignup(
+        current.id,
+        signupId,
+        updates,
+        user,
+        isOrganizer,
+      );
 
-      // Non-blocking notifications for status changes
       const match = await getRepositoryFactory().matches.findById(matchId);
-      if (match) {
+      if (match && match.groupId === current.id) {
         if (updates.status === "PAID" && result.oldStatus !== "PAID" && result.signup.userId) {
-          c.executionCtx?.waitUntil(notifyPlayerConfirmed(match, result.signup.userId));
+          fireAndForget(c, notifyPlayerConfirmed(match, result.signup.userId));
         }
         if (result.oldStatus === "PAID" && updates.status === "CANCELLED") {
-          c.executionCtx?.waitUntil(notifyPlayerCancelled(match, result.signup.playerName));
+          fireAndForget(c, notifyPlayerCancelled(match, result.signup.playerName));
         }
         if (result.promotedSubstitute?.userId) {
-          c.executionCtx?.waitUntil(notifySubstitutePromoted(match, result.promotedSubstitute.userId));
+          fireAndForget(c, notifySubstitutePromoted(match, result.promotedSubstitute.userId));
         }
       }
 
       return c.json({ signup: result.signup });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update signup";
-      return c.json({ error: message }, 400);
+      return errorJson(c, error, "Failed to update signup");
     }
   }
 );
 
-// Admin: Remove a player from a match (hard delete)
+// Organizer: Remove a player from a match (hard delete)
 app.delete("/:id/signup/:signupId", async (c) => {
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
   const matchId = c.req.param("id");
   const signupId = c.req.param("signupId");
   const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
+  const current = requireCurrentGroup(c);
 
   try {
-    // Look up signup and match before deletion for notification
     const [signup, match] = await Promise.all([
       getRepositoryFactory().signups.findById(signupId),
       getRepositoryFactory().matches.findById(matchId),
     ]);
 
-    await getMatchService().removePlayerByAdmin(signupId, user);
+    await getMatchService().removePlayerAsOrganizer(current.id, signupId, user);
 
-    if (signup?.userId && match) {
-      c.executionCtx?.waitUntil(notifyRemovedFromMatch(match, signup.userId));
+    if (signup?.userId && match && match.groupId === current.id) {
+      fireAndForget(c, notifyRemovedFromMatch(match, signup.userId));
     }
 
     return c.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to remove player";
-    return c.json({ error: message }, 400);
+    return errorJson(c, error, "Failed to remove player");
   }
 });
 
 // Get all player stats for a match
 app.get("/:id/player-stats", async (c) => {
   const matchId = c.req.param("id");
+  const current = requireCurrentGroup(c);
 
   try {
+    const match = await getRepositoryFactory().matches.findById(matchId);
+    if (!match || match.groupId !== current.id) {
+      return c.json({ error: "Match not found" }, 404);
+    }
     const stats = await getPlayerStatsService().getMatchStats(matchId);
     return c.json(stats);
   } catch (error) {
@@ -408,7 +461,7 @@ app.get("/:id/player-stats", async (c) => {
   }
 });
 
-// Record player stats for a match (admin or self)
+// Record player stats for a match (organizer or self)
 app.post(
   "/:id/player-stats",
   zValidator(
@@ -425,13 +478,17 @@ app.post(
     const data = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
+    const current = requireCurrentGroup(c);
+    const isOrganizer = isCurrentOrganizer(c);
 
     try {
       const stats = await getPlayerStatsService().recordStats(
+        current.id,
         matchId,
         data.userId,
         data,
         user,
+        isOrganizer,
       );
       return c.json({ stats }, 201);
     } catch (error) {
@@ -442,7 +499,7 @@ app.post(
   },
 );
 
-// Update player stats for a match (admin or self)
+// Update player stats for a match (organizer or self)
 app.patch(
   "/:id/player-stats/:userId",
   zValidator(
@@ -460,13 +517,17 @@ app.patch(
     const updates = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
+    const current = requireCurrentGroup(c);
+    const isOrganizer = isCurrentOrganizer(c);
 
     try {
       const stats = await getPlayerStatsService().updateStats(
+        current.id,
         matchId,
         targetUserId,
         updates,
         user,
+        isOrganizer,
       );
       return c.json({ stats });
     } catch (error) {

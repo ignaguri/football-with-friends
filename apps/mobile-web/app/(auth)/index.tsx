@@ -12,7 +12,7 @@ import {
 import { Mail } from "@tamagui/lucide-icons";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Device from "expo-device";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
@@ -26,6 +26,18 @@ export default function AuthLandingScreen() {
   const { theme } = useThemeContext();
   const tamaguiTheme = useTheme();
   const isDark = theme === "dark";
+  // Preserve a deep-link redirect (e.g. /join/:token) across the signin flow.
+  // Only internal paths are accepted — anything else falls back to /(tabs)
+  // to avoid open-redirect abuse if someone crafts a malicious link.
+  const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
+  const rawRedirect = Array.isArray(params.redirectTo)
+    ? params.redirectTo[0]
+    : params.redirectTo;
+  const redirectTo =
+    rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
+      ? rawRedirect
+      : undefined;
+  const forwardParams = redirectTo ? { redirectTo } : undefined;
   // `tintColor` is a native image prop — resolve the theme token to a real color
   const whatsappTintColor = tamaguiTheme.brandWhatsapp?.val ?? "#25D366";
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -204,7 +216,12 @@ export default function AuthLandingScreen() {
         <YStack gap="$3" alignSelf="stretch" alignItems="stretch">
           {/* Phone Button - Primary */}
           <Button
-            onPress={() => router.push("/(auth)/phone-signin")}
+            onPress={() =>
+              router.push({
+                pathname: "/(auth)/phone-signin",
+                params: forwardParams,
+              })
+            }
             variant="navy"
             size="$5"
             width="100%"
@@ -351,7 +368,12 @@ export default function AuthLandingScreen() {
 
           {/* Email Button - Secondary */}
           <Button
-            onPress={() => router.push("/(auth)/email-signin")}
+            onPress={() =>
+              router.push({
+                pathname: "/(auth)/email-signin",
+                params: forwardParams,
+              })
+            }
             variant="outline"
             size="$5"
             fontWeight="400"

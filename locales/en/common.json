@@ -508,7 +508,14 @@
     "updateError": "Failed to update location",
     "deleteSuccess": "Location deleted successfully",
     "deleteError": "Failed to delete location",
-    "error": "Failed to load locations: {message}"
+    "error": "Failed to load locations: {message}",
+    "copyFromGroup": "Copy from another group",
+    "copyFromGroupHint": "Duplicates all locations and courts from the selected group into this one. Existing venues here are kept.",
+    "sourceGroup": "Source group",
+    "selectSourceGroup": "Select a group",
+    "copy": "Copy",
+    "copying": "Copying…",
+    "copySuccess": "Copied {{locations}} locations and {{courts}} courts."
   },
   "courts": {
     "title": "Courts",
@@ -730,5 +737,137 @@
     "title": "Update Available",
     "message": "A new version has been downloaded. Restart the app to apply it.",
     "restart": "Restart"
+  },
+  "groups": {
+    "switcher": {
+      "label": "Group",
+      "loading": "Loading groups…",
+      "open": "Switch group (current: {{name}})"
+    },
+    "myGroups": {
+      "title": "My Groups",
+      "empty": "You're not in any group yet.",
+      "owner": "Owner",
+      "organizer": "Organizer",
+      "member": "Member"
+    },
+    "create": {
+      "title": "Create Group",
+      "nameLabel": "Group name",
+      "namePlaceholder": "e.g. Saturday Futsal",
+      "cta": "Create",
+      "success": "Group created",
+      "adminOnly": "Only the platform admin can create new groups"
+    },
+    "detail": {
+      "title": "Group Details",
+      "members": "Members",
+      "noMembers": "No members yet.",
+      "settings": "Settings",
+      "leave": "Leave group",
+      "transfer": "Transfer ownership",
+      "delete": "Delete group",
+      "deleteConfirm": "Delete this group? This cannot be undone.",
+      "loadError": "Couldn't load this group. Check your connection and try again."
+    },
+    "members": {
+      "you": "You",
+      "owner": "Owner",
+      "organizer": "Organizer",
+      "member": "Member",
+      "promote": "Promote to organizer",
+      "demote": "Demote to member",
+      "kick": "Remove from group",
+      "transferOwnership": "Transfer ownership",
+      "promoteConfirm": "Make {{name}} an organizer? They'll be able to manage matches, invites and roster.",
+      "demoteConfirm": "Remove organizer role from {{name}}? They'll become a regular member.",
+      "kickConfirm": "Remove {{name}} from the group? Their past match history will stay but they'll lose access.",
+      "transferConfirm": "Transfer ownership to {{name}}? You'll remain an organizer but they'll be the new owner, and only they can delete the group or transfer it again.",
+      "promoted": "{{name}} is now an organizer",
+      "demoted": "{{name}} is no longer an organizer",
+      "kicked": "{{name}} removed from the group",
+      "ownershipTransferred": "{{name}} is the new owner"
+    },
+    "noGroup": {
+      "title": "No group yet",
+      "body": "Ask your organizer for an invite link, then open it to join.",
+      "hint": "Groups are how we organize who plays together — matches, rosters and stats all belong to a group.",
+      "signOut": "Sign out"
+    },
+    "invite": {
+      "sectionTitle": "Invites",
+      "activeTitle": "Active invites",
+      "create": "Create invite link",
+      "createLink": "Create invite link",
+      "createPhone": "Send phone invite",
+      "created": "Invite link created",
+      "createdPhone": "Phone invite created",
+      "copy": "Copy",
+      "copied": "Invite link copied",
+      "revoke": "Revoke",
+      "empty": "No active invites yet.",
+      "expiresAt": "Expires {{date}}",
+      "neverExpires": "Never expires",
+      "forPhone": "for {{phone}}",
+      "previewTitle": "You've been invited to {{groupName}}",
+      "invitedBy": "Invited by {{name}}",
+      "signInToJoin": "Sign in to join",
+      "joining": "Joining…",
+      "invalidTitle": "This invite isn't valid",
+      "invalidReason": {
+        "expired": "This invite has expired.",
+        "revoked": "This invite was revoked by the organizer.",
+        "exhausted": "This invite has been used up.",
+        "target_mismatch": "This invite was issued for a different account.",
+        "not_found": "We couldn't find this invite."
+      },
+      "loadErrorTitle": "Couldn't load invite",
+      "loadErrorBody": "Check your connection and try again.",
+      "acceptFailedTitle": "Couldn't join the group",
+      "acceptFailedBody": "Something went wrong. Please try again.",
+      "alreadyMemberTitle": "You're already in {{groupName}}",
+      "alreadyMemberBody": "Nothing more to do — this invite was for a group you're already in.",
+      "goToMatches": "Go to matches",
+      "goHome": "Back to home",
+      "phonePlaceholder": "+491512345678",
+      "phoneHint": "Optional — if they already have an account, they'll get a push notification.",
+      "phoneInvalid": "Use international format, e.g. +491512345678.",
+      "linkMode": {
+        "title": "Share a link",
+        "description": "Anyone with this link can join the group. The link expires in 7 days."
+      },
+      "phoneMode": {
+        "title": "Invite a specific phone number",
+        "description": "This invite will only work for someone signing in with this phone number. If they already have a Fútbol account on this phone, they'll get a push notification.",
+        "collapsedHint": "Lock an invite to a single phone number"
+      }
+    },
+    "roster": {
+      "title": "Roster",
+      "add": "Add ghost",
+      "empty": "No ghosts yet — add one to bring guests to matches.",
+      "displayName": "Display name",
+      "phone": "Phone (optional)",
+      "email": "Email (optional)",
+      "claimed": "Claimed",
+      "unclaimed": "Unclaimed",
+      "linkedTo": "Linked to {{name}}",
+      "linkToMember": "Link to existing member",
+      "unlinkFromMember": "Unlink from {{name}}",
+      "searchMembers": "Search members…",
+      "noMembersFound": "No members match your search.",
+      "editTitle": "Edit ghost",
+      "deleteTitle": "Delete ghost",
+      "deleteCta": "Delete",
+      "deleteConfirm": "Permanently delete \"{{name}}\" from this group's roster?",
+      "forceDeleteCta": "Delete anyway",
+      "forceDeleteConfirm": "\"{{name}}\" is still linked to {{count}} signup(s). Deleting will keep the signup history but unlink it from this ghost. Continue?",
+      "alreadyMemberError": "A member with that phone or email is already in this group — invite them directly instead of adding a ghost.",
+      "guestPickerTitle": "Pick a guest",
+      "guestPickerSearch": "Search roster…",
+      "guestPickerEmpty": "No roster entries yet.",
+      "quickAddTitle": "Quick add + sign up",
+      "quickAddHint": "Name-only. Phone/email optional. A ghost will be created in this group and signed up for the match."
+    }
   }
 }

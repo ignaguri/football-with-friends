@@ -4,6 +4,7 @@ import {
   useMutation,
   useQueryClient,
   client,
+  useCurrentGroup,
 } from "@repo/api-client";
 import { MATCH_STATUSES, type MatchStatus } from "@repo/shared/domain";
 import {
@@ -78,7 +79,9 @@ export default function EditMatchScreen() {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  const isAdmin = session?.user?.role === "admin";
+  const { myRole } = useCurrentGroup();
+  const canManage =
+    session?.user?.role === "admin" || myRole === "organizer";
 
   // Fetch existing match data
   const { data: match, isLoading: isLoadingMatch } = useQuery({
@@ -217,7 +220,7 @@ export default function EditMatchScreen() {
   }
 
   // Admin check
-  if (!isAdmin) {
+  if (!canManage) {
     return (
       <YStack
         flex={1}

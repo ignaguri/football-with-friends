@@ -8,6 +8,7 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
+    "test": "turbo test",
     "clean": "turbo clean && rm -rf node_modules",
     "dev:api": "turbo dev --filter=api",
     "dev:app": "turbo dev --filter=mobile-web",

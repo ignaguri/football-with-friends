@@ -112,3 +112,40 @@ export async function notifyRemovedFromMatch(match: Match, userId: string): Prom
     await getNotificationService().sendToUser(userId, NotificationTemplates.removedFromMatch(info));
   });
 }
+
+async function findUserIdByPhone(phone: string): Promise<string | null> {
+  const row = await getDatabase()
+    .selectFrom("user")
+    .select("id")
+    .where("phoneNumber", "=", phone)
+    .executeTakeFirst();
+  return row?.id ?? null;
+}
+
+// Skips if the target phone is already a member of the group — a push saying
+// "you were invited" would be confusing when they're already in.
+export async function notifyGroupInviteTarget(params: {
+  targetPhone: string;
+  groupId: string;
+  groupName: string;
+  inviterName: string;
+  token: string;
+}): Promise<void> {
+  await safeNotify("group invite target", async () => {
+    const userId = await findUserIdByPhone(params.targetPhone);
+    if (!userId) return;
+    const existing = await getRepositoryFactory().groupMembers.find(
+      params.groupId,
+      userId,
+    );
+    if (existing) return;
+    await getNotificationService().sendToUser(
+      userId,
+      NotificationTemplates.groupInvite({
+        groupName: params.groupName,
+        inviterName: params.inviterName,
+        token: params.token,
+      }),
+    );
+  });
+}

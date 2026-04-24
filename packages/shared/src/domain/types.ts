@@ -40,6 +40,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
 
 export interface Location {
   id: string;
+  groupId: string;
   name: string;
   address?: string;
   coordinates?: string;
@@ -50,6 +51,7 @@ export interface Location {
 
 export interface Court {
   id: string;
+  groupId: string;
   locationId: string;
   name: string;
   description?: string;
@@ -63,6 +65,7 @@ export interface Court {
 
 export interface Match {
   id: string;
+  groupId: string;
   locationId: string;
   courtId?: string;
   date: string; // ISO date string YYYY-MM-DD
@@ -85,6 +88,7 @@ export interface Match {
 
 export interface Signup {
   id: string;
+  groupId: string;
   matchId: string;
   userId?: string; // nullable for guests
   playerName: string;
@@ -92,6 +96,7 @@ export interface Signup {
   status: PlayerStatus;
   signupType: SignupType;
   guestOwnerId?: string; // for guest signups
+  rosterId?: string; // points to group_roster; supplants guest_owner_id
   addedByUserId: string; // tracks who added this signup
   signedUpAt: Date;
   updatedAt: Date;
@@ -120,7 +125,10 @@ export interface MatchInvitation {
   invitedByUser?: User;
 }
 
-// User type from BetterAuth (extended)
+// User type from BetterAuth (extended).
+// Platform-level role: 'user' (default) or 'admin' (platform admin — only
+// Ignacio today). 'admin' here is the cross-group escape hatch; the
+// group-level role "organizer" (on group_members) is a separate concept.
 export interface User {
   id: string;
   name: string;
@@ -138,6 +146,7 @@ export interface User {
 // Player stats for a specific match
 export interface MatchPlayerStats {
   id: string;
+  groupId: string;
   matchId: string;
   userId: string;
   goals: number;
@@ -226,24 +235,29 @@ export interface VotingLeaderboard {
 // Data transfer objects (DTOs) for creating/updating entities
 
 export interface CreateLocationData {
+  groupId: string;
   name: string;
   address?: string;
   coordinates?: string;
   courtCount?: number;
 }
 
-export interface UpdateLocationData extends Partial<CreateLocationData> {}
+export interface UpdateLocationData
+  extends Partial<Omit<CreateLocationData, "groupId">> {}
 
 export interface CreateCourtData {
+  groupId: string;
   locationId: string;
   name: string;
   description?: string;
   isActive?: boolean;
 }
 
-export interface UpdateCourtData extends Partial<CreateCourtData> {}
+export interface UpdateCourtData
+  extends Partial<Omit<CreateCourtData, "groupId">> {}
 
 export interface CreateMatchData {
+  groupId: string;
   locationId: string;
   courtId?: string;
   date: string;
@@ -256,11 +270,12 @@ export interface CreateMatchData {
 }
 
 export interface UpdateMatchData
-  extends Partial<Omit<CreateMatchData, "createdByUserId">> {
+  extends Partial<Omit<CreateMatchData, "createdByUserId" | "groupId">> {
   status?: MatchStatus;
 }
 
 export interface CreateSignupData {
+  groupId: string;
   matchId: string;
   userId?: string;
   playerName: string;
@@ -268,15 +283,20 @@ export interface CreateSignupData {
   status?: PlayerStatus;
   signupType: SignupType;
   guestOwnerId?: string;
+  rosterId?: string;
   addedByUserId: string;
 }
 
 export interface UpdateSignupData
-  extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId">> {}
+  extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId" | "groupId">> {}
 
 export interface CreateGuestSignupData {
+  groupId: string;
   matchId: string;
-  guestName?: string;
+  // Every guest signup is backed by a roster entry: `rosterId` is the
+  // identity source; `guestName` is the display snapshot at signup time.
+  rosterId: string;
+  guestName: string;
   ownerUserId: string;
   ownerName: string;
   ownerEmail: string;
@@ -290,6 +310,7 @@ export interface CreateInvitationData {
 }
 
 export interface CreateMatchPlayerStatsData {
+  groupId: string;
   matchId: string;
   userId: string;
   goals?: number;
@@ -307,6 +328,7 @@ export interface UpdateMatchPlayerStatsData {
 // Filter and query types
 
 export interface MatchFilters {
+  groupId?: string; // scope-by-group filter; required on all request-driven list calls
   status?: MatchStatus;
   type?: "past" | "upcoming";
   userId?: string; // matches where user is signed up
@@ -317,6 +339,7 @@ export interface MatchFilters {
 }
 
 export interface SignupFilters {
+  groupId?: string;
   matchId?: string;
   userId?: string;
   status?: PlayerStatus;
@@ -549,6 +572,7 @@ export const NOTIFICATION_TYPES = {
   PAYMENT_REMINDER: "payment_reminder",
   VOTING_OPEN: "voting_open",
   ENGAGEMENT_REMINDER: "engagement_reminder",
+  GROUP_INVITE: "group_invite",
 } as const;
 
 export type NotificationType =
@@ -608,3 +632,170 @@ export type MatchMediaFeedGroup = {
   items: MatchMedia[];
   totalCount: number;    // total items in this match; can be > items.length
 };
+
+// --- Groups (multi-tenant scoping) ---
+// See docs/superpowers/specs/2026-04-22-group-oriented-scoping-design.md.
+// Scoping is introduced in Phase 0 (tables + nullable columns) and activated
+// in Phase 1 (backfill + middleware). These types describe the target shape.
+
+export const MEMBER_ROLES = ["organizer", "member"] as const;
+export type MemberRole = (typeof MEMBER_ROLES)[number];
+
+// Platform-level role on the `user` table. Two values:
+//   - "user" (default)
+//   - "admin" (platform admin — Ignacio — cross-group escape hatch)
+// Group-level authority is a separate concept on group_members.role
+// ("organizer" / "member"). Do not conflate.
+export const PLATFORM_ROLES = ["user", "admin"] as const;
+export type PlatformRole = (typeof PLATFORM_ROLES)[number];
+
+// HTTP header carrying the active group id across every authed request.
+export const GROUP_HEADER = "X-Group-Id";
+
+export const GROUP_VISIBILITIES = ["private", "public"] as const;
+export type GroupVisibility = (typeof GROUP_VISIBILITIES)[number];
+
+export interface Group {
+  id: string;
+  name: string;
+  slug: string;
+  ownerUserId: string;
+  visibility: GroupVisibility;
+  deletedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields (from joins)
+  owner?: User;
+  memberCount?: number;
+  myRole?: MemberRole;
+  amIOwner?: boolean;
+}
+
+export interface GroupMember {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: MemberRole;
+  joinedAt: Date;
+
+  // Populated fields
+  user?: User;
+}
+
+// Members enriched with the user fields needed to render a readable row
+// (name + secondary contact). Kept flat rather than nested `user?: User` so
+// callers don't have to thread a User type that doesn't surface `phoneNumber`.
+export interface GroupMemberWithUser extends GroupMember {
+  name: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  username: string | null;
+  displayUsername: string | null;
+}
+
+export interface GroupInvite {
+  id: string;
+  groupId: string;
+  token: string;
+  createdByUserId: string;
+  expiresAt?: Date;
+  maxUses?: number;
+  usesCount: number;
+  targetPhone?: string;
+  targetUserId?: string;
+  revokedAt?: Date;
+  createdAt: Date;
+
+  // Populated fields
+  group?: Group;
+  createdByUser?: User;
+}
+
+export type GroupInviteInvalidReason =
+  | "expired"
+  | "revoked"
+  | "exhausted"
+  | "target_mismatch"
+  | "not_found";
+
+export interface GroupInvitePreview {
+  valid: boolean;
+  reason?: GroupInviteInvalidReason;
+  group?: {
+    id: string;
+    name: string;
+  };
+  inviter?: {
+    id: string;
+    name: string;
+  };
+  expiresAt?: Date;
+}
+
+export interface GroupRoster {
+  id: string;
+  groupId: string;
+  displayName: string;
+  phone?: string;
+  email?: string;
+  claimedByUserId?: string;
+  createdByUserId: string;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Populated fields
+  claimedByUser?: User;
+  createdByUser?: User;
+}
+
+// DTOs
+
+export interface CreateGroupData {
+  name: string;
+  slug?: string; // auto-derived from name if omitted
+  ownerUserId: string;
+  visibility?: GroupVisibility;
+}
+
+export interface UpdateGroupData {
+  name?: string;
+  slug?: string;
+  visibility?: GroupVisibility;
+}
+
+export interface CreateGroupInviteData {
+  groupId: string;
+  createdByUserId: string;
+  expiresAt?: Date;
+  maxUses?: number;
+  targetPhone?: string;
+  targetUserId?: string;
+}
+
+export interface CreateGroupRosterData {
+  groupId: string;
+  displayName: string;
+  phone?: string;
+  email?: string;
+  createdByUserId: string;
+}
+
+export interface UpdateGroupRosterData {
+  displayName?: string;
+  // Nullable so organizers can clear contact info — the repo distinguishes
+  // `undefined` ("don't touch") from `null` ("set to NULL").
+  phone?: string | null;
+  email?: string | null;
+  claimedByUserId?: string | null;
+}
+
+export interface GroupMemberFilters {
+  groupId: string;
+  role?: MemberRole;
+}
+
+export interface GroupRosterFilters {
+  groupId: string;
+  claimed?: boolean;
+}

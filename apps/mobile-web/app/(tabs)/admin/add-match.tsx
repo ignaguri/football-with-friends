@@ -4,6 +4,7 @@ import {
   useMutation,
   useQueryClient,
   client,
+  useCurrentGroup,
 } from "@repo/api-client";
 import {
   Text,
@@ -63,7 +64,9 @@ export default function AddMatchScreen() {
   );
   const [error, setError] = useState<string | null>(null);
 
-  const isAdmin = session?.user?.role === "admin";
+  const { myRole } = useCurrentGroup();
+  const canManage =
+    session?.user?.role === "admin" || myRole === "organizer";
 
   // Fetch settings to pre-fill costs
   const { data: settings } = useQuery({
@@ -199,7 +202,7 @@ export default function AddMatchScreen() {
   }
 
   // Admin check
-  if (!isAdmin) {
+  if (!canManage) {
     return (
       <YStack
         flex={1}

@@ -24,7 +24,7 @@ app.post(
     const user = requireUser(c);
     if (user.role !== "admin") {
       return c.json(
-        { error: "Only administrators can send test notifications" },
+        { error: "Only platform admin can send test notifications" },
         403,
       );
     }

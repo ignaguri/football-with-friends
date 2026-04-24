@@ -1,0 +1,502 @@
+// Group management API (Phase 2).
+//
+// Layout note: `GET /api/groups/me` is the only endpoint that does NOT run
+// through `groupContextMiddleware` — it's the endpoint that powers the
+// switcher itself, so it must work before we know which group to pin.
+// We register /me first, then mount the middleware, then register everything
+// scoped-by-path.
+
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
+import { getServiceFactory } from "@repo/shared/services";
+import { MEMBER_ROLES } from "@repo/shared/domain";
+import { notifyGroupInviteTarget } from "../lib/notify";
+import { fireAndForget } from "../lib/execution";
+import { type AppVariables, requireUser } from "../middleware/security";
+import {
+  groupContextMiddleware,
+  requireCurrentGroup,
+} from "../middleware/group-context";
+import {
+  assertInCurrentGroup,
+  isPlatformAdmin,
+  requireOrganizer,
+  requireOwner,
+  requirePlatformAdmin,
+} from "../middleware/authz";
+
+const app = new Hono<{ Variables: AppVariables }>();
+
+const getGroupService = () => getServiceFactory().groupService;
+
+// List my groups — public-to-authed-user, no X-Group-Id required.
+app.get("/me", async (c) => {
+  const user = requireUser(c);
+  const groups = await getGroupService().listMyGroups(user.id);
+  return c.json({ groups });
+});
+
+// Create a new group (platform admin only for now).
+app.post(
+  "/",
+  zValidator(
+    "json",
+    z.object({
+      name: z.string().min(1).max(120),
+      slug: z
+        .string()
+        .regex(/^[a-z0-9-]+$/i, "slug must be URL-safe")
+        .max(48)
+        .optional(),
+    }),
+  ),
+  async (c) => {
+    const denied = requirePlatformAdmin(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const data = c.req.valid("json");
+
+    try {
+      const group = await getGroupService().createGroup({
+        ownerUserId: user.id,
+        name: data.name,
+        slug: data.slug,
+      });
+      return c.json({ group }, 201);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create group";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+// Everything below is group-scoped — we validate :id matches the active
+// group (or the caller is platform admin) so a member of group A can't probe
+// group B by swapping the path parameter. `/me` and the create endpoint
+// above bypass this because they're the switcher/bootstrap entry points.
+app.use("*", groupContextMiddleware);
+
+// Group details. Organizers get the full roster + settings; members get a
+// stripped {id, name, slug, visibility, myRole} payload and the service
+// skips the member/settings queries to avoid hydrating data we'll drop.
+app.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const current = requireCurrentGroup(c);
+  const isOrganizerView = current.role === "organizer" || isPlatformAdmin(c);
+
+  if (isOrganizerView) {
+    const details = await getGroupService().getGroupDetails(id);
+    if (!details) return c.json({ error: "Group not found" }, 404);
+    return c.json({ group: details });
+  }
+
+  const group = await getGroupService().getGroupBasics(id);
+  if (!group) return c.json({ error: "Group not found" }, 404);
+  return c.json({
+    group: {
+      id: group.id,
+      name: group.name,
+      slug: group.slug,
+      visibility: group.visibility,
+      myRole: current.role,
+    },
+  });
+});
+
+app.patch(
+  "/:id",
+  zValidator(
+    "json",
+    z.object({
+      name: z.string().min(1).max(120).optional(),
+      slug: z.string().regex(/^[a-z0-9-]+$/i).max(48).optional(),
+      visibility: z.enum(["private", "public"]).optional(),
+    }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    // Visibility toggling is gated behind platform admin until we ship the
+    // public-directory flow (Phase 5); see the design doc.
+    const updates = c.req.valid("json");
+    if (updates.visibility !== undefined && !isPlatformAdmin(c)) {
+      return c.json({ error: "Only platform admin can change visibility" }, 403);
+    }
+
+    try {
+      const group = await getGroupService().updateGroup(id, updates);
+      return c.json({ group });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update group";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.delete("/:id", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOwner(c);
+  if (denied) return denied;
+
+  try {
+    await getGroupService().softDeleteGroup(id);
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to delete group";
+    return c.json({ error: message }, 400);
+  }
+});
+
+// Members ------------------------------------------------------------------
+
+app.get("/:id/members", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const members = await getGroupService().listMembers(id);
+  return c.json({ members });
+});
+
+app.patch(
+  "/:id/members/:userId",
+  zValidator("json", z.object({ role: z.enum(MEMBER_ROLES) })),
+  async (c) => {
+    const id = c.req.param("id");
+    const targetUserId = c.req.param("userId");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOwner(c);
+    if (denied) return denied;
+
+    const { role } = c.req.valid("json");
+
+    try {
+      await getGroupService().updateMemberRole(id, targetUserId, role);
+      return c.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update member";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.delete("/:id/members/:userId", async (c) => {
+  const id = c.req.param("id");
+  const targetUserId = c.req.param("userId");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  try {
+    await getGroupService().removeMember(id, targetUserId);
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to remove member";
+    return c.json({ error: message }, 400);
+  }
+});
+
+app.post("/:id/leave", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const user = requireUser(c);
+
+  try {
+    await getGroupService().leaveGroup(id, user.id);
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to leave group";
+    return c.json({ error: message }, 400);
+  }
+});
+
+// Invites ----------------------------------------------------------------
+// Creation and revocation are organizer-only; listing is organizer-only.
+// Public preview/accept endpoints live in `routes/invites.ts` (no group
+// context middleware — the accepter doesn't yet belong to the group).
+
+app.get("/:id/invites", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const invites = await getGroupService().listInvites(id);
+  return c.json({ invites });
+});
+
+// E.164 per BetterAuth phone-auth + profile routes; targetPhone must match
+// the exact shape we store in `user.phoneNumber` or `acceptInvite` never
+// matches and the organizer has effectively created a dead invite.
+export const INVITE_TARGET_PHONE_REGEX = /^\+[1-9]\d{6,14}$/;
+
+app.post(
+  "/:id/invites",
+  zValidator(
+    "json",
+    z.object({
+      expiresInHours: z.number().int().positive().max(24 * 365).optional(),
+      maxUses: z.number().int().positive().max(10_000).optional(),
+      targetPhone: z
+        .string()
+        .trim()
+        .regex(INVITE_TARGET_PHONE_REGEX, "targetPhone must be E.164 (e.g. +1234567890)")
+        .optional(),
+      targetUserId: z.string().min(1).optional(),
+    }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const body = c.req.valid("json");
+
+    try {
+      const [invite, group] = await Promise.all([
+        getGroupService().createInvite({
+          groupId: id,
+          createdByUserId: user.id,
+          expiresInHours: body.expiresInHours,
+          maxUses: body.maxUses,
+          targetPhone: body.targetPhone,
+          targetUserId: body.targetUserId,
+        }),
+        body.targetPhone
+          ? getGroupService().getGroupBasics(id)
+          : Promise.resolve(null),
+      ]);
+      if (body.targetPhone && group) {
+        // Cloudflare Workers terminates background promises once the response
+        // returns; `waitUntil` keeps the isolate alive until the push completes.
+        fireAndForget(c, 
+          notifyGroupInviteTarget({
+            targetPhone: body.targetPhone,
+            groupId: id,
+            groupName: group.name,
+            inviterName: user.name,
+            token: invite.token,
+          }),
+        );
+      }
+      return c.json({ invite }, 201);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create invite";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.delete("/:id/invites/:inviteId", async (c) => {
+  const id = c.req.param("id");
+  const inviteId = c.req.param("inviteId");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  try {
+    await getGroupService().revokeInvite(id, inviteId);
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to revoke invite";
+    return c.json({ error: message }, 404);
+  }
+});
+
+// Roster (ghosts) ---------------------------------------------------------
+// Organizer-only. Ghosts are managed player profiles that may be claimed
+// by a real user via invite accept or organizer-driven linking.
+
+app.get("/:id/roster", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const roster = await getGroupService().listRoster(id);
+  return c.json({ roster });
+});
+
+app.post(
+  "/:id/roster",
+  zValidator(
+    "json",
+    z.object({
+      displayName: z.string().trim().min(1).max(120),
+      phone: z
+        .string()
+        .trim()
+        .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
+        .optional(),
+      email: z.string().trim().email().optional(),
+    }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const body = c.req.valid("json");
+
+    try {
+      const outcome = await getGroupService().createRosterEntry({
+        groupId: id,
+        displayName: body.displayName,
+        phone: body.phone,
+        email: body.email,
+        createdByUserId: user.id,
+      });
+      if (!outcome.created) {
+        return c.json(
+          { error: outcome.reason, userId: outcome.userId },
+          409,
+        );
+      }
+      return c.json({ entry: outcome.entry }, 201);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to create roster entry";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.patch(
+  "/:id/roster/:rosterId",
+  zValidator(
+    "json",
+    z
+      .object({
+        displayName: z.string().trim().min(1).max(120).optional(),
+        phone: z
+          .string()
+          .trim()
+          .regex(INVITE_TARGET_PHONE_REGEX, "phone must be E.164 (e.g. +1234567890)")
+          .nullable()
+          .optional(),
+        email: z.string().trim().email().nullable().optional(),
+        claimedByUserId: z.string().min(1).nullable().optional(),
+      })
+      .refine((v) => Object.keys(v).length > 0, {
+        message: "At least one field must be provided",
+      }),
+  ),
+  async (c) => {
+    const id = c.req.param("id");
+    const rosterId = c.req.param("rosterId");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const patch = c.req.valid("json");
+
+    try {
+      const entry = await getGroupService().updateRosterEntry(rosterId, id, {
+        displayName: patch.displayName,
+        phone: patch.phone,
+        email: patch.email,
+        claimedByUserId: patch.claimedByUserId,
+      });
+      return c.json({ entry });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to update roster entry";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+app.delete(
+  "/:id/roster/:rosterId",
+  zValidator("query", z.object({ force: z.enum(["true", "false"]).optional() })),
+  async (c) => {
+  const id = c.req.param("id");
+  const rosterId = c.req.param("rosterId");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const force = c.req.valid("query").force === "true";
+
+  try {
+    const outcome = await getGroupService().deleteRosterEntry(rosterId, id, { force });
+    if (!outcome.deleted) {
+      return c.json(
+        {
+          error: outcome.reason,
+          referencingSignupCount: outcome.referencingSignupCount,
+        },
+        409,
+      );
+    }
+    return c.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to delete roster entry";
+    return c.json({ error: message }, 404);
+  }
+  },
+);
+
+app.post(
+  "/:id/transfer-ownership",
+  zValidator("json", z.object({ toUserId: z.string().min(1) })),
+  async (c) => {
+    const id = c.req.param("id");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOwner(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const { toUserId } = c.req.valid("json");
+
+    try {
+      await getGroupService().transferOwnership(id, user.id, toUserId);
+      return c.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to transfer ownership";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+export default app;

@@ -1,5 +1,5 @@
 import type { Context, Next } from "hono";
-import type { User } from "@repo/shared/domain";
+import type { MemberRole, PlatformRole, User } from "@repo/shared/domain";
 import { auth } from "../auth";
 
 /**
@@ -7,16 +7,24 @@ import { auth } from "../auth";
  * Used by both worker.ts (Cloudflare Workers) and index.ts (Bun dev).
  */
 
-// Session user stored in Hono context by the global auth middleware
 export type SessionUser = {
   id: string;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: PlatformRole;
 };
 
-// Hono app variables — user is optional because public routes don't set it
-export type AppVariables = { user?: SessionUser };
+// Active group bound by groupContextMiddleware on every scoped request.
+export type CurrentGroup = {
+  id: string;
+  role: MemberRole;
+  isOwner: boolean;
+};
+
+export type AppVariables = {
+  user?: SessionUser;
+  currentGroup?: CurrentGroup;
+};
 
 // Convert session user to the full domain User type (with synthetic timestamps)
 export function sessionUserToUser(sessionUser: SessionUser): User {
@@ -40,6 +48,7 @@ export const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/auth\// },                                      // BetterAuth
   { path: /^\/api\/phone-auth\// },                                 // Phone auth
   { path: /^\/api\/matches\/[^/]+\/preview$/, method: "GET" },      // OG metadata preview
+  { path: /^\/api\/invites\/[^/]+$/, method: "GET" },               // Invite preview (POST accept requires auth)
   { path: /^\/api\/profile\/picture\//, method: "GET" },            // Served images
   { path: /^\/health$/ },                                           // Health check
   { path: /^\/api\/cron\/update-matches$/, method: "POST" },        // Cron (has own secret check)
@@ -63,11 +72,14 @@ export async function authMiddleware(c: Context, next: Next) {
     return c.json({ error: "Unauthorized" }, 401);
   }
 
+  const rawRole = (session.user as any).role as string | undefined;
+  const role: PlatformRole = rawRole === "admin" ? "admin" : "user";
+
   c.set("user", {
     id: session.user.id,
     email: session.user.email,
     name: session.user.name || "",
-    role: ((session.user as any).role as "user" | "admin") || "user",
+    role,
   });
   return next();
 }

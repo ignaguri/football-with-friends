@@ -41,5 +41,49 @@ export {
 } from "./auth";
 export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 
+// Active group storage — consumed by the client fetch interceptor and
+// exposed for the mobile-web switcher (Phase 2).
+export {
+  getActiveGroupId,
+  setActiveGroupId,
+  GROUP_HEADER,
+} from "./group-storage";
+
+// Group-management React Query hooks (Phase 2).
+export {
+  groupQueryKeys,
+  useMyGroups,
+  useCurrentGroup,
+  useGroupDetail,
+  useGroupMembers,
+  useCreateGroup,
+  useUpdateGroup,
+  useDeleteGroup,
+  useUpdateMemberRole,
+  useKickMember,
+  useLeaveGroup,
+  useTransferOwnership,
+  useGroupInvites,
+  useCreateInvite,
+  useRevokeInvite,
+  useInvitePreview,
+  useAcceptInvite,
+  useGroupRoster,
+  useCreateRosterEntry,
+  useUpdateRosterEntry,
+  useDeleteRosterEntry,
+  useCopyVenues,
+} from "./groups";
+export type {
+  GroupInviteSummary,
+  GroupInvitePreviewResult,
+  GroupRosterEntry,
+  CreateRosterInput,
+  UpdateRosterInput,
+  GroupMemberSummary,
+  GroupDetailPayload,
+  MyGroupSummary,
+} from "./groups";
+
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

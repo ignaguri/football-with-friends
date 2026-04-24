@@ -1,4 +1,9 @@
-import { useInfiniteQuery, client, useSession } from "@repo/api-client";
+import {
+  useInfiniteQuery,
+  client,
+  useSession,
+  useCurrentGroup,
+} from "@repo/api-client";
 import {
   Container,
   Card,
@@ -21,6 +26,9 @@ type MatchType = "upcoming" | "past";
 export default function MatchesListScreen() {
   const { t } = useTranslation();
   const { data: session } = useSession();
+  const { myRole } = useCurrentGroup();
+  const canManage =
+    session?.user?.role === "admin" || myRole === "organizer";
   const [activeTab, setActiveTab] = useState<MatchType>("upcoming");
 
   const {
@@ -159,9 +167,26 @@ export default function MatchesListScreen() {
                     }}
                   >
                     <XStack justifyContent="space-between" alignItems="center">
-                      <Text color="white" fontSize="$5" fontWeight="500">
-                        {dateTime}
-                      </Text>
+                      <YStack>
+                        <Text
+                          color="white"
+                          fontSize="$5"
+                          fontWeight="500"
+                          textAlign="left"
+                        >
+                          {dateTime}
+                        </Text>
+                        {match.location?.name && (
+                          <Text
+                            color="white"
+                            fontSize="$5"
+                            fontWeight="600"
+                            textAlign="left"
+                          >
+                            {match.location.name}
+                          </Text>
+                        )}
+                      </YStack>
                       {(match as any).userSignupStatus &&
                         (match as any).userSignupStatus !== "CANCELLED" && (
                           <Text
@@ -179,11 +204,6 @@ export default function MatchesListScreen() {
                           </Text>
                         )}
                     </XStack>
-                    {match.location?.name && (
-                      <Text color="white" fontSize="$4" opacity={0.9}>
-                        {match.location.name}
-                      </Text>
-                    )}
                   </YStack>
                 </Pressable>
                 );
@@ -209,8 +229,8 @@ export default function MatchesListScreen() {
           </YStack>
         </ScrollView>
 
-        {/* Admin FAB */}
-        {session?.user?.role === "admin" && (
+        {/* Admin FAB — visible to platform admins and group organizers */}
+        {canManage && (
           <Button
             position="absolute"
             bottom="$6"

@@ -1,3 +1,4 @@
+import type { Context } from "hono";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 
@@ -10,7 +11,16 @@ import {
 } from "@repo/shared/domain";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 
-import { rateLimitMiddleware, requireUser } from "../middleware/security";
+import {
+  type AppVariables,
+  rateLimitMiddleware,
+  requireUser,
+} from "../middleware/security";
+import {
+  groupContextMiddleware,
+  requireCurrentGroup,
+} from "../middleware/group-context";
+import { assertInCurrentGroup } from "../middleware/authz";
 import {
   deleteFromR2,
   extFromMediaMime,
@@ -25,9 +35,23 @@ type AppEnv = {
   Bindings: {
     MATCH_MEDIA: R2Bucket;
   };
+  Variables: AppVariables;
 };
 
 const app = new Hono<AppEnv>();
+
+app.use("*", groupContextMiddleware);
+
+// Match-media rows don't carry their own `group_id` column; the scoping
+// anchor is the parent match. Any matchId-parameterized endpoint routes
+// through this helper so cross-group matchIds 404 instead of leaking media.
+async function assertMatchInCurrentGroup(
+  c: Context,
+  matchId: string,
+): Promise<Response | null> {
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  return assertInCurrentGroup(c, match, "Match not found");
+}
 
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
@@ -63,11 +87,13 @@ function reactionsFromCounts(
 
 app.get("/feed", async (c) => {
   const user = requireUser(c);
+  const current = requireCurrentGroup(c);
   const cursor = c.req.query("cursor") ?? null;
   const limit = Math.min(Math.max(Number(c.req.query("limit") ?? "5"), 1), 20);
   const itemsPerMatch = 6;
 
   const { groups, nextCursor } = await repos().matchMedia.feed({
+    groupId: current.id,
     cursor,
     matchesPerPage: limit,
     itemsPerMatch,
@@ -144,7 +170,8 @@ app.post("/:matchId", async (c) => {
   const matchId = c.req.param("matchId");
 
   const match = await repos().matches.findById(matchId);
-  if (!match) return c.json({ error: "Match not found" }, 404);
+  const mismatched = assertInCurrentGroup(c, match, "Match not found");
+  if (mismatched) return mismatched;
 
   const participantIds = await repos().signups.getSignedUpUserIds(matchId);
   const isParticipant = participantIds.includes(user.id);
@@ -240,6 +267,8 @@ app.post("/:matchId", async (c) => {
 app.get("/:matchId", async (c) => {
   const user = requireUser(c);
   const matchId = c.req.param("matchId");
+  const notFound = await assertMatchInCurrentGroup(c, matchId);
+  if (notFound) return notFound;
 
   const rows = await repos().matchMedia.listByMatch(matchId, user.id);
   const items: MatchMedia[] = rows.map((r) => {
@@ -270,6 +299,8 @@ app.get("/:matchId", async (c) => {
 app.get("/:matchId/count", async (c) => {
   requireUser(c);
   const matchId = c.req.param("matchId");
+  const notFound = await assertMatchInCurrentGroup(c, matchId);
+  if (notFound) return notFound;
   const count = await repos().matchMedia.countByMatch(matchId);
   return c.json({ count });
 });
@@ -280,6 +311,8 @@ app.delete("/:matchId/:mediaId", async (c) => {
   const user = requireUser(c);
   const matchId = c.req.param("matchId");
   const mediaId = c.req.param("mediaId");
+  const notFound = await assertMatchInCurrentGroup(c, matchId);
+  if (notFound) return notFound;
 
   const media = await repos().matchMedia.findById(mediaId);
   if (!media || media.matchId !== matchId) {
@@ -310,6 +343,8 @@ app.post("/:matchId/:mediaId/reactions", async (c) => {
   const user = requireUser(c);
   const matchId = c.req.param("matchId");
   const mediaId = c.req.param("mediaId");
+  const notFound = await assertMatchInCurrentGroup(c, matchId);
+  if (notFound) return notFound;
 
   const payload = await c.req.json<{ emoji?: string }>().catch(() => ({ emoji: undefined }));
   const emoji = payload.emoji as ReactionEmoji | undefined;

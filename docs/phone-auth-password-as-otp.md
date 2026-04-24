@@ -165,3 +165,12 @@ To verify the fix works:
 2. Open browser DevTools → Network tab
 3. Filter by `get-session`
 4. After login, you should see only 2-3 `get-session` calls, not continuous polling
+
+## Interaction with group invites
+
+The `user.phoneNumber` column this pattern writes is also the target key for phone-shortcut group invites:
+
+- Organizer creates an invite with `targetPhone: "+49..."` (`POST /api/groups/:id/invites`). If that phone matches an existing user's `phoneNumber`, the server sends them a push notification with the join link (best-effort, always returns the shareable link). See `apps/api/src/lib/notify.ts` `notifyGroupInviteTarget`.
+- On invite accept (`GroupService.acceptInvite`), the server also uses `user.phoneNumber` to auto-claim any unclaimed `group_roster` ghost whose `phone` field matches — a single exact match claims, multiple matches are reported as `ambiguousRosterMatches` and require a manual link.
+
+Both flows read the same `phoneNumber` column this pattern populates at sign-up time; if a user signs up via Google OAuth and never adds a phone, they simply won't match phone-targeted invites or phone-keyed ghost rows. Email-keyed ghost claim still works in that case.
