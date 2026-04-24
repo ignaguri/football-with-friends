@@ -68,6 +68,29 @@ export type {
   PlayerAction,
 } from "./components/PlayersTable";
 
+export { MembersTable } from "./components/MembersTable";
+export type {
+  MembersTableProps,
+  MemberRow,
+  MemberRole as MembersTableRole,
+} from "./components/MembersTable";
+
+// Roster primitives — shared between PlayersTable, MembersTable and
+// future roster-style tables.
+export {
+  RosterRow,
+  RosterRowActions,
+  RosterSeparator,
+  RosterSection,
+  renderWithSeparators,
+} from "./components/roster";
+export type {
+  RosterRowProps,
+  RosterRowActionsProps,
+  RosterSectionProps,
+  RosterAction,
+} from "./components/roster";
+
 export { List, ListItem } from "./components/List";
 export type { ListProps, ListItemProps } from "./components/List";
 
