@@ -765,6 +765,7 @@
     "detail": {
       "title": "Detalle del grupo",
       "members": "Miembros",
+      "noMembers": "Todavía no hay miembros.",
       "settings": "Ajustes",
       "leave": "Salir del grupo",
       "transfer": "Transferir propiedad",
@@ -773,9 +774,22 @@
       "loadError": "No se pudo cargar este grupo. Revisá tu conexión e intentá de nuevo."
     },
     "members": {
+      "you": "Vos",
+      "owner": "Dueño",
+      "organizer": "Organizador",
+      "member": "Miembro",
       "promote": "Promover a organizador",
       "demote": "Pasar a miembro",
-      "kick": "Quitar del grupo"
+      "kick": "Quitar del grupo",
+      "transferOwnership": "Transferir propiedad",
+      "promoteConfirm": "¿Hacer a {{name}} organizador? Va a poder gestionar partidos, invitaciones y plantilla.",
+      "demoteConfirm": "¿Quitarle el rol de organizador a {{name}}? Vuelve a ser un miembro común.",
+      "kickConfirm": "¿Quitar a {{name}} del grupo? Su historial de partidos queda pero pierde acceso.",
+      "transferConfirm": "¿Transferirle la propiedad a {{name}}? Vos seguís como organizador, pero ellos pasan a ser los dueños y solo ellos van a poder eliminar el grupo o transferirlo de nuevo.",
+      "promoted": "{{name}} ahora es organizador",
+      "demoted": "{{name}} ya no es organizador",
+      "kicked": "Quitaste a {{name}} del grupo",
+      "ownershipTransferred": "{{name}} es el nuevo dueño"
     },
     "noGroup": {
       "title": "Todavía sin grupo",
@@ -785,12 +799,19 @@
     },
     "invite": {
       "sectionTitle": "Invitaciones",
+      "activeTitle": "Invitaciones activas",
       "create": "Crear link de invitación",
+      "createLink": "Crear link de invitación",
+      "createPhone": "Enviar invitación al teléfono",
+      "created": "Link de invitación creado",
+      "createdPhone": "Invitación por teléfono creada",
       "copy": "Copiar",
+      "copied": "Link copiado",
       "revoke": "Revocar",
       "empty": "Todavía no hay invitaciones activas.",
       "expiresAt": "Vence el {{date}}",
       "neverExpires": "Sin vencimiento",
+      "forPhone": "para {{phone}}",
       "previewTitle": "Te invitaron a {{groupName}}",
       "invitedBy": "Te invitó {{name}}",
       "signInToJoin": "Iniciá sesión para unirte",
@@ -810,7 +831,16 @@
       "goHome": "Volver al inicio",
       "phonePlaceholder": "+491512345678",
       "phoneHint": "Opcional — si ya tiene cuenta, le llega una notificación push.",
-      "phoneInvalid": "Usá formato internacional, ej. +491512345678."
+      "phoneInvalid": "Usá formato internacional, ej. +491512345678.",
+      "linkMode": {
+        "title": "Compartir un link",
+        "description": "Cualquiera con este link puede unirse al grupo. El link expira en 7 días."
+      },
+      "phoneMode": {
+        "title": "Invitar un número de teléfono específico",
+        "description": "Esta invitación solo va a funcionar para quien inicie sesión con ese número. Si ya tiene cuenta en Fútbol con ese teléfono, le llega una notificación push.",
+        "collapsedHint": "Restringí una invitación a un solo número"
+      }
     },
     "roster": {
       "title": "Plantel",

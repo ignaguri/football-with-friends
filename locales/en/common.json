@@ -762,6 +762,7 @@
     "detail": {
       "title": "Group Details",
       "members": "Members",
+      "noMembers": "No members yet.",
       "settings": "Settings",
       "leave": "Leave group",
       "transfer": "Transfer ownership",
@@ -770,9 +771,22 @@
       "loadError": "Couldn't load this group. Check your connection and try again."
     },
     "members": {
+      "you": "You",
+      "owner": "Owner",
+      "organizer": "Organizer",
+      "member": "Member",
       "promote": "Promote to organizer",
       "demote": "Demote to member",
-      "kick": "Remove from group"
+      "kick": "Remove from group",
+      "transferOwnership": "Transfer ownership",
+      "promoteConfirm": "Make {{name}} an organizer? They'll be able to manage matches, invites and roster.",
+      "demoteConfirm": "Remove organizer role from {{name}}? They'll become a regular member.",
+      "kickConfirm": "Remove {{name}} from the group? Their past match history will stay but they'll lose access.",
+      "transferConfirm": "Transfer ownership to {{name}}? You'll remain an organizer but they'll be the new owner, and only they can delete the group or transfer it again.",
+      "promoted": "{{name}} is now an organizer",
+      "demoted": "{{name}} is no longer an organizer",
+      "kicked": "{{name}} removed from the group",
+      "ownershipTransferred": "{{name}} is the new owner"
     },
     "noGroup": {
       "title": "No group yet",
@@ -782,12 +796,19 @@
     },
     "invite": {
       "sectionTitle": "Invites",
+      "activeTitle": "Active invites",
       "create": "Create invite link",
+      "createLink": "Create invite link",
+      "createPhone": "Send phone invite",
+      "created": "Invite link created",
+      "createdPhone": "Phone invite created",
       "copy": "Copy",
+      "copied": "Invite link copied",
       "revoke": "Revoke",
       "empty": "No active invites yet.",
       "expiresAt": "Expires {{date}}",
       "neverExpires": "Never expires",
+      "forPhone": "for {{phone}}",
       "previewTitle": "You've been invited to {{groupName}}",
       "invitedBy": "Invited by {{name}}",
       "signInToJoin": "Sign in to join",
@@ -807,7 +828,16 @@
       "goHome": "Back to home",
       "phonePlaceholder": "+491512345678",
       "phoneHint": "Optional — if they already have an account, they'll get a push notification.",
-      "phoneInvalid": "Use international format, e.g. +491512345678."
+      "phoneInvalid": "Use international format, e.g. +491512345678.",
+      "linkMode": {
+        "title": "Share a link",
+        "description": "Anyone with this link can join the group. The link expires in 7 days."
+      },
+      "phoneMode": {
+        "title": "Invite a specific phone number",
+        "description": "This invite will only work for someone signing in with this phone number. If they already have a Fútbol account on this phone, they'll get a push notification.",
+        "collapsedHint": "Lock an invite to a single phone number"
+      }
     },
     "roster": {
       "title": "Roster",
