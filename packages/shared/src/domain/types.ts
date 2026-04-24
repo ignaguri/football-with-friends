@@ -683,6 +683,17 @@ export interface GroupMember {
   user?: User;
 }
 
+// Members enriched with the user fields needed to render a readable row
+// (name + secondary contact). Kept flat rather than nested `user?: User` so
+// callers don't have to thread a User type that doesn't surface `phoneNumber`.
+export interface GroupMemberWithUser extends GroupMember {
+  name: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  username: string | null;
+  displayUsername: string | null;
+}
+
 export interface GroupInvite {
   id: string;
   groupId: string;

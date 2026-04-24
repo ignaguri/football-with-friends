@@ -8,7 +8,7 @@ import type {
   GroupInvite,
   GroupInviteInvalidReason,
   GroupInvitePreview,
-  GroupMember,
+  GroupMemberWithUser,
   GroupRoster,
   MemberRole,
   UpdateGroupData,
@@ -36,7 +36,7 @@ function logEvent(event: string, payload: Record<string, unknown>): void {
 }
 
 export interface GroupDetails extends Group {
-  members: GroupMember[];
+  members: GroupMemberWithUser[];
   settings: Record<string, string>;
 }
 
@@ -146,7 +146,7 @@ export class GroupService {
     const group = await this.groupRepo.findById(groupId);
     if (!group) return null;
     const [members, settings] = await Promise.all([
-      this.memberRepo.listByGroup(groupId),
+      this.memberRepo.listByGroupWithUsers(groupId),
       this.settingsRepo.getAll(groupId),
     ]);
     return { ...group, members, settings };
@@ -166,8 +166,8 @@ export class GroupService {
     await this.groupRepo.softDelete(groupId);
   }
 
-  async listMembers(groupId: string): Promise<GroupMember[]> {
-    return this.memberRepo.listByGroup(groupId);
+  async listMembers(groupId: string): Promise<GroupMemberWithUser[]> {
+    return this.memberRepo.listByGroupWithUsers(groupId);
   }
 
   async updateMemberRole(

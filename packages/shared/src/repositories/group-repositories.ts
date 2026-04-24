@@ -13,6 +13,7 @@ import type {
   Group,
   GroupInvite,
   GroupMember,
+  GroupMemberWithUser,
   GroupRoster,
   GroupVisibility,
   MemberRole,
@@ -300,6 +301,37 @@ export class TursoGroupMembershipRepository {
       .orderBy("joined_at", "asc")
       .execute();
     return rows.map(rowToMember);
+  }
+
+  // Like `listByGroup`, but joins the user table so the UI can render
+  // names + a secondary identifier (phone or email) instead of raw user IDs.
+  async listByGroupWithUsers(groupId: string): Promise<GroupMemberWithUser[]> {
+    const rows = await this.db
+      .selectFrom("group_members")
+      .leftJoin("user", "user.id", "group_members.user_id")
+      .where("group_members.group_id", "=", groupId)
+      .orderBy("group_members.joined_at", "asc")
+      .select([
+        "group_members.id",
+        "group_members.group_id",
+        "group_members.user_id",
+        "group_members.role",
+        "group_members.joined_at",
+        "user.name as user_name",
+        "user.email as user_email",
+        "user.phoneNumber as user_phone_number",
+        "user.username as user_username",
+        "user.displayUsername as user_display_username",
+      ])
+      .execute();
+    return rows.map((row: any) => ({
+      ...rowToMember(row),
+      name: row.user_name ?? null,
+      email: row.user_email ?? null,
+      phoneNumber: row.user_phone_number ?? null,
+      username: row.user_username ?? null,
+      displayUsername: row.user_display_username ?? null,
+    }));
   }
 
   async add(params: {
