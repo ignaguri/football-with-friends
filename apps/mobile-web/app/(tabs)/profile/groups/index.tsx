@@ -1,5 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useCurrentGroup } from "@repo/api-client";
+import { Container } from "@repo/ui";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView } from "react-native";
@@ -11,23 +12,24 @@ export default function MyGroupsScreen() {
 
   if (isLoading) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center">
+      <Container variant="centered">
         <Spinner size="large" />
-      </YStack>
+      </Container>
     );
   }
 
   if (!groups || groups.length === 0) {
     return (
-      <YStack flex={1} padding="$4" gap="$2">
+      <Container variant="padded" gap="$2">
         <Text color="$gray11">{t("groups.myGroups.empty")}</Text>
-      </YStack>
+      </Container>
     );
   }
 
   return (
-    <ScrollView>
-      <YStack padding="$4" gap="$3">
+    <Container>
+      <ScrollView>
+        <YStack padding="$4" gap="$3">
         {groups.map((g) => {
           const badge = g.amIOwner
             ? t("groups.myGroups.owner")
@@ -69,7 +71,8 @@ export default function MyGroupsScreen() {
             </Pressable>
           );
         })}
-      </YStack>
-    </ScrollView>
+        </YStack>
+      </ScrollView>
+    </Container>
   );
 }

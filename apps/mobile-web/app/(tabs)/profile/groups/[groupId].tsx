@@ -11,7 +11,7 @@ import {
   useRevokeInvite,
   useSession,
 } from "@repo/api-client";
-import { AlertDialog, isValidPhoneNumber } from "@repo/ui";
+import { AlertDialog, Container, isValidPhoneNumber } from "@repo/ui";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -45,20 +45,20 @@ export default function GroupDetailScreen() {
 
   if (isLoading) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center">
+      <Container variant="centered">
         <Spinner size="large" />
-      </YStack>
+      </Container>
     );
   }
 
   if (error || !group) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$3">
+      <Container variant="centered" padding="$4" gap="$3">
         <Text color="$red10" textAlign="center">
           {t("groups.detail.loadError")}
         </Text>
         <Button onPress={() => refetch()}>{t("shared.tryAgain")}</Button>
-      </YStack>
+      </Container>
     );
   }
 
@@ -111,8 +111,9 @@ export default function GroupDetailScreen() {
   }
 
   return (
-    <ScrollView>
-      <YStack padding="$4" gap="$4">
+    <Container>
+      <ScrollView>
+        <YStack padding="$4" gap="$4">
         <YStack gap="$1">
           <Text fontSize="$7" fontWeight="700">
             {group.name}
@@ -242,7 +243,8 @@ export default function GroupDetailScreen() {
             />
           </>
         ) : null}
-      </YStack>
-    </ScrollView>
+        </YStack>
+      </ScrollView>
+    </Container>
   );
 }
