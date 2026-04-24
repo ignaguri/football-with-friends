@@ -112,7 +112,9 @@ export default function OrganizerScreen() {
   const { data: session, isPending: isSessionPending } = useSession();
   const [activeTab, setActiveTab] = useState<Tab>("matches");
 
-  const isAdmin = session?.user?.role === "admin";
+  const { myRole } = useCurrentGroup();
+  const isPlatformAdmin = session?.user?.role === "admin";
+  const canManage = isPlatformAdmin || myRole === "organizer";
 
   // Loading state
   if (isSessionPending) {
@@ -128,8 +130,8 @@ export default function OrganizerScreen() {
     );
   }
 
-  // Auth check
-  if (!session?.user || !isAdmin) {
+  // Auth check — organizer role in the active group OR platform admin.
+  if (!session?.user || !canManage) {
     return (
       <Container variant="padded">
         <YStack flex={1} alignItems="center" justifyContent="center">

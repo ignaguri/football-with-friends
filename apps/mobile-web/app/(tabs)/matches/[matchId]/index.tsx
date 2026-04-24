@@ -162,7 +162,11 @@ export default function MatchDetailScreen() {
   const [signupToRemove, setSignupToRemove] = useState<string | null>(null);
 
   const userId = session?.user?.id;
-  const isAdmin = session?.user?.role === "admin";
+  // Historically `isAdmin` gated organizer actions (edit name, remove player,
+  // guest quick-add). Keep the name but widen it to the group-relative role
+  // so organizers of the active group get the same affordances as the
+  // platform admin.
+  const isAdmin = isOrganizer;
 
   const {
     data: match,
