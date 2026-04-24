@@ -1439,6 +1439,28 @@ to 404 and everything else to 400. Applied to all seven mutation catch
 blocks. Other 400 paths (e.g. `"A match already exists on this date"`)
 remain 400.
 
+### Bug 6 — `GET /api/matches/:id` threw invariant for valid rows
+
+`MatchRepository.findByIdWithDetails` (Turso) fetched signups with an
+explicit `.select([...])` list that **omitted `signups.group_id` and
+`signups.roster_id`**. The mapper `dbSignupToSignup` then called
+`assertGroupId(row.group_id, ...)` on an `undefined` value and threw
+`"Invariant violation: signups row <id> has a missing group_id; check
+Phase 1 backfill."`, producing a 500. The DB rows were fine — the
+column was populated; the query just wasn't reading it.
+
+Surfaced as soon as a signed-in user opened any match detail page on
+staging. Not surfaced locally because local test data paths
+short-circuit on the `findById` step (no signups attached).
+
+**Fix (2026-04-24):** added `signups.group_id` and `signups.roster_id`
+to the SELECT list in
+`packages/shared/src/repositories/turso-repositories.ts` (the single
+bad query at `MatchRepository.findByIdWithDetails`). All other signup
+queries use `selectAll()` or don't route through `dbSignupToSignup`, so
+no other spots were affected. Verified via staging curl + UI match
+detail render.
+
 ---
 
 ## Appendix B — Sign-off log
@@ -1450,7 +1472,7 @@ section numbers were covered.
 |------------|------------------|-------------|--------------------------------------------------|-----------------------------------------------------------------------|
 | 2026-04-23 | Claude (agent)   | local       | 1.1–1.6, 2.1, 2.3–2.6, 3.1, 3.3, 3.5, 5.1/5.4/5.6, 7.1 | Bugs 1 & 2 below surfaced+fixed during walkthrough. 26 unit tests green. |
 | 2026-04-24 | Claude (agent)   | local       | 0.x, 2.2, 2.7–2.10, 3.2/3.6/3.7/3.8, 4.1–4.9, 5.1–5.11 (full leak matrix), 6.1–6.2, 7.1–7.4, 8.1, 9.1–9.4 | Walk done via curl + direct DB seed (bearer tokens planted into `session`). 3.4 still only verified at API contract layer — UI redirect walk skipped. Bug 4 found (pre-existing, non-group). |
-|            |                  | staging     |                                                  |                                                                       |
+| 2026-04-24 | Claude (agent)   | staging     | Migrations + deploy + 1.1/1.4 (auto-pick + header echo), 2.1, 2.3, 5.1/5.2/5.6 (leak probes), match-detail smoke | Bug 6 surfaced + fixed + re-verified on staging. Backfill stats: 52 signups, 31 player stats, 10 voting criteria, 8 match votes, 11 courts, 5 settings, 3 admins demoted, 1 ghost linked. |
 |            |                  | production  |                                                  |                                                                       |
 
 Legend:

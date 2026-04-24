@@ -612,6 +612,7 @@ export class TursoMatchRepository implements MatchRepository {
       )
       .select([
         "signups.id",
+        "signups.group_id",
         "signups.match_id",
         "signups.user_id",
         "signups.player_name",
@@ -619,6 +620,7 @@ export class TursoMatchRepository implements MatchRepository {
         "signups.status",
         "signups.signup_type",
         "signups.guest_owner_id",
+        "signups.roster_id",
         "signups.added_by_user_id",
         "signups.signed_up_at",
         "signups.updated_at",
