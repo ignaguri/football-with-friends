@@ -1,9 +1,12 @@
 import { addDays } from "date-fns";
 import { getDatabase } from "@repo/shared/database";
+import { NOTIFICATION_TYPES } from "@repo/shared/domain";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 import { getServiceFactory } from "@repo/shared/services";
 import { NotificationTemplates } from "@repo/shared/services";
 import { formatDateInAppTimezone } from "@repo/shared/utils";
+
+import { recordForRecipients } from "../lib/notification-inbox";
 
 /**
  * Send match reminders for matches happening tomorrow.
@@ -50,12 +53,21 @@ export async function sendMatchReminders() {
           time: match.time,
           locationName: location?.name,
         };
+        const payload = NotificationTemplates.matchReminder(info);
 
-        await notificationService.sendToUsers(
-          userIds,
-          NotificationTemplates.matchReminder(info),
-          { category: "match_reminder" },
-        );
+        if (match.group_id) {
+          await recordForRecipients({
+            userIds,
+            groupId: match.group_id,
+            type: NOTIFICATION_TYPES.MATCH_REMINDER,
+            category: "match_reminder",
+            payload,
+          });
+        }
+
+        await notificationService.sendToUsers(userIds, payload, {
+          category: "match_reminder",
+        });
         totalSent += userIds.length;
       }
 

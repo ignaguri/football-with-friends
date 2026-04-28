@@ -14,6 +14,7 @@ import { auth } from "./auth";
 import { updateMatchStatuses } from "./cron/update-match-statuses";
 import { sendMatchReminders } from "./cron/send-match-reminders";
 import { sendEngagementReminders } from "./cron/send-engagement-reminders";
+import { pruneInboxNotifications } from "./cron/prune-inbox-notifications";
 
 // Import shared security middleware
 import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
@@ -276,6 +277,7 @@ export default Sentry.withSentry(
           updateMatchStatuses(),
           sendMatchReminders(),
           sendEngagementReminders(),
+          pruneInboxNotifications(),
         ]).then((results) => {
           for (const r of results) {
             if (r.status === "rejected") {

@@ -54,6 +54,7 @@ export const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/cron\/update-matches$/, method: "POST" },        // Cron (has own secret check)
   { path: /^\/api\/cron\/send-reminders$/, method: "POST" },        // Cron (has own secret check)
   { path: /^\/api\/cron\/send-engagement$/, method: "POST" },       // Cron (has own secret check)
+  { path: /^\/api\/cron\/prune-inbox$/, method: "POST" },           // Cron (has own secret check)
 ];
 
 // Global auth middleware — secure by default.

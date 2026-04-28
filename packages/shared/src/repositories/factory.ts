@@ -22,6 +22,7 @@ import {
 } from "./turso-repositories";
 
 import { TursoPushTokenRepository } from "./push-token-repository";
+import { TursoNotificationInboxRepository } from "./notification-inbox-repository";
 import {
   TursoGroupRepository,
   TursoGroupMembershipRepository,
@@ -42,6 +43,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
   public readonly invitations: MatchInvitationRepository;
   public readonly playerStats: PlayerStatsRepository;
   public readonly pushTokens: PushTokenRepository;
+  public readonly notificationInbox: TursoNotificationInboxRepository;
   public readonly matchMedia: TursoMatchMediaRepository;
   public readonly groups: TursoGroupRepository;
   public readonly groupMembers: TursoGroupMembershipRepository;
@@ -60,6 +62,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
         this.invitations = new TursoMatchInvitationRepository();
         this.playerStats = new TursoPlayerStatsRepository();
         this.pushTokens = new TursoPushTokenRepository();
+        this.notificationInbox = new TursoNotificationInboxRepository();
         this.matchMedia = new TursoMatchMediaRepository();
         this.groups = new TursoGroupRepository();
         this.groupMembers = new TursoGroupMembershipRepository();

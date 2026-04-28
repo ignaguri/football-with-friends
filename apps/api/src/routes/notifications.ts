@@ -1,15 +1,79 @@
 import { zValidator } from "@hono/zod-validator";
+import { getRepositoryFactory } from "@repo/shared/repositories";
 import { getServiceFactory } from "@repo/shared/services";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import {
+  groupContextMiddleware,
+  requireCurrentGroup,
+} from "../middleware/group-context";
 import { type AppVariables, requireUser } from "../middleware/security";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
 const getNotificationService = () => getServiceFactory().notificationService;
+const getInbox = () => getRepositoryFactory().notificationInbox;
 
-// Send a test notification (admin only)
+// All inbox endpoints are scoped to the active group via X-Group-Id.
+// /send-test (admin) also runs through this — admins always have a group.
+app.use("*", groupContextMiddleware);
+
+// List inbox notifications for the current user in the current group.
+app.get(
+  "/",
+  zValidator(
+    "query",
+    z.object({
+      limit: z.coerce.number().int().positive().max(100).optional(),
+      before: z.string().min(1).max(200).optional(),
+    }),
+  ),
+  async (c) => {
+    const user = requireUser(c);
+    const current = requireCurrentGroup(c);
+    const { limit, before } = c.req.valid("query");
+
+    const list = await getInbox().listByUserAndGroup(user.id, current.id, {
+      limit,
+      before,
+    });
+
+    return c.json({
+      items: list.items,
+      hasMore: list.hasMore,
+      nextCursor: list.nextCursor,
+    });
+  },
+);
+
+// Lightweight unread count — used to drive the home-screen bell badge.
+app.get("/unread-count", async (c) => {
+  const user = requireUser(c);
+  const current = requireCurrentGroup(c);
+  const unreadCount = await getInbox().unreadCount(user.id, current.id);
+  return c.json({ unreadCount });
+});
+
+// Mark all unread rows in the current group as read.
+app.post("/read-all", async (c) => {
+  const user = requireUser(c);
+  const current = requireCurrentGroup(c);
+  const updated = await getInbox().markAllRead(user.id, current.id);
+  return c.json({ updated });
+});
+
+// Mark a single inbox row as read. 404 if it isn't owned by the caller
+// (or is already read) — ownership is enforced via the WHERE clause.
+app.patch("/:id/read", async (c) => {
+  const user = requireUser(c);
+  const id = c.req.param("id");
+  const ok = await getInbox().markRead(id, user.id);
+  if (!ok) return c.json({ error: "Notification not found" }, 404);
+  return c.json({ success: true });
+});
+
+// Send a test notification (admin only).
 app.post(
   "/send-test",
   zValidator(
