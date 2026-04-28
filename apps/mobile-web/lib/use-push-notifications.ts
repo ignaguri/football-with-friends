@@ -4,9 +4,16 @@ import { router } from "expo-router";
 import { useSession } from "@repo/api-client";
 import { api } from "@repo/api-client";
 
-// Store the last registered token so we can unregister on logout
+// Tracks the token registered by this session so we can deactivate it on
+// sign-out / account deletion. Set after a successful POST /push-tokens.
 let _lastRegisteredToken: string | null = null;
 let _notificationsConfigured = false;
+
+export type OsPermissionStatus =
+  | "granted"
+  | "denied"
+  | "undetermined"
+  | "unsupported";
 
 /**
  * Lazily load expo-notifications to avoid crashing on builds
@@ -38,18 +45,44 @@ async function configureNotificationHandler() {
   });
 }
 
-async function registerForPushNotifications(): Promise<string | null> {
-  // Skip on web — web push will be added later
-  if (Platform.OS === "web") return null;
+/**
+ * Read the current OS-level permission status without prompting. Safe to call
+ * on every mount — used by the preferences provider to reconcile UI state with
+ * the device.
+ */
+export async function getOsPermissionStatus(): Promise<OsPermissionStatus> {
+  if (Platform.OS === "web") return "unsupported";
+  const Notifications = await getNotificationsModule();
+  if (!Notifications) return "unsupported";
+
+  const { status } = await Notifications.getPermissionsAsync();
+  if (status === "granted") return "granted";
+  if (status === "denied") return "denied";
+  return "undetermined";
+}
+
+/**
+ * Trigger the native permission prompt (if not already decided), fetch the
+ * Expo push token, and register it with the backend. Caller is responsible
+ * for deciding *when* this runs — we never call it implicitly from a hook.
+ *
+ * Returns the OS status after the prompt and the token (null if denied or if
+ * APNs is unavailable, e.g. on the iOS simulator).
+ */
+export async function requestAndRegister(): Promise<{
+  status: OsPermissionStatus;
+  token: string | null;
+}> {
+  if (Platform.OS === "web") return { status: "unsupported", token: null };
 
   const Notifications = await getNotificationsModule();
-  if (!Notifications) return null;
+  if (!Notifications) return { status: "unsupported", token: null };
 
   const Constants = (await import("expo-constants")).default;
 
   const { status: existingStatus } =
     await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+  let finalStatus: string = existingStatus;
 
   if (existingStatus !== "granted") {
     const { status } = await Notifications.requestPermissionsAsync();
@@ -57,65 +90,60 @@ async function registerForPushNotifications(): Promise<string | null> {
   }
 
   if (finalStatus !== "granted") {
-    console.log("Push notification permissions not granted");
-    return null;
+    return { status: finalStatus === "denied" ? "denied" : "undetermined", token: null };
   }
 
   const projectId =
     Constants.expoConfig?.extra?.eas?.projectId ??
     "fd683dbc-22ce-4809-b0be-8325693cd621";
 
+  let token: string | null = null;
   try {
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-    return tokenData.data;
+    token = tokenData.data;
   } catch (error) {
-    // APNs is not available on the simulator — this is expected
+    // APNs is not available on the simulator — expected in dev.
     console.log("Could not get push token:", error);
-    return null;
   }
+
+  if (token) {
+    try {
+      await api.api["push-tokens"].$post({
+        json: {
+          token,
+          platform: Platform.OS as "ios" | "android",
+        },
+      });
+      _lastRegisteredToken = token;
+    } catch (error) {
+      console.error("Failed to register push token:", error);
+      // Keep token but don't mark as registered — caller surfaces the failure.
+    }
+  }
+
+  return { status: "granted", token };
 }
 
+/**
+ * Configures the foreground notification handler and attaches in-app
+ * listeners for received notifications and tap-throughs. **Does not** request
+ * permission or fetch a token — that's the responsibility of the
+ * NotificationPreferencesProvider, which decides when to show the
+ * pre-permission modal.
+ */
 export function usePushNotifications() {
   const { data: session } = useSession();
-  const registeredForUserRef = useRef<string | null>(null);
+  const listenersAttachedRef = useRef(false);
   const listenersRef = useRef<{ remove: () => void }[]>([]);
 
   useEffect(() => {
-    // Skip on web
     if (Platform.OS === "web") return;
+    if (!session?.user) return;
+    if (listenersAttachedRef.current) return;
+    listenersAttachedRef.current = true;
 
-    // Reset when user changes (logout/login as different user)
-    if (!session?.user) {
-      registeredForUserRef.current = null;
-      return;
-    }
-
-    // Only register once per user
-    if (registeredForUserRef.current === session.user.id) return;
-
-    registeredForUserRef.current = session.user.id;
-
-    // Configure handler + register token
     configureNotificationHandler();
 
-    registerForPushNotifications().then(async (token) => {
-      if (!token) return;
-
-      _lastRegisteredToken = token;
-
-      try {
-        await api.api["push-tokens"].$post({
-          json: {
-            token,
-            platform: Platform.OS as "ios" | "android",
-          },
-        });
-      } catch (error) {
-        console.error("Failed to register push token:", error);
-      }
-    });
-
-    // Set up listeners
     getNotificationsModule().then((Notifications) => {
       if (!Notifications) return;
 
@@ -144,6 +172,7 @@ export function usePushNotifications() {
         sub.remove();
       }
       listenersRef.current = [];
+      listenersAttachedRef.current = false;
     };
   }, [session?.user?.id]);
 }
@@ -164,3 +193,4 @@ export async function unregisterPushToken(): Promise<void> {
 
   _lastRegisteredToken = null;
 }
+

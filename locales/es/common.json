@@ -459,6 +459,52 @@
     "openGallery": "Abrir galería del {{date}}",
     "uploadMedia": "Subir foto o video"
   },
+  "notifications": {
+    "settings": {
+      "entry": "Notificaciones",
+      "master": "Notificaciones push",
+      "masterLabel": "Activadas",
+      "masterHint": "Recibí avisos sobre lo que te importa. Podés cambiar esto cuando quieras.",
+      "categoriesTitle": "Qué te vamos a mandar"
+    },
+    "categories": {
+      "newMatch": "Partidos nuevos",
+      "newMatchHint": "Cuando un organizador agenda un nuevo partido en tu grupo.",
+      "matchReminder": "Recordatorio del partido",
+      "matchReminderHint": "Un aviso el día antes del partido.",
+      "promoToConfirmed": "Saliste de la lista de espera",
+      "promoToConfirmedHint": "Cuando se libera un lugar y dejás de ser suplente."
+    },
+    "prompt": {
+      "title": "No te pierdas nada",
+      "body": "Activá las notificaciones para no quedarte afuera de ningún partido.",
+      "benefits": {
+        "newMatch": {
+          "title": "Partidos nuevos en tu grupo",
+          "body": "Enterate primero cuando un organizador agenda uno."
+        },
+        "matchReminder": {
+          "title": "Aviso del día anterior",
+          "body": "Te avisamos un día antes para que no te lo olvides."
+        },
+        "promoToConfirmed": {
+          "title": "Saliste de la lista de espera",
+          "body": "Te avisamos en el momento que se libera un lugar para vos."
+        }
+      },
+      "enable": "Activar notificaciones",
+      "later": "Quizás más tarde"
+    },
+    "denied": {
+      "title": "Las notificaciones están bloqueadas",
+      "body": "Las notificaciones push están desactivadas en la configuración de tu sistema. Abrila para volver a activarlas.",
+      "openSettings": "Abrir ajustes del sistema"
+    },
+    "errors": {
+      "generic": "No pudimos activar las notificaciones. Probá de nuevo."
+    },
+    "unsupportedWeb": "Las notificaciones push por ahora solo están disponibles en la app móvil."
+  },
   "status": {
     "paid": "Pagado",
     "pending": "Pendiente",

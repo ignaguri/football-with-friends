@@ -2,6 +2,7 @@
 import { useCurrentGroup, useSession } from "@repo/api-client";
 import { GroupSwitcher } from "../../components/group-switcher";
 import { NoGroupOnboarding } from "../../components/no-group-onboarding";
+import { NotificationPreferencesProvider } from "../../lib/notifications/notification-preferences-context";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import {
   Home,
@@ -52,6 +53,7 @@ export default function TabsLayout() {
   const isAdmin = isPlatformAdmin || myRole === "organizer";
 
   return (
+    <NotificationPreferencesProvider>
     <YStack flex={1}>
       <GroupSwitcher />
       <Tabs
@@ -137,5 +139,6 @@ export default function TabsLayout() {
       />
       </Tabs>
     </YStack>
+    </NotificationPreferencesProvider>
   );
 }

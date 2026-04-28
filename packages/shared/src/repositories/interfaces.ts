@@ -28,6 +28,7 @@ import type {
   SignupWithDetails,
   PushTokenInfo,
   RegisterPushTokenData,
+  NotificationCategory,
 } from "../domain/types";
 
 // Location Repository Interface
@@ -378,8 +379,20 @@ export interface PlayerStatsRepository {
 // Push Token Repository Interface
 export interface PushTokenRepository {
   upsert(data: RegisterPushTokenData): Promise<PushTokenInfo>;
-  findActiveByUserId(userId: string): Promise<PushTokenInfo[]>;
-  findActiveByUserIds(userIds: string[]): Promise<PushTokenInfo[]>;
+  /**
+   * Find active push tokens for a user, optionally filtered by notification
+   * category preference. When `category` is provided, tokens are returned only
+   * if both the master `push_enabled` and the per-category preference are on.
+   * Missing prefs row → defaults to all-on (coalesce-based).
+   */
+  findActiveByUserId(
+    userId: string,
+    category?: NotificationCategory,
+  ): Promise<PushTokenInfo[]>;
+  findActiveByUserIds(
+    userIds: string[],
+    category?: NotificationCategory,
+  ): Promise<PushTokenInfo[]>;
   deactivateToken(token: string): Promise<void>;
   deactivateTokenForUser(token: string, userId: string): Promise<void>;
   deactivateByUserId(userId: string): Promise<void>;

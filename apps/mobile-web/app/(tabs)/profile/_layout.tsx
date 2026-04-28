@@ -41,6 +41,14 @@ export default function ProfileLayout() {
           title: t("groups.detail.title"),
         }}
       />
+      <Stack.Screen
+        name="notifications"
+        options={{
+          title: t("notifications.settings.entry"),
+          headerBackTitle: "",
+          headerBackButtonDisplayMode: "minimal",
+        }}
+      />
     </Stack>
   );
 }

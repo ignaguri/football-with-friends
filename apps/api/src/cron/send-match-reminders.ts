@@ -54,6 +54,7 @@ export async function sendMatchReminders() {
         await notificationService.sendToUsers(
           userIds,
           NotificationTemplates.matchReminder(info),
+          { category: "match_reminder" },
         );
         totalSent += userIds.length;
       }

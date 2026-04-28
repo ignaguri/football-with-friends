@@ -194,6 +194,15 @@ export interface PushTokensTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface UserNotificationPrefsTable {
+  user_id: string;
+  push_enabled: number; // 0 or 1 (master)
+  push_new_match: number; // 0 or 1
+  push_match_reminder: number; // 0 or 1
+  push_promo_to_confirmed: number; // 0 or 1
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // BetterAuth verification table (used for password reset codes, OTPs, etc.)
 export interface VerificationTable {
   id: string;
@@ -274,6 +283,7 @@ export interface Database {
   voting_criteria: VotingCriteriaTable;
   match_votes: MatchVotesTable;
   push_tokens: PushTokensTable;
+  user_notification_prefs: UserNotificationPrefsTable;
   verification: VerificationTable;
   groups: GroupsTable;
   group_members: GroupMembersTable;
@@ -343,6 +353,10 @@ export type MatchVoteUpdate = Updateable<MatchVotesTable>;
 export type PushToken = Selectable<PushTokensTable>;
 export type NewPushToken = Insertable<PushTokensTable>;
 export type PushTokenUpdate = Updateable<PushTokensTable>;
+
+export type UserNotificationPrefs = Selectable<UserNotificationPrefsTable>;
+export type NewUserNotificationPrefs = Insertable<UserNotificationPrefsTable>;
+export type UserNotificationPrefsUpdate = Updateable<UserNotificationPrefsTable>;
 
 export type Group = Selectable<GroupsTable>;
 export type NewGroup = Insertable<GroupsTable>;

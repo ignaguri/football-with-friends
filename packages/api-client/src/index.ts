@@ -85,5 +85,15 @@ export type {
   MyGroupSummary,
 } from "./groups";
 
+export {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+  notificationPreferencesQueryKeys,
+} from "./notification-preferences";
+export type {
+  NotificationPreferences,
+  NotificationPreferencesUpdate,
+} from "@repo/shared/domain";
+
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

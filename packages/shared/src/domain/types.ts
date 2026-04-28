@@ -578,6 +578,44 @@ export const NOTIFICATION_TYPES = {
 export type NotificationType =
   (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 
+// Per-user opt-in/opt-out categories (subset of NOTIFICATION_TYPES that map
+// to a column in user_notification_prefs). Sends without a category bypass
+// the per-category filter and only respect the master push_enabled flag.
+export const NOTIFICATION_CATEGORIES = [
+  "new_match",
+  "match_reminder",
+  "promo_to_confirmed",
+] as const;
+export type NotificationCategory = (typeof NOTIFICATION_CATEGORIES)[number];
+
+export const CATEGORY_TO_COLUMN: Record<
+  NotificationCategory,
+  "push_new_match" | "push_match_reminder" | "push_promo_to_confirmed"
+> = {
+  new_match: "push_new_match",
+  match_reminder: "push_match_reminder",
+  promo_to_confirmed: "push_promo_to_confirmed",
+};
+
+export interface NotificationPreferences {
+  pushEnabled: boolean;
+  pushNewMatch: boolean;
+  pushMatchReminder: boolean;
+  pushPromoToConfirmed: boolean;
+}
+
+export type NotificationPreferencesUpdate = Partial<NotificationPreferences>;
+
+export const NOTIFICATION_PREF_TO_COLUMN: Record<
+  keyof NotificationPreferences,
+  "push_enabled" | "push_new_match" | "push_match_reminder" | "push_promo_to_confirmed"
+> = {
+  pushEnabled: "push_enabled",
+  pushNewMatch: "push_new_match",
+  pushMatchReminder: "push_match_reminder",
+  pushPromoToConfirmed: "push_promo_to_confirmed",
+};
+
 // Helper types for pagination and responses
 
 export interface PaginatedResponse<T> {
