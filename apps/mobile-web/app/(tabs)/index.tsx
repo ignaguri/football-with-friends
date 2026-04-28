@@ -14,9 +14,13 @@ import {
 import { Calendar, Trophy, CircleUserRound } from "@tamagui/lucide-icons";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Platform } from "react-native";
 import { useTheme } from "tamagui";
 
+import { NotificationPermissionPrompt } from "../../components/notifications/notification-permission-prompt";
+import { useNotificationPreferencesContext } from "../../lib/notifications/notification-preferences-context";
 import { useRulesModal } from "../../lib/rules-modal-context";
 
 export default function HomeScreen() {
@@ -24,6 +28,17 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { showModal, dismissModal, dismissPermanently } = useRulesModal();
+
+  const notif = useNotificationPreferencesContext();
+  const [notifPromptOpen, setNotifPromptOpen] = useState(false);
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    if (!session?.user) return;
+    if (notif.isLoading) return;
+    if (notif.hasShownPrompt) return;
+    if (notif.osStatus !== "undetermined") return;
+    setNotifPromptOpen(true);
+  }, [session?.user, notif.isLoading, notif.hasShownPrompt, notif.osStatus]);
 
   const isAuthenticated = !!session?.user;
 
@@ -168,6 +183,13 @@ export default function HomeScreen() {
           </YStack>
         </YStack>
       </Dialog>
+
+      {Platform.OS !== "web" && (
+        <NotificationPermissionPrompt
+          open={notifPromptOpen}
+          onClose={() => setNotifPromptOpen(false)}
+        />
+      )}
     </>
   );
 }

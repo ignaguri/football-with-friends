@@ -25,7 +25,7 @@ import {
   getCountryFlag,
   getCountryName,
 } from "@repo/ui";
-import { Camera } from "@tamagui/lucide-icons";
+import { Bell, Camera, ChevronRight } from "@tamagui/lucide-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Link, router, Stack } from "expo-router";
 import { useState, useEffect } from "react";
@@ -587,6 +587,28 @@ export default function ProfileScreen() {
                 <Text color="$gray11">{t("shared.toggleTheme")}</Text>
                 <ThemeToggle theme={theme} onToggle={toggleTheme} />
               </XStack>
+
+              {/* Notifications entry — push is mobile-only for now */}
+              {Platform.OS !== "web" && (
+                <Button
+                  variant="outline"
+                  onPress={() => router.push("/(tabs)/profile/notifications")}
+                  testID="profile-notifications-entry"
+                  marginTop="$2"
+                >
+                  <XStack
+                    flex={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <XStack gap="$2" alignItems="center">
+                      <Bell size={18} color="$gray11" />
+                      <Text>{t("notifications.settings.entry")}</Text>
+                    </XStack>
+                    <ChevronRight size={18} color="$gray10" />
+                  </XStack>
+                </Button>
+              )}
 
               {/* Change Password Section */}
               {isChangingPassword ? (

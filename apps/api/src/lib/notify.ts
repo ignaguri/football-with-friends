@@ -55,7 +55,11 @@ export async function notifyMatchCreated(match: Match, excludeUserId: string): P
       toMatchInfo(match),
     ]);
     if (userIds.length === 0) return;
-    await getNotificationService().sendToUsers(userIds, NotificationTemplates.matchCreated(info));
+    await getNotificationService().sendToUsers(
+      userIds,
+      NotificationTemplates.matchCreated(info),
+      { category: "new_match" },
+    );
   });
 }
 
@@ -91,7 +95,11 @@ export async function notifyPlayerConfirmed(match: Match, userId: string): Promi
 export async function notifySubstitutePromoted(match: Match, userId: string): Promise<void> {
   await safeNotify("substitute promoted", async () => {
     const info = await toMatchInfo(match);
-    await getNotificationService().sendToUser(userId, NotificationTemplates.substitutePromoted(info));
+    await getNotificationService().sendToUser(
+      userId,
+      NotificationTemplates.substitutePromoted(info),
+      { category: "promo_to_confirmed" },
+    );
   });
 }
 

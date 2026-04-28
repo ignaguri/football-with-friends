@@ -456,6 +456,52 @@
     "openGallery": "Open gallery for {{date}}",
     "uploadMedia": "Upload photo or video"
   },
+  "notifications": {
+    "settings": {
+      "entry": "Notifications",
+      "master": "Push notifications",
+      "masterLabel": "Enabled",
+      "masterHint": "Get pinged for the things you care about. You can change this any time.",
+      "categoriesTitle": "What we'll send you"
+    },
+    "categories": {
+      "newMatch": "New matches",
+      "newMatchHint": "When an organizer schedules a new match in your group.",
+      "matchReminder": "Match reminders",
+      "matchReminderHint": "A heads-up the day before kickoff.",
+      "promoToConfirmed": "Off the waitlist",
+      "promoToConfirmedHint": "When a spot opens up and you're moved off the substitutes list."
+    },
+    "prompt": {
+      "title": "Stay in the loop",
+      "body": "Turn on push notifications so you don't miss a match.",
+      "benefits": {
+        "newMatch": {
+          "title": "New matches in your group",
+          "body": "Be the first to know when an organizer schedules one."
+        },
+        "matchReminder": {
+          "title": "Match-day reminders",
+          "body": "A nudge the day before kickoff — never miss a game."
+        },
+        "promoToConfirmed": {
+          "title": "Off the waitlist",
+          "body": "We'll tell you the moment a spot opens up for you."
+        }
+      },
+      "enable": "Enable notifications",
+      "later": "Maybe later"
+    },
+    "denied": {
+      "title": "Notifications are blocked",
+      "body": "Push notifications are turned off in your system settings. Open them to re-enable.",
+      "openSettings": "Open system settings"
+    },
+    "errors": {
+      "generic": "Couldn't enable notifications. Please try again."
+    },
+    "unsupportedWeb": "Push notifications are only available on the mobile app for now."
+  },
   "status": {
     "paid": "Paid",
     "pending": "Pending",

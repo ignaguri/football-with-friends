@@ -4,7 +4,12 @@ import { sql } from "kysely";
 import { nanoid } from "nanoid";
 
 import type { PushTokenRepository } from "./interfaces";
-import type { PushTokenInfo, RegisterPushTokenData } from "../domain/types";
+import type {
+  NotificationCategory,
+  PushTokenInfo,
+  RegisterPushTokenData,
+} from "../domain/types";
+import { CATEGORY_TO_COLUMN } from "../domain/types";
 
 import { getDatabase } from "../database/connection";
 
@@ -56,37 +61,80 @@ export class TursoPushTokenRepository implements PushTokenRepository {
     return dbRowToPushToken(result);
   }
 
-  async findActiveByUserId(userId: string): Promise<PushTokenInfo[]> {
-    const results = await this.db
-      .selectFrom("push_tokens")
-      .selectAll()
-      .where("user_id", "=", userId)
-      .where("active", "=", 1)
-      .execute();
+  async findActiveByUserId(
+    userId: string,
+    category?: NotificationCategory,
+  ): Promise<PushTokenInfo[]> {
+    const results = await this.applyPrefFilters(
+      this.db
+        .selectFrom("push_tokens")
+        .leftJoin(
+          "user_notification_prefs",
+          "user_notification_prefs.user_id",
+          "push_tokens.user_id",
+        )
+        .selectAll("push_tokens")
+        .where("push_tokens.user_id", "=", userId)
+        .where("push_tokens.active", "=", 1),
+      category,
+    ).execute();
 
     return results.map(dbRowToPushToken);
   }
 
-  async findActiveByUserIds(userIds: string[]): Promise<PushTokenInfo[]> {
+  async findActiveByUserIds(
+    userIds: string[],
+    category?: NotificationCategory,
+  ): Promise<PushTokenInfo[]> {
     if (userIds.length === 0) return [];
 
-    // Batch in chunks of 500 to stay within SQLite parameter limits
+    // Chunk to stay within SQLite parameter limits; each chunk is independent.
     const chunkSize = 500;
-    const allResults: PushTokenInfo[] = [];
-
+    const chunks: string[][] = [];
     for (let i = 0; i < userIds.length; i += chunkSize) {
-      const chunk = userIds.slice(i, i + chunkSize);
-      const results = await this.db
-        .selectFrom("push_tokens")
-        .selectAll()
-        .where("user_id", "in", chunk)
-        .where("active", "=", 1)
-        .execute();
-
-      allResults.push(...results.map(dbRowToPushToken));
+      chunks.push(userIds.slice(i, i + chunkSize));
     }
 
-    return allResults;
+    const chunkResults = await Promise.all(
+      chunks.map((chunk) =>
+        this.applyPrefFilters(
+          this.db
+            .selectFrom("push_tokens")
+            .leftJoin(
+              "user_notification_prefs",
+              "user_notification_prefs.user_id",
+              "push_tokens.user_id",
+            )
+            .selectAll("push_tokens")
+            .where("push_tokens.user_id", "in", chunk)
+            .where("push_tokens.active", "=", 1),
+          category,
+        ).execute(),
+      ),
+    );
+
+    return chunkResults.flat().map(dbRowToPushToken);
+  }
+
+  // Applies master push_enabled + per-category filters, defaulting to "on"
+  // when the joined prefs row is missing (COALESCE-based opt-out semantics).
+  private applyPrefFilters<T>(query: T, category?: NotificationCategory): T {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q = query as any;
+    q = q.where(
+      sql`COALESCE(user_notification_prefs.push_enabled, 1)`,
+      "=",
+      1,
+    );
+    if (category) {
+      const column = CATEGORY_TO_COLUMN[category];
+      q = q.where(
+        sql.raw(`COALESCE(user_notification_prefs.${column}, 1)`),
+        "=",
+        1,
+      );
+    }
+    return q as T;
   }
 
   async deactivateToken(token: string): Promise<void> {

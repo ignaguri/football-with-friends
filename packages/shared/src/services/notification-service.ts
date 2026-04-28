@@ -3,10 +3,20 @@
 import type {
   ExpoPushMessage,
   ExpoPushTicket,
+  NotificationCategory,
   NotificationPayload,
   PushTokenInfo,
 } from "../domain/types";
 import type { PushTokenRepository } from "../repositories/interfaces";
+
+export interface SendOptions {
+  /**
+   * If provided, recipients are filtered by their per-category opt-in.
+   * Omit for sends that should respect only the master push_enabled flag
+   * (e.g. admin test sends, transactional confirmations).
+   */
+  category?: NotificationCategory;
+}
 
 const EXPO_PUSH_API_URL = "https://exp.host/--/api/v2/push/send";
 const EXPO_BATCH_LIMIT = 100;
@@ -40,8 +50,12 @@ export class NotificationService {
   async sendToUser(
     userId: string,
     payload: NotificationPayload,
+    options: SendOptions = {},
   ): Promise<ExpoPushTicket[]> {
-    const tokens = await this.pushTokenRepository.findActiveByUserId(userId);
+    const tokens = await this.pushTokenRepository.findActiveByUserId(
+      userId,
+      options.category,
+    );
     if (tokens.length === 0) return [];
 
     return this.sendToTokens(tokens, payload);
@@ -50,10 +64,14 @@ export class NotificationService {
   async sendToUsers(
     userIds: string[],
     payload: NotificationPayload,
+    options: SendOptions = {},
   ): Promise<ExpoPushTicket[]> {
     if (userIds.length === 0) return [];
 
-    const tokens = await this.pushTokenRepository.findActiveByUserIds(userIds);
+    const tokens = await this.pushTokenRepository.findActiveByUserIds(
+      userIds,
+      options.category,
+    );
     if (tokens.length === 0) return [];
 
     return this.sendToTokens(tokens, payload);
