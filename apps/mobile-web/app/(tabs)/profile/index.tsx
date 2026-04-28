@@ -588,26 +588,27 @@ export default function ProfileScreen() {
                 <ThemeToggle theme={theme} onToggle={toggleTheme} />
               </XStack>
 
-              {/* Notifications entry */}
-              <Button
-                variant="outline"
-                onPress={() => router.push("/(tabs)/profile/notifications")}
-                accessibilityLabel={t("notifications.settings.entry")}
-                testID="profile-notifications-entry"
-                marginTop="$2"
-              >
-                <XStack
-                  flex={1}
-                  alignItems="center"
-                  justifyContent="space-between"
+              {/* Notifications entry — push is mobile-only for now */}
+              {Platform.OS !== "web" && (
+                <Button
+                  variant="outline"
+                  onPress={() => router.push("/(tabs)/profile/notifications")}
+                  testID="profile-notifications-entry"
+                  marginTop="$2"
                 >
-                  <XStack gap="$2" alignItems="center">
-                    <Bell size={18} color="$gray11" />
-                    <Text>{t("notifications.settings.entry")}</Text>
+                  <XStack
+                    flex={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                  >
+                    <XStack gap="$2" alignItems="center">
+                      <Bell size={18} color="$gray11" />
+                      <Text>{t("notifications.settings.entry")}</Text>
+                    </XStack>
+                    <ChevronRight size={18} color="$gray10" />
                   </XStack>
-                  <ChevronRight size={18} color="$gray10" />
-                </XStack>
-              </Button>
+                </Button>
+              )}
 
               {/* Change Password Section */}
               {isChangingPassword ? (
