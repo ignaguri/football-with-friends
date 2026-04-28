@@ -134,10 +134,10 @@ export function useMarkNotificationRead() {
       if (ctx.previousUnread)
         queryClient.setQueryData(unreadKey, ctx.previousUnread);
     },
-    onSettled: () => {
-      const groupId = getActiveGroupId();
+    onSettled: (_data, _err, _id, ctx) => {
+      if (!ctx) return;
       void queryClient.invalidateQueries({
-        queryKey: notificationInboxQueryKeys.unread(groupId),
+        queryKey: notificationInboxQueryKeys.unread(ctx.groupId),
       });
     },
   });
@@ -199,10 +199,10 @@ export function useMarkAllNotificationsRead() {
       if (ctx.previousUnread)
         queryClient.setQueryData(unreadKey, ctx.previousUnread);
     },
-    onSettled: () => {
-      const groupId = getActiveGroupId();
+    onSettled: (_data, _err, _vars, ctx) => {
+      if (!ctx) return;
       void queryClient.invalidateQueries({
-        queryKey: notificationInboxQueryKeys.unread(groupId),
+        queryKey: notificationInboxQueryKeys.unread(ctx.groupId),
       });
     },
   });

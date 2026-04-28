@@ -161,6 +161,15 @@ export function usePushNotifications() {
       const responseSub =
         Notifications.addNotificationResponseReceivedListener((response) => {
           const data = response.notification.request.content.data;
+          // Push notifications without a deep-link target (e.g. /send-test)
+          // shouldn't navigate anywhere on tap — only follow an explicit
+          // screen. Inbox-tap uses the helper's type-based fallback because
+          // the user there always intended to open something.
+          const screen =
+            typeof data === "object" && data !== null
+              ? (data as { screen?: unknown }).screen
+              : undefined;
+          if (typeof screen !== "string" || screen.length === 0) return;
           router.push(getNotificationRoute(data) as never);
         });
 

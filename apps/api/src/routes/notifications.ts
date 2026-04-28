@@ -15,13 +15,14 @@ const app = new Hono<{ Variables: AppVariables }>();
 const getNotificationService = () => getServiceFactory().notificationService;
 const getInbox = () => getRepositoryFactory().notificationInbox;
 
-// All inbox endpoints are scoped to the active group via X-Group-Id.
-// /send-test (admin) also runs through this — admins always have a group.
-app.use("*", groupContextMiddleware);
+// Group-scoping middleware applies only to inbox endpoints that read or
+// mutate group-scoped state. /send-test (admin) and /:id/read (ownership
+// by user_id) intentionally don't require a current group.
 
 // List inbox notifications for the current user in the current group.
 app.get(
   "/",
+  groupContextMiddleware,
   zValidator(
     "query",
     z.object({
@@ -48,7 +49,7 @@ app.get(
 );
 
 // Lightweight unread count — used to drive the home-screen bell badge.
-app.get("/unread-count", async (c) => {
+app.get("/unread-count", groupContextMiddleware, async (c) => {
   const user = requireUser(c);
   const current = requireCurrentGroup(c);
   const unreadCount = await getInbox().unreadCount(user.id, current.id);
@@ -56,7 +57,7 @@ app.get("/unread-count", async (c) => {
 });
 
 // Mark all unread rows in the current group as read.
-app.post("/read-all", async (c) => {
+app.post("/read-all", groupContextMiddleware, async (c) => {
   const user = requireUser(c);
   const current = requireCurrentGroup(c);
   const updated = await getInbox().markAllRead(user.id, current.id);
