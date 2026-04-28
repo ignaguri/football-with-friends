@@ -30,7 +30,7 @@ export default function InboxScreen() {
       // expo-router types accept string for dynamic routes; cast keeps TS quiet.
       router.push(route as never);
     },
-    [markRead],
+    [markRead.mutate],
   );
 
   const showMarkAll = (unread?.unreadCount ?? 0) > 0;

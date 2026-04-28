@@ -46,7 +46,7 @@ app.post("/prune-inbox", async (c) => {
   if (!verifyCronSecret(c)) return c.json({ error: "Unauthorized" }, 401);
 
   try {
-    const result = await pruneInboxNotifications();
+    const result = await pruneInboxNotifications({ force: true });
     return c.json({ success: true, ...result, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("[CRON] Manual trigger error:", error);

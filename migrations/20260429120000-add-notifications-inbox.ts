@@ -6,46 +6,38 @@
 import { sql } from "kysely";
 import type { Kysely, Migration } from "kysely";
 
+const tableExists = async (db: Kysely<any>, table: string) => {
+  const result = await sql<{ name: string }>`
+    SELECT name FROM sqlite_master WHERE type='table' AND name=${table}
+  `.execute(db);
+  return result.rows.length > 0;
+};
+
 export const up: Migration["up"] = async (db: Kysely<any>) => {
-  const tableExists = async (table: string) => {
-    const result = await sql<{ name: string }>`
-      SELECT name FROM sqlite_master WHERE type='table' AND name=${table}
+  if (!(await tableExists(db, "notifications"))) {
+    await sql`
+      CREATE TABLE notifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES user(id) ON DELETE CASCADE,
+        group_id TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        category TEXT,
+        title TEXT,
+        body TEXT NOT NULL,
+        data_json TEXT NOT NULL,
+        read_at TEXT,
+        created_at TEXT NOT NULL
+      )
     `.execute(db);
-    return result.rows.length > 0;
-  };
 
-  if (!(await tableExists("notifications"))) {
-    await db.schema
-      .createTable("notifications")
-      .addColumn("id", "text", (col) => col.primaryKey().notNull())
-      .addColumn("user_id", "text", (col) => col.notNull())
-      .addColumn("group_id", "text", (col) => col.notNull())
-      .addColumn("type", "text", (col) => col.notNull())
-      .addColumn("category", "text")
-      .addColumn("title", "text")
-      .addColumn("body", "text", (col) => col.notNull())
-      .addColumn("data_json", "text", (col) => col.notNull())
-      .addColumn("read_at", "text")
-      .addColumn("created_at", "text", (col) => col.notNull())
-      .execute();
+    // Inbox listing (per user + group, newest first). Also the path used by
+    // unreadCount — `WHERE read_at IS NULL` filters a small subset of the
+    // already-narrowed (user_id, group_id) slice, so a separate unread index
+    // would be redundant.
+    await sql`CREATE INDEX idx_notifications_user_group_created ON notifications(user_id, group_id, created_at)`.execute(db);
 
-    await db.schema
-      .createIndex("idx_notifications_user_group_created")
-      .on("notifications")
-      .columns(["user_id", "group_id", "created_at"])
-      .execute();
-
-    await db.schema
-      .createIndex("idx_notifications_user_unread")
-      .on("notifications")
-      .columns(["user_id", "read_at"])
-      .execute();
-
-    await db.schema
-      .createIndex("idx_notifications_created_at")
-      .on("notifications")
-      .column("created_at")
-      .execute();
+    // Used only by the retention prune cron. Cheap on a 10-day-windowed table.
+    await sql`CREATE INDEX idx_notifications_created_at ON notifications(created_at)`.execute(db);
 
     console.log("✅ Created notifications table + indexes");
   } else {

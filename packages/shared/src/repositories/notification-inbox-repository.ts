@@ -100,6 +100,9 @@ export class TursoNotificationInboxRepository {
 
   async insertMany(rows: NewInboxNotification[]): Promise<void> {
     if (rows.length === 0) return;
+    // Single timestamp shared by every row in this call is intentional:
+    // a fan-out is conceptually one event, and the (created_at, id) cursor
+    // tiebreaks within the slice. Don't recompute per-chunk.
     const now = new Date().toISOString();
 
     // Chunk to stay within SQLite parameter limits (~999 binds; 10 cols/row).

@@ -61,7 +61,6 @@ export function useUnreadNotificationCount() {
     enabled: !!session?.user && !!groupId,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: 60_000, // gentle background poll while the app is open
     queryFn: async () => {
       const res = await client.api.notifications["unread-count"].$get();
       return (await res.json()) as { unreadCount: number };
