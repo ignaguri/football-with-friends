@@ -57,7 +57,9 @@ export function NotificationPermissionPrompt({ open, onClose }: Props) {
     <Dialog
       modal
       open={open}
-      onOpenChange={(v) => !v && handleSkip()}
+      onOpenChange={(v) => {
+        if (!v) void handleSkip();
+      }}
       showActions={false}
       showClose={false}
     >

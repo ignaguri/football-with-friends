@@ -73,10 +73,6 @@ export default function NotificationsScreen() {
       setPromptOpen(true);
       return;
     }
-    if (notif.osStatus === "denied") {
-      Linking.openSettings();
-      return;
-    }
     await notif.enableMaster();
   }
 
@@ -104,6 +100,7 @@ export default function NotificationsScreen() {
                 <Switch
                   checked={masterOn}
                   onCheckedChange={handleMasterToggle}
+                  disabled={notif.osStatus === "denied"}
                   size="$3"
                   testID="profile-notifications-toggle-master"
                 >

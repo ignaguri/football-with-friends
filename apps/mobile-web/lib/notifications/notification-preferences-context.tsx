@@ -86,13 +86,17 @@ export function NotificationPreferencesProvider({
     Promise.all([
       getOsPermissionStatus(),
       AsyncStorage.getItem(PROMPT_SHOWN_KEY),
-    ]).then(([status, shown]) => {
-      setOsStatus(status);
-      setHasShownPrompt(shown === "1");
-    });
+    ])
+      .then(([status, shown]) => {
+        setOsStatus(status);
+        setHasShownPrompt(shown === "1");
+      })
+      .catch(() => {
+        // Init failure is non-fatal — keep defaults and try again on next mount/foreground.
+      });
 
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") refreshOsStatus();
+      if (state === "active") void refreshOsStatus().catch(() => {});
     });
     return () => sub.remove();
   }, [refreshOsStatus]);

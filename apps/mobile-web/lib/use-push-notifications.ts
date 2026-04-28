@@ -116,8 +116,9 @@ export async function requestAndRegister(): Promise<{
       });
       _lastRegisteredToken = token;
     } catch (error) {
-      console.error("Failed to register push token:", error);
-      // Keep token but don't mark as registered — caller surfaces the failure.
+      throw error instanceof Error
+        ? error
+        : new Error("Failed to register push token");
     }
   }
 
