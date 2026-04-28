@@ -454,7 +454,10 @@
     "openStats": "Open player stats",
     "openMultimedia": "Open multimedia feed",
     "openGallery": "Open gallery for {{date}}",
-    "uploadMedia": "Upload photo or video"
+    "uploadMedia": "Upload photo or video",
+    "openInbox": "Open notifications inbox",
+    "openInboxWithUnread": "Open notifications inbox, {{count}} unread",
+    "openNotification": "Open notification"
   },
   "notifications": {
     "settings": {
@@ -500,7 +503,32 @@
     "errors": {
       "generic": "Couldn't enable notifications. Please try again."
     },
-    "unsupportedWeb": "Push notifications are only available on the mobile app for now."
+    "unsupportedWeb": "Push notifications are only available on the mobile app for now.",
+    "inbox": {
+      "title": "Notifications",
+      "empty": "You're all caught up.",
+      "emptyHint": "We'll drop new matches, reminders and updates here.",
+      "markAllRead": "Mark all as read",
+      "loadingMore": "Loading…",
+      "sections": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "earlier": "Earlier"
+      },
+      "types": {
+        "match_created": "New match",
+        "match_updated": "Match updated",
+        "match_cancelled": "Match cancelled",
+        "player_confirmed": "You're in",
+        "substitute_promoted": "Promoted off the waitlist",
+        "player_cancelled": "Player dropped out",
+        "removed_from_match": "Removed from match",
+        "match_reminder": "Match reminder",
+        "voting_open": "Vote on the match",
+        "engagement_reminder": "Come back!",
+        "payment_reminder": "Payment reminder"
+      }
+    }
   },
   "status": {
     "paid": "Paid",

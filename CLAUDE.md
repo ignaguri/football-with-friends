@@ -105,6 +105,53 @@ Every group-scoped resource (match, location, court, signup, setting, invite, ro
 
 **Observability**: `GroupService` emits structured JSON logs on `group.created`, `invite.accepted`, `ghost.claimed`, `group.ownership_transferred` — picked up by Cloudflare Workers logs.
 
+### Notifications System
+Two layers:
+1. **Transient push** — Expo Push API (`https://exp.host/--/api/v2/push/send`). Opt-in, native-only (web returns `osStatus: "unsupported"`).
+2. **Persistent inbox** — DB-backed, group-scoped, available on web and native. Read via the bell icon in the home-screen header.
+
+**Tables**:
+- `push_tokens` — device tokens per user (`migrations/20260407120000-add-push-tokens.ts`).
+- `user_notification_prefs` — master toggle + 3 category toggles. Absent row = all on (COALESCE) (`migrations/20260428120000-add-user-notification-prefs.ts`).
+- `notifications` — inbox rows: `(id, user_id, group_id, type, category, title, body, data_json, read_at, created_at)`. Indexed on `(user_id, group_id, created_at DESC)` and `(user_id, read_at)` (`migrations/20260429120000-add-notifications-inbox.ts`).
+
+**Types and categories** (`packages/shared/src/domain/types.ts`):
+- `NOTIFICATION_TYPES` — 12 event types (match_created, match_updated, match_cancelled, player_confirmed, substitute_promoted, player_cancelled, removed_from_match, match_reminder, payment_reminder, voting_open, engagement_reminder, group_invite). **Reuse this constant; never redefine.**
+- `NOTIFICATION_CATEGORIES` — 3 opt-in categories (`new_match`, `match_reminder`, `promo_to_confirmed`) backed by `user_notification_prefs` columns.
+- **Push delivery rule**: categorized sends honor per-category opt-out; transactional sends honor only the master toggle.
+- **Inbox persistence rule**: independent of push opt-out — a user with push off still sees rows. Ensures the inbox is the canonical history.
+
+**Server modules**:
+- Templates: `packages/shared/src/services/notification-templates.ts` — every template encodes `data.type` and `data.screen` (deep-link).
+- Send service (Expo): `packages/shared/src/services/notification-service.ts`.
+- Token repo (with prefs JOIN): `packages/shared/src/repositories/push-token-repository.ts`.
+- Inbox repo: `packages/shared/src/repositories/notification-inbox-repository.ts` — `insertMany`, `listByUserAndGroup`, `unreadCount`, `markRead`, `markAllRead`, `deleteOlderThan`.
+- Inbox recorder: `apps/api/src/lib/notification-inbox.ts` (`recordForRecipients`).
+- Event helpers (the call sites): `apps/api/src/lib/notify.ts` (`notifyMatchCreated`, `notifyMatchUpdated`, `notifyMatchCancelled`, `notifyPlayerConfirmed`, `notifySubstitutePromoted`, `notifyPlayerCancelled`, `notifyRemovedFromMatch`, `notifyGroupInviteTarget`).
+- Cron senders: `apps/api/src/cron/{send-match-reminders,send-engagement-reminders,update-match-statuses,prune-inbox-notifications}.ts`. All registered in the worker's `scheduled` handler (`apps/api/src/worker.ts`) and behind manual trigger endpoints in `apps/api/src/routes/cron.ts`.
+- API routes: `apps/api/src/routes/notifications.ts` — `GET /api/notifications` (list, group-scoped), `GET /api/notifications/unread-count`, `PATCH /api/notifications/:id/read`, `POST /api/notifications/read-all`, `POST /api/notifications/send-test` (admin only). Push token + preferences endpoints stay separate at `push-tokens.ts` / `notification-preferences.ts`.
+
+**Adding a new notification** (cookbook):
+1. Add the type to `NOTIFICATION_TYPES` if it's truly new.
+2. Add a template in `notification-templates.ts` (must include `data.type` and `data.screen`).
+3. Add a helper in `apps/api/src/lib/notify.ts` that calls `recordForRecipients(...)` first, then `getNotificationService().sendToUsers(...)`. Wrap in `safeNotify`.
+4. Wire the helper at the call site (route or cron). For match-related events, recipients should be intersected with group members (see `getGroupMemberIds` / `intersect` helpers in `notify.ts`).
+5. If the deep-link logic is non-trivial, extend `getNotificationRoute(data)` in `packages/shared/src/utils/notification-routes.ts` (the shared resolver used by both push-tap and inbox-tap handling).
+6. **Group invites are intentionally NOT persisted to the inbox** — the dedicated invite-acceptance flow surfaces them and the target may not yet be a registered user.
+7. Do NOT call the Expo Push API directly from feature code.
+
+**Retention**: inbox rows older than 10 days are pruned by `pruneInboxNotifications` (runs alongside other crons every 30 min — cheap, idempotent).
+
+**Client (mobile-web)**:
+- Push setup + listeners: `apps/mobile-web/lib/use-push-notifications.ts` (lazy-loaded; web is no-op).
+- Permission UX + master toggle context: `apps/mobile-web/lib/notifications/notification-preferences-context.tsx`, `components/notifications/notification-permission-prompt.tsx`.
+- Preferences screen: `apps/mobile-web/app/(tabs)/profile/notifications.tsx` (hidden on web).
+- Inbox: bell in the home-screen header (`components/notifications/inbox-bell.tsx`) opens `app/inbox.tsx`. The list lives in `components/notifications/notification-inbox.tsx`; routing on tap goes through `getNotificationRoute(item.data)` so push-tap and inbox-tap stay in sync. **Inbox works on both web and native**; the preferences screen does not.
+- API client hooks: `useNotifications`, `useUnreadNotificationCount`, `useMarkNotificationRead`, `useMarkAllNotificationsRead` (`packages/api-client/src/notifications-inbox.ts`). Plus existing `useNotificationPreferences`/`useUpdateNotificationPreferences`.
+- i18n root: `notifications.*` (preferences UX) and `notifications.inbox.*` (inbox UX) in `locales/{en,es}/common.json`. Type labels live at `notifications.inbox.types.<NotificationType>`.
+
+**Deep-link convention**: `payload.data.screen` is the canonical route. Both the push tap handler (`use-push-notifications.ts`) and the inbox screen (`app/inbox.tsx`) navigate via `router.push(getNotificationRoute(data))`.
+
 ### Database Configuration
 - **Primary**: Turso (LibSQL) database via `@libsql/kysely-libsql`
 - Connection configured via `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`

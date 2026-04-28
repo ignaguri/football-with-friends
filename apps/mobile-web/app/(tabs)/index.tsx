@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 import { useTheme } from "tamagui";
 
+import { InboxBell } from "../../components/notifications/inbox-bell";
 import { NotificationPermissionPrompt } from "../../components/notifications/notification-permission-prompt";
 import { useNotificationPreferencesContext } from "../../lib/notifications/notification-preferences-context";
 import { useRulesModal } from "../../lib/rules-modal-context";
@@ -53,11 +54,13 @@ export default function HomeScreen() {
       <Stack.Screen
         options={{
           title: t("shared.home"),
+          headerTitle: "",
           headerStyle: {
             backgroundColor: theme.background?.val,
           },
           headerTintColor: theme.color?.val,
           headerShadowVisible: false,
+          headerRight: isAuthenticated ? () => <InboxBell /> : undefined,
         }}
       />
       <Container variant="padded">

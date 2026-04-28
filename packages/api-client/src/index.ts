@@ -95,5 +95,15 @@ export type {
   NotificationPreferencesUpdate,
 } from "@repo/shared/domain";
 
+// Notifications inbox (group-scoped) — list + unread badge + mark read
+export {
+  useNotifications,
+  useUnreadNotificationCount,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  notificationInboxQueryKeys,
+} from "./notifications-inbox";
+export type { InboxNotification, InboxPage } from "./notifications-inbox";
+
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

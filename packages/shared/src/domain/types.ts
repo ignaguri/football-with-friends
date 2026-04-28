@@ -616,6 +616,23 @@ export const NOTIFICATION_PREF_TO_COLUMN: Record<
   pushPromoToConfirmed: "push_promo_to_confirmed",
 };
 
+// Inbox row — persisted record of a notification we sent (or would have sent
+// if the user had push enabled). Group-scoped so an active-group switch
+// changes which rows are visible. `data` mirrors the push payload's `data`
+// field so deep-link handling is the same on tap.
+export interface InboxNotification {
+  id: string;
+  userId: string;
+  groupId: string;
+  type: NotificationType;
+  category: NotificationCategory | null;
+  title: string | null;
+  body: string;
+  data: NotificationPayload["data"];
+  readAt: string | null;
+  createdAt: string;
+}
+
 // Helper types for pagination and responses
 
 export interface PaginatedResponse<T> {

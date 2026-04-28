@@ -89,6 +89,12 @@ function AppNavigation() {
           headerTitle: "",
         }}
       />
+      <Stack.Screen
+        name="inbox"
+        options={{
+          headerTitle: "",
+        }}
+      />
     </Stack>
   );
 }

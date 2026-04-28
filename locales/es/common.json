@@ -457,7 +457,10 @@
     "openStats": "Abrir estadísticas",
     "openMultimedia": "Abrir multimedia",
     "openGallery": "Abrir galería del {{date}}",
-    "uploadMedia": "Subir foto o video"
+    "uploadMedia": "Subir foto o video",
+    "openInbox": "Abrir bandeja de notificaciones",
+    "openInboxWithUnread": "Abrir bandeja de notificaciones, {{count}} sin leer",
+    "openNotification": "Abrir notificación"
   },
   "notifications": {
     "settings": {
@@ -503,7 +506,32 @@
     "errors": {
       "generic": "No pudimos activar las notificaciones. Probá de nuevo."
     },
-    "unsupportedWeb": "Las notificaciones push por ahora solo están disponibles en la app móvil."
+    "unsupportedWeb": "Las notificaciones push por ahora solo están disponibles en la app móvil.",
+    "inbox": {
+      "title": "Notificaciones",
+      "empty": "Estás al día.",
+      "emptyHint": "Acá vas a ver nuevos partidos, recordatorios y actualizaciones.",
+      "markAllRead": "Marcar todas como leídas",
+      "loadingMore": "Cargando…",
+      "sections": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "earlier": "Antes"
+      },
+      "types": {
+        "match_created": "Nuevo partido",
+        "match_updated": "Partido actualizado",
+        "match_cancelled": "Partido cancelado",
+        "player_confirmed": "Estás dentro",
+        "substitute_promoted": "Saliste de la lista de espera",
+        "player_cancelled": "Un jugador se bajó",
+        "removed_from_match": "Te sacaron del partido",
+        "match_reminder": "Recordatorio de partido",
+        "voting_open": "Votá el partido",
+        "engagement_reminder": "Volvé a la cancha",
+        "payment_reminder": "Recordatorio de pago"
+      }
+    }
   },
   "status": {
     "paid": "Pagado",

@@ -3,6 +3,7 @@ import { Platform } from "react-native";
 import { router } from "expo-router";
 import { useSession } from "@repo/api-client";
 import { api } from "@repo/api-client";
+import { getNotificationRoute } from "@repo/shared/utils";
 
 // Tracks the token registered by this session so we can deactivate it on
 // sign-out / account deletion. Set after a successful POST /push-tokens.
@@ -160,9 +161,16 @@ export function usePushNotifications() {
       const responseSub =
         Notifications.addNotificationResponseReceivedListener((response) => {
           const data = response.notification.request.content.data;
-          if (data?.screen && typeof data.screen === "string") {
-            router.push(data.screen as any);
-          }
+          // Push notifications without a deep-link target (e.g. /send-test)
+          // shouldn't navigate anywhere on tap — only follow an explicit
+          // screen. Inbox-tap uses the helper's type-based fallback because
+          // the user there always intended to open something.
+          const screen =
+            typeof data === "object" && data !== null
+              ? (data as { screen?: unknown }).screen
+              : undefined;
+          if (typeof screen !== "string" || screen.length === 0) return;
+          router.push(getNotificationRoute(data) as never);
         });
 
       listenersRef.current = [notifSub, responseSub];

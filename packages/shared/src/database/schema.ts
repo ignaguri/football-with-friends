@@ -203,6 +203,19 @@ export interface UserNotificationPrefsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface NotificationsTable {
+  id: string;
+  user_id: string;
+  group_id: string;
+  type: string;
+  category: string | null;
+  title: string | null;
+  body: string;
+  data_json: string;
+  read_at: string | null;
+  created_at: string;
+}
+
 // BetterAuth verification table (used for password reset codes, OTPs, etc.)
 export interface VerificationTable {
   id: string;
@@ -284,6 +297,7 @@ export interface Database {
   match_votes: MatchVotesTable;
   push_tokens: PushTokensTable;
   user_notification_prefs: UserNotificationPrefsTable;
+  notifications: NotificationsTable;
   verification: VerificationTable;
   groups: GroupsTable;
   group_members: GroupMembersTable;
@@ -357,6 +371,10 @@ export type PushTokenUpdate = Updateable<PushTokensTable>;
 export type UserNotificationPrefs = Selectable<UserNotificationPrefsTable>;
 export type NewUserNotificationPrefs = Insertable<UserNotificationPrefsTable>;
 export type UserNotificationPrefsUpdate = Updateable<UserNotificationPrefsTable>;
+
+export type NotificationRow = Selectable<NotificationsTable>;
+export type NewNotificationRow = Insertable<NotificationsTable>;
+export type NotificationRowUpdate = Updateable<NotificationsTable>;
 
 export type Group = Selectable<GroupsTable>;
 export type NewGroup = Insertable<GroupsTable>;

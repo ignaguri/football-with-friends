@@ -1,5 +1,8 @@
 import { getDatabase } from "@repo/shared/database";
+import { NOTIFICATION_TYPES } from "@repo/shared/domain";
 import { getServiceFactory, NotificationTemplates } from "@repo/shared/services";
+
+import { recordForRecipients } from "../lib/notification-inbox";
 
 /**
  * Update match statuses from "upcoming" to "completed"
@@ -25,7 +28,7 @@ export async function updateMatchStatuses() {
     // Find matches that will transition (for voting reminders)
     const matchesToComplete = await db
       .selectFrom("matches")
-      .select(["id", "date", "time", "location_id"])
+      .select(["id", "date", "time", "location_id", "group_id"])
       .where("status", "=", "upcoming")
       .where("date", "<", berlinDate)
       .execute();
@@ -86,10 +89,18 @@ export async function updateMatchStatuses() {
             time: match.time,
             locationName: location?.name,
           };
-          await notificationService.sendToUsers(
-            userIds,
-            NotificationTemplates.votingOpen(info),
-          );
+          const payload = NotificationTemplates.votingOpen(info);
+
+          if (match.group_id) {
+            await recordForRecipients({
+              userIds,
+              groupId: match.group_id,
+              type: NOTIFICATION_TYPES.VOTING_OPEN,
+              payload,
+            });
+          }
+
+          await notificationService.sendToUsers(userIds, payload);
           console.log(`[CRON] Sent voting reminder for match ${match.id} to ${userIds.length} users`);
         } catch (error) {
           console.error(`[CRON] Failed to send voting reminder for match ${match.id}:`, error);
