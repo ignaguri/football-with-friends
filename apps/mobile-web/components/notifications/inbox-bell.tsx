@@ -28,7 +28,7 @@ export function InboxBell() {
       accessibilityLabel={label}
       testID="home-header-inbox"
       hitSlop={8}
-      style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+      style={{ paddingLeft: 8, paddingRight: 16, paddingVertical: 4 }}
     >
       <XStack position="relative">
         <Bell size={22} color={theme.color?.val} />

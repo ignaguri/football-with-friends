@@ -11,6 +11,7 @@ import type { InboxNotification } from "@repo/shared/domain";
 import { useSession } from "./auth";
 import { client as _client } from "./client";
 import { getActiveGroupId } from "./group-storage";
+import { useCurrentGroup } from "./groups";
 
 // Hono RPC's deep generics resolve as `unknown` across this package boundary.
 
@@ -34,7 +35,11 @@ export const notificationInboxQueryKeys = {
 
 export function useNotifications(opts: { limit?: number } = {}) {
   const { data: session } = useSession();
-  const groupId = getActiveGroupId();
+  // Use the reactive current-group hook instead of the synchronous
+  // `getActiveGroupId()` accessor — on web, AsyncStorage hydrates asynchronously,
+  // so the sync read returns null on first render and the query stays disabled
+  // forever. `useCurrentGroup` re-renders once `useMyGroups` resolves.
+  const { groupId } = useCurrentGroup();
   const limit = opts.limit ?? 30;
 
   return useInfiniteQuery<InboxPage>({
@@ -54,7 +59,7 @@ export function useNotifications(opts: { limit?: number } = {}) {
 
 export function useUnreadNotificationCount() {
   const { data: session } = useSession();
-  const groupId = getActiveGroupId();
+  const { groupId } = useCurrentGroup();
 
   return useQuery<{ unreadCount: number }>({
     queryKey: notificationInboxQueryKeys.unread(groupId),

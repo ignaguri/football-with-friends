@@ -54,6 +54,7 @@ export default function HomeScreen() {
       <Stack.Screen
         options={{
           title: t("shared.home"),
+          headerTitle: "",
           headerStyle: {
             backgroundColor: theme.background?.val,
           },

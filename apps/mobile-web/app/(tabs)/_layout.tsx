@@ -82,7 +82,6 @@ export default function TabsLayout() {
         options={{
           title: t("shared.home"),
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,
-          headerShown: false,
         }}
       />
       <Tabs.Screen

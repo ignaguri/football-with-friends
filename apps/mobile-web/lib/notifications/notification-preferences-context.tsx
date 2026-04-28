@@ -68,6 +68,10 @@ export function NotificationPreferencesProvider({
     Platform.OS === "web" ? "unsupported" : "undetermined",
   );
   const [hasShownPrompt, setHasShownPrompt] = useState(false);
+  // Track AsyncStorage hydration so callers don't read `hasShownPrompt`
+  // before the prompt-shown flag has been loaded — otherwise the home-screen
+  // effect pops the prompt on every cold start.
+  const [initLoaded, setInitLoaded] = useState(Platform.OS === "web");
 
   const prefsQuery = useNotificationPreferences();
   const updateMutation = useUpdateNotificationPreferences();
@@ -93,6 +97,9 @@ export function NotificationPreferencesProvider({
       })
       .catch(() => {
         // Init failure is non-fatal — keep defaults and try again on next mount/foreground.
+      })
+      .finally(() => {
+        setInitLoaded(true);
       });
 
     const sub = AppState.addEventListener("change", (state) => {
@@ -142,7 +149,7 @@ export function NotificationPreferencesProvider({
     () => ({
       osStatus,
       prefs: prefsQuery.data,
-      isLoading: !isAuthed || prefsQuery.isLoading,
+      isLoading: !isAuthed || prefsQuery.isLoading || !initLoaded,
       hasShownPrompt,
       effectivelyEnabled,
       refreshOsStatus,
@@ -156,6 +163,7 @@ export function NotificationPreferencesProvider({
       prefsQuery.data,
       prefsQuery.isLoading,
       isAuthed,
+      initLoaded,
       hasShownPrompt,
       refreshOsStatus,
       markPromptShown,
