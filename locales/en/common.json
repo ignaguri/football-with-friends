@@ -67,6 +67,7 @@
     "claimSpot": "Claim it now!",
     "spotTaken": "Sorry, someone else claimed the spot",
     "sameDayFee": "Same-day fee",
+    "sameDayFeeHint": "+€{{amount}} same-day fee",
     "totalCost": "Total",
     "matchCompletelyFull": "Match and substitute list are full",
     "cancelSpotTitle": "Cancel your spot?",

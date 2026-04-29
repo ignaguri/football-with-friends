@@ -52,6 +52,7 @@ import {
   Linking,
 } from "react-native";
 import { Image } from "expo-image";
+import { formatMatchDate } from "@repo/shared/utils";
 
 import { formatFullDate } from "@/lib/date-utils";
 import {
@@ -600,17 +601,9 @@ export default function MatchDetailScreen() {
     match?.userSignup?.status === "PAID" ||
     match?.userSignup?.status === "PENDING";
 
-  // Check if match is today for same-day cost
+  // Check if match is today (in app timezone, not device timezone)
   const isMatchToday = match
-    ? (() => {
-        const today = new Date();
-        const matchDate = new Date(match.date + "T12:00:00");
-        return (
-          today.getFullYear() === matchDate.getFullYear() &&
-          today.getMonth() === matchDate.getMonth() &&
-          today.getDate() === matchDate.getDate()
-        );
-      })()
+    ? formatMatchDate(new Date()) === match.date
     : false;
 
   // Calculate total cost for same-day matches
@@ -756,40 +749,52 @@ export default function MatchDetailScreen() {
 
           {/* Stats Card */}
           <Card variant="outlined">
-            <XStack padding="$3" justifyContent="space-around">
-              <YStack alignItems="center">
-                <Text fontSize="$3" color="$gray10" marginBottom="$1">
-                  {t("stats.availableSpots")}
-                </Text>
+            <YStack padding="$3" gap="$2">
+              <XStack justifyContent="space-around">
+                <YStack alignItems="center">
+                  <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                    {t("stats.availableSpots")}
+                  </Text>
+                  <Text
+                    fontSize="$7"
+                    fontWeight="bold"
+                    color={match.availableSpots > 0 ? "$green10" : "$color"}
+                  >
+                    {match.availableSpots}
+                  </Text>
+                </YStack>
+
+                <YStack alignItems="center">
+                  <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                    {t("stats.cost")}
+                  </Text>
+                  <Text fontSize="$7" fontWeight="bold">
+                    {match.costPerPlayer
+                      ? `€${totalCost}`
+                      : t("stats.free")}
+                  </Text>
+                </YStack>
+
+                <YStack alignItems="center">
+                  <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                    {t("stats.court")}
+                  </Text>
+                  <Text fontSize="$7" fontWeight="bold">
+                    {match.court?.name || "-"}
+                  </Text>
+                </YStack>
+              </XStack>
+
+              {isMatchToday && sameDayCost > 0 && (
                 <Text
-                  fontSize="$7"
-                  fontWeight="bold"
-                  color={match.availableSpots > 0 ? "$green10" : "$color"}
+                  fontSize="$2"
+                  color="$orange10"
+                  textAlign="center"
                 >
-                  {match.availableSpots}
+                  {t("matchDetail.sameDayFeeHint", { amount: sameDayCost })}
                 </Text>
-              </YStack>
-
-              <YStack alignItems="center">
-                <Text fontSize="$3" color="$gray10" marginBottom="$1">
-                  {t("stats.cost")}
-                </Text>
-                <Text fontSize="$7" fontWeight="bold">
-                  {match.costPerPlayer
-                    ? `€${match.costPerPlayer}`
-                    : t("stats.free")}
-                </Text>
-              </YStack>
-
-              <YStack alignItems="center">
-                <Text fontSize="$3" color="$gray10" marginBottom="$1">
-                  {t("stats.court")}
-                </Text>
-                <Text fontSize="$7" fontWeight="bold">
-                  {match.court?.name || "-"}
-                </Text>
-              </YStack>
-            </XStack>
+              )}
+            </YStack>
           </Card>
 
           {/* View A: Not Participating - Show CTA (only for upcoming matches) */}
@@ -845,7 +850,7 @@ export default function MatchDetailScreen() {
                   alignItems="center"
                 >
                   <Text fontSize="$6" fontWeight="bold">
-                    {t("players.title")} ({match.signups?.length || 0})
+                    {t("players.title")}
                   </Text>
                   {!isPlayed &&
                     isOrganizer &&

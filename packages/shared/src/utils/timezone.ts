@@ -31,7 +31,10 @@ export function convertFromAppTimezone(
   return toZonedTime(date, targetTimezone);
 }
 
-export function formatMatchDate(date: string, timezone?: string): string {
+export function formatMatchDate(
+  date: Date | string,
+  timezone?: string,
+): string {
   return formatDateInAppTimezone(date, "yyyy-MM-dd", timezone);
 }
 
