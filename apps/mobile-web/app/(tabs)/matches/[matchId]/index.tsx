@@ -52,6 +52,7 @@ import {
   Linking,
 } from "react-native";
 import { Image } from "expo-image";
+import { formatMatchDate } from "@repo/shared/utils";
 
 import { formatFullDate } from "@/lib/date-utils";
 import {
@@ -600,17 +601,9 @@ export default function MatchDetailScreen() {
     match?.userSignup?.status === "PAID" ||
     match?.userSignup?.status === "PENDING";
 
-  // Check if match is today for same-day cost
+  // Check if match is today (in app timezone, not device timezone)
   const isMatchToday = match
-    ? (() => {
-        const today = new Date();
-        const matchDate = new Date(match.date + "T12:00:00");
-        return (
-          today.getFullYear() === matchDate.getFullYear() &&
-          today.getMonth() === matchDate.getMonth() &&
-          today.getDate() === matchDate.getDate()
-        );
-      })()
+    ? formatMatchDate(new Date()) === match.date
     : false;
 
   // Calculate total cost for same-day matches
@@ -776,9 +769,14 @@ export default function MatchDetailScreen() {
                 </Text>
                 <Text fontSize="$7" fontWeight="bold">
                   {match.costPerPlayer
-                    ? `€${match.costPerPlayer}`
+                    ? `€${totalCost}`
                     : t("stats.free")}
                 </Text>
+                {isMatchToday && sameDayCost > 0 && (
+                  <Text fontSize="$2" color="$orange10" marginTop="$1">
+                    +€{sameDayCost} {t("matchDetail.sameDayFee").toLowerCase()}
+                  </Text>
+                )}
               </YStack>
 
               <YStack alignItems="center">
