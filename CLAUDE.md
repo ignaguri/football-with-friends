@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Coding Guidelines
+
+Before starting any implementation task, invoke the `andrej-karpathy-skills:karpathy-guidelines` skill.
+
 ## Development Commands
 
 - **Start all apps**: `pnpm dev` (runs all apps via Turborepo)
