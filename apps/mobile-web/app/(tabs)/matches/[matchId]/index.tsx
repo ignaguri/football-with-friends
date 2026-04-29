@@ -749,45 +749,52 @@ export default function MatchDetailScreen() {
 
           {/* Stats Card */}
           <Card variant="outlined">
-            <XStack padding="$3" justifyContent="space-around">
-              <YStack alignItems="center">
-                <Text fontSize="$3" color="$gray10" marginBottom="$1">
-                  {t("stats.availableSpots")}
-                </Text>
-                <Text
-                  fontSize="$7"
-                  fontWeight="bold"
-                  color={match.availableSpots > 0 ? "$green10" : "$color"}
-                >
-                  {match.availableSpots}
-                </Text>
-              </YStack>
-
-              <YStack alignItems="center">
-                <Text fontSize="$3" color="$gray10" marginBottom="$1">
-                  {t("stats.cost")}
-                </Text>
-                <Text fontSize="$7" fontWeight="bold">
-                  {match.costPerPlayer
-                    ? `€${totalCost}`
-                    : t("stats.free")}
-                </Text>
-                {isMatchToday && sameDayCost > 0 && (
-                  <Text fontSize="$2" color="$orange10" marginTop="$1">
-                    +€{sameDayCost} {t("matchDetail.sameDayFee").toLowerCase()}
+            <YStack padding="$3" gap="$2">
+              <XStack justifyContent="space-around">
+                <YStack alignItems="center">
+                  <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                    {t("stats.availableSpots")}
                   </Text>
-                )}
-              </YStack>
+                  <Text
+                    fontSize="$7"
+                    fontWeight="bold"
+                    color={match.availableSpots > 0 ? "$green10" : "$color"}
+                  >
+                    {match.availableSpots}
+                  </Text>
+                </YStack>
 
-              <YStack alignItems="center">
-                <Text fontSize="$3" color="$gray10" marginBottom="$1">
-                  {t("stats.court")}
+                <YStack alignItems="center">
+                  <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                    {t("stats.cost")}
+                  </Text>
+                  <Text fontSize="$7" fontWeight="bold">
+                    {match.costPerPlayer
+                      ? `€${totalCost}`
+                      : t("stats.free")}
+                  </Text>
+                </YStack>
+
+                <YStack alignItems="center">
+                  <Text fontSize="$3" color="$gray10" marginBottom="$1">
+                    {t("stats.court")}
+                  </Text>
+                  <Text fontSize="$7" fontWeight="bold">
+                    {match.court?.name || "-"}
+                  </Text>
+                </YStack>
+              </XStack>
+
+              {isMatchToday && sameDayCost > 0 && (
+                <Text
+                  fontSize="$2"
+                  color="$orange10"
+                  textAlign="center"
+                >
+                  +€{sameDayCost} {t("matchDetail.sameDayFee").toLowerCase()}
                 </Text>
-                <Text fontSize="$7" fontWeight="bold">
-                  {match.court?.name || "-"}
-                </Text>
-              </YStack>
-            </XStack>
+              )}
+            </YStack>
           </Card>
 
           {/* View A: Not Participating - Show CTA (only for upcoming matches) */}
