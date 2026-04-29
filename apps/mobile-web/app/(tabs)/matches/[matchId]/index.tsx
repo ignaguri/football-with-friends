@@ -791,7 +791,7 @@ export default function MatchDetailScreen() {
                   color="$orange10"
                   textAlign="center"
                 >
-                  +€{sameDayCost} {t("matchDetail.sameDayFee").toLowerCase()}
+                  {t("matchDetail.sameDayFeeHint", { amount: sameDayCost })}
                 </Text>
               )}
             </YStack>

@@ -68,6 +68,7 @@
     "claimSpot": "¡Reclamalo ahora!",
     "spotTaken": "Lo siento, alguien más reclamó el lugar",
     "sameDayFee": "Recargo mismo día",
+    "sameDayFeeHint": "+€{{amount}} recargo mismo día",
     "totalCost": "Total",
     "matchCompletelyFull": "El partido y la lista de suplentes están completos",
     "cancelSpotTitle": "¿Cancelar tu lugar?",
