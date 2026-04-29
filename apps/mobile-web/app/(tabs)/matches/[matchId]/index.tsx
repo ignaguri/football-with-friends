@@ -850,7 +850,7 @@ export default function MatchDetailScreen() {
                   alignItems="center"
                 >
                   <Text fontSize="$6" fontWeight="bold">
-                    {t("players.title")} ({match.signups?.length || 0})
+                    {t("players.title")}
                   </Text>
                   {!isPlayed &&
                     isOrganizer &&
