@@ -162,7 +162,7 @@ export default function MatchStatsScreen() {
   };
 
   return (
-    <Container>
+    <Container variant="padded">
       <Stack.Screen options={{ title: t("matchStats.title") }} />
 
       {isLoading && (
