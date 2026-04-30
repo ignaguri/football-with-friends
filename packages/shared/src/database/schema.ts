@@ -36,6 +36,7 @@ export interface MatchesTable {
   reminder_sent: Generated<number>;
   // Group scoping — nullable through Phase 0, backfilled and tightened to NOT NULL in Phase 1.
   group_id: string | null;
+  voting_closed_at: string | null;
   created_at: ColumnType<Date, string | undefined, never>;
   updated_at: ColumnType<Date, string | undefined, string>;
 }

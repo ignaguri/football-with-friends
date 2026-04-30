@@ -461,7 +461,8 @@
     "uploadMedia": "Subir foto o video",
     "openInbox": "Abrir bandeja de notificaciones",
     "openInboxWithUnread": "Abrir bandeja de notificaciones, {{count}} sin leer",
-    "openNotification": "Abrir notificación"
+    "openNotification": "Abrir notificación",
+    "viewMatchStats": "Ver estadísticas del partido"
   },
   "notifications": {
     "settings": {
@@ -782,6 +783,39 @@
     "createSuccess": "Criterio de votación creado exitosamente",
     "updateSuccess": "Criterio de votación actualizado exitosamente",
     "duplicateSortOrder": "Ya existe un criterio con este número de orden"
+  },
+  "matchStats": {
+    "title": "Estadísticas del partido",
+    "viewStats": "Ver estadísticas",
+    "votingClosesIn": "La votación cierra {{when}}",
+    "votingOpen": "Votación abierta",
+    "votingClosed": "Votación cerrada",
+    "participation": "{{voted}} de {{eligible}} votaron",
+    "awards": {
+      "title": "Premios del partido",
+      "voteCount": "{{count}} votos",
+      "voteCount_one": "{{count}} voto"
+    },
+    "social": {
+      "title": "Tercer tiempo",
+      "thirdTimeAttended": "Asistió al tercer tiempo",
+      "thirdTimeBeers": "{{count}} cervezas",
+      "noEntries": "Sin estadísticas del tercer tiempo"
+    },
+    "closeVoting": {
+      "action": "Cerrar votación",
+      "confirm": "¿Cerrar la votación de este partido? Los resultados se harán visibles para todos.",
+      "success": "Votación cerrada",
+      "failed": "No se pudo cerrar la votación"
+    },
+    "reopenVoting": {
+      "action": "Reabrir votación",
+      "confirm": "¿Reabrir la votación? Los resultados volverán a ocultarse.",
+      "success": "Votación reabierta",
+      "failed": "No se pudo reabrir la votación"
+    },
+    "empty": "No se registraron votos para este partido",
+    "openHint": "Los resultados aparecerán aquí cuando cierre la votación."
   },
   "admin": {
     "addCriteria": "Agregar Criterio",

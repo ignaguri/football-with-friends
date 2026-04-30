@@ -1,7 +1,12 @@
 // Domain types for the football match application
 
 // Player status types for match participation
-export const PLAYER_STATUSES = ["PAID", "PENDING", "CANCELLED", "SUBSTITUTE"] as const;
+export const PLAYER_STATUSES = [
+  "PAID",
+  "PENDING",
+  "CANCELLED",
+  "SUBSTITUTE",
+] as const;
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number];
 
 // Signup types to track how a player was added
@@ -76,6 +81,7 @@ export interface Match {
   costPerPlayer?: string;
   sameDayCost?: string;
   createdByUserId: string;
+  votingClosedAt: string | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -242,8 +248,9 @@ export interface CreateLocationData {
   courtCount?: number;
 }
 
-export interface UpdateLocationData
-  extends Partial<Omit<CreateLocationData, "groupId">> {}
+export interface UpdateLocationData extends Partial<
+  Omit<CreateLocationData, "groupId">
+> {}
 
 export interface CreateCourtData {
   groupId: string;
@@ -253,8 +260,9 @@ export interface CreateCourtData {
   isActive?: boolean;
 }
 
-export interface UpdateCourtData
-  extends Partial<Omit<CreateCourtData, "groupId">> {}
+export interface UpdateCourtData extends Partial<
+  Omit<CreateCourtData, "groupId">
+> {}
 
 export interface CreateMatchData {
   groupId: string;
@@ -269,8 +277,9 @@ export interface CreateMatchData {
   createdByUserId: string;
 }
 
-export interface UpdateMatchData
-  extends Partial<Omit<CreateMatchData, "createdByUserId" | "groupId">> {
+export interface UpdateMatchData extends Partial<
+  Omit<CreateMatchData, "createdByUserId" | "groupId">
+> {
   status?: MatchStatus;
 }
 
@@ -287,8 +296,9 @@ export interface CreateSignupData {
   addedByUserId: string;
 }
 
-export interface UpdateSignupData
-  extends Partial<Omit<CreateSignupData, "matchId" | "addedByUserId" | "groupId">> {}
+export interface UpdateSignupData extends Partial<
+  Omit<CreateSignupData, "matchId" | "addedByUserId" | "groupId">
+> {}
 
 export interface CreateGuestSignupData {
   groupId: string;
@@ -435,6 +445,26 @@ export interface MatchVotingResults {
   matchId: string;
   totalVoters: number;
   results: CriteriaVoteResult[];
+}
+
+export interface MatchPlayerSocialStat {
+  userId: string;
+  userName: string;
+  thirdTimeAttended: boolean;
+  thirdTimeBeers: number;
+}
+
+// `results` and `playerStats` are empty arrays while voting is open, populated
+// once it closes (manually by an organizer or auto-closes 7 days after match.date).
+export interface MatchStats {
+  matchId: string;
+  isVotingClosed: boolean;
+  votingAutoCloseAt: string;
+  votingClosedAt: string | null;
+  totalVoters: number;
+  eligibleVoterCount: number;
+  results: CriteriaVoteResult[];
+  playerStats: MatchPlayerSocialStat[];
 }
 
 // Rich domain objects for API responses
@@ -608,7 +638,10 @@ export type NotificationPreferencesUpdate = Partial<NotificationPreferences>;
 
 export const NOTIFICATION_PREF_TO_COLUMN: Record<
   keyof NotificationPreferences,
-  "push_enabled" | "push_new_match" | "push_match_reminder" | "push_promo_to_confirmed"
+  | "push_enabled"
+  | "push_new_match"
+  | "push_match_reminder"
+  | "push_promo_to_confirmed"
 > = {
   pushEnabled: "push_enabled",
   pushNewMatch: "push_new_match",
@@ -682,10 +715,10 @@ export type MatchMedia = {
 
 export type MatchMediaFeedGroup = {
   matchId: string;
-  matchDate: string;     // ISO date
+  matchDate: string; // ISO date
   fieldName: string | null;
   items: MatchMedia[];
-  totalCount: number;    // total items in this match; can be > items.length
+  totalCount: number; // total items in this match; can be > items.length
 };
 
 // --- Groups (multi-tenant scoping) ---

@@ -1,19 +1,21 @@
 // Voting Repository for match voting system
 
 import { sql } from "kysely";
-import { getDatabase } from "../database/connection";
+
 import type {
   VotingCriteria,
   MatchVote,
   CreateVoteData,
   LocalizedVotingCriteria,
   UserMatchVotes,
-  CriteriaVoteResult,
   MatchVotingResults,
+  MatchPlayerSocialStat,
   PlayerVotingStats,
   VotingLeaderboard,
   PlayerRanking,
 } from "../domain/types";
+
+import { getDatabase } from "../database/connection";
 
 const { nanoid } = require("nanoid");
 
@@ -49,7 +51,7 @@ function toMatchVote(row: any): MatchVote {
 // Get localized criteria based on language
 function toLocalizedCriteria(
   criteria: VotingCriteria,
-  language: "en" | "es"
+  language: "en" | "es",
 ): LocalizedVotingCriteria {
   return {
     id: criteria.id,
@@ -88,7 +90,7 @@ export class VotingRepository {
    */
   async findAllCriteriaLocalized(
     language: "en" | "es",
-    activeOnly = true
+    activeOnly = true,
   ): Promise<LocalizedVotingCriteria[]> {
     const criteria = await this.findAllCriteria(activeOnly);
     return criteria.map((c) => toLocalizedCriteria(c, language));
@@ -173,7 +175,7 @@ export class VotingRepository {
       descriptionEs?: string;
       isActive?: boolean;
       sortOrder?: number;
-    }
+    },
   ): Promise<VotingCriteria> {
     const db = getDatabase();
     const now = new Date().toISOString();
@@ -189,7 +191,8 @@ export class VotingRepository {
       updateData.description_en = data.descriptionEn;
     if (data.descriptionEs !== undefined)
       updateData.description_es = data.descriptionEs;
-    if (data.isActive !== undefined) updateData.is_active = data.isActive ? 1 : 0;
+    if (data.isActive !== undefined)
+      updateData.is_active = data.isActive ? 1 : 0;
     if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder;
 
     await db
@@ -210,10 +213,7 @@ export class VotingRepository {
    */
   async deleteCriteria(id: string): Promise<void> {
     const db = getDatabase();
-    await db
-      .deleteFrom("voting_criteria")
-      .where("id", "=", id)
-      .execute();
+    await db.deleteFrom("voting_criteria").where("id", "=", id).execute();
   }
 
   // ==================== MATCH VOTES ====================
@@ -234,7 +234,7 @@ export class VotingRepository {
 
     if (!votedForUser) {
       throw new Error(
-        `Cannot vote for user ${data.votedForUserId}: user does not exist. Guests cannot receive votes.`
+        `Cannot vote for user ${data.votedForUserId}: user does not exist. Guests cannot receive votes.`,
       );
     }
 
@@ -286,7 +286,7 @@ export class VotingRepository {
   async submitVotes(
     matchId: string,
     voterUserId: string,
-    votes: { criteriaId: string; votedForUserId: string }[]
+    votes: { criteriaId: string; votedForUserId: string }[],
   ): Promise<MatchVote[]> {
     const results: MatchVote[] = [];
 
@@ -322,7 +322,7 @@ export class VotingRepository {
    */
   async findUserVotesForMatch(
     matchId: string,
-    userId: string
+    userId: string,
   ): Promise<UserMatchVotes> {
     const db = getDatabase();
     const rows = await db
@@ -347,7 +347,7 @@ export class VotingRepository {
    */
   async getMatchVotingResults(
     matchId: string,
-    language: "en" | "es" = "en"
+    language: "en" | "es" = "en",
   ): Promise<MatchVotingResults> {
     const db = getDatabase();
 
@@ -364,7 +364,11 @@ export class VotingRepository {
     // Get vote counts per criteria and voted_for_user
     const results = await db
       .selectFrom("match_votes")
-      .innerJoin("voting_criteria", "voting_criteria.id", "match_votes.criteria_id")
+      .innerJoin(
+        "voting_criteria",
+        "voting_criteria.id",
+        "match_votes.criteria_id",
+      )
       .innerJoin("user", "user.id", "match_votes.voted_for_user_id")
       .select([
         "match_votes.criteria_id",
@@ -414,7 +418,7 @@ export class VotingRepository {
    */
   async deleteUserVotesForMatch(
     matchId: string,
-    userId: string
+    userId: string,
   ): Promise<void> {
     const db = getDatabase();
     await db
@@ -427,7 +431,10 @@ export class VotingRepository {
   /**
    * Check if a user has voted for a specific match
    */
-  async hasUserVotedForMatch(matchId: string, userId: string): Promise<boolean> {
+  async hasUserVotedForMatch(
+    matchId: string,
+    userId: string,
+  ): Promise<boolean> {
     const db = getDatabase();
     const result = await db
       .selectFrom("match_votes")
@@ -439,6 +446,60 @@ export class VotingRepository {
     return !!result;
   }
 
+  // Filters to user-linked stats only (skips guest rows that have no user_id).
+  async getMatchPlayerSocialStats(
+    matchId: string,
+  ): Promise<MatchPlayerSocialStat[]> {
+    const db = getDatabase();
+    const rows = await db
+      .selectFrom("match_player_stats")
+      .innerJoin("user", "user.id", "match_player_stats.user_id")
+      .select([
+        "match_player_stats.user_id as user_id",
+        "user.name as user_name",
+        "match_player_stats.third_time_attended as third_time_attended",
+        "match_player_stats.third_time_beers as third_time_beers",
+      ])
+      .where("match_player_stats.match_id", "=", matchId)
+      .orderBy("user.name", "asc")
+      .execute();
+
+    return rows.map((r) => ({
+      userId: r.user_id,
+      userName: r.user_name || "Unknown",
+      thirdTimeAttended: Number(r.third_time_attended) === 1,
+      thirdTimeBeers: Number(r.third_time_beers) || 0,
+    }));
+  }
+
+  // Excludes cancelled signups and guests (no user_id, can't vote).
+  async getEligibleVoterCount(matchId: string): Promise<number> {
+    const db = getDatabase();
+    const result = await db
+      .selectFrom("signups")
+      .select((eb) => eb.fn.countAll<number>().as("count"))
+      .where("match_id", "=", matchId)
+      .where("status", "!=", "CANCELLED")
+      .where("user_id", "is not", null)
+      .executeTakeFirst();
+    return Number(result?.count ?? 0);
+  }
+
+  async setMatchVotingClosedAt(
+    matchId: string,
+    isoTimestamp: string | null,
+  ): Promise<void> {
+    const db = getDatabase();
+    await db
+      .updateTable("matches")
+      .set({
+        voting_closed_at: isoTimestamp,
+        updated_at: new Date().toISOString(),
+      })
+      .where("id", "=", matchId)
+      .execute();
+  }
+
   // ==================== RANKING & LEADERBOARDS ====================
 
   /**
@@ -446,7 +507,7 @@ export class VotingRepository {
    */
   async getPlayerVotingStats(
     userId: string,
-    language: "en" | "es" = "en"
+    language: "en" | "es" = "en",
   ): Promise<PlayerVotingStats> {
     const db = getDatabase();
 
@@ -474,7 +535,7 @@ export class VotingRepository {
 
     const totalVotes = rows.rows.reduce(
       (sum, row) => sum + Number(row.vote_count),
-      0
+      0,
     );
 
     return {
@@ -496,12 +557,13 @@ export class VotingRepository {
   async getVotingLeaderboard(
     groupId: string,
     language: "en" | "es" = "en",
-    topN: number = 3
+    topN: number = 3,
   ): Promise<VotingLeaderboard> {
     const db = getDatabase();
 
     const nameColumn = language === "es" ? "vc.name_es" : "vc.name_en";
-    const descriptionColumn = language === "es" ? "vc.description_es" : "vc.description_en";
+    const descriptionColumn =
+      language === "es" ? "vc.description_es" : "vc.description_en";
 
     const rows = await sql<{
       criteria_id: string;
@@ -561,7 +623,12 @@ export class VotingRepository {
 
       const awardUserName = row.user_name || "Unknown";
       const awardRawNick = row.display_username || row.username || null;
-      const awardNickname = awardRawNick && !awardRawNick.includes("@") && awardRawNick !== awardUserName ? awardRawNick : null;
+      const awardNickname =
+        awardRawNick &&
+        !awardRawNick.includes("@") &&
+        awardRawNick !== awardUserName
+          ? awardRawNick
+          : null;
       criteriaMap.get(row.criteria_id)!.topPlayers.push({
         userId: row.voted_for_user_id,
         userName: awardUserName,
@@ -581,7 +648,10 @@ export class VotingRepository {
    * Get player rankings by total votes received across all criteria, scoped
    * to a group.
    */
-  async getRankingsByTotalVotes(groupId: string, limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByTotalVotes(
+    groupId: string,
+    limit: number,
+  ): Promise<PlayerRanking[]> {
     const db = getDatabase();
 
     const rows = await sql<{
@@ -615,7 +685,10 @@ export class VotingRepository {
     return rows.rows.map((row) => {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
-      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      const userNickname =
+        rawNick && !rawNick.includes("@") && rawNick !== userName
+          ? rawNick
+          : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
