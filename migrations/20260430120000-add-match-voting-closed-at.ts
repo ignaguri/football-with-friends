@@ -25,7 +25,8 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   console.log("✅ Migration: add-match-voting-closed-at completed");
 };
 
-export const down: Migration["down"] = async (db: Kysely<any>) => {
-  // SQLite doesn't support DROP COLUMN reliably; leave nullable column in place.
-  console.log("↩️ Rolled back: add-match-voting-closed-at (column remains)");
+export const down: Migration["down"] = async (_db: Kysely<any>) => {
+  throw new Error(
+    "Migration add-match-voting-closed-at is intentionally non-reversible: SQLite cannot drop a column without rebuilding the matches table. Down migration aborted so callers do not assume the prior schema was restored.",
+  );
 };

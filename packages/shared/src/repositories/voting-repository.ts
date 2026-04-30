@@ -446,7 +446,7 @@ export class VotingRepository {
     return !!result;
   }
 
-  // Filters to user-linked stats only (skips guest rows that have no user_id).
+  // Inner-joins user to load user.name; rows whose user has been deleted drop out.
   async getMatchPlayerSocialStats(
     matchId: string,
   ): Promise<MatchPlayerSocialStat[]> {

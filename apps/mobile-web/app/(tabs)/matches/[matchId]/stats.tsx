@@ -280,44 +280,54 @@ export default function MatchStatsScreen() {
             )}
 
             {/* Post-match social stats (only when closed) */}
-            {stats.isVotingClosed && stats.playerStats.length > 0 && (
+            {stats.isVotingClosed && (
               <Card variant="elevated">
                 <YStack padding="$3" gap="$2">
                   <Text fontSize="$6" fontWeight="700">
                     {t("matchStats.social.title")}
                   </Text>
-                  {stats.playerStats.map((p) => (
-                    <XStack
-                      key={p.userId}
-                      alignItems="center"
-                      justifyContent="space-between"
-                      paddingVertical="$2"
-                      borderBottomWidth={1}
-                      borderBottomColor="$borderColor"
-                    >
-                      <Text flex={1} fontSize="$4">
-                        {p.userName}
-                      </Text>
-                      <XStack alignItems="center" gap="$3">
-                        {p.thirdTimeAttended && (
-                          <XStack alignItems="center" gap="$1">
-                            <CheckCircle2 size={16} color="$green10" />
-                            <Text fontSize="$2" color="$gray11">
-                              {t("matchStats.social.thirdTimeAttended")}
-                            </Text>
-                          </XStack>
-                        )}
-                        {p.thirdTimeBeers > 0 && (
-                          <XStack alignItems="center" gap="$1">
-                            <Beer size={16} color="$orange10" />
-                            <Text fontSize="$3" fontWeight="600">
-                              {p.thirdTimeBeers}
-                            </Text>
-                          </XStack>
-                        )}
+                  {stats.playerStats.length > 0 ? (
+                    stats.playerStats.map((p) => (
+                      <XStack
+                        key={p.userId}
+                        alignItems="center"
+                        justifyContent="space-between"
+                        paddingVertical="$2"
+                        borderBottomWidth={1}
+                        borderBottomColor="$borderColor"
+                      >
+                        <Text flex={1} fontSize="$4">
+                          {p.userName}
+                        </Text>
+                        <XStack alignItems="center" gap="$3">
+                          {p.thirdTimeAttended && (
+                            <XStack alignItems="center" gap="$1">
+                              <CheckCircle2 size={16} color="$green10" />
+                              <Text fontSize="$2" color="$gray11">
+                                {t("matchStats.social.thirdTimeAttended")}
+                              </Text>
+                            </XStack>
+                          )}
+                          {p.thirdTimeBeers > 0 && (
+                            <XStack alignItems="center" gap="$1">
+                              <Beer size={16} color="$orange10" />
+                              <Text fontSize="$3" fontWeight="600">
+                                {p.thirdTimeBeers}
+                              </Text>
+                            </XStack>
+                          )}
+                        </XStack>
                       </XStack>
-                    </XStack>
-                  ))}
+                    ))
+                  ) : (
+                    <Text
+                      color="$gray11"
+                      textAlign="center"
+                      paddingVertical="$3"
+                    >
+                      {t("matchStats.social.noEntries")}
+                    </Text>
+                  )}
                 </YStack>
               </Card>
             )}

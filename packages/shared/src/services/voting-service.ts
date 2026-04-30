@@ -3,6 +3,7 @@
 import { addDays } from "date-fns";
 
 import type {
+  Match,
   VotingCriteria,
   MatchVote,
   LocalizedVotingCriteria,
@@ -12,7 +13,6 @@ import type {
 } from "../domain/types";
 import type { VotingRepository } from "../repositories/voting-repository";
 
-import { getRepositoryFactory } from "../repositories";
 import { votingRepository } from "../repositories/voting-repository";
 import { convertToAppTimezone } from "../utils/timezone";
 
@@ -20,7 +20,7 @@ const VOTING_AUTO_CLOSE_DAYS = 7;
 
 // Auto-close moment = end-of-day in the app timezone of the match date, plus N days.
 function computeVotingAutoCloseAt(matchDate: string, days: number): string {
-  const endOfDay = convertToAppTimezone(`${matchDate} 23:59:59`);
+  const endOfDay = convertToAppTimezone(`${matchDate}T23:59:59`);
   return addDays(endOfDay, days).toISOString();
 }
 
@@ -199,14 +199,10 @@ export class VotingService {
   }
 
   async getMatchStats(
-    matchId: string,
+    match: Match,
     language: "en" | "es" = "en",
   ): Promise<MatchStats> {
-    const match = await getRepositoryFactory().matches.findById(matchId);
-    if (!match) {
-      throw new Error("Match not found");
-    }
-
+    const matchId = match.id;
     const votingAutoCloseAt = computeVotingAutoCloseAt(
       match.date,
       VOTING_AUTO_CLOSE_DAYS,

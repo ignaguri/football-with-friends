@@ -4,6 +4,7 @@ import { votingService, getServiceFactory } from "@repo/shared/services";
 import { Hono } from "hono";
 import { z } from "zod";
 
+import type { Match } from "@repo/shared/domain";
 import type { Context } from "hono";
 
 import {
@@ -36,6 +37,18 @@ async function assertMatchInCurrentGroup(
 ): Promise<Response | null> {
   const match = await getRepositoryFactory().matches.findById(matchId);
   return assertInCurrentGroup(c, match, "Match not found");
+}
+
+// Same group-scoping check as `assertMatchInCurrentGroup`, but returns the
+// loaded match on success so the handler can avoid a second `findById`.
+async function loadMatchInCurrentGroup(
+  c: Context,
+  matchId: string,
+): Promise<{ match: Match } | { response: Response }> {
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  const denied = assertInCurrentGroup(c, match, "Match not found");
+  if (denied || !match) return { response: denied! };
+  return { match };
 }
 
 // ==================== VOTING CRITERIA ====================
@@ -239,10 +252,10 @@ app.get("/matches/:matchId/stats", async (c) => {
   try {
     requireUser(c);
     const matchId = c.req.param("matchId");
-    const notFound = await assertMatchInCurrentGroup(c, matchId);
-    if (notFound) return notFound;
+    const result = await loadMatchInCurrentGroup(c, matchId);
+    if ("response" in result) return result.response;
     const language = getLanguage(c.req.header("Accept-Language"));
-    const stats = await votingService.getMatchStats(matchId, language);
+    const stats = await votingService.getMatchStats(result.match, language);
     return c.json(stats);
   } catch (error: any) {
     console.error("Get match stats error:", error);
