@@ -36,9 +36,11 @@ bucket_name = "football-profile-pictures"
 binding = "MATCH_MEDIA"
 bucket_name = "football-match-media"
 
-# Cron trigger for match status updates (every 30 minutes)
+# Crons:
+#  - "*/30 * * * *": match-status / reminders / engagement (every 30 min)
+#  - "0 1 * * *":   inbox pruning, daily at 01:00 UTC (~03:00 Berlin in DST)
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/30 * * * *", "0 1 * * *"]
 
 # Development environment
 [env.development]
@@ -58,4 +60,4 @@ binding = "MATCH_MEDIA"
 bucket_name = "football-match-media-staging"
 
 [env.preview.triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/30 * * * *", "0 1 * * *"]

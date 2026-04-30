@@ -9,6 +9,7 @@ import {
   useGroupRoster,
   type GroupRosterEntry,
 } from "@repo/api-client";
+import { formatMatchDate } from "@repo/shared/utils";
 import {
   Container,
   Card,
@@ -40,6 +41,7 @@ import {
   Image as ImageIcon,
   ChevronRight,
 } from "@tamagui/lucide-icons";
+import { Image } from "expo-image";
 import { useLocalSearchParams, router } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
@@ -51,15 +53,13 @@ import {
   Share,
   Linking,
 } from "react-native";
-import { Image } from "expo-image";
-import { formatMatchDate } from "@repo/shared/utils";
 
-import { formatFullDate } from "@/lib/date-utils";
 import {
   generateICS as generateICSFromUtils,
   getGoogleCalendarUrl,
   openGoogleCalendar,
 } from "@/lib/calendar-utils";
+import { formatFullDate } from "@/lib/date-utils";
 
 interface Signup {
   id: string;
@@ -132,8 +132,7 @@ export default function MatchDetailScreen() {
   const [guestEmail, setGuestEmail] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
   const { groupId: currentGroupId, myRole } = useCurrentGroup();
-  const isOrganizer =
-    myRole === "organizer" || session?.user?.role === "admin";
+  const isOrganizer = myRole === "organizer" || session?.user?.role === "admin";
   // Roster list is organizer-only; don't trigger a 403 for regular members.
   const rosterForGuest = useGroupRoster(
     showGuestDialog && isOrganizer ? currentGroupId : null,
@@ -227,7 +226,10 @@ export default function MatchDetailScreen() {
       setShowConfirmationModal(true);
     },
     onError: (err: Error) => {
-      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+      toast.show(err.message, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -255,7 +257,10 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
     },
     onError: (err: Error) => {
-      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+      toast.show(err.message, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -283,10 +288,16 @@ export default function MatchDetailScreen() {
       setGuestName("");
       setGuestPhone("");
       setGuestEmail("");
-      toast.show(t("matchDetail.guestAddSuccess"), { duration: 3000, customData: { variant: "success" } });
+      toast.show(t("matchDetail.guestAddSuccess"), {
+        duration: 3000,
+        customData: { variant: "success" },
+      });
     },
     onError: (err: Error) => {
-      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+      toast.show(err.message, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -317,7 +328,10 @@ export default function MatchDetailScreen() {
       setEditedName("");
     },
     onError: (err: Error) => {
-      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+      toast.show(err.message, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -338,7 +352,10 @@ export default function MatchDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ["match", matchId] });
     },
     onError: (err: Error) => {
-      toast.show(err.message, { duration: 4000, customData: { variant: "error" } });
+      toast.show(err.message, {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     },
   });
 
@@ -402,10 +419,16 @@ export default function MatchDetailScreen() {
     const paypalUrl = settings?.paypal_url;
     if (paypalUrl) {
       Linking.openURL(paypalUrl).catch(() => {
-        toast.show(t("matchDetail.paymentOpenError"), { duration: 4000, customData: { variant: "error" } });
+        toast.show(t("matchDetail.paymentOpenError"), {
+          duration: 4000,
+          customData: { variant: "error" },
+        });
       });
     } else {
-      toast.show(t("matchDetail.noPaymentMethod"), { duration: 4000, customData: { variant: "error" } });
+      toast.show(t("matchDetail.noPaymentMethod"), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     }
   };
 
@@ -413,7 +436,10 @@ export default function MatchDetailScreen() {
     // Open WhatsApp to notify organizer using wa.me link with phone number
     const organizerPhone = settings?.organizer_whatsapp;
     if (!organizerPhone) {
-      toast.show(t("matchDetail.noOrganizerPhone"), { duration: 4000, customData: { variant: "error" } });
+      toast.show(t("matchDetail.noOrganizerPhone"), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
       return;
     }
     const message = t("notify.whatsappMessage", {
@@ -422,7 +448,10 @@ export default function MatchDetailScreen() {
     });
     const url = `https://wa.me/${organizerPhone}?text=${encodeURIComponent(message)}`;
     Linking.openURL(url).catch(() => {
-      toast.show(t("matchDetail.whatsappError"), { duration: 4000, customData: { variant: "error" } });
+      toast.show(t("matchDetail.whatsappError"), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     });
   };
 
@@ -457,7 +486,8 @@ export default function MatchDetailScreen() {
   const handleShareMatch = () => {
     if (!match) return;
     const baseUrl =
-      (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_WEB_BASE_URL) ||
+      (typeof process !== "undefined" &&
+        process.env?.EXPO_PUBLIC_WEB_BASE_URL) ||
       "https://footballwithfriends.vercel.app";
     const matchUrl =
       Platform.OS === "web" && typeof window !== "undefined"
@@ -769,9 +799,7 @@ export default function MatchDetailScreen() {
                     {t("stats.cost")}
                   </Text>
                   <Text fontSize="$7" fontWeight="bold">
-                    {match.costPerPlayer
-                      ? `€${totalCost}`
-                      : t("stats.free")}
+                    {match.costPerPlayer ? `€${totalCost}` : t("stats.free")}
                   </Text>
                 </YStack>
 
@@ -786,11 +814,7 @@ export default function MatchDetailScreen() {
               </XStack>
 
               {isMatchToday && sameDayCost > 0 && (
-                <Text
-                  fontSize="$2"
-                  color="$orange10"
-                  textAlign="center"
-                >
+                <Text fontSize="$2" color="$orange10" textAlign="center">
                   {t("matchDetail.sameDayFeeHint", { amount: sameDayCost })}
                 </Text>
               )}
@@ -839,6 +863,24 @@ export default function MatchDetailScreen() {
             </Button>
           )}
 
+          {/* View match stats — visible to any group member once the match is played */}
+          {isPlayed && (
+            <Button
+              variant="outline"
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/matches/[matchId]/stats",
+                  params: { matchId: match.id },
+                })
+              }
+              accessibilityRole="button"
+              accessibilityLabel={t("a11y.viewMatchStats")}
+              testID="match-detail-view-stats-btn"
+            >
+              {t("matchStats.viewStats")}
+            </Button>
+          )}
+
           {/* View B: Participating or Played Match - Show Players Table */}
           {(isParticipating || isPlayed || isAdmin) && (
             <Card variant="elevated">
@@ -852,19 +894,17 @@ export default function MatchDetailScreen() {
                   <Text fontSize="$6" fontWeight="bold">
                     {t("players.title")}
                   </Text>
-                  {!isPlayed &&
-                    isOrganizer &&
-                    match.availableSpots > 0 && (
-                      <Button
-                        variant="outline"
-                        size="$3"
-                        onPress={() => setShowGuestDialog(true)}
-                        testID="match-detail-invite-friend-btn"
-                      >
-                        <UserPlus size={16} />
-                        <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
-                      </Button>
-                    )}
+                  {!isPlayed && isOrganizer && match.availableSpots > 0 && (
+                    <Button
+                      variant="outline"
+                      size="$3"
+                      onPress={() => setShowGuestDialog(true)}
+                      testID="match-detail-invite-friend-btn"
+                    >
+                      <UserPlus size={16} />
+                      <Text marginLeft="$1">{t("actions.signUpGuest")}</Text>
+                    </Button>
+                  )}
                 </XStack>
 
                 <PlayersTable
@@ -1072,7 +1112,9 @@ export default function MatchDetailScreen() {
                     <Button
                       key={e.id}
                       variant="outline"
-                      onPress={() => addGuestMutation.mutate({ rosterId: e.id })}
+                      onPress={() =>
+                        addGuestMutation.mutate({ rosterId: e.id })
+                      }
                       disabled={addGuestMutation.isPending}
                       testID={`guest-roster-pick-${e.id}`}
                     >
@@ -1124,7 +1166,9 @@ export default function MatchDetailScreen() {
                 }
                 disabled={!guestName.trim() || addGuestMutation.isPending}
               >
-                {addGuestMutation.isPending ? t("guest.adding") : t("guest.add")}
+                {addGuestMutation.isPending
+                  ? t("guest.adding")
+                  : t("guest.add")}
               </Button>
             </YStack>
           )}
@@ -1195,9 +1239,7 @@ export default function MatchDetailScreen() {
                   });
                 }
               }}
-              disabled={
-                !editedName.trim() || editPlayerNameMutation.isPending
-              }
+              disabled={!editedName.trim() || editPlayerNameMutation.isPending}
             >
               {editPlayerNameMutation.isPending
                 ? t("shared.saving")

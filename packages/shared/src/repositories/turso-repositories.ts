@@ -39,9 +39,6 @@ import type {
   MatchDetails,
   SignupWithDetails,
   PlayerStatus,
-  MatchMedia,
-  MatchMediaFeedGroup,
-  MatchMediaReactionSummary,
   MediaKind,
   ReactionEmoji,
 } from "../domain/types";
@@ -106,6 +103,7 @@ function dbMatchToMatch(row: any): Match {
     costPerPlayer: row.cost_per_player,
     sameDayCost: row.same_day_cost,
     createdByUserId: row.created_by_user_id,
+    votingClosedAt: row.voting_closed_at ?? null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -131,7 +129,11 @@ function dbMatchWithCourtToMatch(row: any): Match {
   if (row.location_name) {
     match.location = {
       id: row.location_id,
-      groupId: assertGroupId(row.location_group_id, "locations", row.location_id),
+      groupId: assertGroupId(
+        row.location_group_id,
+        "locations",
+        row.location_id,
+      ),
       name: row.location_name,
       address: row.location_address || "",
       coordinates: row.location_coordinates || "",
@@ -267,7 +269,10 @@ export class TursoCourtRepository implements CourtRepository {
     return rows.map(dbCourtToCourt);
   }
 
-  async findByLocationId(groupId: string, locationId: string): Promise<Court[]> {
+  async findByLocationId(
+    groupId: string,
+    locationId: string,
+  ): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
@@ -279,7 +284,10 @@ export class TursoCourtRepository implements CourtRepository {
     return rows.map(dbCourtToCourt);
   }
 
-  async findActiveByLocationId(groupId: string, locationId: string): Promise<Court[]> {
+  async findActiveByLocationId(
+    groupId: string,
+    locationId: string,
+  ): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
@@ -432,7 +440,9 @@ export class TursoCourtRepository implements CourtRepository {
 export class TursoMatchRepository implements MatchRepository {
   private db = getDatabase();
 
-  async findAll(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }> {
+  async findAll(
+    filters?: MatchFilters & { limit?: number; offset?: number },
+  ): Promise<{ matches: Match[]; total: number }> {
     // Build the base query for filtering and counting
     let baseQuery = this.db.selectFrom("matches");
 
@@ -461,7 +471,11 @@ export class TursoMatchRepository implements MatchRepository {
     }
 
     if (filters?.locationId) {
-      baseQuery = baseQuery.where("matches.location_id", "=", filters.locationId);
+      baseQuery = baseQuery.where(
+        "matches.location_id",
+        "=",
+        filters.locationId,
+      );
     }
 
     if (filters?.dateFrom) {
@@ -495,6 +509,7 @@ export class TursoMatchRepository implements MatchRepository {
         "matches.cost_per_player",
         "matches.same_day_cost",
         "matches.created_by_user_id",
+        "matches.voting_closed_at",
         "matches.created_at",
         "matches.updated_at",
         "courts.id as court_id",
@@ -543,7 +558,7 @@ export class TursoMatchRepository implements MatchRepository {
 
       // Create a map of matchId -> status
       const signupMap = new Map(
-        userSignups.map((s) => [s.match_id, s.status as PlayerStatus])
+        userSignups.map((s) => [s.match_id, s.status as PlayerStatus]),
       );
 
       // Attach user signup status to each match
@@ -605,11 +620,7 @@ export class TursoMatchRepository implements MatchRepository {
         "signups.guest_owner_id",
         "guest_owner.id",
       )
-      .leftJoin(
-        "user as player_user",
-        "signups.user_id",
-        "player_user.id",
-      )
+      .leftJoin("user as player_user", "signups.user_id", "player_user.id")
       .select([
         "signups.id",
         "signups.group_id",
@@ -987,7 +998,10 @@ export class TursoSignupRepository implements SignupRepository {
     });
   }
 
-  async removePlayerAsOrganizer(signupId: string, actorId: string): Promise<void> {
+  async removePlayerAsOrganizer(
+    signupId: string,
+    actorId: string,
+  ): Promise<void> {
     console.log(`Organizer ${actorId} removing signup ${signupId}`);
     await this.delete(signupId);
   }
@@ -1018,9 +1032,7 @@ export class TursoSignupRepository implements SignupRepository {
 }
 
 // Turso Match Invitation Repository
-export class TursoMatchInvitationRepository
-  implements MatchInvitationRepository
-{
+export class TursoMatchInvitationRepository implements MatchInvitationRepository {
   private db = getDatabase();
 
   async findByMatchId(matchId: string): Promise<MatchInvitation[]> {
@@ -1199,6 +1211,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         "matches.cost_per_player as match_cost_per_player",
         "matches.same_day_cost as match_same_day_cost",
         "matches.created_by_user_id as match_created_by_user_id",
+        "matches.voting_closed_at as match_voting_closed_at",
         "matches.created_at as match_created_at",
         "matches.updated_at as match_updated_at",
       ])
@@ -1221,6 +1234,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         costPerPlayer: row.match_cost_per_player,
         sameDayCost: row.match_same_day_cost,
         createdByUserId: row.match_created_by_user_id,
+        votingClosedAt: row.match_voting_closed_at ?? null,
         createdAt: new Date(row.match_created_at),
         updatedAt: new Date(row.match_updated_at),
       },
@@ -1372,7 +1386,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return rows.rows.map((row) => {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
-      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      const userNickname =
+        rawNick && !rawNick.includes("@") && rawNick !== userName
+          ? rawNick
+          : null;
       return {
         userId: row.user_id,
         userName,
@@ -1408,7 +1425,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     };
   }
 
-  async getRankingsByMatches(groupId: string, limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByMatches(
+    groupId: string,
+    limit: number,
+  ): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1440,7 +1460,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return rows.rows.map((row) => {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
-      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      const userNickname =
+        rawNick && !rawNick.includes("@") && rawNick !== userName
+          ? rawNick
+          : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
@@ -1454,7 +1477,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByThirdTimes(groupId: string, limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByThirdTimes(
+    groupId: string,
+    limit: number,
+  ): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1488,7 +1514,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return rows.rows.map((row) => {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
-      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      const userNickname =
+        rawNick && !rawNick.includes("@") && rawNick !== userName
+          ? rawNick
+          : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
@@ -1502,7 +1531,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByBeers(groupId: string, limit: number): Promise<PlayerRanking[]> {
+  async getRankingsByBeers(
+    groupId: string,
+    limit: number,
+  ): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1536,7 +1568,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return rows.rows.map((row) => {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
-      const userNickname = rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
+      const userNickname =
+        rawNick && !rawNick.includes("@") && rawNick !== userName
+          ? rawNick
+          : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
@@ -1634,21 +1669,23 @@ export class TursoMatchMediaRepository {
    */
   async listByMatch(
     matchId: string,
-    callerUserId: string | null
-  ): Promise<Array<{
-    id: string;
-    matchId: string;
-    uploaderUserId: string;
-    uploaderName: string;
-    kind: MediaKind;
-    mimeType: string;
-    sizeBytes: number;
-    caption: string | null;
-    r2Key: string;
-    createdAt: Date;
-    reactionCounts: Record<string, number>;
-    ownReactions: Set<string>;
-  }>> {
+    callerUserId: string | null,
+  ): Promise<
+    Array<{
+      id: string;
+      matchId: string;
+      uploaderUserId: string;
+      uploaderName: string;
+      kind: MediaKind;
+      mimeType: string;
+      sizeBytes: number;
+      caption: string | null;
+      r2Key: string;
+      createdAt: Date;
+      reactionCounts: Record<string, number>;
+      ownReactions: Set<string>;
+    }>
+  > {
     const rows = await this.db
       .selectFrom("match_media as m")
       .innerJoin("user as u", "u.id", "m.uploader_user_id")
@@ -1716,21 +1753,23 @@ export class TursoMatchMediaRepository {
    */
   async listByIds(
     mediaIds: string[],
-    callerUserId: string | null
-  ): Promise<Array<{
-    id: string;
-    matchId: string;
-    uploaderUserId: string;
-    uploaderName: string;
-    kind: MediaKind;
-    mimeType: string;
-    sizeBytes: number;
-    caption: string | null;
-    r2Key: string;
-    createdAt: Date;
-    reactionCounts: Record<string, number>;
-    ownReactions: Set<string>;
-  }>> {
+    callerUserId: string | null,
+  ): Promise<
+    Array<{
+      id: string;
+      matchId: string;
+      uploaderUserId: string;
+      uploaderName: string;
+      kind: MediaKind;
+      mimeType: string;
+      sizeBytes: number;
+      caption: string | null;
+      r2Key: string;
+      createdAt: Date;
+      reactionCounts: Record<string, number>;
+      ownReactions: Set<string>;
+    }>
+  > {
     if (mediaIds.length === 0) return [];
 
     const rows = await this.db
@@ -1796,7 +1835,7 @@ export class TursoMatchMediaRepository {
   async toggleReaction(
     mediaId: string,
     userId: string,
-    emoji: ReactionEmoji
+    emoji: ReactionEmoji,
   ): Promise<{ didReact: boolean; newCount: number }> {
     // Race-safe toggle: try INSERT OR IGNORE first. If the insert reports 0
     // changes, the row already existed, so we DELETE it instead. This avoids
@@ -1868,11 +1907,7 @@ export class TursoMatchMediaRepository {
         eb.fn.countAll<number>().as("totalCount"),
       ])
       .where("mt.group_id", "=", groupId)
-      .groupBy((eb) => [
-        sql`m.match_id`,
-        sql`mt.date`,
-        sql`l.name`,
-      ])
+      .groupBy((eb) => [sql`m.match_id`, sql`mt.date`, sql`l.name`])
       .orderBy("lastUploadAt", "desc")
       .limit(matchesPerPage + 1); // fetch one extra to detect next page
 
@@ -1883,10 +1918,13 @@ export class TursoMatchMediaRepository {
     const matchRows = await matchQuery.execute();
 
     const hasMore = matchRows.length > matchesPerPage;
-    const pageMatches = hasMore ? matchRows.slice(0, matchesPerPage) : matchRows;
+    const pageMatches = hasMore
+      ? matchRows.slice(0, matchesPerPage)
+      : matchRows;
     const nextCursor =
       hasMore && pageMatches.length > 0
-        ? (pageMatches[pageMatches.length - 1]?.lastUploadAt as unknown as string) ?? null
+        ? ((pageMatches[pageMatches.length - 1]
+            ?.lastUploadAt as unknown as string) ?? null)
         : null;
 
     if (pageMatches.length === 0) {

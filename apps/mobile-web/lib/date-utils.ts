@@ -14,9 +14,10 @@ function capitalizeFirst(str: string): string {
  * Date-only ISO strings (e.g. "2026-03-03") are parsed as UTC midnight,
  * which shifts to the previous day in UTC+ timezones like Europe/Berlin.
  * Appending T12:00:00 forces local-time parsing at noon, safe for any offset.
+ * Full ISO timestamps (with a "T") are parsed as-is.
  */
 function parseDate(dateString: string): Date {
-  return new Date(dateString + "T12:00:00");
+  return new Date(dateString.includes("T") ? dateString : `${dateString}T12:00:00`);
 }
 
 /**

@@ -16,6 +16,10 @@ import { sendMatchReminders } from "./cron/send-match-reminders";
 import { sendEngagementReminders } from "./cron/send-engagement-reminders";
 import { pruneInboxNotifications } from "./cron/prune-inbox-notifications";
 
+// Cron expressions must match `[triggers].crons` in wrangler.toml.
+const CRON_EVERY_30_MIN = "*/30 * * * *";
+const CRON_DAILY_01_UTC = "0 1 * * *";
+
 // Import shared security middleware
 import { type AppVariables, authMiddleware, rateLimitMiddleware } from "./middleware/security";
 
@@ -270,15 +274,28 @@ export default Sentry.withSentry(
   {
     fetch: app.fetch,
     async scheduled(event: any, env: Bindings, ctx: any) {
-      console.log("[CRON] Running scheduled tasks");
+      console.log(`[CRON] Running scheduled tasks for "${event.cron}"`);
       injectEnv(env);
+
+      let tasks: Array<Promise<unknown>>;
+      switch (event.cron) {
+        case CRON_EVERY_30_MIN:
+          tasks = [
+            updateMatchStatuses(),
+            sendMatchReminders(),
+            sendEngagementReminders(),
+          ];
+          break;
+        case CRON_DAILY_01_UTC:
+          tasks = [pruneInboxNotifications()];
+          break;
+        default:
+          console.warn(`[CRON] Unknown cron expression: "${event.cron}"`);
+          return;
+      }
+
       ctx.waitUntil(
-        Promise.allSettled([
-          updateMatchStatuses(),
-          sendMatchReminders(),
-          sendEngagementReminders(),
-          pruneInboxNotifications(),
-        ]).then((results) => {
+        Promise.allSettled(tasks).then((results) => {
           for (const r of results) {
             if (r.status === "rejected") {
               console.error("[CRON] Task failed:", r.reason);

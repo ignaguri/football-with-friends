@@ -458,7 +458,8 @@
     "uploadMedia": "Upload photo or video",
     "openInbox": "Open notifications inbox",
     "openInboxWithUnread": "Open notifications inbox, {{count}} unread",
-    "openNotification": "Open notification"
+    "openNotification": "Open notification",
+    "viewMatchStats": "View match stats"
   },
   "notifications": {
     "settings": {
@@ -779,6 +780,39 @@
     "createSuccess": "Voting criteria created successfully",
     "updateSuccess": "Voting criteria updated successfully",
     "duplicateSortOrder": "A criteria with this order number already exists"
+  },
+  "matchStats": {
+    "title": "Match Stats",
+    "viewStats": "View Match Stats",
+    "votingClosesIn": "Voting closes {{when}}",
+    "votingOpen": "Voting still open",
+    "votingClosed": "Voting closed",
+    "participation": "{{voted}} of {{eligible}} voted",
+    "awards": {
+      "title": "Match Awards",
+      "voteCount": "{{count}} votes",
+      "voteCount_one": "{{count}} vote"
+    },
+    "social": {
+      "title": "Post-Match Social",
+      "thirdTimeAttended": "Attended 3rd half",
+      "thirdTimeBeers": "{{count}} beers",
+      "noEntries": "No post-match stats recorded"
+    },
+    "closeVoting": {
+      "action": "Close voting now",
+      "confirm": "Close voting for this match? Results become visible to everyone.",
+      "success": "Voting closed",
+      "failed": "Failed to close voting"
+    },
+    "reopenVoting": {
+      "action": "Reopen voting",
+      "confirm": "Reopen voting? Results will be hidden again.",
+      "success": "Voting reopened",
+      "failed": "Failed to reopen voting"
+    },
+    "empty": "No votes were submitted for this match",
+    "openHint": "Results will appear here after voting closes."
   },
   "admin": {
     "addCriteria": "Add Criteria",

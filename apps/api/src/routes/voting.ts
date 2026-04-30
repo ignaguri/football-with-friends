@@ -1,15 +1,22 @@
-import type { Context } from "hono";
-import { Hono } from "hono";
-import { votingService, getServiceFactory } from "@repo/shared/services";
-import { getRepositoryFactory } from "@repo/shared/repositories";
-import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { type AppVariables, requireUser } from "../middleware/security";
+import { getRepositoryFactory } from "@repo/shared/repositories";
+import { votingService, getServiceFactory } from "@repo/shared/services";
+import { Hono } from "hono";
+import { z } from "zod";
+
+import type { Match } from "@repo/shared/domain";
+import type { Context } from "hono";
+
+import {
+  assertInCurrentGroup,
+  requireOrganizer,
+  requirePlatformAdmin,
+} from "../middleware/authz";
 import {
   groupContextMiddleware,
   requireCurrentGroup,
 } from "../middleware/group-context";
-import { assertInCurrentGroup, requirePlatformAdmin } from "../middleware/authz";
+import { type AppVariables, requireUser } from "../middleware/security";
 
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -30,6 +37,18 @@ async function assertMatchInCurrentGroup(
 ): Promise<Response | null> {
   const match = await getRepositoryFactory().matches.findById(matchId);
   return assertInCurrentGroup(c, match, "Match not found");
+}
+
+// Same group-scoping check as `assertMatchInCurrentGroup`, but returns the
+// loaded match on success so the handler can avoid a second `findById`.
+async function loadMatchInCurrentGroup(
+  c: Context,
+  matchId: string,
+): Promise<{ match: Match } | { response: Response }> {
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  const denied = assertInCurrentGroup(c, match, "Match not found");
+  if (denied || !match) return { response: denied! };
+  return { match };
 }
 
 // ==================== VOTING CRITERIA ====================
@@ -75,31 +94,27 @@ const createCriteriaSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-app.post(
-  "/criteria",
-  zValidator("json", createCriteriaSchema),
-  async (c) => {
-    try {
-      const denied = requirePlatformAdmin(c);
-      if (denied) return denied;
-      const data = c.req.valid("json");
-      const criteria = await votingService.createCriteria(data);
-      return c.json({ criteria }, 201);
-    } catch (error: any) {
-      console.error("Create criteria error:", error);
-      if (error.message.includes("Admin")) {
-        return c.json({ error: error.message }, 403);
-      }
-      if (error.message.includes("authenticated")) {
-        return c.json({ error: error.message }, 401);
-      }
-      if (error.message.includes("already exists")) {
-        return c.json({ error: error.message }, 400);
-      }
-      return c.json({ error: error.message || "Failed to create criteria" }, 500);
+app.post("/criteria", zValidator("json", createCriteriaSchema), async (c) => {
+  try {
+    const denied = requirePlatformAdmin(c);
+    if (denied) return denied;
+    const data = c.req.valid("json");
+    const criteria = await votingService.createCriteria(data);
+    return c.json({ criteria }, 201);
+  } catch (error: any) {
+    console.error("Create criteria error:", error);
+    if (error.message.includes("Admin")) {
+      return c.json({ error: error.message }, 403);
     }
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
+    }
+    if (error.message.includes("already exists")) {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: error.message || "Failed to create criteria" }, 500);
   }
-);
+});
 
 // Update criteria (admin only)
 const updateCriteriaSchema = z.object({
@@ -137,9 +152,12 @@ app.patch(
       if (error.message.includes("already exists")) {
         return c.json({ error: error.message }, 400);
       }
-      return c.json({ error: error.message || "Failed to update criteria" }, 500);
+      return c.json(
+        { error: error.message || "Failed to update criteria" },
+        500,
+      );
     }
-  }
+  },
 );
 
 // Delete criteria (soft delete, admin only)
@@ -174,10 +192,7 @@ app.get("/matches/:matchId", async (c) => {
     const matchId = c.req.param("matchId");
     const notFound = await assertMatchInCurrentGroup(c, matchId);
     if (notFound) return notFound;
-    const votes = await votingService.getUserVotesForMatch(
-      matchId,
-      user.id
-    );
+    const votes = await votingService.getUserVotesForMatch(matchId, user.id);
     return c.json(votes);
   } catch (error: any) {
     console.error("Get user votes error:", error);
@@ -194,7 +209,7 @@ const submitVotesSchema = z.object({
     z.object({
       criteriaId: z.string().min(1),
       votedForUserId: z.string().min(1),
-    })
+    }),
   ),
 });
 
@@ -212,7 +227,7 @@ app.post(
       const submittedVotes = await votingService.submitVotes(
         matchId,
         user.id,
-        votes
+        votes,
       );
 
       return c.json({ votes: submittedVotes }, 201);
@@ -230,8 +245,67 @@ app.post(
       }
       return c.json({ error: error.message || "Failed to submit votes" }, 500);
     }
-  }
+  },
 );
+
+app.get("/matches/:matchId/stats", async (c) => {
+  try {
+    requireUser(c);
+    const matchId = c.req.param("matchId");
+    const result = await loadMatchInCurrentGroup(c, matchId);
+    if ("response" in result) return result.response;
+    const language = getLanguage(c.req.header("Accept-Language"));
+    const stats = await votingService.getMatchStats(result.match, language);
+    return c.json(stats);
+  } catch (error: any) {
+    console.error("Get match stats error:", error);
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
+    }
+    if (error.message.includes("not found")) {
+      return c.json({ error: error.message }, 404);
+    }
+    return c.json({ error: error.message || "Failed to get stats" }, 500);
+  }
+});
+
+app.post("/matches/:matchId/close-voting", async (c) => {
+  try {
+    requireUser(c);
+    const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+    await votingService.setMatchVotingState(matchId, true);
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error("Close voting error:", error);
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
+    }
+    return c.json({ error: error.message || "Failed to close voting" }, 500);
+  }
+});
+
+app.post("/matches/:matchId/reopen-voting", async (c) => {
+  try {
+    requireUser(c);
+    const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+    await votingService.setMatchVotingState(matchId, false);
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error("Reopen voting error:", error);
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
+    }
+    return c.json({ error: error.message || "Failed to reopen voting" }, 500);
+  }
+});
 
 // Get voting results for a match
 app.get("/matches/:matchId/results", async (c) => {
@@ -241,7 +315,10 @@ app.get("/matches/:matchId/results", async (c) => {
     const notFound = await assertMatchInCurrentGroup(c, matchId);
     if (notFound) return notFound;
     const language = getLanguage(c.req.header("Accept-Language"));
-    const results = await votingService.getMatchVotingResults(matchId, language);
+    const results = await votingService.getMatchVotingResults(
+      matchId,
+      language,
+    );
     return c.json(results);
   } catch (error: any) {
     console.error("Get voting results error:", error);
@@ -277,17 +354,17 @@ app.get("/matches/:matchId/has-voted", async (c) => {
     const matchId = c.req.param("matchId");
     const notFound = await assertMatchInCurrentGroup(c, matchId);
     if (notFound) return notFound;
-    const hasVoted = await votingService.hasUserVotedForMatch(
-      matchId,
-      user.id
-    );
+    const hasVoted = await votingService.hasUserVotedForMatch(matchId, user.id);
     return c.json({ hasVoted });
   } catch (error: any) {
     console.error("Check has voted error:", error);
     if (error.message.includes("authenticated")) {
       return c.json({ error: error.message }, 401);
     }
-    return c.json({ error: error.message || "Failed to check vote status" }, 500);
+    return c.json(
+      { error: error.message || "Failed to check vote status" },
+      500,
+    );
   }
 });
 
@@ -302,7 +379,7 @@ app.get("/leaderboard", async (c) => {
     const leaderboard = await rankingService.getVotingLeaderboard(
       current.id,
       language,
-      parseInt(topN, 10)
+      parseInt(topN, 10),
     );
     return c.json(leaderboard);
   } catch (error: any) {
