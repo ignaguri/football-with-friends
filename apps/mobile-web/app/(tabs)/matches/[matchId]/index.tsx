@@ -207,6 +207,19 @@ export default function MatchDetailScreen() {
   });
   const mediaCount = mediaCountData?.count ?? 0;
 
+  const { data: matchStats } = useQuery({
+    queryKey: ["match-stats", matchId],
+    queryFn: async () => {
+      const res = await client.api.voting.matches[":matchId"].stats.$get({
+        param: { matchId: matchId! },
+      });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: !!matchId,
+  });
+  const isVotingClosed = matchStats?.isVotingClosed ?? false;
+
   const signupMutation = useMutation({
     mutationFn: async () => {
       const res = await client.api.matches[":id"].signup.$post({
@@ -859,7 +872,9 @@ export default function MatchDetailScreen() {
                 })
               }
             >
-              {t("voting.voteForMatch")}
+              {isVotingClosed
+                ? t("voting.seeMyVotes")
+                : t("voting.voteForMatch")}
             </Button>
           )}
 
@@ -879,6 +894,41 @@ export default function MatchDetailScreen() {
             >
               {t("matchStats.viewStats")}
             </Button>
+          )}
+
+          {/* Multimedia Gallery — only for finished matches, placed under match stats */}
+          {isPlayed && userId && (mediaCount > 0 || isParticipating || isAdmin) && (
+            <Pressable
+              onPress={() => router.push(`/(tabs)/matches/${matchId}/gallery`)}
+              accessibilityRole="button"
+              accessibilityLabel={t("multimedia.viewGallery")}
+            >
+              <Card variant="elevated" padding="$4">
+                <XStack alignItems="center" gap="$3">
+                  <YStack
+                    width={40}
+                    height={40}
+                    borderRadius={10}
+                    backgroundColor="$purple4"
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <ImageIcon size={20} color="$purple10" />
+                  </YStack>
+                  <YStack flex={1}>
+                    <Text fontSize="$5" fontWeight="bold">
+                      {t("multimedia.title")}
+                    </Text>
+                    <Text fontSize="$3" color="$gray11">
+                      {mediaCount === 0
+                        ? t("multimedia.addFirstPhoto")
+                        : t("multimedia.galleryCount", { count: mediaCount })}
+                    </Text>
+                  </YStack>
+                  <ChevronRight size={20} color="$gray10" />
+                </XStack>
+              </Card>
+            </Pressable>
           )}
 
           {/* View B: Participating or Played Match - Show Players Table */}
@@ -917,43 +967,6 @@ export default function MatchDetailScreen() {
                 />
               </YStack>
             </Card>
-          )}
-
-          {/* Multimedia Gallery Card */}
-          {userId && (mediaCount > 0 || isParticipating || isAdmin) && (
-            <Pressable
-              onPress={() => router.push(`/(tabs)/matches/${matchId}/gallery`)}
-              accessibilityRole="button"
-              accessibilityLabel={t("multimedia.viewGallery")}
-            >
-              <Card variant="elevated" padding="$4">
-                <XStack alignItems="center" gap="$3">
-                  <YStack
-                    width={40}
-                    height={40}
-                    borderRadius={10}
-                    backgroundColor="$purple4"
-                    alignItems="center"
-                    justifyContent="center"
-                  >
-                    <ImageIcon size={20} color="$purple10" />
-                  </YStack>
-                  <YStack flex={1}>
-                    <Text fontSize="$5" fontWeight="bold">
-                      {t("multimedia.title")}
-                    </Text>
-                    <Text fontSize="$3" color="$gray11">
-                      {mediaCount === 0
-                        ? t("multimedia.addFirstPhoto")
-                        : t("multimedia.galleryCount", { count: mediaCount })}
-                    </Text>
-                    {/* Note: addFirstPhoto is only shown to participants/admin since
-                        the card is hidden for non-participants when count === 0. */}
-                  </YStack>
-                  <ChevronRight size={20} color="$gray10" />
-                </XStack>
-              </Card>
-            </Pressable>
           )}
 
           {/* Not logged in prompt */}
