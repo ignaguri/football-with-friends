@@ -347,8 +347,9 @@ export default function StatsVotingScreen() {
           });
         }
 
-        // Submit votes if any
-        if (votes.length > 0) {
+        // Votes are immutable; voteSelections is pre-populated when hasVoted is true,
+        // so gate on hasNewVotes to avoid re-POSTing existing selections on stats edits.
+        if (hasNewVotes && votes.length > 0) {
           await submitVotesMutation.mutateAsync(votes);
         }
 
