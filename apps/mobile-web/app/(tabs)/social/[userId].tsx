@@ -1,11 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-  client,
-  useSession,
-} from "@repo/api-client";
+import { useQuery, client } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -13,7 +7,6 @@ import {
   YStack,
   XStack,
   Spinner,
-  Button,
   StatsSummary,
   UserAvatar,
   H2,
@@ -58,13 +51,6 @@ interface PlayerProfile {
 export default function PlayerDetailScreen() {
   const { userId } = useLocalSearchParams<{ userId: string }>();
   const { t, i18n } = useTranslation();
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  const isAdmin = session?.user?.role === "admin";
-  const isSelf = session?.user?.id === userId;
-  const canEdit = isAdmin || isSelf;
-
   const {
     data: profile,
     isLoading,
@@ -82,19 +68,6 @@ export default function PlayerDetailScreen() {
     enabled: !!userId,
   });
 
-  // Also fetch all matches the user participated in (for stats entry on matches without stats yet)
-  const { data: userSignups } = useQuery({
-    queryKey: ["user-signups", userId],
-    queryFn: async () => {
-      // Get all matches to cross-reference with stats
-      const res = await client.api.matches.$get({
-        query: { type: "past" },
-      });
-      return res.json();
-    },
-    enabled: !!userId,
-  });
-
   // Fetch voting statistics for this player
   const { data: votingStats } = useQuery({
     queryKey: ["player-voting-stats", userId],
@@ -106,84 +79,6 @@ export default function PlayerDetailScreen() {
     },
     enabled: !!userId,
   });
-
-  const recordStatsMutation = useMutation({
-    mutationFn: async ({
-      matchId,
-      data,
-    }: {
-      matchId: string;
-      data: {
-        userId: string;
-        goals?: number;
-        thirdTimeAttended?: boolean;
-        thirdTimeBeers?: number;
-      };
-    }) => {
-      const res = await client.api.matches[":id"]["player-stats"].$post({
-        param: { id: matchId },
-        json: data,
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["player-profile", userId] });
-    },
-  });
-
-  const updateStatsMutation = useMutation({
-    mutationFn: async ({
-      matchId,
-      targetUserId,
-      data,
-    }: {
-      matchId: string;
-      targetUserId: string;
-      data: {
-        goals?: number;
-        thirdTimeAttended?: boolean;
-        thirdTimeBeers?: number;
-        confirmed?: boolean;
-      };
-    }) => {
-      const res = await client.api.matches[":id"]["player-stats"][
-        ":userId"
-      ].$patch({
-        param: { id: matchId, userId: targetUserId },
-        json: data,
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["player-profile", userId] });
-    },
-  });
-
-  const handleThirdTimeConfirm = (
-    matchId: string,
-    beers: number,
-    attended: boolean,
-  ) => {
-    const existingStat = profile?.matchStats?.find(
-      (s) => s.matchId === matchId,
-    );
-    if (existingStat) {
-      updateStatsMutation.mutate({
-        matchId,
-        targetUserId: userId!,
-        data: { thirdTimeBeers: beers, thirdTimeAttended: attended },
-      });
-    } else {
-      recordStatsMutation.mutate({
-        matchId,
-        data: {
-          userId: userId!,
-          thirdTimeBeers: beers,
-          thirdTimeAttended: attended,
-        },
-      });
-    }
-  };
 
   const language = i18n.language === "es" ? "es" : "en";
 
@@ -231,10 +126,7 @@ export default function PlayerDetailScreen() {
           {/* Player Header */}
           <Card variant="elevated">
             <YStack padding="$4" alignItems="center" gap="$3">
-              <UserAvatar
-                name={profile.user.name}
-                size={64}
-              />
+              <UserAvatar name={profile.user.name} size={64} />
               <XStack gap="$2" alignItems="center">
                 {profile.user.nationality && (
                   <Text fontSize="$7">
@@ -320,25 +212,10 @@ export default function PlayerDetailScreen() {
                           ? t("playerStats.attended")
                           : t("playerStats.notAttended")}
                       </Text>
-                      {stat.thirdTimeAttended && (
+                      {stat.thirdTimeAttended && stat.thirdTimeBeers > 0 && (
                         <Text fontSize="$4" fontWeight="700">
-                          {stat.thirdTimeBeers}
+                          🍺 {stat.thirdTimeBeers}
                         </Text>
-                      )}
-                      {canEdit && (
-                        <Button
-                          size="$2"
-                          variant="outline"
-                          onPress={() =>
-                            handleThirdTimeConfirm(
-                              stat.matchId,
-                              stat.thirdTimeBeers + 1,
-                              true,
-                            )
-                          }
-                        >
-                          +1
-                        </Button>
                       )}
                     </XStack>
                   </XStack>
@@ -357,13 +234,17 @@ export default function PlayerDetailScreen() {
                 <VotingStatsSection
                   stats={votingStats.criteriaBreakdown.map((stat: any) => ({
                     ...stat,
-                    criteriaName: t(`voting.criteria.${stat.criteriaCode}`, { defaultValue: stat.criteriaName }),
+                    criteriaName: t(`voting.criteria.${stat.criteriaCode}`, {
+                      defaultValue: stat.criteriaName,
+                    }),
                   }))}
                   totalVotes={votingStats.totalVotesReceived}
                   emptyTitle={t("awards.noAwardsYet")}
                   emptyDescription={t("awards.playMoreMatches")}
                   formatVotes={(count) => t("awards.votesCount", { count })}
-                  formatTotalVotes={(count) => t("awards.totalVotes", { count })}
+                  formatTotalVotes={(count) =>
+                    t("awards.totalVotes", { count })
+                  }
                   overallLabel={t("awards.rankOverall")}
                 />
               </YStack>
