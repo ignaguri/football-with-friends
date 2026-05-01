@@ -366,6 +366,8 @@ export default function StatsVotingScreen() {
       <Stack.Screen
         options={{
           title: t("voting.title"),
+          headerStyle: { backgroundColor: theme.background?.val },
+          headerTintColor: theme.color?.val,
           headerBackVisible: false,
           headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ marginLeft: 8 }}>
