@@ -9,6 +9,7 @@ import {
   useGroupRoster,
   type GroupRosterEntry,
 } from "@repo/api-client";
+import type { MatchStats } from "@repo/shared/domain";
 import { formatMatchDate } from "@repo/shared/utils";
 import {
   Container,
@@ -207,18 +208,24 @@ export default function MatchDetailScreen() {
   });
   const mediaCount = mediaCountData?.count ?? 0;
 
-  const { data: matchStats } = useQuery({
+  const isCancelled = match?.status === "cancelled";
+  const isPlayed = match?.status === "completed";
+  const isParticipating = match?.isUserSignedUp;
+  const userWasParticipant =
+    match?.userSignup?.status === "PAID" ||
+    match?.userSignup?.status === "PENDING";
+
+  const { data: isVotingClosed = false } = useQuery<MatchStats, Error, boolean>({
     queryKey: ["match-stats", matchId],
     queryFn: async () => {
       const res = await client.api.voting.matches[":matchId"].stats.$get({
         param: { matchId: matchId! },
       });
-      if (!res.ok) return null;
-      return res.json();
+      return res.json() as Promise<MatchStats>;
     },
-    enabled: !!matchId,
+    select: (data) => data.isVotingClosed,
+    enabled: !!matchId && isPlayed && userWasParticipant,
   });
-  const isVotingClosed = matchStats?.isVotingClosed ?? false;
 
   const signupMutation = useMutation({
     mutationFn: async () => {
@@ -634,15 +641,6 @@ export default function MatchDetailScreen() {
       testID: `match-detail-player-row-${signup.id}`,
     }));
   };
-
-  const isCancelled = match?.status === "cancelled";
-  const isPlayed = match?.status === "completed" || match?.status === "played";
-  const isParticipating = match?.isUserSignedUp;
-
-  // Check if user was a participant (PAID or PENDING, not CANCELLED)
-  const userWasParticipant =
-    match?.userSignup?.status === "PAID" ||
-    match?.userSignup?.status === "PENDING";
 
   // Check if match is today (in app timezone, not device timezone)
   const isMatchToday = match
