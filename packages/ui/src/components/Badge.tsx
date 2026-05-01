@@ -28,6 +28,7 @@ export function Badge({ variant = "default", children, ...props }: BadgeProps) {
       color: "$blue11",
     },
   };
+  const { color, backgroundColor } = variantStyles[variant];
 
   return (
     <XStack
@@ -35,10 +36,10 @@ export function Badge({ variant = "default", children, ...props }: BadgeProps) {
       paddingVertical="$1.5"
       borderRadius="$2"
       alignItems="center"
-      {...variantStyles[variant]}
+      backgroundColor={backgroundColor}
       {...props}
     >
-      <Text fontSize="$2" fontWeight="600" color="inherit">
+      <Text fontSize="$2" fontWeight="600" color={color}>
         {children}
       </Text>
     </XStack>

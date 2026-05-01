@@ -155,6 +155,19 @@ export default function StatsVotingScreen() {
     enabled: !!selectedMatchId && !!userId,
   });
 
+  const { data: matchStatsView } = useQuery({
+    queryKey: ["match-stats", selectedMatchId],
+    queryFn: async () => {
+      const res = await client.api.voting.matches[":matchId"].stats.$get({
+        param: { matchId: selectedMatchId },
+      });
+      return res.json();
+    },
+    enabled: !!selectedMatchId && !!userId,
+  });
+
+  const isVotingClosed = !!matchStatsView?.isVotingClosed;
+
   // Submit votes mutation
   const submitVotesMutation = useMutation({
     mutationFn: async (
@@ -211,9 +224,8 @@ export default function StatsVotingScreen() {
     if (!data || !userId) return null;
     const stats = Array.isArray(data) ? data : data?.stats || [];
     return (
-      stats.find(
-        (s: any) => s.userId === userId || s.user_id === userId,
-      ) || null
+      stats.find((s: any) => s.userId === userId || s.user_id === userId) ||
+      null
     );
   };
 
@@ -232,12 +244,10 @@ export default function StatsVotingScreen() {
   useEffect(() => {
     const myStats = getMyStats(matchStatsData);
     if (myStats) {
-      const attended =
-        myStats.thirdTimeAttended ?? myStats.third_time_attended;
+      const attended = myStats.thirdTimeAttended ?? myStats.third_time_attended;
       if (attended !== undefined && attended !== null) {
         setAttendedThirdTime(Boolean(attended));
-        const beers =
-          myStats.thirdTimeBeers ?? myStats.third_time_beers ?? 0;
+        const beers = myStats.thirdTimeBeers ?? myStats.third_time_beers ?? 0;
         setBeersCount(Number(beers));
       }
     }
@@ -287,13 +297,29 @@ export default function StatsVotingScreen() {
   };
 
   const hasVoted = (userVotesData?.votes?.length ?? 0) > 0;
-  const hasSubmittedStats = !!getMyStats(matchStatsData);
+  const myStats = getMyStats(matchStatsData);
+  const hasSubmittedStats = !!myStats;
 
-  // Lock form only when both applicable parts are done:
-  // - If user has voted, votes are locked
-  // - If user has submitted stats, stats are locked
-  // - Full lock (hide submit) only when both are done (or one wasn't attempted)
-  const isLocked = hasVoted && hasSubmittedStats;
+  const serverAttended = myStats
+    ? Boolean(myStats.thirdTimeAttended ?? myStats.third_time_attended)
+    : null;
+  const serverBeers = Number(
+    myStats?.thirdTimeBeers ?? myStats?.third_time_beers ?? 0,
+  );
+  // Beer diff only matters when attendance is true (false → beers persisted as 0)
+  const statsDirty =
+    attendedThirdTime !== serverAttended ||
+    (attendedThirdTime === true && beersCount !== serverBeers);
+
+  // Votes are immutable after first submit; stats stay editable until voting closes.
+  const isLocked =
+    isVotingClosed || (hasVoted && hasSubmittedStats && !statsDirty);
+
+  const hasNewVotes =
+    !hasVoted && Object.values(voteSelections).some((v) => !!v);
+  const hasStatsToSubmit = hasSubmittedStats
+    ? statsDirty
+    : attendedThirdTime !== null;
 
   const handleSubmitVotes = async () => {
     const votes = Object.entries(voteSelections)
@@ -314,8 +340,7 @@ export default function StatsVotingScreen() {
       setSubmitError(null);
 
       try {
-        // Submit 3rd time stats if answered
-        if (attendedThirdTime !== null) {
+        if (attendedThirdTime !== null && hasStatsToSubmit) {
           await submitStatsMutation.mutateAsync({
             thirdTimeAttended: attendedThirdTime,
             thirdTimeBeers: attendedThirdTime ? beersCount : 0,
@@ -409,19 +434,18 @@ export default function StatsVotingScreen() {
               </YStack>
             </Card>
 
-            {/* Already voted banner */}
-            {!!selectedMatchId && hasVoted && (
+            {!!selectedMatchId && isVotingClosed && (
               <XStack
-                backgroundColor="$green3"
+                backgroundColor="$gray4"
                 padding="$3"
                 borderRadius="$3"
                 alignItems="center"
                 justifyContent="center"
                 gap="$2"
               >
-                <Lock size={16} color="$green10" />
-                <Text color="$green10" fontWeight="600">
-                  {t("voting.alreadyVoted")}
+                <Lock size={16} color="$gray11" />
+                <Text color="$gray11" fontWeight="600">
+                  {t("matchStats.votingClosed")}
                 </Text>
               </XStack>
             )}
@@ -442,8 +466,8 @@ export default function StatsVotingScreen() {
                           attendedThirdTime === true ? "primary" : "outline"
                         }
                         onPress={() => setAttendedThirdTime(true)}
-                        disabled={hasSubmittedStats}
-                        opacity={hasSubmittedStats ? 0.5 : 1}
+                        disabled={isVotingClosed}
+                        opacity={isVotingClosed ? 0.5 : 1}
                       >
                         {t("voting.yes")}
                       </Button>
@@ -453,8 +477,8 @@ export default function StatsVotingScreen() {
                           attendedThirdTime === false ? "primary" : "outline"
                         }
                         onPress={() => setAttendedThirdTime(false)}
-                        disabled={hasSubmittedStats}
-                        opacity={hasSubmittedStats ? 0.5 : 1}
+                        disabled={isVotingClosed}
+                        opacity={isVotingClosed ? 0.5 : 1}
                       >
                         {t("voting.no")}
                       </Button>
@@ -469,7 +493,7 @@ export default function StatsVotingScreen() {
                           circular
                           icon={Minus}
                           variant="outline"
-                          disabled={beersCount <= 0 || hasSubmittedStats}
+                          disabled={beersCount <= 0 || isVotingClosed}
                           onPress={() =>
                             setBeersCount(Math.max(0, beersCount - 1))
                           }
@@ -487,7 +511,7 @@ export default function StatsVotingScreen() {
                           circular
                           icon={Plus}
                           variant="outline"
-                          disabled={hasSubmittedStats}
+                          disabled={isVotingClosed}
                           onPress={() => setBeersCount(beersCount + 1)}
                         />
                       </XStack>
@@ -504,6 +528,21 @@ export default function StatsVotingScreen() {
                   <Text fontSize="$5" fontWeight="600">
                     {t("voting.matchAwards")}
                   </Text>
+                  {hasVoted && !isVotingClosed && (
+                    <XStack
+                      backgroundColor="$green3"
+                      padding="$3"
+                      borderRadius="$3"
+                      alignItems="center"
+                      justifyContent="center"
+                      gap="$2"
+                    >
+                      <Lock size={16} color="$green10" />
+                      <Text color="$green10" fontWeight="600">
+                        {t("voting.alreadyVoted")}
+                      </Text>
+                    </XStack>
+                  )}
                   {isLoadingCriteria || isLoadingPlayers ? (
                     <YStack alignItems="center" padding="$4">
                       <Spinner size="large" />
@@ -519,7 +558,7 @@ export default function StatsVotingScreen() {
                       selections={voteSelections}
                       onSelectionChange={handleSelectionChange}
                       placeholder={t("voting.selectPlayer")}
-                      disabled={hasVoted}
+                      disabled={hasVoted || isVotingClosed}
                     />
                   )}
 
@@ -550,11 +589,7 @@ export default function StatsVotingScreen() {
                       variant="primary"
                       onPress={handleSubmitVotes}
                       disabled={
-                        isSubmitting ||
-                        (Object.keys(voteSelections).filter(
-                          (k) => voteSelections[k],
-                        ).length === 0 &&
-                          attendedThirdTime === null)
+                        isSubmitting || (!hasNewVotes && !hasStatsToSubmit)
                       }
                     >
                       {isSubmitting ? (
