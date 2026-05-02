@@ -1,26 +1,14 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signUp } from "@repo/api-client";
-import {
-  Container,
-  Card,
-  Text,
-  YStack,
-  XStack,
-  Input,
-  Button,
-  Spinner,
-} from "@repo/ui";
+import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ScrollView } from "react-native";
 
-import {
-  signUpSchema,
-  type SignUpFormData,
-} from "../../lib/validation";
+import { signUpSchema, type SignUpFormData } from "../../lib/validation";
 
 export default function EmailSignUpScreen() {
   const { t } = useTranslation();
@@ -65,17 +53,8 @@ export default function EmailSignUpScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack
-          gap="$6"
-          width="100%"
-          maxWidth={400}
-          marginHorizontal="auto"
-          paddingVertical="$8"
-        >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <YStack gap="$6" width="100%" maxWidth={400} marginHorizontal="auto" paddingVertical="$8">
           <YStack gap="$2" alignItems="center">
             <Text fontSize="$9" fontWeight="bold">
               {t("auth.createAccount")}
@@ -120,10 +99,7 @@ export default function EmailSignUpScreen() {
                     testID="auth-email-signup-email"
                     error={
                       emailForm.formState.errors.email
-                        ? t(
-                            emailForm.formState.errors.email
-                              .message as string,
-                          )
+                        ? t(emailForm.formState.errors.email.message as string)
                         : undefined
                     }
                   />
@@ -143,10 +119,7 @@ export default function EmailSignUpScreen() {
                     testID="auth-email-signup-password"
                     error={
                       emailForm.formState.errors.password
-                        ? t(
-                            emailForm.formState.errors.password
-                              .message as string,
-                          )
+                        ? t(emailForm.formState.errors.password.message as string)
                         : undefined
                     }
                     helperText={t("auth.passwordHelp")}
@@ -168,10 +141,7 @@ export default function EmailSignUpScreen() {
                     testID="auth-email-signup-username"
                     error={
                       emailForm.formState.errors.username
-                        ? t(
-                            emailForm.formState.errors.username
-                              .message as string,
-                          )
+                        ? t(emailForm.formState.errors.username.message as string)
                         : undefined
                     }
                   />

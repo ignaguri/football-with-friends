@@ -24,9 +24,11 @@ Before starting any implementation task, invoke the `andrej-karpathy-skills:karp
 **Fútbol con los pibes** is a modern monorepo football match organization app built with Expo (mobile/web) and a Hono API backend.
 
 ### Monorepo Structure
+
 This is a **Turborepo** monorepo using **pnpm workspaces** with the following structure:
 
 #### Apps (`apps/`)
+
 - **`api/`** - Hono API server
   - Backend API with oRPC for type-safe endpoints
   - BetterAuth integration for authentication
@@ -44,6 +46,7 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
   - **Note**: TypeScript checking disabled due to Tamagui type recursion issues
 
 #### Packages (`packages/`)
+
 - **`@repo/api-client`** - Type-safe API client
   - Hono RPC client (`hc`) for consuming the Hono API
   - TanStack React Query hooks for data fetching
@@ -62,6 +65,7 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
   - Date pickers, forms, and common UI elements
 
 ### Key Technologies
+
 - **Frontend**: Expo, React 19, React Native, TypeScript, Tamagui
 - **Backend**: Hono (with built-in RPC), Bun runtime
 - **UI Components**: Tamagui (universal design system)
@@ -73,6 +77,7 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
 - **Date/Time**: date-fns and date-fns-tz for timezone-aware operations
 
 ### Authentication System
+
 - BetterAuth with @better-auth/expo adapter
 - **Google OAuth** provider for social login
 - **Phone number authentication** with password-as-OTP pattern (see `docs/phone-auth-password-as-otp.md`)
@@ -82,27 +87,32 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
 - Two-tier role model: **platform role** (on `user.role`) + **group-relative role** (see next section)
 
 ### Group-oriented Scoping
+
 Every group-scoped resource belongs to a group; authz is group-relative. Two role axes: **platform role** (`user.role`: `user` | `admin`) and **group-relative role** (`group_members.role`: `member` | `organizer`). The client sends `X-Group-Id` on every scoped request; use the helpers in `apps/api/src/middleware/authz.ts` at route boundaries.
 
 See [`docs/groups.md`](docs/groups.md) for full details: role definitions, ownership, active-group mechanics, authz helpers, ghost roster, and deprecated tables.
 
 ### Notifications System
+
 Two layers: **transient push** (Expo Push API, native-only, opt-in) and **persistent inbox** (DB-backed, group-scoped, web + native). Key rule: always use the helpers in `apps/api/src/lib/notify.ts` — never call the Expo Push API directly.
 
 See [`docs/notifications.md`](docs/notifications.md) for full details: DB tables, types/categories, server modules, client files, delivery rules, retention policy, and the step-by-step cookbook for adding new notification types.
 
 ### Database Configuration
+
 - **Primary**: Turso (LibSQL) database via `@libsql/kysely-libsql`
 - Connection configured via `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`
 - Migrations managed via scripts in root package.json
 - Local development uses SQLite
 
 ### Environment & Timezone Configuration
+
 Default timezone is `Europe/Berlin` (configurable via `DEFAULT_TIMEZONE`). Use `pnpm validate-env` to check required variables. Always use the timezone helpers from `packages/shared/src/utils/timezone.ts` — never convert dates to UTC directly.
 
 See [`docs/configuration.md`](docs/configuration.md) for required env vars, validation commands, and timezone utility reference.
 
 ### Accessibility & Automation Identifiers
+
 Interactive elements follow a shared convention so screen readers AND automation tools (Chrome DevTools MCP, agent-browser) can reliably identify them.
 
 - Priority: **semantic role + accessible name first**, `testID` only as a fallback for repeated/ambiguous elements. Chrome DevTools MCP snapshots the accessibility tree, not the DOM.
@@ -112,6 +122,7 @@ Interactive elements follow a shared convention so screen readers AND automation
 Full convention, examples, and verification steps: [`docs/accessibility-and-test-ids.md`](docs/accessibility-and-test-ids.md).
 
 ### Development Workflow
+
 1. **Install dependencies**: `pnpm install` (installs for all workspaces)
 2. **Start development**: `pnpm dev` (starts API and mobile app concurrently)
 3. **Run individual apps**: Use `pnpm dev:api` or `pnpm dev:app`
@@ -120,11 +131,13 @@ Full convention, examples, and verification steps: [`docs/accessibility-and-test
 6. **Environment setup**: Copy `.env.example` and configure variables
 
 ### Deployment Architecture
+
 Web app on Vercel (auto-deploy from main), API on Cloudflare Workers (`pnpm cf:deploy` / `pnpm cf:deploy:preview` from `apps/api`).
 
 See [`docs/deployment.md`](docs/deployment.md) for environment URLs, deploy commands, required Cloudflare secrets, and Vercel env vars.
 
 ### Monorepo Benefits
+
 - **Code Sharing**: Common types, utilities, and components across apps
 - **Type Safety**: End-to-end type safety from API to client via Hono RPC
 - **Consistent Tooling**: Shared TypeScript, ESLint configs

@@ -18,10 +18,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ScrollView } from "react-native";
 
-import {
-  phoneSignUpSchema,
-  type PhoneSignUpFormData,
-} from "../../lib/validation";
+import { phoneSignUpSchema, type PhoneSignUpFormData } from "../../lib/validation";
 
 export default function PhoneSignUpScreen() {
   const { t } = useTranslation();
@@ -75,17 +72,8 @@ export default function PhoneSignUpScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack
-          gap="$6"
-          width="100%"
-          maxWidth={400}
-          marginHorizontal="auto"
-          paddingVertical="$8"
-        >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <YStack gap="$6" width="100%" maxWidth={400} marginHorizontal="auto" paddingVertical="$8">
           <YStack gap="$2" alignItems="center">
             <Text fontSize="$9" fontWeight="bold">
               {t("auth.createAccount")}
@@ -127,10 +115,7 @@ export default function PhoneSignUpScreen() {
                     onChangeValue={(phone) => onChange(phone)}
                     error={
                       phoneForm.formState.errors.phoneNumber
-                        ? t(
-                            phoneForm.formState.errors.phoneNumber
-                              .message as string,
-                          )
+                        ? t(phoneForm.formState.errors.phoneNumber.message as string)
                         : undefined
                     }
                     helperText={t("auth.phoneHelp")}
@@ -151,10 +136,7 @@ export default function PhoneSignUpScreen() {
                     testID="auth-phone-signup-password"
                     error={
                       phoneForm.formState.errors.password
-                        ? t(
-                            phoneForm.formState.errors.password
-                              .message as string,
-                          )
+                        ? t(phoneForm.formState.errors.password.message as string)
                         : undefined
                     }
                     helperText={t("auth.passwordHelp")}

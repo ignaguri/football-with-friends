@@ -154,9 +154,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     .createTable("table_name")
     .addColumn("id", "text", (col) => col.primaryKey())
     .addColumn("name", "text", (col) => col.notNull())
-    .addColumn("created_at", "text", (col) =>
-      col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull()
-    )
+    .addColumn("created_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
     .execute();
 };
 ```
@@ -165,10 +163,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
 ```typescript
 export const up: Migration["up"] = async (db: Kysely<any>) => {
-  await db.schema
-    .alterTable("existing_table")
-    .addColumn("new_column", "text")
-    .execute();
+  await db.schema.alterTable("existing_table").addColumn("new_column", "text").execute();
 };
 ```
 
@@ -176,11 +171,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
 ```typescript
 export const up: Migration["up"] = async (db: Kysely<any>) => {
-  await db.schema
-    .createIndex("index_name")
-    .on("table_name")
-    .column("column_name")
-    .execute();
+  await db.schema.createIndex("index_name").on("table_name").column("column_name").execute();
 };
 ```
 

@@ -22,13 +22,13 @@
     "react-dom": "19.2.5",
     "tamagui": "2.0.0-rc.41"
   },
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-native": "*"
-  },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/react": "~19.2.14",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-native": "*"
   }
 }

@@ -66,11 +66,7 @@ const getApiErrorMessage = (error: Error): string => {
     data?: { error?: string };
     status?: number;
   };
-  if (
-    apiError.data &&
-    typeof apiError.data === "object" &&
-    "error" in apiError.data
-  ) {
+  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
     return (apiError.data as { error: string }).error;
   }
   return error.message;
@@ -338,9 +334,7 @@ function MatchesTab() {
     <ScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Match Button */}
@@ -389,9 +383,7 @@ function MatchesTab() {
                   <Text color="$gray11">
                     {match.max_players} {t("players.title").toLowerCase()}
                   </Text>
-                  {match.cost_per_player && (
-                    <Text color="$gray11">{match.cost_per_player}</Text>
-                  )}
+                  {match.cost_per_player && <Text color="$gray11">{match.cost_per_player}</Text>}
                 </XStack>
 
                 {match.location_name && (
@@ -664,9 +656,7 @@ function LocationsTab() {
     <ScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Location Button */}
@@ -705,9 +695,7 @@ function LocationsTab() {
                 <Text fontSize="$5" fontWeight="600">
                   {location.name}
                 </Text>
-                {location.address && (
-                  <Text color="$gray11">{location.address}</Text>
-                )}
+                {location.address && <Text color="$gray11">{location.address}</Text>}
                 <XStack gap="$2" marginTop="$2">
                   <Button
                     flex={1}
@@ -743,11 +731,7 @@ function LocationsTab() {
             setShowAddDialog(false);
             resetForm();
           }}
-          confirmText={
-            createMutation.isPending
-              ? t("locations.creating")
-              : t("locations.create")
-          }
+          confirmText={createMutation.isPending ? t("locations.creating") : t("locations.create")}
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -779,11 +763,7 @@ function LocationsTab() {
             setEditingLocation(null);
             resetForm();
           }}
-          confirmText={
-            updateMutation.isPending
-              ? t("locations.updating")
-              : t("locations.update")
-          }
+          confirmText={updateMutation.isPending ? t("locations.updating") : t("locations.update")}
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -845,11 +825,7 @@ function LocationsTab() {
             });
           }}
           onCancel={() => setShowCopyDialog(false)}
-          confirmText={
-            copyVenuesMutation.isPending
-              ? t("locations.copying")
-              : t("locations.copy")
-          }
+          confirmText={copyVenuesMutation.isPending ? t("locations.copying") : t("locations.copy")}
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$3" padding="$4">
@@ -1017,9 +993,7 @@ function CourtsTab() {
   };
 
   const getLocationName = (locId: string) => {
-    return (
-      locations.find((l) => l.id === locId)?.name || t("courts.unknownLocation")
-    );
+    return locations.find((l) => l.id === locId)?.name || t("courts.unknownLocation");
   };
 
   const locationOptions = locations.map((loc) => ({
@@ -1039,9 +1013,7 @@ function CourtsTab() {
     <ScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Court Button */}
@@ -1068,9 +1040,7 @@ function CourtsTab() {
                   <Text fontSize="$5" fontWeight="600">
                     {court.name}
                   </Text>
-                  {!court.isActive && (
-                    <Badge variant="secondary">{t("status.inactive")}</Badge>
-                  )}
+                  {!court.isActive && <Badge variant="secondary">{t("status.inactive")}</Badge>}
                 </XStack>
                 <Text color="$gray11">{getLocationName(court.locationId)}</Text>
                 {court.description && (
@@ -1113,9 +1083,7 @@ function CourtsTab() {
             setShowAddDialog(false);
             resetForm();
           }}
-          confirmText={
-            createMutation.isPending ? t("courts.creating") : t("courts.create")
-          }
+          confirmText={createMutation.isPending ? t("courts.creating") : t("courts.create")}
           cancelText={t("courts.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -1154,9 +1122,7 @@ function CourtsTab() {
             setEditingCourt(null);
             resetForm();
           }}
-          confirmText={
-            updateMutation.isPending ? t("courts.updating") : t("courts.update")
-          }
+          confirmText={updateMutation.isPending ? t("courts.updating") : t("courts.update")}
           cancelText={t("courts.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -1224,19 +1190,15 @@ function SettingsTab() {
   const queryClient = useQueryClient();
   const toast = useToastController();
 
-  const [defaultCostPerPlayerOverride, setDefaultCostPerPlayerOverride] =
-    useState<string | null>(null);
-  const [sameDayExtraCostOverride, setSameDayExtraCostOverride] = useState<
-    string | null
-  >(null);
-  const [defaultMaxSubstitutesOverride, setDefaultMaxSubstitutesOverride] =
-    useState<string | null>(null);
-  const [paypalUrlOverride, setPaypalUrlOverride] = useState<string | null>(
+  const [defaultCostPerPlayerOverride, setDefaultCostPerPlayerOverride] = useState<string | null>(
     null,
   );
-  const [organizerWhatsappOverride, setOrganizerWhatsappOverride] = useState<
-    string | null
-  >(null);
+  const [sameDayExtraCostOverride, setSameDayExtraCostOverride] = useState<string | null>(null);
+  const [defaultMaxSubstitutesOverride, setDefaultMaxSubstitutesOverride] = useState<string | null>(
+    null,
+  );
+  const [paypalUrlOverride, setPaypalUrlOverride] = useState<string | null>(null);
+  const [organizerWhatsappOverride, setOrganizerWhatsappOverride] = useState<string | null>(null);
 
   const {
     data: settings,
@@ -1253,13 +1215,11 @@ function SettingsTab() {
 
   const defaultCostPerPlayer =
     defaultCostPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
-  const sameDayExtraCost =
-    sameDayExtraCostOverride ?? settings?.same_day_extra_cost ?? "";
+  const sameDayExtraCost = sameDayExtraCostOverride ?? settings?.same_day_extra_cost ?? "";
   const defaultMaxSubstitutes =
     defaultMaxSubstitutesOverride ?? settings?.default_max_substitutes ?? "";
   const paypalUrl = paypalUrlOverride ?? settings?.paypal_url ?? "";
-  const organizerWhatsapp =
-    organizerWhatsappOverride ?? settings?.organizer_whatsapp ?? "";
+  const organizerWhatsapp = organizerWhatsappOverride ?? settings?.organizer_whatsapp ?? "";
 
   const updateMutation = useMutation({
     mutationFn: async (updates: Partial<AppSettings>) => {
@@ -1351,9 +1311,7 @@ function SettingsTab() {
     <ScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Cost Settings */}
@@ -1434,7 +1392,11 @@ function SettingsTab() {
 
 function ResetCodesSection() {
   const { t } = useTranslation();
-  const { data: codes, isLoading, refetch } = useQuery({
+  const {
+    data: codes,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["admin-reset-codes"],
     queryFn: getAdminResetCodes,
     refetchInterval: 30000, // Auto-refresh every 30s
@@ -1448,7 +1410,11 @@ function ResetCodesSection() {
             {t("admin.resetCodes", { defaultValue: "Password Reset Codes" })}
           </Text>
           <Button size="$2" variant="outline" onPress={() => refetch()}>
-            {isLoading ? <Spinner size="small" /> : t("shared.refresh", { defaultValue: "Refresh" })}
+            {isLoading ? (
+              <Spinner size="small" />
+            ) : (
+              t("shared.refresh", { defaultValue: "Refresh" })
+            )}
           </Button>
         </XStack>
 
@@ -1469,12 +1435,7 @@ function ResetCodesSection() {
                     {new Date(item.expiresAt).toLocaleTimeString()}
                   </Text>
                 </YStack>
-                <Text
-                  fontSize="$7"
-                  fontWeight="bold"
-                  fontFamily="$mono"
-                  letterSpacing={2}
-                >
+                <Text fontSize="$7" fontWeight="bold" fontFamily="$mono" letterSpacing={2}>
                   {item.code}
                 </Text>
               </XStack>
@@ -1505,9 +1466,7 @@ function VotingCriteriaTab() {
   const queryClient = useQueryClient();
   const toast = useToastController();
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [editingCriteria, setEditingCriteria] = useState<VotingCriteria | null>(
-    null,
-  );
+  const [editingCriteria, setEditingCriteria] = useState<VotingCriteria | null>(null);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<VotingCriteria | null>(null);
   const [code, setCode] = useState("");
@@ -1635,9 +1594,7 @@ function VotingCriteriaTab() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          (data as any).error || "Failed to toggle active status",
-        );
+        throw new Error((data as any).error || "Failed to toggle active status");
       }
       return res.json();
     },
@@ -1704,8 +1661,7 @@ function VotingCriteriaTab() {
     setShowDeleteAlert(true);
   };
 
-  const getName = (c: VotingCriteria) =>
-    language === "es" ? c.nameEs : c.nameEn;
+  const getName = (c: VotingCriteria) => (language === "es" ? c.nameEs : c.nameEn);
   const getDescription = (c: VotingCriteria) =>
     language === "es" ? c.descriptionEs : c.descriptionEn;
 
@@ -1721,9 +1677,7 @@ function VotingCriteriaTab() {
     <ScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Criteria Button */}
@@ -1818,9 +1772,7 @@ function VotingCriteriaTab() {
             setShowAddDialog(false);
             resetForm();
           }}
-          confirmText={
-            createMutation.isPending ? t("shared.loading") : t("shared.save")
-          }
+          confirmText={createMutation.isPending ? t("shared.loading") : t("shared.save")}
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">
@@ -1878,9 +1830,7 @@ function VotingCriteriaTab() {
             setEditingCriteria(null);
             resetForm();
           }}
-          confirmText={
-            updateMutation.isPending ? t("shared.loading") : t("shared.save")
-          }
+          confirmText={updateMutation.isPending ? t("shared.loading") : t("shared.save")}
           cancelText={t("shared.cancel")}
         >
           <YStack gap="$4" padding="$4">

@@ -7,7 +7,9 @@ This directory contains better-auth examples for **Next.js with PostgreSQL**.
 ## Files
 
 ### `postgres-example.ts`
+
 Complete Next.js API route with better-auth using:
+
 - **PostgreSQL** (not D1)
 - Drizzle ORM with `postgres` driver
 - Organizations plugin
@@ -16,16 +18,19 @@ Complete Next.js API route with better-auth using:
 - Custom error handling
 
 **Use this example when**:
+
 - Building Next.js application (not Cloudflare Workers)
 - Using PostgreSQL database
 - Need organizations and 2FA features
 
 **Installation**:
+
 ```bash
 npm install better-auth drizzle-orm postgres
 ```
 
 **Environment variables**:
+
 ```env
 DATABASE_URL=postgresql://user:password@host:5432/database
 BETTER_AUTH_SECRET=your-secret
@@ -37,5 +42,6 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 ---
 
 **For Cloudflare D1 examples**, see the parent `references/` directory:
+
 - `cloudflare-worker-drizzle.ts` - Complete Worker with Drizzle + D1
 - `cloudflare-worker-kysely.ts` - Complete Worker with Kysely + D1

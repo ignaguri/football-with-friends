@@ -10,11 +10,7 @@ import { getNotificationRoute } from "@repo/shared/utils";
 let _lastRegisteredToken: string | null = null;
 let _notificationsConfigured = false;
 
-export type OsPermissionStatus =
-  | "granted"
-  | "denied"
-  | "undetermined"
-  | "unsupported";
+export type OsPermissionStatus = "granted" | "denied" | "undetermined" | "unsupported";
 
 /**
  * Lazily load expo-notifications to avoid crashing on builds
@@ -81,8 +77,7 @@ export async function requestAndRegister(): Promise<{
 
   const Constants = (await import("expo-constants")).default;
 
-  const { status: existingStatus } =
-    await Notifications.getPermissionsAsync();
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus: string = existingStatus;
 
   if (existingStatus !== "granted") {
@@ -95,8 +90,7 @@ export async function requestAndRegister(): Promise<{
   }
 
   const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ??
-    "fd683dbc-22ce-4809-b0be-8325693cd621";
+    Constants.expoConfig?.extra?.eas?.projectId ?? "fd683dbc-22ce-4809-b0be-8325693cd621";
 
   let token: string | null = null;
   try {
@@ -117,9 +111,7 @@ export async function requestAndRegister(): Promise<{
       });
       _lastRegisteredToken = token;
     } catch (error) {
-      throw error instanceof Error
-        ? error
-        : new Error("Failed to register push token");
+      throw error instanceof Error ? error : new Error("Failed to register push token");
     }
   }
 
@@ -149,29 +141,23 @@ export function usePushNotifications() {
     getNotificationsModule().then((Notifications) => {
       if (!Notifications) return;
 
-      const notifSub = Notifications.addNotificationReceivedListener(
-        (notification) => {
-          console.log(
-            "Notification received:",
-            notification.request.content.title,
-          );
-        },
-      );
+      const notifSub = Notifications.addNotificationReceivedListener((notification) => {
+        console.log("Notification received:", notification.request.content.title);
+      });
 
-      const responseSub =
-        Notifications.addNotificationResponseReceivedListener((response) => {
-          const data = response.notification.request.content.data;
-          // Push notifications without a deep-link target (e.g. /send-test)
-          // shouldn't navigate anywhere on tap — only follow an explicit
-          // screen. Inbox-tap uses the helper's type-based fallback because
-          // the user there always intended to open something.
-          const screen =
-            typeof data === "object" && data !== null
-              ? (data as { screen?: unknown }).screen
-              : undefined;
-          if (typeof screen !== "string" || screen.length === 0) return;
-          router.push(getNotificationRoute(data) as never);
-        });
+      const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data;
+        // Push notifications without a deep-link target (e.g. /send-test)
+        // shouldn't navigate anywhere on tap — only follow an explicit
+        // screen. Inbox-tap uses the helper's type-based fallback because
+        // the user there always intended to open something.
+        const screen =
+          typeof data === "object" && data !== null
+            ? (data as { screen?: unknown }).screen
+            : undefined;
+        if (typeof screen !== "string" || screen.length === 0) return;
+        router.push(getNotificationRoute(data) as never);
+      });
 
       listenersRef.current = [notifSub, responseSub];
     });
@@ -202,4 +188,3 @@ export async function unregisterPushToken(): Promise<void> {
 
   _lastRegisteredToken = null;
 }
-

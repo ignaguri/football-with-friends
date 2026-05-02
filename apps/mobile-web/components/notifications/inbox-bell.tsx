@@ -17,9 +17,7 @@ export function InboxBell() {
   const showBadge = unread > 0;
   const badgeText = unread > MAX_VISIBLE ? `${MAX_VISIBLE}+` : String(unread);
 
-  const label = showBadge
-    ? t("a11y.openInboxWithUnread", { count: unread })
-    : t("a11y.openInbox");
+  const label = showBadge ? t("a11y.openInboxWithUnread", { count: unread }) : t("a11y.openInbox");
 
   return (
     <Pressable

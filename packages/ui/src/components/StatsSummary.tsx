@@ -23,11 +23,7 @@ export function StatsSummary({ stats }: StatsSummaryProps) {
           minWidth={80}
           flex={1}
         >
-          <Text
-            fontSize="$7"
-            fontWeight="700"
-            color={stat.color || "$color"}
-          >
+          <Text fontSize="$7" fontWeight="700" color={stat.color || "$color"}>
             {stat.value}
           </Text>
           <Text fontSize="$2" color="$gray11" textAlign="center">

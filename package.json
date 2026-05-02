@@ -2,7 +2,6 @@
   "name": "football-with-friends-monorepo",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -65,6 +64,17 @@
     "turbo": "^2.9.7",
     "typescript": "^5.9.3"
   },
+  "lint-staged": {
+    "migrations/**/*.ts": [
+      "oxlint --fix",
+      "tsc --noEmit"
+    ],
+    "*.{ts,tsx,js,mjs,cjs,json}": [
+      "oxlint --fix",
+      "oxfmt"
+    ]
+  },
+  "packageManager": "pnpm@9.15.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "@sentry/cli",
@@ -78,15 +88,5 @@
       "@types/react": "~19.2.14",
       "@types/react-dom": "~19.2.0"
     }
-  },
-  "lint-staged": {
-    "migrations/**/*.ts": [
-      "oxlint --fix",
-      "tsc --noEmit"
-    ],
-    "*.{ts,tsx,js,mjs,cjs,json}": [
-      "oxlint --fix",
-      "oxfmt"
-    ]
   }
 }

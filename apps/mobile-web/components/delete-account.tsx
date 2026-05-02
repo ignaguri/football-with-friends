@@ -17,7 +17,7 @@ export function DeleteAccountSection({ primaryAuthMethod }: DeleteAccountSection
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showPassword, setShowPassword] = useState(
-    primaryAuthMethod !== "google" && primaryAuthMethod !== "apple"
+    primaryAuthMethod !== "google" && primaryAuthMethod !== "apple",
   );
 
   const handleDelete = async () => {
@@ -106,20 +106,10 @@ export function DeleteAccountSection({ primaryAuthMethod }: DeleteAccountSection
       )}
 
       <XStack gap="$2">
-        <Button
-          flex={1}
-          variant="outline"
-          onPress={handleCancel}
-          disabled={isDeleting}
-        >
+        <Button flex={1} variant="outline" onPress={handleCancel} disabled={isDeleting}>
           {t("shared.cancel")}
         </Button>
-        <Button
-          flex={1}
-          variant="danger"
-          onPress={handleDelete}
-          disabled={isDeleting}
-        >
+        <Button flex={1} variant="danger" onPress={handleDelete} disabled={isDeleting}>
           {isDeleting ? <Spinner size="small" /> : t("profile.deleteAccount")}
         </Button>
       </XStack>

@@ -27,18 +27,23 @@ function cleanStaleCookieData() {
       }
     }
   } catch {
-    try { storage.setItem(key, "{}"); } catch { /* ignore */ }
+    try {
+      storage.setItem(key, "{}");
+    } catch {
+      /* ignore */
+    }
   }
 }
 
 // Gate the first request on storage hydration so useSession() can't fire
 // before the bearer token is loaded. `storage.getItem` is sync on native
 // but AsyncStorage on web is async — `hydrateFromStorage` unifies both.
-export const _tokenLoadPromise: Promise<void> = hydrateFromStorage(BEARER_TOKEN_KEY)
-  .then((token) => {
+export const _tokenLoadPromise: Promise<void> = hydrateFromStorage(BEARER_TOKEN_KEY).then(
+  (token) => {
     if (token) _cachedBearerToken = token;
     cleanStaleCookieData();
-  });
+  },
+);
 
 /**
  * Store a bearer token for authentication.
@@ -218,7 +223,11 @@ function createDynamicFetch() {
           // verification, and avoids URL-encoding issues across platforms.
           const tokenPart = newToken.split(".")[0] || newToken;
           _cachedBearerToken = tokenPart;
-          try { storage.setItem(BEARER_TOKEN_KEY, tokenPart); } catch { /* ignore */ }
+          try {
+            storage.setItem(BEARER_TOKEN_KEY, tokenPart);
+          } catch {
+            /* ignore */
+          }
         }
         // Clear token when signing out
         if (finalUrl.includes("/sign-out")) {
@@ -252,14 +261,7 @@ export const authClient = createAuthClient({
 });
 
 // Export individual auth methods for convenience
-export const {
-  signUp,
-  signIn,
-  signOut,
-  useSession,
-  getSession,
-  $Infer,
-} = authClient;
+export const { signUp, signIn, signOut, useSession, getSession, $Infer } = authClient;
 
 // Phone authentication helpers
 export interface PhoneSignUpData {
@@ -337,14 +339,11 @@ export async function needsPasswordReset(identifier: {
   email?: string;
 }): Promise<boolean> {
   try {
-    const response = await fetch(
-      `${getApiUrl()}/api/phone-auth/needs-password-reset`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(identifier),
-      }
-    );
+    const response = await fetch(`${getApiUrl()}/api/phone-auth/needs-password-reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(identifier),
+    });
     if (!response.ok) return false;
     const result = await response.json();
     return result.needsReset === true;
@@ -363,14 +362,11 @@ export async function resetPasswordForMigration(data: {
   currentPassword: string;
   newPassword: string;
 }): Promise<void> {
-  const response = await fetch(
-    `${getApiUrl()}/api/phone-auth/reset-password`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${getApiUrl()}/api/phone-auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const result = await response.json();
@@ -386,14 +382,11 @@ export async function requestPasswordReset(identifier: {
   phoneNumber?: string;
   email?: string;
 }): Promise<void> {
-  const response = await fetch(
-    `${getApiUrl()}/api/phone-auth/forgot-password`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(identifier),
-    }
-  );
+  const response = await fetch(`${getApiUrl()}/api/phone-auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(identifier),
+  });
 
   if (!response.ok) {
     const result = await response.json();
@@ -410,14 +403,11 @@ export async function resetPasswordWithCode(data: {
   code: string;
   newPassword: string;
 }): Promise<void> {
-  const response = await fetch(
-    `${getApiUrl()}/api/phone-auth/verify-reset`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${getApiUrl()}/api/phone-auth/verify-reset`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const result = await response.json();
@@ -439,10 +429,7 @@ export async function getAdminResetCodes(): Promise<
     headers["Authorization"] = `Bearer ${_cachedBearerToken}`;
   }
 
-  const response = await fetch(
-    `${getApiUrl()}/api/phone-auth/admin/reset-codes`,
-    { headers }
-  );
+  const response = await fetch(`${getApiUrl()}/api/phone-auth/admin/reset-codes`, { headers });
 
   if (!response.ok) {
     throw new Error("Failed to fetch reset codes");
@@ -451,7 +438,6 @@ export async function getAdminResetCodes(): Promise<
   const result = await response.json();
   return result.codes;
 }
-
 
 /**
  * Delete the current user's account and all associated data.
@@ -474,9 +460,7 @@ export async function deleteAccount(confirmText: string, password?: string) {
 
   if (!response.ok) {
     const result = await response.json();
-    throw new Error(
-      result.error || "Failed to delete account"
-    );
+    throw new Error(result.error || "Failed to delete account");
   }
 
   // Clear local auth state

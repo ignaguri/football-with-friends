@@ -32,14 +32,10 @@ async function main() {
   try {
     const tursoEnv = getTursoEnv();
     console.log("🔗 Connected to Turso database");
-    console.log(
-      `   Database URL: ${tursoEnv.TURSO_DATABASE_URL.replace(/\/\/.*@/, "//***@")}`,
-    );
+    console.log(`   Database URL: ${tursoEnv.TURSO_DATABASE_URL.replace(/\/\/.*@/, "//***@")}`);
   } catch (error) {
     console.error("❌ Environment validation failed:");
-    console.error(
-      "   Make sure STORAGE_PROVIDER=turso and Turso credentials are set",
-    );
+    console.error("   Make sure STORAGE_PROVIDER=turso and Turso credentials are set");
     console.error("   Run 'pnpm env:check' to validate your environment");
     process.exit(1);
   }
@@ -101,9 +97,7 @@ async function main() {
           console.error("❌ Migration failed:", result.error);
           process.exit(1);
         }
-        console.log(
-          "✅ All migrations completed successfully on remote database",
-        );
+        console.log("✅ All migrations completed successfully on remote database");
       } catch (error) {
         if (error instanceof MigrationError) {
           console.error("❌ Migration error:", error.message);
@@ -123,9 +117,7 @@ async function main() {
     case "down":
     case "rollback":
       const steps = parseInt(restArgs[0] ?? "1", 10) || 1;
-      console.log(
-        `🔄 Rolling back ${steps} migration(s) on remote database...`,
-      );
+      console.log(`🔄 Rolling back ${steps} migration(s) on remote database...`);
 
       // Show current status before rollback
       try {
@@ -142,9 +134,7 @@ async function main() {
           console.log(
             `\n⚠️  This will rollback ${steps} migration(s) on the remote Turso database.`,
           );
-          console.log(
-            `   This action cannot be undone without re-running migrations.`,
-          );
+          console.log(`   This action cannot be undone without re-running migrations.`);
           console.log(`   Continue? (y/N)`);
 
           const readline = await import("readline");

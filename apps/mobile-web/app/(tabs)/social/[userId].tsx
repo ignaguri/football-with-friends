@@ -118,9 +118,7 @@ export default function PlayerDetailScreen() {
     <Container variant="padded">
       <ScrollView
         style={{ flex: 1 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
         <YStack gap="$4" paddingBottom="$6">
           {/* Player Header */}
@@ -129,9 +127,7 @@ export default function PlayerDetailScreen() {
               <UserAvatar name={profile.user.name} size={64} />
               <XStack gap="$2" alignItems="center">
                 {profile.user.nationality && (
-                  <Text fontSize="$7">
-                    {getCountryFlag(profile.user.nationality)}
-                  </Text>
+                  <Text fontSize="$7">{getCountryFlag(profile.user.nationality)}</Text>
                 )}
                 <Text fontSize="$7" fontWeight="700">
                   {profile.user.name}
@@ -242,9 +238,7 @@ export default function PlayerDetailScreen() {
                   emptyTitle={t("awards.noAwardsYet")}
                   emptyDescription={t("awards.playMoreMatches")}
                   formatVotes={(count) => t("awards.votesCount", { count })}
-                  formatTotalVotes={(count) =>
-                    t("awards.totalVotes", { count })
-                  }
+                  formatTotalVotes={(count) => t("awards.totalVotes", { count })}
                   overallLabel={t("awards.rankOverall")}
                 />
               </YStack>

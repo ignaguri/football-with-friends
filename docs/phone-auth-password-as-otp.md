@@ -131,7 +131,8 @@ app.post("/sign-up", async (c) => {
   });
 
   // Store phone number on user
-  await db.updateTable("user")
+  await db
+    .updateTable("user")
     .set({ phoneNumber })
     .where("id", "=", signUpResponse.user.id)
     .execute();

@@ -13,10 +13,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     .execute();
 
   // Add same_day_cost column to matches table
-  await db.schema
-    .alterTable("matches")
-    .addColumn("same_day_cost", "text")
-    .execute();
+  await db.schema.alterTable("matches").addColumn("same_day_cost", "text").execute();
 
   // Create settings table
   await db.schema
@@ -24,9 +21,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     .ifNotExists()
     .addColumn("key", "text", (col) => col.primaryKey())
     .addColumn("value", "text", (col) => col.notNull())
-    .addColumn("updated_at", "text", (col) =>
-      col.defaultTo(sql`CURRENT_TIMESTAMP`),
-    )
+    .addColumn("updated_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
     .execute();
 
   // Insert default settings

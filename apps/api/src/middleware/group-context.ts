@@ -22,10 +22,7 @@ export async function groupContextMiddleware(c: Context, next: Next) {
   let current: CurrentGroup | null = null;
 
   if (requestedGroupId) {
-    const membership = await factory.groups.findMembership(
-      requestedGroupId,
-      user.id,
-    );
+    const membership = await factory.groups.findMembership(requestedGroupId, user.id);
     if (membership) {
       current = membership;
     } else if (isPlatformAdmin) {
@@ -56,9 +53,7 @@ export async function groupContextMiddleware(c: Context, next: Next) {
 export function requireCurrentGroup(c: Context): CurrentGroup {
   const current = c.get("currentGroup") as CurrentGroup | undefined;
   if (!current) {
-    throw new Error(
-      "groupContextMiddleware did not run for this request — check route mounting.",
-    );
+    throw new Error("groupContextMiddleware did not run for this request — check route mounting.");
   }
   return current;
 }

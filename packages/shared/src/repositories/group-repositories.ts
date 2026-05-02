@@ -132,7 +132,9 @@ export class TursoGroupRepository {
     return row ? rowToGroup(row) : null;
   }
 
-  async listByUserId(userId: string): Promise<Array<Group & { myRole: MemberRole; amIOwner: boolean }>> {
+  async listByUserId(
+    userId: string,
+  ): Promise<Array<Group & { myRole: MemberRole; amIOwner: boolean }>> {
     const rows = await this.db
       .selectFrom("groups")
       .innerJoin("group_members", "group_members.group_id", "groups.id")
@@ -283,8 +285,7 @@ export class TursoGroupMembershipRepository {
       .where("group_members.group_id", "=", groupId)
       .where((eb) => {
         const clauses = [];
-        if (contact.phone)
-          clauses.push(eb("user.phoneNumber", "=", contact.phone));
+        if (contact.phone) clauses.push(eb("user.phoneNumber", "=", contact.phone));
         if (contact.email) clauses.push(eb("user.email", "=", contact.email));
         return eb.or(clauses);
       })
@@ -334,11 +335,7 @@ export class TursoGroupMembershipRepository {
     }));
   }
 
-  async add(params: {
-    groupId: string;
-    userId: string;
-    role: MemberRole;
-  }): Promise<GroupMember> {
+  async add(params: { groupId: string; userId: string; role: MemberRole }): Promise<GroupMember> {
     const id = generateId("gm");
     const row = await this.db
       .insertInto("group_members")
@@ -359,11 +356,7 @@ export class TursoGroupMembershipRepository {
    * under concurrent accepts of the same invite by the same user. Returns
    * true iff a new row was created.
    */
-  async tryAdd(params: {
-    groupId: string;
-    userId: string;
-    role: MemberRole;
-  }): Promise<boolean> {
+  async tryAdd(params: { groupId: string; userId: string; role: MemberRole }): Promise<boolean> {
     const id = generateId("gm");
     const result = await this.db
       .insertInto("group_members")
@@ -378,11 +371,7 @@ export class TursoGroupMembershipRepository {
     return Number(result.numInsertedOrUpdatedRows ?? 0) > 0;
   }
 
-  async updateRole(
-    groupId: string,
-    userId: string,
-    role: MemberRole,
-  ): Promise<void> {
+  async updateRole(groupId: string, userId: string, role: MemberRole): Promise<void> {
     await this.db
       .updateTable("group_members")
       .set({ role })
@@ -474,12 +463,7 @@ export class TursoGroupInviteRepository {
       .updateTable("group_invites")
       .set((eb) => ({ uses_count: eb("uses_count", "+", 1) }))
       .where("id", "=", id)
-      .where((eb) =>
-        eb.or([
-          eb("max_uses", "is", null),
-          eb("uses_count", "<", eb.ref("max_uses")),
-        ]),
-      )
+      .where((eb) => eb.or([eb("max_uses", "is", null), eb("uses_count", "<", eb.ref("max_uses"))]))
       .executeTakeFirst();
     return Number(result.numUpdatedRows ?? 0) > 0;
   }
@@ -534,10 +518,7 @@ export class TursoGroupRosterRepository {
     return rows.map(rowToRoster);
   }
 
-  async findByGroupAndPhone(
-    groupId: string,
-    phone: string,
-  ): Promise<GroupRoster[]> {
+  async findByGroupAndPhone(groupId: string, phone: string): Promise<GroupRoster[]> {
     const rows = await this.db
       .selectFrom("group_roster")
       .selectAll()
@@ -547,10 +528,7 @@ export class TursoGroupRosterRepository {
     return rows.map(rowToRoster);
   }
 
-  async findByGroupAndEmail(
-    groupId: string,
-    email: string,
-  ): Promise<GroupRoster[]> {
+  async findByGroupAndEmail(groupId: string, email: string): Promise<GroupRoster[]> {
     const rows = await this.db
       .selectFrom("group_roster")
       .selectAll()
@@ -578,10 +556,7 @@ export class TursoGroupRosterRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.db
-      .deleteFrom("group_roster")
-      .where("id", "=", id)
-      .execute();
+    await this.db.deleteFrom("group_roster").where("id", "=", id).execute();
   }
 
   /**
@@ -634,9 +609,7 @@ export class TursoGroupSettingsRepository {
     await this.db
       .insertInto("group_settings")
       .values({ group_id: groupId, key, value, updated_at: now })
-      .onConflict((oc) =>
-        oc.columns(["group_id", "key"]).doUpdateSet({ value, updated_at: now }),
-      )
+      .onConflict((oc) => oc.columns(["group_id", "key"]).doUpdateSet({ value, updated_at: now }))
       .execute();
   }
 }

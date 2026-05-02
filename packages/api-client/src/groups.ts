@@ -13,10 +13,7 @@ import type {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { client as _client } from "./client";
-import {
-  getActiveGroupId,
-  setActiveGroupId,
-} from "./group-storage";
+import { getActiveGroupId, setActiveGroupId } from "./group-storage";
 
 // The Hono RPC client's generic type is too deep for TypeScript to resolve
 // cleanly in this cross-package import (it types as `unknown`). We fall back
@@ -37,8 +34,7 @@ export const groupQueryKeys = {
   detail: (id: string) => [...groupQueryKeys.all, "detail", id] as const,
   members: (id: string) => [...groupQueryKeys.all, "members", id] as const,
   invites: (id: string) => [...groupQueryKeys.all, "invites", id] as const,
-  invitePreview: (token: string) =>
-    [...groupQueryKeys.all, "invite-preview", token] as const,
+  invitePreview: (token: string) => [...groupQueryKeys.all, "invite-preview", token] as const,
   roster: (id: string) => [...groupQueryKeys.all, "roster", id] as const,
 };
 
@@ -190,11 +186,7 @@ export function useCreateGroup() {
 export function useUpdateGroup(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: {
-      name?: string;
-      slug?: string;
-      visibility?: GroupVisibility;
-    }) => {
+    mutationFn: async (input: { name?: string; slug?: string; visibility?: GroupVisibility }) => {
       const res = await client.api.groups[":id"].$patch({
         param: { id: groupId },
         json: input,

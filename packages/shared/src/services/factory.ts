@@ -7,10 +7,7 @@ import { NotificationService } from "./notification-service";
 import { PlayerStatsService } from "./player-stats-service";
 import { RankingService } from "./ranking-service";
 import { votingRepository } from "../repositories/voting-repository";
-import {
-  getRepositoryFactory,
-  type AppRepositoryFactory,
-} from "../repositories/factory";
+import { getRepositoryFactory, type AppRepositoryFactory } from "../repositories/factory";
 
 export class ServiceFactory {
   public readonly matchService: MatchService;
@@ -20,10 +17,7 @@ export class ServiceFactory {
   public readonly notificationService: NotificationService;
   public readonly groupService: GroupService;
 
-  constructor(
-    repositoryFactory?: AppRepositoryFactory,
-    expoAccessToken?: string,
-  ) {
+  constructor(repositoryFactory?: AppRepositoryFactory, expoAccessToken?: string) {
     const repos = repositoryFactory || getRepositoryFactory();
 
     this.matchService = new MatchService(
@@ -40,14 +34,8 @@ export class ServiceFactory {
       repos.matches,
       repos.signups,
     );
-    this.rankingService = new RankingService(
-      repos.playerStats,
-      votingRepository,
-    );
-    this.notificationService = new NotificationService(
-      repos.pushTokens,
-      expoAccessToken,
-    );
+    this.rankingService = new RankingService(repos.playerStats, votingRepository);
+    this.notificationService = new NotificationService(repos.pushTokens, expoAccessToken);
     this.groupService = new GroupService(
       repos.groups,
       repos.groupMembers,
@@ -68,10 +56,7 @@ let serviceFactory: ServiceFactory | null = null;
  */
 export function getServiceFactory(): ServiceFactory {
   if (!serviceFactory) {
-    serviceFactory = new ServiceFactory(
-      undefined,
-      process.env.EXPO_ACCESS_TOKEN,
-    );
+    serviceFactory = new ServiceFactory(undefined, process.env.EXPO_ACCESS_TOKEN);
   }
   return serviceFactory;
 }
@@ -86,8 +71,6 @@ export function resetServiceFactory(): void {
 /**
  * Create a service factory with specific repositories (useful for testing)
  */
-export function createServiceFactory(
-  repositoryFactory: AppRepositoryFactory,
-): ServiceFactory {
+export function createServiceFactory(repositoryFactory: AppRepositoryFactory): ServiceFactory {
   return new ServiceFactory(repositoryFactory);
 }

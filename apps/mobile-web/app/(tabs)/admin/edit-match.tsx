@@ -51,11 +51,7 @@ interface MatchDetails {
 // Extract the actual error message from API errors.
 const getApiErrorMessage = (error: Error): string => {
   const apiError = error as Error & { data?: { error?: string } };
-  if (
-    apiError.data &&
-    typeof apiError.data === "object" &&
-    "error" in apiError.data
-  ) {
+  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
     return (apiError.data as { error: string }).error;
   }
   return error.message;
@@ -80,8 +76,7 @@ export default function EditMatchScreen() {
   const [initialized, setInitialized] = useState(false);
 
   const { myRole } = useCurrentGroup();
-  const canManage =
-    session?.user?.role === "admin" || myRole === "organizer";
+  const canManage = session?.user?.role === "admin" || myRole === "organizer";
 
   // Fetch existing match data
   const { data: match, isLoading: isLoadingMatch } = useQuery({
@@ -365,9 +360,7 @@ export default function EditMatchScreen() {
             disabled={updateMutation.isPending}
             testID="admin-edit-match-submit"
           >
-            {updateMutation.isPending
-              ? t("editMatch.saving")
-              : t("editMatch.save")}
+            {updateMutation.isPending ? t("editMatch.saving") : t("editMatch.save")}
           </Button>
         </YStack>
       </ScrollView>

@@ -35,8 +35,6 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 export const down: Migration["down"] = async (db: Kysely<any>) => {
   // SQLite doesn't support DROP COLUMN directly, need to recreate table
   // For simplicity, we'll just log a warning
-  console.log(
-    "⚠️  SQLite doesn't support DROP COLUMN. primaryAuthMethod column will remain.",
-  );
+  console.log("⚠️  SQLite doesn't support DROP COLUMN. primaryAuthMethod column will remain.");
   console.log("↩️ Migration: add-primary-auth-method rolled back (no-op)");
 };

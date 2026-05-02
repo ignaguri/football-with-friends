@@ -26,7 +26,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `.execute(db);
-    await sql`CREATE INDEX idx_match_media_match_created ON match_media(match_id, created_at DESC)`.execute(db);
+    await sql`CREATE INDEX idx_match_media_match_created ON match_media(match_id, created_at DESC)`.execute(
+      db,
+    );
     await sql`CREATE INDEX idx_match_media_uploader ON match_media(uploader_user_id)`.execute(db);
     console.log("✅ Created match_media table and indexes");
   }

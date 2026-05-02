@@ -28,9 +28,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   const legacyGuests = await db
     .selectFrom("signups")
     .select((eb) => [
-      eb.fn
-        .coalesce("guest_owner_id", "added_by_user_id")
-        .as("owner_id"),
+      eb.fn.coalesce("guest_owner_id", "added_by_user_id").as("owner_id"),
       "player_name",
     ])
     .where("user_id", "is", null)
@@ -87,10 +85,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .where((eb) =>
         eb.or([
           eb("guest_owner_id", "=", ownerId),
-          eb.and([
-            eb("guest_owner_id", "is", null),
-            eb("added_by_user_id", "=", ownerId),
-          ]),
+          eb.and([eb("guest_owner_id", "is", null), eb("added_by_user_id", "=", ownerId)]),
         ]),
       )
       .where("player_name", "=", playerName)

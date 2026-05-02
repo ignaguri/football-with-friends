@@ -63,21 +63,13 @@ export function RankingCard({
           borderWidth={2}
           borderColor={rankColor}
         >
-          <Text
-            fontSize={isPodium && rank <= 3 ? "$6" : "$5"}
-            fontWeight="700"
-            color={rankColor}
-          >
+          <Text fontSize={isPodium && rank <= 3 ? "$6" : "$5"} fontWeight="700" color={rankColor}>
             {rank}
           </Text>
         </Circle>
 
         {/* User Avatar */}
-        <UserAvatar
-          name={userName}
-          profilePicture={profilePicture}
-          size={avatarSize}
-        />
+        <UserAvatar name={userName} profilePicture={profilePicture} size={avatarSize} />
 
         {/* Player Info */}
         <YStack flex={1} gap="$1">
@@ -95,7 +87,9 @@ export function RankingCard({
                 {userNickname ?? userName}
               </Text>
               {userNickname && userNickname !== userName && (
-                <Text fontSize="$2" color="$gray10" fontWeight="400">({userName})</Text>
+                <Text fontSize="$2" color="$gray10" fontWeight="400">
+                  ({userName})
+                </Text>
               )}
             </YStack>
           </XStack>

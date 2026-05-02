@@ -20,10 +20,7 @@ export interface SeededUser {
   role: string;
 }
 
-export async function seedUser(
-  db: Kysely<any>,
-  params: SeedUserParams = {},
-): Promise<SeededUser> {
+export async function seedUser(db: Kysely<any>, params: SeedUserParams = {}): Promise<SeededUser> {
   const id = params.id ?? `user_${nanoid(10)}`;
   const email = params.email ?? `${id}@test.local`;
   const name = params.name ?? `User ${id.slice(-4)}`;
@@ -72,10 +69,7 @@ export interface SeededGroup {
   ownerUserId: string;
 }
 
-export async function seedGroup(
-  db: Kysely<any>,
-  params: SeedGroupParams,
-): Promise<SeededGroup> {
+export async function seedGroup(db: Kysely<any>, params: SeedGroupParams): Promise<SeededGroup> {
   const id = params.id ?? `grp_${nanoid(10)}`;
   const name = params.name ?? `Group ${id.slice(-4)}`;
   const slug = params.slug ?? id.toLowerCase();
@@ -146,10 +140,7 @@ export interface SeededInvite {
   token: string;
 }
 
-export async function seedInvite(
-  db: Kysely<any>,
-  params: SeedInviteParams,
-): Promise<SeededInvite> {
+export async function seedInvite(db: Kysely<any>, params: SeedInviteParams): Promise<SeededInvite> {
   const id = `inv_${nanoid(10)}`;
   const token = params.token ?? nanoid(24);
   await db
@@ -254,10 +245,7 @@ export interface SeedMatchParams {
 // specific calendar day.
 let matchDateCounter = 0;
 
-export async function seedMatch(
-  db: Kysely<any>,
-  params: SeedMatchParams,
-): Promise<{ id: string }> {
+export async function seedMatch(db: Kysely<any>, params: SeedMatchParams): Promise<{ id: string }> {
   const id = params.id ?? `match_${nanoid(10)}`;
   const defaultDate = (() => {
     matchDateCounter += 1;

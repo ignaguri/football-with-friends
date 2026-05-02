@@ -20,10 +20,13 @@ app.post("/update-matches", async (c) => {
     return c.json({ success: true, ...result, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("[CRON] Manual trigger error:", error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
 });
 
@@ -35,10 +38,13 @@ app.post("/send-reminders", async (c) => {
     return c.json({ success: true, ...result, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("[CRON] Manual trigger error:", error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
 });
 
@@ -50,10 +56,13 @@ app.post("/prune-inbox", async (c) => {
     return c.json({ success: true, ...result, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("[CRON] Manual trigger error:", error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
 });
 
@@ -65,10 +74,13 @@ app.post("/send-engagement", async (c) => {
     return c.json({ success: true, ...result, timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("[CRON] Manual trigger error:", error);
-    return c.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    return c.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500,
+    );
   }
 });
 

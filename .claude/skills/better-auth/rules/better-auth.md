@@ -32,23 +32,23 @@ database: {
 
 ```typescript
 /* ❌ CommonJS no longer supported (v1.4.0) */
-const { betterAuth } = require('better-auth')
+const { betterAuth } = require("better-auth");
 
 /* ✅ ESM only */
-import { betterAuth } from 'better-auth'
+import { betterAuth } from "better-auth";
 
 /* ❌ MCP plugin deprecated (v1.4.9) */
-import { mcp } from 'better-auth/plugins'
+import { mcp } from "better-auth/plugins";
 
 /* ✅ Use OAuth 2.1 Provider instead */
-import { oauthProvider, jwt } from 'better-auth/plugins'
-plugins: [jwt(), oauthProvider({ accessTokenExpiresIn: 3600 })]
+import { oauthProvider, jwt } from "better-auth/plugins";
+plugins: [jwt(), oauthProvider({ accessTokenExpiresIn: 3600 })];
 
 /* ❌ Admin impersonation of admins (v1.4.6 default changed) */
-admin() // allowImpersonatingAdmins now defaults to false
+admin(); // allowImpersonatingAdmins now defaults to false
 
 /* ✅ Explicit if you need admin-on-admin impersonation */
-admin({ allowImpersonatingAdmins: true })
+admin({ allowImpersonatingAdmins: true });
 ```
 
 ## TanStack Start: Cookie Plugin Required
@@ -57,29 +57,29 @@ admin({ allowImpersonatingAdmins: true })
 /* ❌ Cookies won't set properly */
 export const auth = betterAuth({
   plugins: [twoFactor(), organization()],
-})
+});
 
 /* ✅ reactStartCookies MUST be last */
-import { reactStartCookies } from 'better-auth/react-start'
+import { reactStartCookies } from "better-auth/react-start";
 export const auth = betterAuth({
   plugins: [
     twoFactor(),
     organization(),
     reactStartCookies(), // MUST be LAST
   ],
-})
+});
 ```
 
 ## Nanostore Session Invalidation
 
 ```typescript
 /* ❌ TanStack Query invalidation doesn't update session */
-queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
 /* ✅ Notify nanostore after user updates */
-const { data, error } = await authClient.updateUser({ image: newAvatarUrl })
+const { data, error } = await authClient.updateUser({ image: newAvatarUrl });
 if (!error) {
-  authClient.$store.notify('$sessionSignal')
+  authClient.$store.notify("$sessionSignal");
 }
 ```
 
@@ -96,10 +96,10 @@ wrangler d1 migrations apply my-db --remote
 
 ## Quick Fixes
 
-| If Claude suggests... | Use instead... |
-|----------------------|----------------|
-| `d1Adapter(env.DB)` | `drizzleAdapter(db, { provider: "sqlite" })` |
-| `require('better-auth')` | `import { betterAuth } from 'better-auth'` |
-| Missing cookies in TanStack Start | Add `reactStartCookies()` as last plugin |
+| If Claude suggests...                       | Use instead...                               |
+| ------------------------------------------- | -------------------------------------------- |
+| `d1Adapter(env.DB)`                         | `drizzleAdapter(db, { provider: "sqlite" })` |
+| `require('better-auth')`                    | `import { betterAuth } from 'better-auth'`   |
+| Missing cookies in TanStack Start           | Add `reactStartCookies()` as last plugin     |
 | `queryClient.invalidateQueries` for session | `authClient.$store.notify('$sessionSignal')` |
-| `npx better-auth migrate` | `npx drizzle-kit generate` |
+| `npx better-auth migrate`                   | `npx drizzle-kit generate`                   |

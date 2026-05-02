@@ -3,6 +3,7 @@
 **Goal**: Migrate "Fútbol con los pibes" from Next.js web-only to a universal Expo app (web + iOS + Android) with a standalone Hono API backend.
 
 **Architecture Overview**:
+
 ```
 monorepo/
 ├── apps/
@@ -17,6 +18,7 @@ monorepo/
 ```
 
 **Tech Stack**:
+
 - **Monorepo**: Turborepo
 - **Package Manager**: pnpm (keep current)
 - **API Framework**: Hono
@@ -36,6 +38,7 @@ monorepo/
 ### 0.1 Understand Current Architecture
 
 **Read these files to understand the codebase**:
+
 - `lib/services/match-service.ts` - Core business logic
 - `lib/repositories/` - Data access layer
 - `lib/domain/types.ts` - Domain models
@@ -44,6 +47,7 @@ monorepo/
 - `components/ui/` - Current UI components
 
 **Key patterns to preserve**:
+
 - Service layer abstractions
 - Repository interfaces (dual storage support)
 - Timezone utilities
@@ -146,9 +150,9 @@ mkdir -p tooling/typescript
 
 ```yaml
 packages:
-  - 'apps/*'
-  - 'packages/*'
-  - 'tooling/*'
+  - "apps/*"
+  - "packages/*"
+  - "tooling/*"
 ```
 
 ### 1.5 Create Shared TypeScript Config
@@ -263,19 +267,20 @@ packages:
 **Create `packages/shared/src/domain/index.ts`**:
 
 ```typescript
-export * from './types'
-export * from './constants'
+export * from "./types";
+export * from "./constants";
 ```
 
 **Create `packages/shared/src/services/index.ts`**:
 
 ```typescript
-export * from './match-service'
-export * from './court-service'
-export * from './factory'
+export * from "./match-service";
+export * from "./court-service";
+export * from "./factory";
 ```
 
 **Create similar index files for**:
+
 - `repositories/index.ts`
 - `utils/index.ts`
 - `database/index.ts`
@@ -287,15 +292,16 @@ export * from './factory'
 
 ```typescript
 // Before:
-import { Match } from '@/lib/domain/types'
-import { MatchRepository } from '@/lib/repositories/interfaces'
+import { Match } from "@/lib/domain/types";
+import { MatchRepository } from "@/lib/repositories/interfaces";
 
 // After:
-import { Match } from '../domain/types'
-import { MatchRepository } from '../repositories/interfaces'
+import { Match } from "../domain/types";
+import { MatchRepository } from "../repositories/interfaces";
 ```
 
 **Remove Next.js-specific imports** (will be handled by API layer):
+
 - Remove `@/` aliases
 - Remove any Next.js imports (headers, cookies, etc.)
 
@@ -352,48 +358,51 @@ import { MatchRepository } from '../repositories/interfaces'
 **Create `apps/api/src/index.ts`**:
 
 ```typescript
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { logger } from 'hono/logger'
-import { auth } from './auth'
-import { matchesRouter } from './routes/matches'
-import { courtsRouter } from './routes/courts'
-import { locationsRouter } from './routes/locations'
-import { orpcHandler } from './orpc'
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
+import { auth } from "./auth";
+import { matchesRouter } from "./routes/matches";
+import { courtsRouter } from "./routes/courts";
+import { locationsRouter } from "./routes/locations";
+import { orpcHandler } from "./orpc";
 
-const app = new Hono()
+const app = new Hono();
 
 // Middleware
-app.use('*', logger())
-app.use('*', cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:8081'],
-  credentials: true,
-}))
+app.use("*", logger());
+app.use(
+  "*",
+  cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:8081"],
+    credentials: true,
+  }),
+);
 
 // Health check
-app.get('/health', (c) => c.json({ status: 'ok' }))
+app.get("/health", (c) => c.json({ status: "ok" }));
 
 // Better Auth
-app.on(['POST', 'GET'], '/api/auth/*', (c) => {
-  return auth.handler(c.req.raw)
-})
+app.on(["POST", "GET"], "/api/auth/*", (c) => {
+  return auth.handler(c.req.raw);
+});
 
 // API Routes (traditional REST)
-app.route('/api/matches', matchesRouter)
-app.route('/api/courts', courtsRouter)
-app.route('/api/locations', locationsRouter)
+app.route("/api/matches", matchesRouter);
+app.route("/api/courts", courtsRouter);
+app.route("/api/locations", locationsRouter);
 
 // oRPC endpoint
-app.use('/rpc/*', orpcHandler)
+app.use("/rpc/*", orpcHandler);
 
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3001;
 
-console.log(`🚀 API Server running on http://localhost:${port}`)
+console.log(`🚀 API Server running on http://localhost:${port}`);
 
 export default {
   port,
   fetch: app.fetch,
-}
+};
 ```
 
 ### 3.3 Setup Better Auth
@@ -401,13 +410,13 @@ export default {
 **Create `apps/api/src/auth.ts`**:
 
 ```typescript
-import { betterAuth } from 'better-auth'
-import { createKyselyAdapter } from '@libsql/kysely-libsql'
-import { db } from '@repo/shared/database'
+import { betterAuth } from "better-auth";
+import { createKyselyAdapter } from "@libsql/kysely-libsql";
+import { db } from "@repo/shared/database";
 
 export const auth = betterAuth({
   database: createKyselyAdapter(db, {
-    dialect: 'sqlite',
+    dialect: "sqlite",
   }),
   emailAndPassword: {
     enabled: false,
@@ -421,13 +430,13 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       role: {
-        type: 'string',
-        defaultValue: 'user',
+        type: "string",
+        defaultValue: "user",
       },
     },
   },
-  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(',') || [],
-})
+  trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || [],
+});
 ```
 
 ### 3.4 Create oRPC Router
@@ -435,71 +444,73 @@ export const auth = betterAuth({
 **Create `apps/api/src/orpc/index.ts`**:
 
 ```typescript
-import { createORPCHandler } from '@orpc/server'
-import { matchesProcedures } from './procedures/matches'
-import { courtsProcedures } from './procedures/courts'
-import { locationsProcedures } from './procedures/locations'
+import { createORPCHandler } from "@orpc/server";
+import { matchesProcedures } from "./procedures/matches";
+import { courtsProcedures } from "./procedures/courts";
+import { locationsProcedures } from "./procedures/locations";
 
 // Combine all procedures
 export const appRouter = {
   matches: matchesProcedures,
   courts: courtsProcedures,
   locations: locationsProcedures,
-}
+};
 
-export type AppRouter = typeof appRouter
+export type AppRouter = typeof appRouter;
 
 // Create Hono handler
 export const orpcHandler = createORPCHandler({
   router: appRouter,
-})
+});
 ```
 
 **Create `apps/api/src/orpc/procedures/matches.ts`**:
 
 ```typescript
-import { z } from 'zod'
-import { createProcedure } from '@orpc/server'
-import { matchService } from '@repo/shared/services'
-import { CreateMatchDTO, UpdateMatchDTO } from '@repo/shared/domain'
-import { withAuth, withAdminAuth } from '../middleware/auth'
+import { z } from "zod";
+import { createProcedure } from "@orpc/server";
+import { matchService } from "@repo/shared/services";
+import { CreateMatchDTO, UpdateMatchDTO } from "@repo/shared/domain";
+import { withAuth, withAdminAuth } from "../middleware/auth";
 
-const baseProcedure = createProcedure()
+const baseProcedure = createProcedure();
 
 export const matchesProcedures = {
   // Get all matches
   getAll: baseProcedure
-    .input(z.object({
-      type: z.enum(['upcoming', 'past', 'all']).optional(),
-    }))
+    .input(
+      z.object({
+        type: z.enum(["upcoming", "past", "all"]).optional(),
+      }),
+    )
     .query(async ({ input }) => {
-      return matchService.getMatches(input.type || 'upcoming')
+      return matchService.getMatches(input.type || "upcoming");
     }),
 
   // Get single match
-  getById: baseProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      return matchService.getMatchById(input.id)
-    }),
+  getById: baseProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+    return matchService.getMatchById(input.id);
+  }),
 
   // Create match (admin only)
   create: baseProcedure
     .use(withAdminAuth)
     .input(z.custom<CreateMatchDTO>())
     .mutation(async ({ input, ctx }) => {
-      return matchService.createMatch(input, ctx.user.id)
+      return matchService.createMatch(input, ctx.user.id);
     }),
 
   // Update match (admin only)
   update: baseProcedure
     .use(withAdminAuth)
-    .input(z.object({
-      id: z.string(),
-      data: z.custom<UpdateMatchDTO>(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        data: z.custom<UpdateMatchDTO>(),
+      }),
+    )
     .mutation(async ({ input }) => {
-      return matchService.updateMatch(input.id, input.data)
+      return matchService.updateMatch(input.id, input.data);
     }),
 
   // Delete match (admin only)
@@ -507,7 +518,7 @@ export const matchesProcedures = {
     .use(withAdminAuth)
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input }) => {
-      return matchService.deleteMatch(input.id)
+      return matchService.deleteMatch(input.id);
     }),
 
   // Signup procedures
@@ -515,48 +526,50 @@ export const matchesProcedures = {
     // Sign up for match
     create: baseProcedure
       .use(withAuth)
-      .input(z.object({
-        matchId: z.string(),
-        playerName: z.string().optional(),
-        playerEmail: z.string().email().optional(),
-      }))
+      .input(
+        z.object({
+          matchId: z.string(),
+          playerName: z.string().optional(),
+          playerEmail: z.string().email().optional(),
+        }),
+      )
       .mutation(async ({ input, ctx }) => {
         return matchService.signupPlayer(
           input.matchId,
           ctx.user.id,
           input.playerName,
-          input.playerEmail
-        )
+          input.playerEmail,
+        );
       }),
 
     // Update signup status
     update: baseProcedure
       .use(withAuth)
-      .input(z.object({
-        matchId: z.string(),
-        signupId: z.string(),
-        status: z.enum(['PAID', 'PENDING', 'CANCELLED']),
-      }))
+      .input(
+        z.object({
+          matchId: z.string(),
+          signupId: z.string(),
+          status: z.enum(["PAID", "PENDING", "CANCELLED"]),
+        }),
+      )
       .mutation(async ({ input }) => {
-        return matchService.updateSignupStatus(
-          input.matchId,
-          input.signupId,
-          input.status
-        )
+        return matchService.updateSignupStatus(input.matchId, input.signupId, input.status);
       }),
 
     // Remove signup
     remove: baseProcedure
       .use(withAuth)
-      .input(z.object({
-        matchId: z.string(),
-        signupId: z.string(),
-      }))
+      .input(
+        z.object({
+          matchId: z.string(),
+          signupId: z.string(),
+        }),
+      )
       .mutation(async ({ input }) => {
-        return matchService.removeSignup(input.matchId, input.signupId)
+        return matchService.removeSignup(input.matchId, input.signupId);
       }),
   },
-}
+};
 ```
 
 ### 3.5 Create Auth Middleware
@@ -564,14 +577,14 @@ export const matchesProcedures = {
 **Create `apps/api/src/orpc/middleware/auth.ts`**:
 
 ```typescript
-import { createMiddleware } from '@orpc/server'
-import { auth } from '../../auth'
+import { createMiddleware } from "@orpc/server";
+import { auth } from "../../auth";
 
 export const withAuth = createMiddleware(async ({ ctx, next }) => {
-  const session = await auth.getSession(ctx.request)
+  const session = await auth.getSession(ctx.request);
 
   if (!session?.user) {
-    throw new Error('Unauthorized')
+    throw new Error("Unauthorized");
   }
 
   return next({
@@ -580,18 +593,18 @@ export const withAuth = createMiddleware(async ({ ctx, next }) => {
       user: session.user,
       session,
     },
-  })
-})
+  });
+});
 
 export const withAdminAuth = createMiddleware(async ({ ctx, next }) => {
-  const session = await auth.getSession(ctx.request)
+  const session = await auth.getSession(ctx.request);
 
   if (!session?.user) {
-    throw new Error('Unauthorized')
+    throw new Error("Unauthorized");
   }
 
-  if (session.user.role !== 'admin') {
-    throw new Error('Forbidden: Admin access required')
+  if (session.user.role !== "admin") {
+    throw new Error("Forbidden: Admin access required");
   }
 
   return next({
@@ -600,8 +613,8 @@ export const withAdminAuth = createMiddleware(async ({ ctx, next }) => {
       user: session.user,
       session,
     },
-  })
-})
+  });
+});
 ```
 
 ### 3.6 Create Traditional REST Routes (Optional)
@@ -609,34 +622,31 @@ export const withAdminAuth = createMiddleware(async ({ ctx, next }) => {
 **Create `apps/api/src/routes/matches.ts`** (for backwards compatibility):
 
 ```typescript
-import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { matchService } from '@repo/shared/services'
-import { createMatchSchema } from '@repo/shared/domain'
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { matchService } from "@repo/shared/services";
+import { createMatchSchema } from "@repo/shared/domain";
 
-export const matchesRouter = new Hono()
+export const matchesRouter = new Hono();
 
-matchesRouter.get('/', async (c) => {
-  const type = c.req.query('type') || 'upcoming'
-  const matches = await matchService.getMatches(type as any)
-  return c.json(matches)
-})
+matchesRouter.get("/", async (c) => {
+  const type = c.req.query("type") || "upcoming";
+  const matches = await matchService.getMatches(type as any);
+  return c.json(matches);
+});
 
-matchesRouter.get('/:id', async (c) => {
-  const id = c.req.param('id')
-  const match = await matchService.getMatchById(id)
-  return c.json(match)
-})
+matchesRouter.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const match = await matchService.getMatchById(id);
+  return c.json(match);
+});
 
-matchesRouter.post('/',
-  zValidator('json', createMatchSchema),
-  async (c) => {
-    // TODO: Add auth check
-    const data = c.req.valid('json')
-    const match = await matchService.createMatch(data, 'user-id')
-    return c.json(match, 201)
-  }
-)
+matchesRouter.post("/", zValidator("json", createMatchSchema), async (c) => {
+  // TODO: Add auth check
+  const data = c.req.valid("json");
+  const match = await matchService.createMatch(data, "user-id");
+  return c.json(match, 201);
+});
 
 // Add more routes as needed
 ```
@@ -695,11 +705,11 @@ DEFAULT_TIMEZONE=Europe/Berlin
 **Create `packages/api-client/src/index.ts`**:
 
 ```typescript
-import { createORPCClient } from '@orpc/client'
-import { createORPCReact } from '@orpc/react'
-import type { AppRouter } from 'api/src/orpc'
+import { createORPCClient } from "@orpc/client";
+import { createORPCReact } from "@orpc/react";
+import type { AppRouter } from "api/src/orpc";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3001";
 
 // Create base client
 export const orpcClient = createORPCClient<AppRouter>({
@@ -707,21 +717,17 @@ export const orpcClient = createORPCClient<AppRouter>({
   fetch: (input, init) => {
     return fetch(input, {
       ...init,
-      credentials: 'include', // Important for cookies
-    })
+      credentials: "include", // Important for cookies
+    });
   },
-})
+});
 
 // Create React hooks
-export const {
-  useQuery,
-  useMutation,
-  useInfiniteQuery,
-  useSuspenseQuery,
-} = createORPCReact<AppRouter>(orpcClient)
+export const { useQuery, useMutation, useInfiniteQuery, useSuspenseQuery } =
+  createORPCReact<AppRouter>(orpcClient);
 
 // Export typed client
-export { orpcClient as api }
+export { orpcClient as api };
 ```
 
 ### 4.3 Create React Query Provider
@@ -854,8 +860,8 @@ export default function Home() {
 **Create `apps/mobile-web/tamagui.config.ts`**:
 
 ```typescript
-import { config as defaultConfig } from '@tamagui/config/v3'
-import { createTamagui } from 'tamagui'
+import { config as defaultConfig } from "@tamagui/config/v3";
+import { createTamagui } from "tamagui";
 
 const config = createTamagui({
   ...defaultConfig,
@@ -863,33 +869,30 @@ const config = createTamagui({
     ...defaultConfig.themes,
     // Customize themes here
   },
-})
+});
 
-export type AppConfig = typeof config
+export type AppConfig = typeof config;
 
-declare module 'tamagui' {
+declare module "tamagui" {
   interface TamaguiCustomConfig extends AppConfig {}
 }
 
-export default config
+export default config;
 ```
 
 **Create `apps/mobile-web/metro.config.js`**:
 
 ```javascript
-const { getDefaultConfig } = require('expo/metro-config')
+const { getDefaultConfig } = require("expo/metro-config");
 
-const config = getDefaultConfig(__dirname)
+const config = getDefaultConfig(__dirname);
 
-config.resolver.sourceExts.push('mjs')
+config.resolver.sourceExts.push("mjs");
 
 // Support pnpm monorepo
-config.watchFolders = [
-  ...config.watchFolders,
-  '../../packages',
-]
+config.watchFolders = [...config.watchFolders, "../../packages"];
 
-module.exports = config
+module.exports = config;
 ```
 
 ### 5.5 Setup Environment
@@ -932,9 +935,7 @@ EXPO_PUBLIC_GOOGLE_CLIENT_ID=...
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router"
-    ],
+    "plugins": ["expo-router"],
     "experiments": {
       "typedRoutes": true
     }
@@ -1032,8 +1033,8 @@ export function CardContent({ children }: { children: ReactNode }) {
 **Create `packages/ui/src/index.ts`**:
 
 ```typescript
-export { Button } from './Button'
-export { Card, CardHeader, CardTitle, CardContent } from './Card'
+export { Button } from "./Button";
+export { Card, CardHeader, CardTitle, CardContent } from "./Card";
 // Export more components as you create them
 ```
 
@@ -1215,18 +1216,13 @@ export default function TabLayout() {
 **Create `apps/mobile-web/lib/auth.ts`**:
 
 ```typescript
-import { createAuthClient } from 'better-auth/react'
+import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
-})
+});
 
-export const {
-  signIn,
-  signOut,
-  useSession,
-  signUp
-} = authClient
+export const { signIn, signOut, useSession, signUp } = authClient;
 ```
 
 **Create `apps/mobile-web/app/(auth)/sign-in.tsx`**:
@@ -1383,24 +1379,25 @@ pnpm expo start
 **Create a test file `packages/api-client/test.ts`**:
 
 ```typescript
-import { api } from './src'
+import { api } from "./src";
 
 async function test() {
   // Test getting matches
-  const matches = await api.matches.getAll({ type: 'upcoming' })
-  console.log('Matches:', matches)
+  const matches = await api.matches.getAll({ type: "upcoming" });
+  console.log("Matches:", matches);
 
   // Test type safety (this should show autocomplete)
-  const match = await api.matches.getById({ id: '123' })
-  console.log('Match:', match)
+  const match = await api.matches.getById({ id: "123" });
+  console.log("Match:", match);
 }
 
-test()
+test();
 ```
 
 ### 9.4 Validation Checklist
 
 **API Backend**:
+
 - [ ] Health check responds
 - [ ] Better Auth routes work
 - [ ] CORS configured correctly
@@ -1409,6 +1406,7 @@ test()
 - [ ] Environment variables loaded
 
 **Expo App**:
+
 - [ ] Web version loads
 - [ ] iOS simulator works (if on Mac)
 - [ ] Android emulator works
@@ -1418,6 +1416,7 @@ test()
 - [ ] Tamagui components render correctly
 
 **Shared Code**:
+
 - [ ] Services work with Hono
 - [ ] Repositories connect to database
 - [ ] Timezone utilities work
@@ -1430,12 +1429,14 @@ test()
 ### 10.1 Gradual Migration
 
 **Option A: Parallel Development**
+
 1. Keep current Next.js app running
 2. Build new Expo app alongside
 3. Point both to same database
 4. Gradually move users to new app
 
 **Option B: Feature Parity First**
+
 1. Build all features in Expo app first
 2. Test thoroughly
 3. Switch over completely
@@ -1446,6 +1447,7 @@ test()
 **Current setup already supports dual storage** (Turso + Google Sheets), so no changes needed to `@repo/shared/repositories`.
 
 **Migration steps**:
+
 1. Ensure API can connect to Turso
 2. Test all repository operations
 3. Verify data integrity
@@ -1532,10 +1534,10 @@ EXPO_PUBLIC_GOOGLE_CLIENT_ID=...
 **Create `apps/mobile-web/lib/calendar.ts`**:
 
 ```typescript
-import * as FileSystem from 'expo-file-system'
-import * as Sharing from 'expo-sharing'
-import { Match } from '@repo/shared/domain'
-import { formatDisplayDateTime } from '@repo/shared/utils'
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import { Match } from "@repo/shared/domain";
+import { formatDisplayDateTime } from "@repo/shared/utils";
 
 export async function downloadMatchCalendar(match: Match) {
   const icsContent = `BEGIN:VCALENDAR
@@ -1547,11 +1549,11 @@ DTEND:${formatICSDate(match.date, match.time, 90)} // 90min duration
 LOCATION:${match.location.address}
 DESCRIPTION:Football match with friends
 END:VEVENT
-END:VCALENDAR`
+END:VCALENDAR`;
 
-  const fileUri = FileSystem.documentDirectory + 'match.ics'
-  await FileSystem.writeAsStringAsync(fileUri, icsContent)
-  await Sharing.shareAsync(fileUri)
+  const fileUri = FileSystem.documentDirectory + "match.ics";
+  await FileSystem.writeAsStringAsync(fileUri, icsContent);
+  await Sharing.shareAsync(fileUri);
 }
 
 function formatICSDate(date: string, time: string, addMinutes = 0): string {
@@ -1577,13 +1579,13 @@ pnpm expo install expo-notifications
 
 ```typescript
 // In packages/api-client/src/provider.tsx
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const persister = createSyncStoragePersister({
   storage: AsyncStorage,
-})
+});
 
 // Wrap app with PersistQueryClientProvider
 ```
@@ -1602,29 +1604,27 @@ pnpm add i18next react-i18next expo-localization
 **Create `apps/mobile-web/lib/i18n.ts`**:
 
 ```typescript
-import i18n from 'i18next'
-import { initReactI18next } from 'react-i18next'
-import * as Localization from 'expo-localization'
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import * as Localization from "expo-localization";
 
 // Import translations from current locales/ folder
-import en from '../../../locales/en/common.json'
-import es from '../../../locales/es/common.json'
+import en from "../../../locales/en/common.json";
+import es from "../../../locales/es/common.json";
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      en: { translation: en },
-      es: { translation: es },
-    },
-    lng: Localization.locale.split('-')[0], // 'en' or 'es'
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  })
+i18n.use(initReactI18next).init({
+  resources: {
+    en: { translation: en },
+    es: { translation: es },
+  },
+  lng: Localization.locale.split("-")[0], // 'en' or 'es'
+  fallbackLng: "en",
+  interpolation: {
+    escapeValue: false,
+  },
+});
 
-export default i18n
+export default i18n;
 ```
 
 **Copy translations**: Move `locales/` folder to `apps/mobile-web/locales/`.
@@ -1666,7 +1666,7 @@ const queryClient = new QueryClient({
       retry: 2,
     },
   },
-})
+});
 ```
 
 ---
@@ -1676,6 +1676,7 @@ const queryClient = new QueryClient({
 ### Pre-Launch Validation
 
 **API**:
+
 - [ ] All endpoints tested
 - [ ] Authentication working
 - [ ] Authorization rules enforced
@@ -1688,6 +1689,7 @@ const queryClient = new QueryClient({
 - [ ] API documentation generated
 
 **Mobile App**:
+
 - [ ] All screens implemented
 - [ ] Navigation working smoothly
 - [ ] Forms validated properly
@@ -1699,6 +1701,7 @@ const queryClient = new QueryClient({
 - [ ] App store metadata prepared
 
 **Web App**:
+
 - [ ] SEO meta tags added
 - [ ] PWA manifest configured
 - [ ] Responsive design tested
@@ -1706,12 +1709,14 @@ const queryClient = new QueryClient({
 - [ ] Accessibility checked
 
 **Shared Code**:
+
 - [ ] All services unit tested
 - [ ] Repository tests passing
 - [ ] Type coverage complete
 - [ ] No unused imports/code
 
 **DevOps**:
+
 - [ ] CI/CD pipeline configured
 - [ ] API deployed to production
 - [ ] Expo builds successful
@@ -1726,6 +1731,7 @@ const queryClient = new QueryClient({
 ### Common Issues
 
 **1. Metro bundler can't find packages**
+
 ```bash
 # Clear cache
 cd apps/mobile-web
@@ -1733,6 +1739,7 @@ pnpm expo start --clear
 ```
 
 **2. TypeScript can't find types**
+
 ```bash
 # Rebuild project references
 pnpm install
@@ -1740,6 +1747,7 @@ pnpm typecheck
 ```
 
 **3. Bun runtime errors**
+
 ```bash
 # Check Bun version
 bun --version
@@ -1748,16 +1756,19 @@ bun --version
 ```
 
 **4. CORS errors**
+
 - Check `ALLOWED_ORIGINS` in API .env
 - Ensure credentials: 'include' in API client
 - Verify Better Auth `trustedOrigins`
 
 **5. oRPC type errors**
+
 - Restart TypeScript server in IDE
 - Check that API types are exported correctly
 - Verify `AppRouter` type export
 
 **6. Database connection fails**
+
 - Check Turso credentials
 - Test connection with Kysely directly
 - Verify `STORAGE_PROVIDER` env var
@@ -1767,6 +1778,7 @@ bun --version
 ## Next Steps After Migration
 
 ### Feature Additions
+
 1. Push notifications for match reminders
 2. In-app payments for match fees
 3. Photo sharing for matches
@@ -1776,6 +1788,7 @@ bun --version
 7. Location services (find nearby courts)
 
 ### Technical Improvements
+
 1. Add E2E tests (Detox for mobile)
 2. Setup Storybook for component library
 3. Add analytics (Mixpanel/Amplitude)
@@ -1789,6 +1802,7 @@ bun --version
 ## Reference Links
 
 **Documentation**:
+
 - [Turborepo Docs](https://turbo.build/repo/docs)
 - [Expo Router Docs](https://docs.expo.dev/router/introduction/)
 - [Hono Docs](https://hono.dev/)
@@ -1797,6 +1811,7 @@ bun --version
 - [Better Auth Docs](https://www.better-auth.com/)
 
 **Key Files to Reference**:
+
 - Current `lib/services/match-service.ts` - Business logic patterns
 - Current `lib/repositories/turso/match-repository.ts` - Data access patterns
 - Current `lib/utils/timezone.ts` - Timezone handling
@@ -1807,6 +1822,7 @@ bun --version
 ## Notes for Future Self
 
 **Remember**:
+
 - Timezone handling is critical - always use `convertToAppTimezone()` from `@repo/shared/utils`
 - The service layer is already well-structured - just wire it to Hono
 - Repository pattern supports dual storage - don't break that abstraction
@@ -1817,6 +1833,7 @@ bun --version
 - Keep shared code truly shared - no platform-specific code in `@repo/shared`
 
 **Don't forget**:
+
 - Add proper error boundaries
 - Implement retry logic for failed requests
 - Add loading skeletons for better UX

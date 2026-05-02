@@ -137,9 +137,7 @@ async function setupDatabase() {
       .addColumn("id", "text", (col) => col.primaryKey())
       .addColumn("name", "text")
       .addColumn("email", "text", (col) => col.notNull().unique())
-      .addColumn("emailVerified", "integer", (col) =>
-        col.notNull().defaultTo(0),
-      )
+      .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
       .addColumn("image", "text")
       .addColumn("role", "text", (col) => col.notNull().defaultTo("user"))
       .addColumn("banned", "integer")
@@ -167,9 +165,7 @@ async function setupDatabase() {
       .createTable("account")
       .ifNotExists()
       .addColumn("id", "text", (col) => col.primaryKey())
-      .addColumn("userId", "text", (col) =>
-        col.notNull().references("user.id").onDelete("cascade"),
-      )
+      .addColumn("userId", "text", (col) => col.notNull().references("user.id").onDelete("cascade"))
       .addColumn("accountId", "text", (col) => col.notNull())
       .addColumn("providerId", "text", (col) => col.notNull())
       .addColumn("accessToken", "text")
@@ -194,9 +190,7 @@ async function setupDatabase() {
       .addColumn("updatedAt", "integer", (col) => col.notNull())
       .addColumn("ipAddress", "text")
       .addColumn("userAgent", "text")
-      .addColumn("userId", "text", (col) =>
-        col.notNull().references("user.id").onDelete("cascade"),
-      )
+      .addColumn("userId", "text", (col) => col.notNull().references("user.id").onDelete("cascade"))
       .addColumn("impersonatedBy", "text")
       .execute();
 
@@ -224,12 +218,8 @@ async function setupDatabase() {
       .addColumn("address", "text")
       .addColumn("coordinates", "text")
       .addColumn("court_count", "integer", (col) => col.notNull().defaultTo(1))
-      .addColumn("created_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("created_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
 
     // Courts table
@@ -243,12 +233,8 @@ async function setupDatabase() {
       .addColumn("name", "text", (col) => col.notNull())
       .addColumn("description", "text")
       .addColumn("is_active", "integer", (col) => col.notNull().defaultTo(1))
-      .addColumn("created_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("created_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
 
     // Matches table
@@ -259,9 +245,7 @@ async function setupDatabase() {
       .addColumn("location_id", "text", (col) =>
         col.references("locations.id").onDelete("cascade").notNull(),
       )
-      .addColumn("court_id", "text", (col) =>
-        col.references("courts.id").onDelete("set null"),
-      )
+      .addColumn("court_id", "text", (col) => col.references("courts.id").onDelete("set null"))
       .addColumn("date", "text", (col) => col.notNull())
       .addColumn("time", "text", (col) => col.notNull())
       .addColumn("status", "text", (col) => col.notNull().defaultTo("upcoming"))
@@ -269,12 +253,8 @@ async function setupDatabase() {
       .addColumn("cost_per_player", "text")
       .addColumn("shirt_cost", "text")
       .addColumn("created_by_user_id", "text", (col) => col.notNull())
-      .addColumn("created_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("created_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
 
     // Signups table
@@ -289,17 +269,11 @@ async function setupDatabase() {
       .addColumn("player_name", "text", (col) => col.notNull())
       .addColumn("player_email", "text", (col) => col.notNull())
       .addColumn("status", "text", (col) => col.notNull().defaultTo("PENDING"))
-      .addColumn("signup_type", "text", (col) =>
-        col.notNull().defaultTo("self"),
-      )
+      .addColumn("signup_type", "text", (col) => col.notNull().defaultTo("self"))
       .addColumn("guest_owner_id", "text")
       .addColumn("added_by_user_id", "text", (col) => col.notNull())
-      .addColumn("signed_up_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("signed_up_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
 
     // Match invitations table
@@ -313,9 +287,7 @@ async function setupDatabase() {
       .addColumn("email", "text", (col) => col.notNull())
       .addColumn("invited_by_user_id", "text", (col) => col.notNull())
       .addColumn("status", "text", (col) => col.notNull().defaultTo("pending"))
-      .addColumn("invited_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("invited_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .addColumn("responded_at", "text")
       .execute();
 

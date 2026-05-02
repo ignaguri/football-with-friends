@@ -57,20 +57,22 @@ export function createAuth(env: Env) {
 
     // Social Providers (optional)
     socialProviders: {
-      ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET && {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-          scope: ["openid", "email", "profile"],
-        },
-      }),
-      ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET && {
-        github: {
-          clientId: env.GITHUB_CLIENT_ID,
-          clientSecret: env.GITHUB_CLIENT_SECRET,
-          scope: ["user:email", "read:user"],
-        },
-      }),
+      ...(env.GOOGLE_CLIENT_ID &&
+        env.GOOGLE_CLIENT_SECRET && {
+          google: {
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
+            scope: ["openid", "email", "profile"],
+          },
+        }),
+      ...(env.GITHUB_CLIENT_ID &&
+        env.GITHUB_CLIENT_SECRET && {
+          github: {
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
+            scope: ["user:email", "read:user"],
+          },
+        }),
     },
 
     // Session Configuration
@@ -113,7 +115,7 @@ app.use(
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Mount better-auth handler

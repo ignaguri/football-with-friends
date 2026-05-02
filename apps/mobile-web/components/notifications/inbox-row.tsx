@@ -100,11 +100,7 @@ export function InboxRow({ item, onPress }: InboxRowProps) {
 
         <YStack flex={1} gap="$1">
           <XStack alignItems="center" gap="$2" justifyContent="space-between">
-            <Text
-              fontSize="$4"
-              fontWeight={isUnread ? "700" : "500"}
-              numberOfLines={1}
-            >
+            <Text fontSize="$4" fontWeight={isUnread ? "700" : "500"} numberOfLines={1}>
               {title}
             </Text>
             <Text fontSize="$2" color="$gray10">
@@ -117,13 +113,7 @@ export function InboxRow({ item, onPress }: InboxRowProps) {
         </YStack>
 
         {isUnread && (
-          <YStack
-            width={8}
-            height={8}
-            borderRadius={4}
-            backgroundColor="$blue10"
-            marginTop={8}
-          />
+          <YStack width={8} height={8} borderRadius={4} backgroundColor="$blue10" marginTop={8} />
         )}
       </XStack>
     </Pressable>

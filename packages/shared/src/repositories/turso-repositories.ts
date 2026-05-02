@@ -129,11 +129,7 @@ function dbMatchWithCourtToMatch(row: any): Match {
   if (row.location_name) {
     match.location = {
       id: row.location_id,
-      groupId: assertGroupId(
-        row.location_group_id,
-        "locations",
-        row.location_id,
-      ),
+      groupId: assertGroupId(row.location_group_id, "locations", row.location_id),
       name: row.location_name,
       address: row.location_address || "",
       coordinates: row.location_coordinates || "",
@@ -269,10 +265,7 @@ export class TursoCourtRepository implements CourtRepository {
     return rows.map(dbCourtToCourt);
   }
 
-  async findByLocationId(
-    groupId: string,
-    locationId: string,
-  ): Promise<Court[]> {
+  async findByLocationId(groupId: string, locationId: string): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
@@ -284,10 +277,7 @@ export class TursoCourtRepository implements CourtRepository {
     return rows.map(dbCourtToCourt);
   }
 
-  async findActiveByLocationId(
-    groupId: string,
-    locationId: string,
-  ): Promise<Court[]> {
+  async findActiveByLocationId(groupId: string, locationId: string): Promise<Court[]> {
     const rows = await this.db
       .selectFrom("courts")
       .selectAll()
@@ -384,15 +374,10 @@ export class TursoCourtRepository implements CourtRepository {
     };
 
     if (updates.name !== undefined) updateData.name = updates.name;
-    if (updates.description !== undefined)
-      updateData.description = updates.description;
+    if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
 
-    await this.db
-      .updateTable("courts")
-      .set(updateData)
-      .where("id", "=", id)
-      .execute();
+    await this.db.updateTable("courts").set(updateData).where("id", "=", id).execute();
 
     const updated = await this.findById(id);
     if (!updated) {
@@ -406,11 +391,7 @@ export class TursoCourtRepository implements CourtRepository {
     await this.db.deleteFrom("courts").where("id", "=", id).execute();
   }
 
-  async existsByName(
-    locationId: string,
-    name: string,
-    excludeId?: string,
-  ): Promise<boolean> {
+  async existsByName(locationId: string, name: string, excludeId?: string): Promise<boolean> {
     let query = this.db
       .selectFrom("courts")
       .select("id")
@@ -458,10 +439,7 @@ export class TursoMatchRepository implements MatchRepository {
       const today = format(new Date(), "yyyy-MM-dd"); // YYYY-MM-DD
       if (filters.type === "past") {
         baseQuery = baseQuery.where((eb) =>
-          eb.or([
-            eb("matches.date", "<", today),
-            eb("matches.status", "=", "cancelled"),
-          ]),
+          eb.or([eb("matches.date", "<", today), eb("matches.status", "=", "cancelled")]),
         );
       } else if (filters.type === "upcoming") {
         baseQuery = baseQuery
@@ -471,11 +449,7 @@ export class TursoMatchRepository implements MatchRepository {
     }
 
     if (filters?.locationId) {
-      baseQuery = baseQuery.where(
-        "matches.location_id",
-        "=",
-        filters.locationId,
-      );
+      baseQuery = baseQuery.where("matches.location_id", "=", filters.locationId);
     }
 
     if (filters?.dateFrom) {
@@ -530,9 +504,7 @@ export class TursoMatchRepository implements MatchRepository {
       ]);
 
     const sortDir = filters?.sortDirection ?? "asc";
-    dataQuery = dataQuery
-      .orderBy("matches.date", sortDir)
-      .orderBy("matches.time", sortDir);
+    dataQuery = dataQuery.orderBy("matches.date", sortDir).orderBy("matches.time", sortDir);
 
     // Apply pagination
     if (filters?.limit) {
@@ -557,9 +529,7 @@ export class TursoMatchRepository implements MatchRepository {
         .execute();
 
       // Create a map of matchId -> status
-      const signupMap = new Map(
-        userSignups.map((s) => [s.match_id, s.status as PlayerStatus]),
-      );
+      const signupMap = new Map(userSignups.map((s) => [s.match_id, s.status as PlayerStatus]));
 
       // Attach user signup status to each match
       for (const match of matches) {
@@ -580,10 +550,7 @@ export class TursoMatchRepository implements MatchRepository {
     return row ? dbMatchToMatch(row) : null;
   }
 
-  async findByIdWithDetails(
-    id: string,
-    userId?: string,
-  ): Promise<MatchDetails | null> {
+  async findByIdWithDetails(id: string, userId?: string): Promise<MatchDetails | null> {
     const match = await this.findById(id);
     if (!match) return null;
 
@@ -615,11 +582,7 @@ export class TursoMatchRepository implements MatchRepository {
     // Get signups with guest owner information and user nationality
     const signupRows = await this.db
       .selectFrom("signups")
-      .leftJoin(
-        "user as guest_owner",
-        "signups.guest_owner_id",
-        "guest_owner.id",
-      )
+      .leftJoin("user as guest_owner", "signups.guest_owner_id", "guest_owner.id")
       .leftJoin("user as player_user", "signups.user_id", "player_user.id")
       .select([
         "signups.id",
@@ -657,12 +620,8 @@ export class TursoMatchRepository implements MatchRepository {
     const availableSpots = Math.max(0, match.maxPlayers - paidSignupsCount);
 
     // Check if user is signed up
-    const isUserSignedUp = userId
-      ? signups.some((s) => s.userId === userId)
-      : undefined;
-    const userSignup = userId
-      ? signups.find((s) => s.userId === userId)
-      : undefined;
+    const isUserSignedUp = userId ? signups.some((s) => s.userId === userId) : undefined;
+    const userSignup = userId ? signups.find((s) => s.userId === userId) : undefined;
 
     return {
       ...match,
@@ -767,10 +726,7 @@ export class TursoSignupRepository implements SignupRepository {
   private db = getDatabase();
 
   async findAll(filters?: SignupFilters): Promise<Signup[]> {
-    let query = this.db
-      .selectFrom("signups")
-      .selectAll()
-      .orderBy("signed_up_at", "asc");
+    let query = this.db.selectFrom("signups").selectAll().orderBy("signed_up_at", "asc");
 
     if (filters?.groupId) {
       query = query.where("group_id", "=", filters.groupId);
@@ -998,10 +954,7 @@ export class TursoSignupRepository implements SignupRepository {
     });
   }
 
-  async removePlayerAsOrganizer(
-    signupId: string,
-    actorId: string,
-  ): Promise<void> {
+  async removePlayerAsOrganizer(signupId: string, actorId: string): Promise<void> {
     console.log(`Organizer ${actorId} removing signup ${signupId}`);
     await this.delete(signupId);
   }
@@ -1082,18 +1035,12 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
       responded_at: null,
     };
 
-    await this.db
-      .insertInto("match_invitations")
-      .values(newInvitation)
-      .execute();
+    await this.db.insertInto("match_invitations").values(newInvitation).execute();
 
     return dbInvitationToInvitation(newInvitation);
   }
 
-  async updateStatus(
-    id: string,
-    status: "accepted" | "declined",
-  ): Promise<MatchInvitation> {
+  async updateStatus(id: string, status: "accepted" | "declined"): Promise<MatchInvitation> {
     const now = new Date().toISOString();
 
     await this.db
@@ -1119,10 +1066,7 @@ export class TursoMatchInvitationRepository implements MatchInvitationRepository
   }
 
   async delete(id: string): Promise<void> {
-    await this.db
-      .deleteFrom("match_invitations")
-      .where("id", "=", id)
-      .execute();
+    await this.db.deleteFrom("match_invitations").where("id", "=", id).execute();
   }
 
   async deleteExpired(olderThanDays: number): Promise<number> {
@@ -1160,10 +1104,7 @@ function dbStatsToMatchPlayerStats(row: any): MatchPlayerStats {
 export class TursoPlayerStatsRepository implements PlayerStatsRepository {
   private db = getDatabase();
 
-  async findByMatchAndUser(
-    matchId: string,
-    userId: string,
-  ): Promise<MatchPlayerStats | null> {
+  async findByMatchAndUser(matchId: string, userId: string): Promise<MatchPlayerStats | null> {
     const row = await this.db
       .selectFrom("match_player_stats")
       .selectAll()
@@ -1273,26 +1214,17 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return dbStatsToMatchPlayerStats(newStats);
   }
 
-  async update(
-    id: string,
-    updates: UpdateMatchPlayerStatsData,
-  ): Promise<MatchPlayerStats> {
+  async update(id: string, updates: UpdateMatchPlayerStatsData): Promise<MatchPlayerStats> {
     const now = new Date().toISOString();
     const updateData: Record<string, any> = { updated_at: now };
 
     if (updates.goals !== undefined) updateData.goals = updates.goals;
     if (updates.thirdTimeAttended !== undefined)
       updateData.third_time_attended = updates.thirdTimeAttended ? 1 : 0;
-    if (updates.thirdTimeBeers !== undefined)
-      updateData.third_time_beers = updates.thirdTimeBeers;
-    if (updates.confirmed !== undefined)
-      updateData.confirmed = updates.confirmed ? 1 : 0;
+    if (updates.thirdTimeBeers !== undefined) updateData.third_time_beers = updates.thirdTimeBeers;
+    if (updates.confirmed !== undefined) updateData.confirmed = updates.confirmed ? 1 : 0;
 
-    await this.db
-      .updateTable("match_player_stats")
-      .set(updateData)
-      .where("id", "=", id)
-      .execute();
+    await this.db.updateTable("match_player_stats").set(updateData).where("id", "=", id).execute();
 
     const updated = await this.db
       .selectFrom("match_player_stats")
@@ -1308,10 +1240,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.db
-      .deleteFrom("match_player_stats")
-      .where("id", "=", id)
-      .execute();
+    await this.db.deleteFrom("match_player_stats").where("id", "=", id).execute();
   }
 
   async getPlayerAggregateStats(userId: string): Promise<{
@@ -1333,9 +1262,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       .selectFrom("match_player_stats")
       .select([
         sql`COALESCE(SUM(goals), 0)`.as("total_goals"),
-        sql`COALESCE(SUM(third_time_attended), 0)`.as(
-          "total_third_time_attendances",
-        ),
+        sql`COALESCE(SUM(third_time_attended), 0)`.as("total_third_time_attendances"),
         sql`COALESCE(SUM(third_time_beers), 0)`.as("total_beers"),
       ])
       .where("user_id", "=", userId)
@@ -1344,9 +1271,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     return {
       totalMatches: Number(matchCountResult?.total_matches || 0),
       totalGoals: Number(statsResult?.total_goals || 0),
-      totalThirdTimeAttendances: Number(
-        statsResult?.total_third_time_attendances || 0,
-      ),
+      totalThirdTimeAttendances: Number(statsResult?.total_third_time_attendances || 0),
       totalBeers: Number(statsResult?.total_beers || 0),
     };
   }
@@ -1387,9 +1312,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
       const userNickname =
-        rawNick && !rawNick.includes("@") && rawNick !== userName
-          ? rawNick
-          : null;
+        rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
       return {
         userId: row.user_id,
         userName,
@@ -1425,10 +1348,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     };
   }
 
-  async getRankingsByMatches(
-    groupId: string,
-    limit: number,
-  ): Promise<PlayerRanking[]> {
+  async getRankingsByMatches(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1461,9 +1381,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
       const userNickname =
-        rawNick && !rawNick.includes("@") && rawNick !== userName
-          ? rawNick
-          : null;
+        rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
@@ -1477,10 +1395,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByThirdTimes(
-    groupId: string,
-    limit: number,
-  ): Promise<PlayerRanking[]> {
+  async getRankingsByThirdTimes(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1515,9 +1430,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
       const userNickname =
-        rawNick && !rawNick.includes("@") && rawNick !== userName
-          ? rawNick
-          : null;
+        rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
@@ -1531,10 +1444,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
     });
   }
 
-  async getRankingsByBeers(
-    groupId: string,
-    limit: number,
-  ): Promise<PlayerRanking[]> {
+  async getRankingsByBeers(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1569,9 +1479,7 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
       const userNickname =
-        rawNick && !rawNick.includes("@") && rawNick !== userName
-          ? rawNick
-          : null;
+        rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,
@@ -1918,13 +1826,10 @@ export class TursoMatchMediaRepository {
     const matchRows = await matchQuery.execute();
 
     const hasMore = matchRows.length > matchesPerPage;
-    const pageMatches = hasMore
-      ? matchRows.slice(0, matchesPerPage)
-      : matchRows;
+    const pageMatches = hasMore ? matchRows.slice(0, matchesPerPage) : matchRows;
     const nextCursor =
       hasMore && pageMatches.length > 0
-        ? ((pageMatches[pageMatches.length - 1]
-            ?.lastUploadAt as unknown as string) ?? null)
+        ? ((pageMatches[pageMatches.length - 1]?.lastUploadAt as unknown as string) ?? null)
         : null;
 
     if (pageMatches.length === 0) {

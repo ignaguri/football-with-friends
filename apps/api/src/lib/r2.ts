@@ -9,7 +9,7 @@ export interface R2Bucket {
         contentType?: string;
         cacheControl?: string;
       };
-    }
+    },
   ): Promise<R2Object>;
   get(key: string): Promise<R2ObjectBody | null>;
   delete(key: string): Promise<void>;
@@ -46,11 +46,7 @@ export function generateProfilePictureKey(userId: string, fileType: string): str
 // Get the public URL for an R2 object
 // Note: R2 public access needs to be configured via Cloudflare dashboard
 // or use a custom domain with R2 public bucket settings
-export function getR2PublicUrl(
-  key: string,
-  accountId: string,
-  bucketName: string
-): string {
+export function getR2PublicUrl(key: string, accountId: string, bucketName: string): string {
   // Public R2 URL format for buckets with public access enabled
   // Format: https://pub-{hash}.r2.dev/{key}
   // Or with custom domain: https://your-domain.com/{key}
@@ -63,7 +59,7 @@ export async function uploadToR2(
   bucket: R2Bucket,
   key: string,
   data: ArrayBuffer,
-  contentType: string
+  contentType: string,
 ): Promise<R2Object> {
   return bucket.put(key, data, {
     httpMetadata: {
@@ -74,18 +70,12 @@ export async function uploadToR2(
 }
 
 // Delete a file from R2
-export async function deleteFromR2(
-  bucket: R2Bucket,
-  key: string
-): Promise<void> {
+export async function deleteFromR2(bucket: R2Bucket, key: string): Promise<void> {
   await bucket.delete(key);
 }
 
 // Get a file from R2
-export async function getFromR2(
-  bucket: R2Bucket,
-  key: string
-): Promise<R2ObjectBody | null> {
+export async function getFromR2(bucket: R2Bucket, key: string): Promise<R2ObjectBody | null> {
   return bucket.get(key);
 }
 
@@ -93,7 +83,7 @@ export async function getFromR2(
 export async function deleteOldProfilePictures(
   bucket: R2Bucket,
   userId: string,
-  keepLatest = 1
+  keepLatest = 1,
 ): Promise<void> {
   const prefix = `profile-pictures/${userId}/`;
   const { objects } = await bucket.list({ prefix });
@@ -127,18 +117,11 @@ export function extFromMediaMime(mime: string): string | null {
 }
 
 /** R2 key for a match-media asset: `matches/{matchId}/{mediaId}.{ext}`. */
-export function generateMatchMediaKey(
-  matchId: string,
-  mediaId: string,
-  ext: string
-): string {
+export function generateMatchMediaKey(matchId: string, mediaId: string, ext: string): string {
   return `matches/${matchId}/${mediaId}.${ext}`;
 }
 
 /** R2 key for a video's poster frame: sibling of the main asset. */
-export function generateMatchMediaPosterKey(
-  matchId: string,
-  mediaId: string
-): string {
+export function generateMatchMediaPosterKey(matchId: string, mediaId: string): string {
   return `matches/${matchId}/${mediaId}.poster.jpg`;
 }

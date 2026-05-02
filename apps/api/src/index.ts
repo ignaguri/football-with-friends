@@ -23,7 +23,7 @@ app.use(
     credentials: true,
     allowHeaders: ["Content-Type", "Authorization", "X-Group-Id"],
     exposeHeaders: ["set-auth-token", "X-Group-Id"],
-  })
+  }),
 );
 
 // Rate limiting for auth endpoints
@@ -34,9 +34,7 @@ app.use("/api/phone-auth/*", rateLimitMiddleware("phone"));
 app.use("/api/*", authMiddleware);
 
 // Health check
-app.get("/health", (c) =>
-  c.json({ status: "ok", timestamp: new Date().toISOString() })
-);
+app.get("/health", (c) => c.json({ status: "ok", timestamp: new Date().toISOString() }));
 
 // Reusable helper: intercept an OAuth callback, extract session token and append to redirect URL
 async function interceptOAuthCallback(c: any) {
@@ -59,7 +57,10 @@ async function interceptOAuthCallback(c: any) {
       if (redirectUrl.startsWith("http://") || redirectUrl.startsWith("https://")) {
         fullRedirectUrl = redirectUrl;
       } else {
-        const origin = c.req.header("origin") || c.req.header("referer")?.replace(/\/[^/]*$/, "") || "http://localhost:8084";
+        const origin =
+          c.req.header("origin") ||
+          c.req.header("referer")?.replace(/\/[^/]*$/, "") ||
+          "http://localhost:8084";
         fullRedirectUrl = origin + (redirectUrl.startsWith("/") ? redirectUrl : "/" + redirectUrl);
       }
 

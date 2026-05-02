@@ -21,12 +21,7 @@ export function RosterSection({
     <>
       {showSeparatorBefore && <RosterSeparator />}
       {label ? (
-        <XStack
-          paddingVertical="$2"
-          paddingHorizontal="$3"
-          backgroundColor="$gray2"
-          marginTop="$2"
-        >
+        <XStack paddingVertical="$2" paddingHorizontal="$3" backgroundColor="$gray2" marginTop="$2">
           <Text fontSize="$2" color="$gray10" fontWeight="500">
             {label}
           </Text>

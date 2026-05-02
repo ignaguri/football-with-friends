@@ -12,7 +12,7 @@ import type {
 export class RankingService {
   constructor(
     private playerStatsRepository: PlayerStatsRepository,
-    private votingRepository: VotingRepository
+    private votingRepository: VotingRepository,
   ) {}
 
   /**
@@ -21,7 +21,7 @@ export class RankingService {
   async getPlayerRankings(
     groupId: string,
     criteria: RankingCriteria,
-    limit = 50
+    limit = 50,
   ): Promise<PlayerRanking[]> {
     switch (criteria) {
       case "matches":
@@ -43,7 +43,7 @@ export class RankingService {
   async getVotingLeaderboard(
     groupId: string,
     language: "en" | "es",
-    topN = 3
+    topN = 3,
   ): Promise<VotingLeaderboard> {
     return this.votingRepository.getVotingLeaderboard(groupId, language, topN);
   }
@@ -51,10 +51,7 @@ export class RankingService {
   /**
    * Get voting statistics for a specific player
    */
-  async getPlayerVotingStats(
-    userId: string,
-    language: "en" | "es"
-  ): Promise<PlayerVotingStats> {
+  async getPlayerVotingStats(userId: string, language: "en" | "es"): Promise<PlayerVotingStats> {
     return this.votingRepository.getPlayerVotingStats(userId, language);
   }
 }

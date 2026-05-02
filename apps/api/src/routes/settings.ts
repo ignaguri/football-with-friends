@@ -46,7 +46,7 @@ app.patch(
       default_max_substitutes: z.string().optional(),
       paypal_url: z.string().optional(),
       organizer_whatsapp: z.string().optional(),
-    })
+    }),
   ),
   async (c) => {
     const denied = requireOrganizer(c);
@@ -74,7 +74,7 @@ app.patch(
       const message = error instanceof Error ? error.message : "Failed to update settings";
       return c.json({ error: message }, 400);
     }
-  }
+  },
 );
 
 export default app;

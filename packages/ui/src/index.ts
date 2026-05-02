@@ -55,18 +55,10 @@ export type { TabsProps, TabItem } from "./components/Tabs";
 
 // Status Components
 export { StatusBadge } from "./components/StatusBadge";
-export type {
-  StatusBadgeProps,
-  PlayerStatusType,
-  MatchStatusType,
-} from "./components/StatusBadge";
+export type { StatusBadgeProps, PlayerStatusType, MatchStatusType } from "./components/StatusBadge";
 
 export { PlayersTable } from "./components/PlayersTable";
-export type {
-  PlayersTableProps,
-  PlayerRow,
-  PlayerAction,
-} from "./components/PlayersTable";
+export type { PlayersTableProps, PlayerRow, PlayerAction } from "./components/PlayersTable";
 
 export { MembersTable } from "./components/MembersTable";
 export type {

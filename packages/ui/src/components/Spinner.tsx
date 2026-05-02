@@ -1,4 +1,4 @@
-import type { SpinnerProps} from "tamagui";
+import type { SpinnerProps } from "tamagui";
 import { Spinner as TamaguiSpinner, YStack, Text } from "tamagui";
 
 export interface CustomSpinnerProps extends SpinnerProps {

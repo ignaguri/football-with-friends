@@ -13,10 +13,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   };
 
   if (!(await columnExists("matches", "voting_closed_at"))) {
-    await db.schema
-      .alterTable("matches")
-      .addColumn("voting_closed_at", "text")
-      .execute();
+    await db.schema.alterTable("matches").addColumn("voting_closed_at", "text").execute();
     console.log("✅ Added voting_closed_at column to matches");
   } else {
     console.log("⏭️  voting_closed_at column already exists, skipping");

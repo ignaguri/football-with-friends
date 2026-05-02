@@ -36,9 +36,9 @@ describe("transferOwnership", () => {
       role: "organizer",
     });
 
-    await expect(
-      service.transferOwnership(group.id, intruder.id, owner.id),
-    ).rejects.toThrow(/current owner/i);
+    await expect(service.transferOwnership(group.id, intruder.id, owner.id)).rejects.toThrow(
+      /current owner/i,
+    );
   });
 
   test("rejects when target is not already an organizer", async () => {
@@ -51,9 +51,9 @@ describe("transferOwnership", () => {
       role: "member",
     });
 
-    await expect(
-      service.transferOwnership(group.id, owner.id, target.id),
-    ).rejects.toThrow(/organizer/i);
+    await expect(service.transferOwnership(group.id, owner.id, target.id)).rejects.toThrow(
+      /organizer/i,
+    );
   });
 
   test("happy path: owner_user_id flips, old owner stays organizer", async () => {
@@ -91,9 +91,7 @@ describe("leaveGroup", () => {
     const owner = await seedUser(db);
     const group = await seedGroup(db, { ownerUserId: owner.id });
 
-    await expect(service.leaveGroup(group.id, owner.id)).rejects.toThrow(
-      /owner cannot leave/i,
-    );
+    await expect(service.leaveGroup(group.id, owner.id)).rejects.toThrow(/owner cannot leave/i);
   });
 
   test("non-owner leave removes membership row", async () => {

@@ -52,10 +52,7 @@ export class NotificationService {
     payload: NotificationPayload,
     options: SendOptions = {},
   ): Promise<ExpoPushTicket[]> {
-    const tokens = await this.pushTokenRepository.findActiveByUserId(
-      userId,
-      options.category,
-    );
+    const tokens = await this.pushTokenRepository.findActiveByUserId(userId, options.category);
     if (tokens.length === 0) return [];
 
     return this.sendToTokens(tokens, payload);
@@ -68,10 +65,7 @@ export class NotificationService {
   ): Promise<ExpoPushTicket[]> {
     if (userIds.length === 0) return [];
 
-    const tokens = await this.pushTokenRepository.findActiveByUserIds(
-      userIds,
-      options.category,
-    );
+    const tokens = await this.pushTokenRepository.findActiveByUserIds(userIds, options.category);
     if (tokens.length === 0) return [];
 
     return this.sendToTokens(tokens, payload);
@@ -93,9 +87,7 @@ export class NotificationService {
     return this.sendPushNotifications(messages);
   }
 
-  private async sendPushNotifications(
-    messages: ExpoPushMessage[],
-  ): Promise<ExpoPushTicket[]> {
+  private async sendPushNotifications(messages: ExpoPushMessage[]): Promise<ExpoPushTicket[]> {
     const allTickets: ExpoPushTicket[] = [];
 
     // Chunk into batches of EXPO_BATCH_LIMIT
@@ -119,9 +111,7 @@ export class NotificationService {
         });
 
         if (!response.ok) {
-          console.error(
-            `Expo Push API error: ${response.status} ${response.statusText}`,
-          );
+          console.error(`Expo Push API error: ${response.status} ${response.statusText}`);
           continue;
         }
 
@@ -132,10 +122,7 @@ export class NotificationService {
         // Handle invalid tokens
         for (let j = 0; j < result.data.length; j++) {
           const ticket = result.data[j]!;
-          if (
-            ticket.status === "error" &&
-            ticket.details?.error === "DeviceNotRegistered"
-          ) {
+          if (ticket.status === "error" && ticket.details?.error === "DeviceNotRegistered") {
             // Deactivate the invalid token
             const invalidToken = chunk[j]!.to;
             console.log("Deactivating invalid push token");

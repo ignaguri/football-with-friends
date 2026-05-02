@@ -13,10 +13,7 @@
     "typescript/explicit-module-boundary-types": "off",
     "typescript/consistent-type-imports": "error",
     "typescript/no-explicit-any": "warn",
-    "typescript/no-unused-vars": [
-      "warn",
-      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
-    ],
+    "typescript/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     "no-unused-vars": "off"
   },
   "ignorePatterns": [

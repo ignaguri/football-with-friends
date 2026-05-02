@@ -89,14 +89,8 @@ export default function NotificationsScreen() {
                 {t("notifications.settings.masterHint")}
               </Text>
 
-              <XStack
-                justifyContent="space-between"
-                alignItems="center"
-                marginTop="$2"
-              >
-                <Text color="$gray11">
-                  {t("notifications.settings.masterLabel")}
-                </Text>
+              <XStack justifyContent="space-between" alignItems="center" marginTop="$2">
+                <Text color="$gray11">{t("notifications.settings.masterLabel")}</Text>
                 <Switch
                   checked={masterOn}
                   onCheckedChange={handleMasterToggle}
@@ -163,10 +157,7 @@ export default function NotificationsScreen() {
         </YStack>
       </ScrollView>
 
-      <NotificationPermissionPrompt
-        open={promptOpen}
-        onClose={() => setPromptOpen(false)}
-      />
+      <NotificationPermissionPrompt open={promptOpen} onClose={() => setPromptOpen(false)} />
     </Container>
   );
 }

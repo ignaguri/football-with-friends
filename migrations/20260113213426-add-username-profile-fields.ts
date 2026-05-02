@@ -23,10 +23,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // Add username column if it doesn't exist
   if (!(await columnExists("user", "username"))) {
-    await db.schema
-      .alterTable("user")
-      .addColumn("username", "text")
-      .execute();
+    await db.schema.alterTable("user").addColumn("username", "text").execute();
     console.log("✅ Added username column");
   } else {
     console.log("⏭️  username column already exists, skipping");
@@ -34,10 +31,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // Add displayUsername column if it doesn't exist
   if (!(await columnExists("user", "displayUsername"))) {
-    await db.schema
-      .alterTable("user")
-      .addColumn("displayUsername", "text")
-      .execute();
+    await db.schema.alterTable("user").addColumn("displayUsername", "text").execute();
     console.log("✅ Added displayUsername column");
   } else {
     console.log("⏭️  displayUsername column already exists, skipping");
@@ -45,10 +39,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // Add profilePicture column if it doesn't exist
   if (!(await columnExists("user", "profilePicture"))) {
-    await db.schema
-      .alterTable("user")
-      .addColumn("profilePicture", "text")
-      .execute();
+    await db.schema.alterTable("user").addColumn("profilePicture", "text").execute();
     console.log("✅ Added profilePicture column");
   } else {
     console.log("⏭️  profilePicture column already exists, skipping");
@@ -77,5 +68,7 @@ export const down: Migration["down"] = async (db: Kysely<any>) => {
   // Note: SQLite doesn't support DROP COLUMN directly
   // For SQLite, we'd need to recreate the table without these columns
   // For now, we'll leave the columns (they're nullable and won't break anything)
-  console.log("↩️ Rolled back: Migration: add-username-profile-fields (index dropped, columns remain)");
+  console.log(
+    "↩️ Rolled back: Migration: add-username-profile-fields (index dropped, columns remain)",
+  );
 };

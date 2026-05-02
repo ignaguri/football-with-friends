@@ -57,8 +57,7 @@ export function PlayersTable({
 
   const canShowActions = (player: PlayerRow) => isAdmin || !!player.isCurrentUser;
 
-  const getStatusLabel = (status: PlayerStatusType) =>
-    statusLabels?.[status] ?? status;
+  const getStatusLabel = (status: PlayerStatusType) => statusLabels?.[status] ?? status;
 
   const paidPlayers = players.filter((p) => p.status === "PAID");
   const pendingPlayers = players.filter((p) => p.status === "PENDING");
@@ -68,9 +67,7 @@ export function PlayersTable({
     if (player.isGuest) {
       return (
         <Text fontWeight={player.isCurrentUser ? "600" : "500"}>
-          {player.addedByName
-            ? `${player.name} (${player.addedByName})`
-            : player.name}
+          {player.addedByName ? `${player.name} (${player.addedByName})` : player.name}
         </Text>
       );
     }
@@ -95,11 +92,7 @@ export function PlayersTable({
 
     const trailing = (
       <>
-        <StatusBadge
-          status={player.status}
-          type="player"
-          label={getStatusLabel(player.status)}
-        />
+        <StatusBadge status={player.status} type="player" label={getStatusLabel(player.status)} />
         {actions ? (
           <>
             <View style={{ height: 4 }} />
@@ -133,8 +126,7 @@ export function PlayersTable({
     );
   };
 
-  const renderSectionBody = (list: PlayerRow[]) =>
-    renderWithSeparators(list, renderPlayerRow);
+  const renderSectionBody = (list: PlayerRow[]) => renderWithSeparators(list, renderPlayerRow);
 
   return (
     <YStack>
@@ -148,11 +140,7 @@ export function PlayersTable({
       {/* Cancelled players last, under a visible header once there's anything above */}
       {cancelledPlayers.length > 0 && (
         <RosterSection
-          label={
-            paidPlayers.length > 0 || pendingPlayers.length > 0
-              ? cancelledLabel
-              : undefined
-          }
+          label={paidPlayers.length > 0 || pendingPlayers.length > 0 ? cancelledLabel : undefined}
         >
           {renderSectionBody(cancelledPlayers)}
         </RosterSection>
@@ -160,4 +148,3 @@ export function PlayersTable({
     </YStack>
   );
 }
-

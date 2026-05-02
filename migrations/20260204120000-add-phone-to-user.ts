@@ -17,7 +17,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   if (!(await columnExists("user", "phoneNumber"))) {
     await sql`ALTER TABLE user ADD COLUMN phoneNumber TEXT`.execute(db);
     // Create unique index instead of column constraint
-    await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_phone_number ON user(phoneNumber) WHERE phoneNumber IS NOT NULL`.execute(db);
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_phone_number ON user(phoneNumber) WHERE phoneNumber IS NOT NULL`.execute(
+      db,
+    );
     console.log("✅ Added phoneNumber column and unique index to user table");
   } else {
     console.log("⏭️  phoneNumber column already exists, skipping");
@@ -25,9 +27,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // Add phoneNumberVerified column
   if (!(await columnExists("user", "phoneNumberVerified"))) {
-    await sql`ALTER TABLE user ADD COLUMN phoneNumberVerified INTEGER DEFAULT 0`.execute(
-      db,
-    );
+    await sql`ALTER TABLE user ADD COLUMN phoneNumberVerified INTEGER DEFAULT 0`.execute(db);
     console.log("✅ Added phoneNumberVerified column to user table");
   } else {
     console.log("⏭️  phoneNumberVerified column already exists, skipping");
@@ -39,8 +39,6 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 export const down: Migration["down"] = async (db: Kysely<any>) => {
   // SQLite doesn't support DROP COLUMN directly, need to recreate table
   // For simplicity, we'll just log a warning
-  console.log(
-    "⚠️  SQLite doesn't support DROP COLUMN. Phone columns will remain.",
-  );
+  console.log("⚠️  SQLite doesn't support DROP COLUMN. Phone columns will remain.");
   console.log("↩️ Migration: add-phone-to-user rolled back (no-op)");
 };

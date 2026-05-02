@@ -49,9 +49,7 @@ describe("groupContextMiddleware", () => {
     const group = await seedGroup(db, { ownerUserId: owner.id });
     const app = asUser({ id: owner.id });
 
-    const res = await app.fetch(
-      makeRequest("/scoped/echo", { groupId: group.id }),
-    );
+    const res = await app.fetch(makeRequest("/scoped/echo", { groupId: group.id }));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { currentGroup: { id: string } };
     expect(body.currentGroup.id).toBe(group.id);
@@ -67,9 +65,7 @@ describe("groupContextMiddleware", () => {
     void groupA;
 
     const app = asUser({ id: aliceA.id });
-    const res = await app.fetch(
-      makeRequest("/scoped/echo", { groupId: groupB.id }),
-    );
+    const res = await app.fetch(makeRequest("/scoped/echo", { groupId: groupB.id }));
     expect(res.status).toBe(403);
     const body = (await res.json()) as { code?: string };
     expect(body.code).toBe("FORBIDDEN_GROUP");
@@ -83,9 +79,7 @@ describe("groupContextMiddleware", () => {
 
     // Platform admin is never a member of groupB, but the bypass grants access.
     const app = asUser({ id: PLATFORM_ADMIN_USER_ID, role: "admin" });
-    const res = await app.fetch(
-      makeRequest("/scoped/echo", { groupId: groupB.id }),
-    );
+    const res = await app.fetch(makeRequest("/scoped/echo", { groupId: groupB.id }));
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
       currentGroup: { id: string; role: string; isOwner: boolean };
@@ -126,9 +120,7 @@ describe("groupContextMiddleware", () => {
       .execute();
 
     const app = asUser({ id: PLATFORM_ADMIN_USER_ID, role: "admin" });
-    const res = await app.fetch(
-      makeRequest("/scoped/echo", { groupId: group.id }),
-    );
+    const res = await app.fetch(makeRequest("/scoped/echo", { groupId: group.id }));
     expect(res.status).toBe(404);
     const body = (await res.json()) as { code?: string };
     expect(body.code).toBe("GROUP_NOT_FOUND");

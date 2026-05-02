@@ -95,8 +95,7 @@ export class MigrationRunner {
 
   constructor(migrationFolder?: string) {
     this.db = getExtendedDatabase();
-    const migrationsPath =
-      migrationFolder || path.join(process.cwd(), "migrations");
+    const migrationsPath = migrationFolder || path.join(process.cwd(), "migrations");
 
     this.migrator = new KyselyMigrator({
       db: this.db,
@@ -117,13 +116,9 @@ export class MigrationRunner {
     if (result.results) {
       result.results.forEach((migrationResult: MigrationResult) => {
         if (migrationResult.status === "Success") {
-          console.log(
-            `✅ Migration "${migrationResult.migrationName}" executed successfully`,
-          );
+          console.log(`✅ Migration "${migrationResult.migrationName}" executed successfully`);
         } else if (migrationResult.status === "Error") {
-          console.error(
-            `❌ Failed to execute migration "${migrationResult.migrationName}"`,
-          );
+          console.error(`❌ Failed to execute migration "${migrationResult.migrationName}"`);
         }
       });
     }
@@ -145,13 +140,9 @@ export class MigrationRunner {
     if (result.results) {
       result.results.forEach((migrationResult: MigrationResult) => {
         if (migrationResult.status === "Success") {
-          console.log(
-            `↩️ Migration "${migrationResult.migrationName}" rolled back successfully`,
-          );
+          console.log(`↩️ Migration "${migrationResult.migrationName}" rolled back successfully`);
         } else if (migrationResult.status === "Error") {
-          console.error(
-            `❌ Failed to rollback migration "${migrationResult.migrationName}"`,
-          );
+          console.error(`❌ Failed to rollback migration "${migrationResult.migrationName}"`);
         }
       });
     }
@@ -188,9 +179,7 @@ export class MigrationRunner {
       const migrationFiles = await this.migrator.getMigrations();
 
       const executedNames = executedMigrations.map((m) => m.name);
-      const pending = migrationFiles.filter(
-        (m) => !executedNames.includes(m.name),
-      );
+      const pending = migrationFiles.filter((m) => !executedNames.includes(m.name));
 
       return {
         executed: executedMigrations.map((m) => m.name),
@@ -271,11 +260,7 @@ export class MigrationRunner {
    */
   async validateConnection(): Promise<boolean> {
     try {
-      await this.db
-        .selectFrom("sqlite_master")
-        .select("name")
-        .limit(1)
-        .execute();
+      await this.db.selectFrom("sqlite_master").select("name").limit(1).execute();
       return true;
     } catch (error) {
       console.error("Database connection validation failed:", error);

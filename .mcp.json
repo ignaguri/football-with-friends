@@ -3,10 +3,7 @@
     "context7": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp@latest"
-      ]
+      "args": ["-y", "@upstash/context7-mcp@latest"]
     },
     "sentry": {
       "type": "http",
@@ -19,10 +16,7 @@
     "shadcn": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "shadcn@latest",
-        "mcp"
-      ]
+      "args": ["shadcn@latest", "mcp"]
     },
     "figma": {
       "type": "http",
@@ -30,49 +24,30 @@
     },
     "chrome-devtools": {
       "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest"
-      ]
+      "args": ["-y", "chrome-devtools-mcp@latest"]
     },
     "chrome-devtools-isolated": {
       "command": "npx",
-      "args": [
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--isolated"
-      ]
+      "args": ["-y", "chrome-devtools-mcp@latest", "--isolated"]
     },
     "ios-simulator": {
       "command": "npx",
-      "args": [
-        "-y",
-        "ios-simulator-mcp"
-      ],
+      "args": ["-y", "ios-simulator-mcp"],
       "env": {
         "IOS_SIMULATOR_MCP_DEFAULT_OUTPUT_DIR": "~/Temp/football-with-friends/tmp"
       }
     },
     "cloudflare-observability": {
       "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://observability.mcp.cloudflare.com/mcp"
-      ]
+      "args": ["mcp-remote", "https://observability.mcp.cloudflare.com/mcp"]
     },
     "cloudflare-bindings": {
       "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://bindings.mcp.cloudflare.com/mcp"
-      ]
+      "args": ["mcp-remote", "https://bindings.mcp.cloudflare.com/mcp"]
     },
     "gcloud": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@google-cloud/gcloud-mcp"
-      ]
+      "args": ["-y", "@google-cloud/gcloud-mcp"]
     }
   }
 }

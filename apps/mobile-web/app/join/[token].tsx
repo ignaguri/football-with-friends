@@ -4,11 +4,7 @@
 // users: signed-out flow shows a sign-in CTA with a `redirectTo` preserving
 // the token; signed-in flow accepts on mount and navigates into the group.
 
-import {
-  useAcceptInvite,
-  useInvitePreview,
-  useSession,
-} from "@repo/api-client";
+import { useAcceptInvite, useInvitePreview, useSession } from "@repo/api-client";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -69,9 +65,7 @@ export default function JoinScreen() {
         <Text color="$gray11" textAlign="center">
           {t("groups.invite.loadErrorBody")}
         </Text>
-        <Button onPress={() => router.replace("/(tabs)")}>
-          {t("groups.invite.goHome")}
-        </Button>
+        <Button onPress={() => router.replace("/(tabs)")}>{t("groups.invite.goHome")}</Button>
       </YStack>
     );
   }
@@ -86,9 +80,7 @@ export default function JoinScreen() {
         <Text color="$gray11" textAlign="center">
           {t(`groups.invite.invalidReason.${reason}`)}
         </Text>
-        <Button onPress={() => router.replace("/(tabs)")}>
-          {t("groups.invite.goHome")}
-        </Button>
+        <Button onPress={() => router.replace("/(tabs)")}>{t("groups.invite.goHome")}</Button>
       </YStack>
     );
   }

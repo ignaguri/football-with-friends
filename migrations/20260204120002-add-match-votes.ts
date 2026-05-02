@@ -17,25 +17,13 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     await db.schema
       .createTable("match_votes")
       .addColumn("id", "text", (col) => col.primaryKey().notNull())
-      .addColumn("match_id", "text", (col) =>
-        col.notNull().references("matches.id"),
-      )
-      .addColumn("voter_user_id", "text", (col) =>
-        col.notNull().references("user.id"),
-      )
-      .addColumn("criteria_id", "text", (col) =>
-        col.notNull().references("voting_criteria.id"),
-      )
-      .addColumn("voted_for_user_id", "text", (col) =>
-        col.notNull().references("user.id"),
-      )
+      .addColumn("match_id", "text", (col) => col.notNull().references("matches.id"))
+      .addColumn("voter_user_id", "text", (col) => col.notNull().references("user.id"))
+      .addColumn("criteria_id", "text", (col) => col.notNull().references("voting_criteria.id"))
+      .addColumn("voted_for_user_id", "text", (col) => col.notNull().references("user.id"))
       .addColumn("created_at", "text", (col) => col.notNull())
       .addColumn("updated_at", "text", (col) => col.notNull())
-      .addUniqueConstraint("unique_vote_per_criteria", [
-        "match_id",
-        "voter_user_id",
-        "criteria_id",
-      ])
+      .addUniqueConstraint("unique_vote_per_criteria", ["match_id", "voter_user_id", "criteria_id"])
       .execute();
     console.log("✅ Created match_votes table");
   } else {

@@ -1,16 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useSession } from "@repo/api-client";
-import {
-  Container,
-  Card,
-  Text,
-  YStack,
-  XStack,
-  Button,
-  Spinner,
-  Dialog,
-  List,
-} from "@repo/ui";
+import { Container, Card, Text, YStack, XStack, Button, Spinner, Dialog, List } from "@repo/ui";
 import { Calendar, Trophy, CircleUserRound } from "@tamagui/lucide-icons-2";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
@@ -45,9 +35,7 @@ export default function HomeScreen() {
 
   // Get the first 4 general rules for the modal
   const generalRules = t("rules.general", { returnObjects: true }) as string[];
-  const rulesPreview = Array.isArray(generalRules)
-    ? generalRules.slice(0, 4)
-    : [];
+  const rulesPreview = Array.isArray(generalRules) ? generalRules.slice(0, 4) : [];
 
   return (
     <>
@@ -78,8 +66,7 @@ export default function HomeScreen() {
             <YStack gap="$4" width="100%" maxWidth={400}>
               <Text fontSize="$4" color="$gray11" textAlign="center">
                 {t("home.welcome", {
-                  name:
-                    session?.user?.name || session?.user?.email?.split("@")[0],
+                  name: session?.user?.name || session?.user?.email?.split("@")[0],
                 })}
               </Text>
 
@@ -137,10 +124,7 @@ export default function HomeScreen() {
                 <Text fontSize="$5" color="$gray11" textAlign="center">
                   {t("home.signInPrompt")}
                 </Text>
-                <Button
-                  variant="primary"
-                  onPress={() => router.push("/(auth)")}
-                >
+                <Button variant="primary" onPress={() => router.push("/(auth)")}>
                   {t("shared.signIn")}
                 </Button>
               </YStack>

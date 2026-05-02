@@ -72,9 +72,7 @@ export default async function middleware(request: Request) {
   const ua = request.headers.get("user-agent") || "";
   if (!BOT_UA.test(ua)) return next();
 
-  const rawMatchId = new URL(request.url).pathname
-    .split("/matches/")[1]
-    ?.split(/[/?#]/)[0];
+  const rawMatchId = new URL(request.url).pathname.split("/matches/")[1]?.split(/[/?#]/)[0];
   if (!rawMatchId) return next();
 
   let matchId: string;
@@ -85,9 +83,7 @@ export default async function middleware(request: Request) {
   }
 
   try {
-    const res = await fetch(
-      `${apiBase}/api/matches/${encodeURIComponent(matchId)}/preview`
-    );
+    const res = await fetch(`${apiBase}/api/matches/${encodeURIComponent(matchId)}/preview`);
     if (!res.ok) return next();
     const match = (await res.json()) as MatchResponse;
     return new Response(buildOgHtml(match, request.url), {

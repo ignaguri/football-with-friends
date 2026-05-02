@@ -20,12 +20,8 @@ export const up: Migration["up"] = async (db: Kysely<ExtendedDatabase>) => {
       .addColumn("name", "text", (col) => col.notNull())
       .addColumn("description", "text")
       .addColumn("is_active", "boolean", (col) => col.defaultTo(true).notNull())
-      .addColumn("created_at", "text", (col) =>
-        col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull(),
-      )
+      .addColumn("created_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`).notNull())
       .addForeignKeyConstraint(
         "courts_location_id_fk",
         ["location_id"],
@@ -73,30 +69,18 @@ export const up: Migration["up"] = async (db: Kysely<ExtendedDatabase>) => {
   }
 
   if (!(await indexExists("courts_is_active_idx"))) {
-    await db.schema
-      .createIndex("courts_is_active_idx")
-      .on("courts")
-      .column("is_active")
-      .execute();
+    await db.schema.createIndex("courts_is_active_idx").on("courts").column("is_active").execute();
     console.log("✅ Created courts_is_active_idx");
   }
 
   if (!(await indexExists("matches_court_id_idx"))) {
-    await db.schema
-      .createIndex("matches_court_id_idx")
-      .on("matches")
-      .column("court_id")
-      .execute();
+    await db.schema.createIndex("matches_court_id_idx").on("matches").column("court_id").execute();
     console.log("✅ Created matches_court_id_idx");
   }
 
   // Create default courts for existing locations based on court_count
   // Only insert if no courts exist yet
-  const existingCourts = await db
-    .selectFrom("courts")
-    .select("id")
-    .limit(1)
-    .execute();
+  const existingCourts = await db.selectFrom("courts").select("id").limit(1).execute();
 
   if (existingCourts.length === 0) {
     const locations = await db

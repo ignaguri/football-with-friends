@@ -16,14 +16,10 @@ const BaseEnvSchema = z.object({
   DEFAULT_TIMEZONE: z.string().default("Europe/Berlin"),
 
   // Authentication (BetterAuth)
-  BETTER_AUTH_SECRET: z
-    .string()
-    .min(32, "BETTER_AUTH_SECRET must be at least 32 characters long"),
+  BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET must be at least 32 characters long"),
 
   // Google OAuth (required for BetterAuth)
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z
-    .string()
-    .min(1, "NEXT_PUBLIC_GOOGLE_CLIENT_ID is required"),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().min(1, "NEXT_PUBLIC_GOOGLE_CLIENT_ID is required"),
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
 
   // Apple Sign In (optional — required for iOS App Store submission)
@@ -31,9 +27,7 @@ const BaseEnvSchema = z.object({
   APPLE_CLIENT_SECRET: z.string().optional(),
 
   // App URL configuration
-  NEXT_PUBLIC_BASE_URL: z
-    .url("NEXT_PUBLIC_BASE_URL must be a valid URL")
-    .optional(),
+  NEXT_PUBLIC_BASE_URL: z.url("NEXT_PUBLIC_BASE_URL must be a valid URL").optional(),
 
   // External service URLs
   NEXT_PUBLIC_PAYPAL_URL: z
@@ -42,9 +36,7 @@ const BaseEnvSchema = z.object({
   NEXT_PUBLIC_ORGANIZER_WHATSAPP: z.string().default("491234567890"),
 
   // Runtime environment
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+  NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   CI: z.string().optional(),
 
   // Vercel deployment
@@ -60,14 +52,10 @@ const TursoEnvSchema = z.object({
     .url("TURSO_DATABASE_URL must be a valid URL")
     .refine(
       (url) =>
-        url.startsWith("libsql://") ||
-        url.startsWith("http://") ||
-        url.startsWith("https://"),
+        url.startsWith("libsql://") || url.startsWith("http://") || url.startsWith("https://"),
       "TURSO_DATABASE_URL must be a valid Turso database URL",
     ),
-  TURSO_AUTH_TOKEN: z
-    .string()
-    .min(1, "TURSO_AUTH_TOKEN is required when using Turso database"),
+  TURSO_AUTH_TOKEN: z.string().min(1, "TURSO_AUTH_TOKEN is required when using Turso database"),
 });
 
 // Local database specific environment schema
@@ -75,10 +63,7 @@ const LocalDbEnvSchema = z.object({
   LOCAL_DATABASE_URL: z
     .string()
     .default("file:./local.db")
-    .refine(
-      (url) => url.startsWith("file:"),
-      "LOCAL_DATABASE_URL must be a file: URL",
-    ),
+    .refine((url) => url.startsWith("file:"), "LOCAL_DATABASE_URL must be a file: URL"),
 });
 
 // Individual environment schemas for each provider

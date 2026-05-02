@@ -26,21 +26,15 @@ export async function pruneInboxNotifications(
 ): Promise<PruneResult | PruneSkipped> {
   if (!opts.force) {
     const now = new Date();
-    if (
-      now.getUTCHours() !== DAILY_RUN_HOUR_UTC ||
-      now.getUTCMinutes() >= 30
-    ) {
+    if (now.getUTCHours() !== DAILY_RUN_HOUR_UTC || now.getUTCMinutes() >= 30) {
       return { skipped: true, reason: "outside-daily-window" };
     }
   }
 
-  const cutoff = new Date(
-    Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000,
-  ).toISOString();
+  const cutoff = new Date(Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   try {
-    const deleted =
-      await getRepositoryFactory().notificationInbox.deleteOlderThan(cutoff);
+    const deleted = await getRepositoryFactory().notificationInbox.deleteOlderThan(cutoff);
 
     console.log(
       JSON.stringify({

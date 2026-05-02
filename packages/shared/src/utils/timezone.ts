@@ -6,10 +6,7 @@ function getDefaultTimezone(): string {
 
 export const DEFAULT_TIMEZONE = getDefaultTimezone();
 
-export function convertToAppTimezone(
-  date: Date | string,
-  timezone?: string,
-): Date {
+export function convertToAppTimezone(date: Date | string, timezone?: string): Date {
   const targetTimezone = timezone || DEFAULT_TIMEZONE;
   return fromZonedTime(date, targetTimezone);
 }
@@ -23,33 +20,19 @@ export function formatDateInAppTimezone(
   return formatInTimeZone(date, targetTimezone, format);
 }
 
-export function convertFromAppTimezone(
-  date: Date | string,
-  timezone?: string,
-): Date {
+export function convertFromAppTimezone(date: Date | string, timezone?: string): Date {
   const targetTimezone = timezone || DEFAULT_TIMEZONE;
   return toZonedTime(date, targetTimezone);
 }
 
-export function formatMatchDate(
-  date: Date | string,
-  timezone?: string,
-): string {
+export function formatMatchDate(date: Date | string, timezone?: string): string {
   return formatDateInAppTimezone(date, "yyyy-MM-dd", timezone);
 }
 
-export function formatMatchDateTime(
-  date: string,
-  time: string,
-  timezone?: string,
-): string {
+export function formatMatchDateTime(date: string, time: string, timezone?: string): string {
   const targetTimezone = timezone || DEFAULT_TIMEZONE;
   const dateTimeString = `${date} ${time}`;
-  return formatInTimeZone(
-    dateTimeString,
-    targetTimezone,
-    "yyyy-MM-dd HH:mm:ss",
-  );
+  return formatInTimeZone(dateTimeString, targetTimezone, "yyyy-MM-dd HH:mm:ss");
 }
 
 export function formatDisplayDate(

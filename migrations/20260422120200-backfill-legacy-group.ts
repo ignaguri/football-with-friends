@@ -74,10 +74,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // 3. Create group_members for every user. role=organizer iff they were admin.
   // Users already in the legacy group (e.g. re-runs) are skipped via NOT IN.
-  const users = await db
-    .selectFrom("user")
-    .select(["id", "role"])
-    .execute();
+  const users = await db.selectFrom("user").select(["id", "role"]).execute();
 
   const existingMembers = await db
     .selectFrom("group_members")
@@ -112,18 +109,13 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .set({ group_id: LEGACY_GROUP_ID })
       .where("group_id", "is", null)
       .executeTakeFirst();
-    console.log(
-      `✅ Backfilled ${Number(result?.numUpdatedRows ?? 0)} row(s) on ${table}`,
-    );
+    console.log(`✅ Backfilled ${Number(result?.numUpdatedRows ?? 0)} row(s) on ${table}`);
   }
 
   // 5. Copy global settings into group_settings under grp_legacy. Upsert shape
   // matches group_settings' composite PK (group_id, key).
   if (await tableExists(db, "settings")) {
-    const settingRows = await db
-      .selectFrom("settings")
-      .select(["key", "value"])
-      .execute();
+    const settingRows = await db.selectFrom("settings").select(["key", "value"]).execute();
     for (const row of settingRows) {
       await db
         .insertInto("group_settings")
@@ -158,15 +150,9 @@ export const down: Migration["down"] = async (db: Kysely<any>) => {
       .execute();
   }
 
-  await db
-    .deleteFrom("group_settings")
-    .where("group_id", "=", LEGACY_GROUP_ID)
-    .execute();
+  await db.deleteFrom("group_settings").where("group_id", "=", LEGACY_GROUP_ID).execute();
 
-  await db
-    .deleteFrom("group_members")
-    .where("group_id", "=", LEGACY_GROUP_ID)
-    .execute();
+  await db.deleteFrom("group_members").where("group_id", "=", LEGACY_GROUP_ID).execute();
 
   await db.deleteFrom("groups").where("id", "=", LEGACY_GROUP_ID).execute();
 

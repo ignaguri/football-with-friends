@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Platform } from "react-native";
-import type {
-  SelectProps} from "tamagui";
+import type { SelectProps } from "tamagui";
 import {
   Select as TamaguiSelect,
   YStack,
@@ -49,11 +48,10 @@ function WebSelect({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Filter options based on search query
-  const filteredOptions = searchable && searchQuery
-    ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : options;
+  const filteredOptions =
+    searchable && searchQuery
+      ? options.filter((option) => option.label.toLowerCase().includes(searchQuery.toLowerCase()))
+      : options;
 
   // Get display label for selected value
   const selectedOption = options.find((opt) => opt.value === value);
@@ -122,7 +120,8 @@ function WebSelect({
             width: "100%",
             padding: "12px",
             fontSize: "16px",
-            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            fontFamily:
+              "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
             borderRadius: "8px",
             border: error ? "1px solid var(--red8)" : `1px solid ${cssVars.borderColor}`,
             backgroundColor: cssVars.background,
@@ -164,7 +163,13 @@ function WebSelect({
           >
             {/* Search input */}
             {searchable && (
-              <div style={{ padding: "8px", borderBottom: `1px solid ${cssVars.borderColor}`, boxSizing: "border-box" }}>
+              <div
+                style={{
+                  padding: "8px",
+                  borderBottom: `1px solid ${cssVars.borderColor}`,
+                  boxSizing: "border-box",
+                }}
+              >
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -179,7 +184,8 @@ function WebSelect({
                     borderRadius: "4px",
                     outline: "none",
                     boxSizing: "border-box",
-                    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    fontFamily:
+                      "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                     backgroundColor: cssVars.background,
                     color: cssVars.color,
                   }}
@@ -190,12 +196,15 @@ function WebSelect({
             {/* Options list */}
             <div style={{ overflow: "auto", maxHeight: "250px" }}>
               {filteredOptions.length === 0 ? (
-                <div style={{
-                  padding: "12px",
-                  color: cssVars.placeholderColor,
-                  textAlign: "center",
-                  fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                }}>
+                <div
+                  style={{
+                    padding: "12px",
+                    color: cssVars.placeholderColor,
+                    textAlign: "center",
+                    fontFamily:
+                      "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  }}
+                >
                   No options found
                 </div>
               ) : (
@@ -211,7 +220,8 @@ function WebSelect({
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                      fontFamily:
+                        "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                       fontSize: "14px",
                     }}
                     onMouseEnter={(e) => {
@@ -258,16 +268,13 @@ function NativeSelect({
   const { top, left, right } = useSafeAreaInsets();
 
   // Filter options based on search query
-  const filteredOptions = searchable && searchQuery
-    ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : options;
+  const filteredOptions =
+    searchable && searchQuery
+      ? options.filter((option) => option.label.toLowerCase().includes(searchQuery.toLowerCase()))
+      : options;
 
   // Create renderValue function if getSelectedLabel is provided
-  const renderValue = getSelectedLabel
-    ? (val: string) => getSelectedLabel(val)
-    : undefined;
+  const renderValue = getSelectedLabel ? (val: string) => getSelectedLabel(val) : undefined;
 
   return (
     <YStack gap="$2">
@@ -292,12 +299,13 @@ function NativeSelect({
         </TamaguiSelect.Trigger>
 
         <Adapt platform="touch">
-          <Sheet
-            modal
-            dismissOnSnapToBottom
-            snapPoints={SHEET_SNAP_POINTS}
-          >
-            <Sheet.Frame backgroundColor="$background" paddingTop={top} paddingLeft={left} paddingRight={right}>
+          <Sheet modal dismissOnSnapToBottom snapPoints={SHEET_SNAP_POINTS}>
+            <Sheet.Frame
+              backgroundColor="$background"
+              paddingTop={top}
+              paddingLeft={left}
+              paddingRight={right}
+            >
               {searchable && (
                 <YStack paddingHorizontal="$4" paddingTop="$3" paddingBottom="$2">
                   <TamaguiInput
@@ -340,11 +348,7 @@ function NativeSelect({
           <TamaguiSelect.Viewport minWidth={200}>
             <TamaguiSelect.Group>
               {filteredOptions.map((option, index) => (
-                <TamaguiSelect.Item
-                  key={option.value}
-                  index={index}
-                  value={option.value}
-                >
+                <TamaguiSelect.Item key={option.value} index={index} value={option.value}>
                   <TamaguiSelect.ItemText>{option.label}</TamaguiSelect.ItemText>
                   <TamaguiSelect.ItemIndicator marginLeft="auto">
                     <Check size={16} />

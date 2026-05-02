@@ -7,11 +7,7 @@
 
 import path from "node:path";
 import { promises as fs } from "node:fs";
-import {
-  FileMigrationProvider,
-  Migrator as KyselyMigrator,
-  type Kysely,
-} from "kysely";
+import { FileMigrationProvider, Migrator as KyselyMigrator, type Kysely } from "kysely";
 
 // Install env vars the moment this module is imported. Test files import
 // this module before anything else; the shared env proxy is lazy so values
@@ -22,19 +18,13 @@ process.env.STORAGE_PROVIDER = "local-db";
 // Kysely singleton per test file (see getDatabase() below), so that is fine.
 process.env.LOCAL_DATABASE_URL = "file::memory:";
 process.env.BETTER_AUTH_SECRET =
-  process.env.BETTER_AUTH_SECRET ||
-  "test-secret-0123456789abcdef0123456789abcdef";
+  process.env.BETTER_AUTH_SECRET || "test-secret-0123456789abcdef0123456789abcdef";
 process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID =
   process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "test-google-client-id";
-process.env.GOOGLE_CLIENT_SECRET =
-  process.env.GOOGLE_CLIENT_SECRET || "test-google-client-secret";
+process.env.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "test-google-client-secret";
 process.env.NODE_ENV = process.env.NODE_ENV || "test";
 
-import {
-  closeDatabase,
-  getDatabase,
-  resetDatabase,
-} from "@repo/shared/database";
+import { closeDatabase, getDatabase, resetDatabase } from "@repo/shared/database";
 import { resetEnvCache } from "@repo/shared/env";
 import { resetRepositoryFactory } from "@repo/shared/repositories";
 

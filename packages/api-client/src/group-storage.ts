@@ -14,10 +14,9 @@ const STORAGE_KEY = "football_active_group_id";
 
 let _cachedGroupId: string | null = null;
 
-export const _groupIdLoadPromise: Promise<void> = hydrateFromStorage(STORAGE_KEY)
-  .then((id) => {
-    if (id) _cachedGroupId = id;
-  });
+export const _groupIdLoadPromise: Promise<void> = hydrateFromStorage(STORAGE_KEY).then((id) => {
+  if (id) _cachedGroupId = id;
+});
 
 export function getActiveGroupId(): string | null {
   return _cachedGroupId;

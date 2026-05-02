@@ -46,9 +46,7 @@ function generateId(): string {
   return nanoid();
 }
 
-function parseCursor(
-  cursor: string,
-): { createdAt: string; id: string } | null {
+function parseCursor(cursor: string): { createdAt: string; id: string } | null {
   const sep = cursor.indexOf(CURSOR_SEP);
   if (sep <= 0 || sep === cursor.length - 1) return null;
   return {
@@ -147,10 +145,7 @@ export class TursoNotificationInboxRepository {
         query = query.where((eb) =>
           eb.or([
             eb("created_at", "<", cursor.createdAt),
-            eb.and([
-              eb("created_at", "=", cursor.createdAt),
-              eb("id", "<", cursor.id),
-            ]),
+            eb.and([eb("created_at", "=", cursor.createdAt), eb("id", "<", cursor.id)]),
           ]),
         );
       }
@@ -161,9 +156,7 @@ export class TursoNotificationInboxRepository {
     const trimmed = hasMore ? rows.slice(0, limit) : rows;
     const last = trimmed[trimmed.length - 1];
     const nextCursor =
-      hasMore && last
-        ? encodeCursor(last.created_at as string, last.id as string)
-        : null;
+      hasMore && last ? encodeCursor(last.created_at as string, last.id as string) : null;
 
     return {
       items: trimmed.map(rowToInbox),

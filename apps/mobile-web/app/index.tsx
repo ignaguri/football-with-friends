@@ -23,8 +23,7 @@ export default function Index() {
 
       const url = new URL(window.location.href);
       const sessionToken =
-        url.searchParams.get("session_token") ||
-        url.searchParams.get("__session_token");
+        url.searchParams.get("session_token") || url.searchParams.get("__session_token");
 
       if (sessionToken) {
         setIsHandlingCallback(true);
@@ -52,12 +51,7 @@ export default function Index() {
   // Show loading spinner while checking authentication or handling callback
   if (isPending || isHandlingCallback) {
     return (
-      <YStack
-        flex={1}
-        justifyContent="center"
-        alignItems="center"
-        backgroundColor="$background"
-      >
+      <YStack flex={1} justifyContent="center" alignItems="center" backgroundColor="$background">
         <Spinner size="large" />
       </YStack>
     );

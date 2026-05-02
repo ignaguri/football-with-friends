@@ -49,10 +49,7 @@ export default function AdminLayout() {
           title: t("organizer.editMatch"),
           headerBackVisible: false,
           headerLeft: () => (
-            <Pressable
-              onPress={() => router.navigate("/(tabs)/admin")}
-              style={{ marginLeft: 8 }}
-            >
+            <Pressable onPress={() => router.navigate("/(tabs)/admin")} style={{ marginLeft: 8 }}>
               <ChevronLeft size={28} color={theme.color?.val} />
             </Pressable>
           ),
@@ -70,10 +67,7 @@ export default function AdminLayout() {
           title: t("groups.roster.title"),
           headerBackVisible: false,
           headerLeft: () => (
-            <Pressable
-              onPress={() => router.navigate("/(tabs)/admin")}
-              style={{ marginLeft: 8 }}
-            >
+            <Pressable onPress={() => router.navigate("/(tabs)/admin")} style={{ marginLeft: 8 }}>
               <ChevronLeft size={28} color={theme.color?.val} />
             </Pressable>
           ),

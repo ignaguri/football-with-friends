@@ -86,9 +86,7 @@ export function getCountry(countryCode: string): Country | undefined {
  * Generated from country-flag-emoji-json dataset
  * Includes ~250 countries and territories
  */
-export const COUNTRIES: Country[] = Object.entries(
-  countriesByCode as Record<string, CountryData>
-)
+export const COUNTRIES: Country[] = Object.entries(countriesByCode as Record<string, CountryData>)
   .map(([code, data]) => ({
     code,
     name: data.name,
@@ -129,7 +127,7 @@ export function getCountryFromDialCode(dialCode: string): string | undefined {
 
   // Find the country with this dial code
   const entry = Object.entries(countryDialCodes as Record<string, string>).find(
-    ([, code]) => code === normalizedCode
+    ([, code]) => code === normalizedCode,
   );
 
   return entry?.[0];
@@ -140,7 +138,7 @@ export function getCountryFromDialCode(dialCode: string): string | undefined {
  * For use in phone prefix selectors
  */
 export const COUNTRIES_WITH_DIAL_CODES: CountryWithDialCode[] = Object.entries(
-  countriesByCode as Record<string, CountryData>
+  countriesByCode as Record<string, CountryData>,
 )
   .filter(([code]) => code in (countryDialCodes as Record<string, string>))
   .map(([code, data]) => ({

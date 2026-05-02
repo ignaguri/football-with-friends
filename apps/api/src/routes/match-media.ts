@@ -11,15 +11,8 @@ import {
 } from "@repo/shared/domain";
 import { getRepositoryFactory } from "@repo/shared/repositories";
 
-import {
-  type AppVariables,
-  rateLimitMiddleware,
-  requireUser,
-} from "../middleware/security";
-import {
-  groupContextMiddleware,
-  requireCurrentGroup,
-} from "../middleware/group-context";
+import { type AppVariables, rateLimitMiddleware, requireUser } from "../middleware/security";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import { assertInCurrentGroup } from "../middleware/authz";
 import {
   deleteFromR2,
@@ -45,10 +38,7 @@ app.use("*", groupContextMiddleware);
 // Match-media rows don't carry their own `group_id` column; the scoping
 // anchor is the parent match. Any matchId-parameterized endpoint routes
 // through this helper so cross-group matchIds 404 instead of leaking media.
-async function assertMatchInCurrentGroup(
-  c: Context,
-  matchId: string,
-): Promise<Response | null> {
+async function assertMatchInCurrentGroup(c: Context, matchId: string): Promise<Response | null> {
   const match = await getRepositoryFactory().matches.findById(matchId);
   return assertInCurrentGroup(c, match, "Match not found");
 }
@@ -61,17 +51,14 @@ const CAPTION_MAX_LEN = 280;
 
 const repos = () => getRepositoryFactory();
 
-function buildMediaUrl(
-  c: any,
-  key: string
-): string {
+function buildMediaUrl(c: any, key: string): string {
   const baseUrl = c.req.url.split("/api/")[0];
   return `${baseUrl}/api/match-media/file/${encodeURIComponent(key)}`;
 }
 
 function reactionsFromCounts(
   counts: Record<string, number>,
-  own: Set<string>
+  own: Set<string>,
 ): MatchMediaReactionSummary[] {
   return REACTION_EMOJIS.map((emoji) => ({
     emoji,
@@ -113,9 +100,7 @@ app.get("/feed", async (c) => {
       .map((id) => byId.get(id))
       .filter((r): r is NonNullable<typeof r> => r !== undefined)
       .map<MatchMedia>((r) => {
-        const posterKey = r.kind === "video"
-          ? generateMatchMediaPosterKey(r.matchId, r.id)
-          : null;
+        const posterKey = r.kind === "video" ? generateMatchMediaPosterKey(r.matchId, r.id) : null;
         return {
           id: r.id,
           matchId: r.matchId,
@@ -272,9 +257,7 @@ app.get("/:matchId", async (c) => {
 
   const rows = await repos().matchMedia.listByMatch(matchId, user.id);
   const items: MatchMedia[] = rows.map((r) => {
-    const posterKey = r.kind === "video"
-      ? generateMatchMediaPosterKey(r.matchId, r.id)
-      : null;
+    const posterKey = r.kind === "video" ? generateMatchMediaPosterKey(r.matchId, r.id) : null;
     return {
       id: r.id,
       matchId: r.matchId,

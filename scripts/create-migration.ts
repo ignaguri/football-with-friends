@@ -11,10 +11,7 @@ interface MigrationTemplate {
   content: string;
 }
 
-function generateMigrationTemplate(
-  name: string,
-  description: string,
-): MigrationTemplate {
+function generateMigrationTemplate(name: string, description: string): MigrationTemplate {
   const now = new Date();
   const timestamp = now.toISOString().replace(/[-:T]/g, "").split(".")[0]; // Format: YYYYMMDDHHMMSS
   const migrationName = `${timestamp}-${name}`;
@@ -68,8 +65,7 @@ function validateMigrationName(name: string): {
   if (!validNameRegex.test(name)) {
     return {
       valid: false,
-      error:
-        "Migration name can only contain letters, numbers, hyphens, and underscores",
+      error: "Migration name can only contain letters, numbers, hyphens, and underscores",
     };
   }
 
@@ -147,9 +143,7 @@ The migration file will be created in the migrations/ directory with the format:
   try {
     await fs.access(migrationsDir);
   } catch {
-    console.error(
-      "❌ Migrations directory not found. Make sure you're in the project root.",
-    );
+    console.error("❌ Migrations directory not found. Make sure you're in the project root.");
     process.exit(1);
   }
 

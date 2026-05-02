@@ -1,8 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import {
-  type InboxNotification,
-  useNotifications,
-} from "@repo/api-client";
+import { type InboxNotification, useNotifications } from "@repo/api-client";
 import { Spinner, Text, YStack } from "@repo/ui";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,18 +14,10 @@ interface NotificationInboxProps {
 
 export function NotificationInbox({ onItemPress }: NotificationInboxProps) {
   const { t } = useTranslation();
-  const {
-    data,
-    isLoading,
-    isRefetching,
-    refetch,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useNotifications();
+  const { data, isLoading, isRefetching, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useNotifications();
 
-  const items: InboxNotification[] =
-    data?.pages.flatMap((p) => p.items) ?? [];
+  const items: InboxNotification[] = data?.pages.flatMap((p) => p.items) ?? [];
 
   const onEndReached = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -37,9 +26,7 @@ export function NotificationInbox({ onItemPress }: NotificationInboxProps) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderItem = useCallback(
-    ({ item }: { item: InboxNotification }) => (
-      <InboxRow item={item} onPress={onItemPress} />
-    ),
+    ({ item }: { item: InboxNotification }) => <InboxRow item={item} onPress={onItemPress} />,
     [onItemPress],
   );
 
@@ -73,9 +60,7 @@ export function NotificationInbox({ onItemPress }: NotificationInboxProps) {
       renderItem={renderItem}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.3}
-      refreshControl={
-        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-      }
+      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       ListFooterComponent={
         isFetchingNextPage ? (
           <YStack paddingVertical="$4" alignItems="center" gap="$2">

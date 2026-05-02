@@ -29,8 +29,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         photosPermission:
           "Football with Friends uses your photo library to update your profile picture.",
-        cameraPermission:
-          "Football with Friends uses your camera to take a profile photo.",
+        cameraPermission: "Football with Friends uses your camera to take a profile photo.",
       },
     ],
     "expo-apple-authentication",
@@ -74,8 +73,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     infoPlist: {
       NSPhotoLibraryUsageDescription:
         "Football with Friends uses your photo library to update your profile picture.",
-      NSCameraUsageDescription:
-        "Football with Friends uses your camera to take a profile photo.",
+      NSCameraUsageDescription: "Football with Friends uses your camera to take a profile photo.",
       ITSAppUsesNonExemptEncryption: false,
     },
   },

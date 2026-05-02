@@ -34,7 +34,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     // unreadCount — `WHERE read_at IS NULL` filters a small subset of the
     // already-narrowed (user_id, group_id) slice, so a separate unread index
     // would be redundant.
-    await sql`CREATE INDEX idx_notifications_user_group_created ON notifications(user_id, group_id, created_at)`.execute(db);
+    await sql`CREATE INDEX idx_notifications_user_group_created ON notifications(user_id, group_id, created_at)`.execute(
+      db,
+    );
 
     // Used only by the retention prune cron. Cheap on a 10-day-windowed table.
     await sql`CREATE INDEX idx_notifications_created_at ON notifications(created_at)`.execute(db);

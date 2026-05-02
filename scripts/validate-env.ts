@@ -68,9 +68,7 @@ function validateCurrentEnvironment(): boolean {
   const storageProvider = process.env.STORAGE_PROVIDER || "google-sheets";
 
   console.log(`\n${colors.bold}Current Configuration:${colors.reset}`);
-  printInfo(
-    `Storage Provider: ${colors.bold}${storageProvider}${colors.reset}`,
-  );
+  printInfo(`Storage Provider: ${colors.bold}${storageProvider}${colors.reset}`);
   printInfo(
     `Node Environment: ${colors.bold}${process.env.NODE_ENV || "development"}${colors.reset}`,
   );
@@ -110,12 +108,8 @@ function validateCurrentEnvironment(): boolean {
     printInfo(
       `Google OAuth: ${validatedEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? "✓ Configured" : "❌ Missing"}`,
     );
-    printInfo(
-      `BetterAuth Secret: ${validatedEnv.BETTER_AUTH_SECRET ? "✓ Set" : "❌ Missing"}`,
-    );
-    printInfo(
-      `Sentry: ${validatedEnv.SENTRY_AUTH_TOKEN ? "✓ Configured" : "⚠️  Optional"}`,
-    );
+    printInfo(`BetterAuth Secret: ${validatedEnv.BETTER_AUTH_SECRET ? "✓ Set" : "❌ Missing"}`);
+    printInfo(`Sentry: ${validatedEnv.SENTRY_AUTH_TOKEN ? "✓ Configured" : "⚠️  Optional"}`);
 
     return true;
   } catch (error) {
@@ -126,26 +120,20 @@ function validateCurrentEnvironment(): boolean {
 }
 
 function showRequiredVariables(provider?: string) {
-  const storageProvider =
-    provider || process.env.STORAGE_PROVIDER || "google-sheets";
+  const storageProvider = provider || process.env.STORAGE_PROVIDER || "google-sheets";
   const required = getRequiredVariables(storageProvider);
 
-  console.log(
-    `\n${colors.bold}Required Variables for ${storageProvider}:${colors.reset}`,
-  );
+  console.log(`\n${colors.bold}Required Variables for ${storageProvider}:${colors.reset}`);
   required.forEach((variable) => {
     console.log(`  • ${variable}`);
   });
 }
 
 function generateTemplate(provider?: string) {
-  const storageProvider =
-    provider || process.env.STORAGE_PROVIDER || "google-sheets";
+  const storageProvider = provider || process.env.STORAGE_PROVIDER || "google-sheets";
   const template = generateEnvTemplate(storageProvider);
 
-  console.log(
-    `\n${colors.bold}Generated .env template for ${storageProvider}:${colors.reset}`,
-  );
+  console.log(`\n${colors.bold}Generated .env template for ${storageProvider}:${colors.reset}`);
   console.log(`${colors.yellow}${template}${colors.reset}`);
 
   // Offer to save template
@@ -153,9 +141,7 @@ function generateTemplate(provider?: string) {
   try {
     fs.writeFileSync(templatePath, template);
     printSuccess(`Template saved to ${templatePath}`);
-    printInfo(
-      `Copy it to .env: ${colors.bold}cp ${templatePath} .env${colors.reset}`,
-    );
+    printInfo(`Copy it to .env: ${colors.bold}cp ${templatePath} .env${colors.reset}`);
   } catch (error) {
     printWarning(`Could not save template: ${error}`);
   }

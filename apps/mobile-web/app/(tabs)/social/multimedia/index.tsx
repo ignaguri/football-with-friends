@@ -16,7 +16,11 @@ function FeedThumb({ item }: { item: MatchMedia }) {
   const thumbUrl = item.kind === "video" && item.posterUrl ? item.posterUrl : item.url;
   return (
     <View style={{ width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: 6, overflow: "hidden" }}>
-      <Image source={{ uri: thumbUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" />
+      <Image
+        source={{ uri: thumbUrl }}
+        style={{ width: "100%", height: "100%" }}
+        contentFit="cover"
+      />
       {item.kind === "video" && (
         <View
           style={{
@@ -86,8 +90,7 @@ export default function MultimediaFeedScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           onScroll={({ nativeEvent }) => {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const atBottom =
-              layoutMeasurement.height + contentOffset.y >= contentSize.height - 80;
+            const atBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 80;
             if (atBottom && hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}
           scrollEventThrottle={200}
@@ -110,9 +113,7 @@ export default function MultimediaFeedScreen() {
                 return (
                   <Card key={g.matchId} padding="$2">
                     <Pressable
-                      onPress={() =>
-                        router.push(`/(tabs)/matches/${g.matchId}/gallery`)
-                      }
+                      onPress={() => router.push(`/(tabs)/matches/${g.matchId}/gallery`)}
                       accessibilityRole="button"
                       accessibilityLabel={t("a11y.openGallery", {
                         date: formatDisplayDate(g.matchDate, "MMM d"),

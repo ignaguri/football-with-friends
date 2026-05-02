@@ -48,8 +48,7 @@ export default function MatchesLayout() {
           title: t("multimedia.title"),
           headerBackVisible: false,
           headerLeft: () => {
-            const matchId = (route.params as { matchId?: string } | undefined)
-              ?.matchId;
+            const matchId = (route.params as { matchId?: string } | undefined)?.matchId;
             return (
               <Pressable
                 onPress={() => {

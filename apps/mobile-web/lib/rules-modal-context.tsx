@@ -10,9 +10,7 @@ interface RulesModalContextValue {
   resetDismissal: () => void; // For testing
 }
 
-const RulesModalContext = createContext<RulesModalContextValue | undefined>(
-  undefined
-);
+const RulesModalContext = createContext<RulesModalContextValue | undefined>(undefined);
 
 export function RulesModalProvider({ children }: { children: React.ReactNode }) {
   // Start with modal hidden, then show it if not dismissed (avoids flash)

@@ -11,7 +11,11 @@ export const NotificationTemplates = {
     return {
       title: "New Match!",
       body: `Match on ${match.date} at ${match.time}${location}. Sign up now!`,
-      data: { type: NOTIFICATION_TYPES.MATCH_CREATED, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.MATCH_CREATED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -19,7 +23,11 @@ export const NotificationTemplates = {
     return {
       title: "Match Updated",
       body: `The match on ${match.date} has been updated: ${changes}`,
-      data: { type: NOTIFICATION_TYPES.MATCH_UPDATED, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.MATCH_UPDATED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -27,7 +35,11 @@ export const NotificationTemplates = {
     return {
       title: "Match Cancelled",
       body: `The match on ${match.date} at ${match.time} has been cancelled.`,
-      data: { type: NOTIFICATION_TYPES.MATCH_CANCELLED, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.MATCH_CANCELLED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -35,7 +47,11 @@ export const NotificationTemplates = {
     return {
       title: "You're Confirmed!",
       body: `Your spot for the match on ${match.date} is confirmed. See you there!`,
-      data: { type: NOTIFICATION_TYPES.PLAYER_CONFIRMED, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.PLAYER_CONFIRMED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -43,7 +59,11 @@ export const NotificationTemplates = {
     return {
       title: "You're In!",
       body: `A spot opened up for the match on ${match.date}. You've been moved off the waitlist!`,
-      data: { type: NOTIFICATION_TYPES.SUBSTITUTE_PROMOTED, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.SUBSTITUTE_PROMOTED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -51,7 +71,11 @@ export const NotificationTemplates = {
     return {
       title: "Player Cancelled",
       body: `${playerName} cancelled their spot for the match on ${match.date}.`,
-      data: { type: NOTIFICATION_TYPES.PLAYER_CANCELLED, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.PLAYER_CANCELLED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -59,7 +83,11 @@ export const NotificationTemplates = {
     return {
       title: "Removed from Match",
       body: `You have been removed from the match on ${match.date}.`,
-      data: { type: NOTIFICATION_TYPES.REMOVED_FROM_MATCH, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.REMOVED_FROM_MATCH,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -68,7 +96,11 @@ export const NotificationTemplates = {
     return {
       title: "Match Tomorrow!",
       body: `Don't forget — match tomorrow at ${match.time}${location}.`,
-      data: { type: NOTIFICATION_TYPES.MATCH_REMINDER, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.MATCH_REMINDER,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 
@@ -77,7 +109,11 @@ export const NotificationTemplates = {
     return {
       title: "Payment Pending",
       body: `Your payment${cost} for the match on ${match.date} is still pending.`,
-      data: { type: NOTIFICATION_TYPES.PAYMENT_REMINDER, matchId: match.id, screen: matchScreen(match.id) },
+      data: {
+        type: NOTIFICATION_TYPES.PAYMENT_REMINDER,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
     };
   },
 

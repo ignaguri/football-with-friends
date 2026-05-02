@@ -104,11 +104,7 @@ export interface CourtRepository {
   /**
    * Check if a court name already exists for a location
    */
-  existsByName(
-    locationId: string,
-    name: string,
-    excludeId?: string,
-  ): Promise<boolean>;
+  existsByName(locationId: string, name: string, excludeId?: string): Promise<boolean>;
 
   /**
    * Get court count for a location
@@ -121,7 +117,9 @@ export interface MatchRepository {
   /**
    * Find all matches with optional filters and pagination
    */
-  findAll(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }>;
+  findAll(
+    filters?: MatchFilters & { limit?: number; offset?: number },
+  ): Promise<{ matches: Match[]; total: number }>;
 
   /**
    * Find a match by ID
@@ -131,10 +129,7 @@ export interface MatchRepository {
   /**
    * Find a match by ID with full details (location, signups, etc.)
    */
-  findByIdWithDetails(
-    id: string,
-    userId?: string,
-  ): Promise<MatchDetails | null>;
+  findByIdWithDetails(id: string, userId?: string): Promise<MatchDetails | null>;
 
   /**
    * Create a new match
@@ -286,10 +281,7 @@ export interface MatchInvitationRepository {
   /**
    * Update invitation status (accept/decline)
    */
-  updateStatus(
-    id: string,
-    status: "accepted" | "declined",
-  ): Promise<MatchInvitation>;
+  updateStatus(id: string, status: "accepted" | "declined"): Promise<MatchInvitation>;
 
   /**
    * Delete an invitation
@@ -307,10 +299,7 @@ export interface PlayerStatsRepository {
   /**
    * Find stats for a specific match and user
    */
-  findByMatchAndUser(
-    matchId: string,
-    userId: string,
-  ): Promise<MatchPlayerStats | null>;
+  findByMatchAndUser(matchId: string, userId: string): Promise<MatchPlayerStats | null>;
 
   /**
    * Find all stats for a match
@@ -330,10 +319,7 @@ export interface PlayerStatsRepository {
   /**
    * Update existing stats by ID
    */
-  update(
-    id: string,
-    updates: UpdateMatchPlayerStatsData,
-  ): Promise<MatchPlayerStats>;
+  update(id: string, updates: UpdateMatchPlayerStatsData): Promise<MatchPlayerStats>;
 
   /**
    * Delete stats
@@ -385,14 +371,8 @@ export interface PushTokenRepository {
    * if both the master `push_enabled` and the per-category preference are on.
    * Missing prefs row → defaults to all-on (coalesce-based).
    */
-  findActiveByUserId(
-    userId: string,
-    category?: NotificationCategory,
-  ): Promise<PushTokenInfo[]>;
-  findActiveByUserIds(
-    userIds: string[],
-    category?: NotificationCategory,
-  ): Promise<PushTokenInfo[]>;
+  findActiveByUserId(userId: string, category?: NotificationCategory): Promise<PushTokenInfo[]>;
+  findActiveByUserIds(userIds: string[], category?: NotificationCategory): Promise<PushTokenInfo[]>;
   deactivateToken(token: string): Promise<void>;
   deactivateTokenForUser(token: string, userId: string): Promise<void>;
   deactivateByUserId(userId: string): Promise<void>;
@@ -421,7 +401,5 @@ export interface TransactionalRepository {
   /**
    * Execute operations within a transaction
    */
-  withTransaction<T>(
-    operation: (repos: RepositoryFactory) => Promise<T>,
-  ): Promise<T>;
+  withTransaction<T>(operation: (repos: RepositoryFactory) => Promise<T>): Promise<T>;
 }

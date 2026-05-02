@@ -90,12 +90,14 @@ app.post("/sign-up", zValidator("json", signUpSchema), async (c) => {
  * Old scrypt hashes (from BetterAuth defaults) can't be verified on CF Workers.
  * Accepts either phone number or email to look up the user.
  */
-const needsResetSchema = z.object({
-  phoneNumber: z.string().optional(),
-  email: z.string().email().optional(),
-}).refine((data) => data.phoneNumber || data.email, {
-  message: "Either phoneNumber or email is required",
-});
+const needsResetSchema = z
+  .object({
+    phoneNumber: z.string().optional(),
+    email: z.string().email().optional(),
+  })
+  .refine((data) => data.phoneNumber || data.email, {
+    message: "Either phoneNumber or email is required",
+  });
 
 app.post("/needs-password-reset", zValidator("json", needsResetSchema), async (c) => {
   const { phoneNumber, email } = c.req.valid("json");
@@ -144,14 +146,16 @@ app.post("/needs-password-reset", zValidator("json", needsResetSchema), async (c
  * Requires the old password as proof of identity (even though we can't
  * verify it on CF Workers, it prevents blind account takeover).
  */
-const resetPasswordSchema = z.object({
-  phoneNumber: z.string().optional(),
-  email: z.string().email().optional(),
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
-}).refine((data) => data.phoneNumber || data.email, {
-  message: "Either phoneNumber or email is required",
-});
+const resetPasswordSchema = z
+  .object({
+    phoneNumber: z.string().optional(),
+    email: z.string().email().optional(),
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  })
+  .refine((data) => data.phoneNumber || data.email, {
+    message: "Either phoneNumber or email is required",
+  });
 
 app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) => {
   const { phoneNumber, email, newPassword } = c.req.valid("json");
@@ -186,7 +190,10 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
 
     // Only allow reset if the hash is in the old scrypt format
     if (account.password.startsWith("pbkdf2:")) {
-      return c.json({ error: "Password is already up to date. Use the normal change password flow." }, 400);
+      return c.json(
+        { error: "Password is already up to date. Use the normal change password flow." },
+        400,
+      );
     }
 
     // Hash new password with PBKDF2
@@ -211,12 +218,14 @@ app.post("/reset-password", zValidator("json", resetPasswordSchema), async (c) =
  * The code must be relayed to the user by the admin via WhatsApp.
  * Always returns success to prevent user enumeration.
  */
-const forgotPasswordSchema = z.object({
-  phoneNumber: z.string().optional(),
-  email: z.string().min(1).optional(),
-}).refine((data) => data.phoneNumber || data.email, {
-  message: "Either phoneNumber or email is required",
-});
+const forgotPasswordSchema = z
+  .object({
+    phoneNumber: z.string().optional(),
+    email: z.string().min(1).optional(),
+  })
+  .refine((data) => data.phoneNumber || data.email, {
+    message: "Either phoneNumber or email is required",
+  });
 
 function generateResetCode(): string {
   const digits = "0123456789";
@@ -252,10 +261,7 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
       const verificationId = `forgot:${identifier}`;
 
       // Delete any existing reset code for this identifier
-      await db
-        .deleteFrom("verification")
-        .where("identifier", "=", verificationId)
-        .execute();
+      await db.deleteFrom("verification").where("identifier", "=", verificationId).execute();
 
       // Insert new reset code
       await db
@@ -269,7 +275,6 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
           updatedAt: now,
         })
         .execute();
-
     }
 
     // Always return success to prevent enumeration
@@ -284,14 +289,19 @@ app.post("/forgot-password", zValidator("json", forgotPasswordSchema), async (c)
  * Verify reset code and set new password.
  * Rate-limited to 3 attempts per code.
  */
-const verifyResetSchema = z.object({
-  phoneNumber: z.string().optional(),
-  email: z.string().min(1).optional(),
-  code: z.string().length(6, "Code must be 6 digits").regex(/^\d{6}$/, "Code must be numeric"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
-}).refine((data) => data.phoneNumber || data.email, {
-  message: "Either phoneNumber or email is required",
-});
+const verifyResetSchema = z
+  .object({
+    phoneNumber: z.string().optional(),
+    email: z.string().min(1).optional(),
+    code: z
+      .string()
+      .length(6, "Code must be 6 digits")
+      .regex(/^\d{6}$/, "Code must be numeric"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+  })
+  .refine((data) => data.phoneNumber || data.email, {
+    message: "Either phoneNumber or email is required",
+  });
 
 app.post("/verify-reset", zValidator("json", verifyResetSchema), async (c) => {
   const { phoneNumber, email, code, newPassword } = c.req.valid("json");
@@ -404,14 +414,14 @@ app.get("/admin/reset-codes", async (c) => {
       .execute();
 
     const result = codes.map((v) => {
-        const [code] = v.value.split(":");
-        const userIdentifier = v.identifier.replace("forgot:", "");
-        return {
-          identifier: userIdentifier,
-          code,
-          expiresAt: new Date(v.expiresAt).toISOString(),
-        };
-      });
+      const [code] = v.value.split(":");
+      const userIdentifier = v.identifier.replace("forgot:", "");
+      return {
+        identifier: userIdentifier,
+        code,
+        expiresAt: new Date(v.expiresAt).toISOString(),
+      };
+    });
 
     return c.json({ codes: result });
   } catch (error) {
@@ -419,7 +429,6 @@ app.get("/admin/reset-codes", async (c) => {
     return c.json({ error: "Unauthorized" }, 401);
   }
 });
-
 
 // Named export for worker.ts (Cloudflare Workers)
 export { app as phoneAuthRoute };

@@ -99,11 +99,8 @@ export function useMarkNotificationRead() {
         queryClient.cancelQueries({ queryKey: unreadKey }),
       ]);
 
-      const previousList =
-        queryClient.getQueryData<InfiniteData<InboxPage>>(listKey);
-      const previousUnread = queryClient.getQueryData<{ unreadCount: number }>(
-        unreadKey,
-      );
+      const previousList = queryClient.getQueryData<InfiniteData<InboxPage>>(listKey);
+      const previousUnread = queryClient.getQueryData<{ unreadCount: number }>(unreadKey);
 
       if (previousList) {
         let didFlip = false;
@@ -135,8 +132,7 @@ export function useMarkNotificationRead() {
       const listKey = notificationInboxQueryKeys.list(ctx.groupId);
       const unreadKey = notificationInboxQueryKeys.unread(ctx.groupId);
       if (ctx.previousList) queryClient.setQueryData(listKey, ctx.previousList);
-      if (ctx.previousUnread)
-        queryClient.setQueryData(unreadKey, ctx.previousUnread);
+      if (ctx.previousUnread) queryClient.setQueryData(unreadKey, ctx.previousUnread);
     },
     onSettled: (_data, _err, _id, ctx) => {
       if (!ctx) return;
@@ -171,11 +167,8 @@ export function useMarkAllNotificationsRead() {
         queryClient.cancelQueries({ queryKey: unreadKey }),
       ]);
 
-      const previousList =
-        queryClient.getQueryData<InfiniteData<InboxPage>>(listKey);
-      const previousUnread = queryClient.getQueryData<{ unreadCount: number }>(
-        unreadKey,
-      );
+      const previousList = queryClient.getQueryData<InfiniteData<InboxPage>>(listKey);
+      const previousUnread = queryClient.getQueryData<{ unreadCount: number }>(unreadKey);
 
       if (previousList) {
         const now = new Date().toISOString();
@@ -183,9 +176,7 @@ export function useMarkAllNotificationsRead() {
           ...previousList,
           pages: previousList.pages.map((page) => ({
             ...page,
-            items: page.items.map((item) =>
-              item.readAt ? item : { ...item, readAt: now },
-            ),
+            items: page.items.map((item) => (item.readAt ? item : { ...item, readAt: now })),
           })),
         };
         queryClient.setQueryData(listKey, next);
@@ -200,8 +191,7 @@ export function useMarkAllNotificationsRead() {
       const listKey = notificationInboxQueryKeys.list(ctx.groupId);
       const unreadKey = notificationInboxQueryKeys.unread(ctx.groupId);
       if (ctx.previousList) queryClient.setQueryData(listKey, ctx.previousList);
-      if (ctx.previousUnread)
-        queryClient.setQueryData(unreadKey, ctx.previousUnread);
+      if (ctx.previousUnread) queryClient.setQueryData(unreadKey, ctx.previousUnread);
     },
     onSettled: (_data, _err, _vars, ctx) => {
       if (!ctx) return;

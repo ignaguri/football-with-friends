@@ -16,75 +16,75 @@ export default function SocialHubScreen() {
         }}
       />
       <Container variant="padded">
-      <YStack
-        gap="$4"
-        flex={1}
-        justifyContent="center"
-        maxWidth={400}
-        marginHorizontal="auto"
-        width="100%"
-      >
-        <Pressable
-          onPress={() => router.push("/(tabs)/social/stats")}
-          accessibilityRole="button"
-          accessibilityLabel={t("a11y.openStats")}
-          testID="social-hub-stats"
+        <YStack
+          gap="$4"
+          flex={1}
+          justifyContent="center"
+          maxWidth={400}
+          marginHorizontal="auto"
+          width="100%"
         >
-          <Card variant="elevated" padding="$5">
-            <XStack gap="$4" alignItems="center">
-              <YStack
-                width={48}
-                height={48}
-                borderRadius={12}
-                backgroundColor="$blue4"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <BarChart3 size={24} color="$blue10" />
-              </YStack>
-              <YStack flex={1}>
-                <Text fontSize="$6" fontWeight="bold">
-                  {t("social.statsCard")}
-                </Text>
-                <Text fontSize="$3" color="$gray11" marginTop="$1">
-                  {t("social.statsCardDesc")}
-                </Text>
-              </YStack>
-            </XStack>
-          </Card>
-        </Pressable>
+          <Pressable
+            onPress={() => router.push("/(tabs)/social/stats")}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.openStats")}
+            testID="social-hub-stats"
+          >
+            <Card variant="elevated" padding="$5">
+              <XStack gap="$4" alignItems="center">
+                <YStack
+                  width={48}
+                  height={48}
+                  borderRadius={12}
+                  backgroundColor="$blue4"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <BarChart3 size={24} color="$blue10" />
+                </YStack>
+                <YStack flex={1}>
+                  <Text fontSize="$6" fontWeight="bold">
+                    {t("social.statsCard")}
+                  </Text>
+                  <Text fontSize="$3" color="$gray11" marginTop="$1">
+                    {t("social.statsCardDesc")}
+                  </Text>
+                </YStack>
+              </XStack>
+            </Card>
+          </Pressable>
 
-        <Pressable
-          onPress={() => router.push("/(tabs)/social/multimedia")}
-          accessibilityRole="button"
-          accessibilityLabel={t("a11y.openMultimedia")}
-          testID="social-hub-multimedia"
-        >
-          <Card variant="elevated" padding="$5">
-            <XStack gap="$4" alignItems="center">
-              <YStack
-                width={48}
-                height={48}
-                borderRadius={12}
-                backgroundColor="$purple4"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Image size={24} color="$purple10" />
-              </YStack>
-              <YStack flex={1}>
-                <Text fontSize="$6" fontWeight="bold">
-                  {t("social.multimediaCard")}
-                </Text>
-                <Text fontSize="$3" color="$gray11" marginTop="$1">
-                  {t("social.multimediaCardDesc")}
-                </Text>
-              </YStack>
-            </XStack>
-          </Card>
-        </Pressable>
-      </YStack>
-    </Container>
+          <Pressable
+            onPress={() => router.push("/(tabs)/social/multimedia")}
+            accessibilityRole="button"
+            accessibilityLabel={t("a11y.openMultimedia")}
+            testID="social-hub-multimedia"
+          >
+            <Card variant="elevated" padding="$5">
+              <XStack gap="$4" alignItems="center">
+                <YStack
+                  width={48}
+                  height={48}
+                  borderRadius={12}
+                  backgroundColor="$purple4"
+                  alignItems="center"
+                  justifyContent="center"
+                >
+                  <Image size={24} color="$purple10" />
+                </YStack>
+                <YStack flex={1}>
+                  <Text fontSize="$6" fontWeight="bold">
+                    {t("social.multimediaCard")}
+                  </Text>
+                  <Text fontSize="$3" color="$gray11" marginTop="$1">
+                    {t("social.multimediaCardDesc")}
+                  </Text>
+                </YStack>
+              </XStack>
+            </Card>
+          </Pressable>
+        </YStack>
+      </Container>
     </>
   );
 }

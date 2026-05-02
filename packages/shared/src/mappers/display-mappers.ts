@@ -94,18 +94,8 @@ export function matchToDisplay(match: Match): MatchDisplay {
 /**
  * Convert domain MatchDetails to display format for match detail pages
  */
-export function matchDetailsToDisplay(
-  matchDetails: MatchDetails,
-): MatchDetailsDisplay {
-  const header = [
-    "id",
-    "name",
-    "email",
-    "status",
-    "isGuest",
-    "ownerEmail",
-    "guestName",
-  ];
+export function matchDetailsToDisplay(matchDetails: MatchDetails): MatchDetailsDisplay {
+  const header = ["id", "name", "email", "status", "isGuest", "ownerEmail", "guestName"];
 
   const players: PlayerDisplay[] = matchDetails.signups.map((signup) => ({
     id: signup.id,
@@ -145,10 +135,7 @@ export function matchDetailsToDisplay(
 /**
  * Calculate player statistics from signups
  */
-export function calculatePlayerStats(
-  signups: Signup[],
-  maxPlayers: number,
-): PlayerStats {
+export function calculatePlayerStats(signups: Signup[], maxPlayers: number): PlayerStats {
   const totalPlayers = signups.length;
   const paidPlayers = signups.filter((s) => s.status === "PAID").length;
   const pendingPlayers = signups.filter((s) => s.status === "PENDING").length;
@@ -197,15 +184,10 @@ export function signupToPlayerDisplay(signup: Signup): PlayerDisplay {
 /**
  * Helper to format match title for display
  */
-export function formatMatchTitle(
-  date: string,
-  time: string,
-  locale?: string,
-): string {
+export function formatMatchTitle(date: string, time: string, locale?: string): string {
   try {
     // Format the date and time in the app's timezone (Berlin)
-    const format =
-      locale === "es" ? "EEEE, d 'de' MMMM 'de' yyyy" : "EEEE, MMMM d, yyyy";
+    const format = locale === "es" ? "EEEE, d 'de' MMMM 'de' yyyy" : "EEEE, MMMM d, yyyy";
     const formattedDate = formatDisplayDateTime(date, time, format);
     const timeStr = time;
 

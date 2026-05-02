@@ -24,6 +24,6 @@ config.resolver.extraNodeModules = {
 };
 
 // 4. Add font asset extensions for Montserrat fonts
-config.resolver.assetExts.push('ttf', 'woff2');
+config.resolver.assetExts.push("ttf", "woff2");
 
 module.exports = config;

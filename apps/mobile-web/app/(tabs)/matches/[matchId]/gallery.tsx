@@ -4,7 +4,14 @@ import { api, client, useQuery, useMutation, useQueryClient } from "@repo/api-cl
 import { useLocalSearchParams } from "expo-router";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView } from "react-native";
+import {
+  ActionSheetIOS,
+  Alert,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as VideoThumbnails from "expo-video-thumbnails";
@@ -56,7 +63,7 @@ export default function MatchGalleryScreen() {
 
   const canDelete = useCallback(
     (item: MatchMedia) => !!userId && (item.uploaderUserId === userId || isAdmin),
-    [userId, isAdmin]
+    [userId, isAdmin],
   );
 
   // --- Upload ---
@@ -87,7 +94,7 @@ export default function MatchGalleryScreen() {
         (i) => {
           if (i === 0) void pick("photo");
           if (i === 1) void pick("video");
-        }
+        },
       );
     } else if (Platform.OS === "web") {
       // RN Web's Alert.alert doesn't render custom button arrays — it falls
@@ -114,10 +121,7 @@ export default function MatchGalleryScreen() {
     }
   };
 
-  const submitUpload = async (
-    asset: ImagePicker.ImagePickerAsset,
-    kind: "photo" | "video"
-  ) => {
+  const submitUpload = async (asset: ImagePicker.ImagePickerAsset, kind: "photo" | "video") => {
     try {
       setUploading(true);
 
@@ -129,7 +133,7 @@ export default function MatchGalleryScreen() {
         const processed = await ImageManipulator.manipulateAsync(
           asset.uri,
           [{ resize: { width: 1920 } }],
-          { compress: 0.82, format: ImageManipulator.SaveFormat.WEBP }
+          { compress: 0.82, format: ImageManipulator.SaveFormat.WEBP },
         );
         fileUri = processed.uri;
         fileMime = "image/webp";
@@ -198,15 +202,12 @@ export default function MatchGalleryScreen() {
   const toggleReactionMut = useMutation({
     mutationFn: async ({ mediaId, emoji }: { mediaId: string; emoji: ReactionEmoji }) => {
       const apiUrl = getConfiguredApiUrl();
-      const res = await fetch(
-        `${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ emoji }),
-        }
-      );
+      const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ emoji }),
+      });
       if (!res.ok) throw new Error("Reaction failed");
       return res.json();
     },
@@ -256,10 +257,7 @@ export default function MatchGalleryScreen() {
               <Text color="$gray11">{t("multimedia.emptyMatch")}</Text>
             </YStack>
           ) : (
-            <MediaGrid
-              items={items}
-              onItemPress={(_, i) => setLightboxIndex(i)}
-            />
+            <MediaGrid items={items} onItemPress={(_, i) => setLightboxIndex(i)} />
           )}
         </ScrollView>
       </Container>
@@ -268,9 +266,7 @@ export default function MatchGalleryScreen() {
         startIndex={lightboxIndex ?? 0}
         visible={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}
-        onToggleReaction={(item, emoji) =>
-          toggleReactionMut.mutate({ mediaId: item.id, emoji })
-        }
+        onToggleReaction={(item, emoji) => toggleReactionMut.mutate({ mediaId: item.id, emoji })}
         onDelete={(item) => {
           // RN Web's Alert.alert ignores button arrays, so use window.confirm
           // on web. Native platforms get the standard destructive-style alert.

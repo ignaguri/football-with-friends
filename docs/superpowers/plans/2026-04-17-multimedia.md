@@ -19,6 +19,7 @@
 ### Task 1 — Add shared domain types
 
 **Files:**
+
 - Modify: `packages/shared/src/domain/types.ts`
 
 - [ ] **Step 1: Open the file and locate `MATCH_STATUSES` as an anchor to insert new constants near other domain enums.**
@@ -29,6 +30,7 @@ Expected: a single-line hit. We'll insert the new types in the same export block
 - [ ] **Step 2: Append the new types at the bottom of the file (after the last existing export).**
 
 Add:
+
 ```ts
 // --- Match media ---
 
@@ -61,10 +63,10 @@ export type MatchMedia = {
 
 export type MatchMediaFeedGroup = {
   matchId: string;
-  matchDate: string;     // ISO date
+  matchDate: string; // ISO date
   fieldName: string | null;
   items: MatchMedia[];
-  totalCount: number;    // total items in this match; can be > items.length
+  totalCount: number; // total items in this match; can be > items.length
 };
 ```
 
@@ -85,11 +87,13 @@ git commit -m "feat(shared): add MatchMedia domain types"
 ### Task 2 — Add Kysely schema types for new tables
 
 **Files:**
+
 - Modify: `packages/shared/src/database/schema.ts`
 
 - [ ] **Step 1: Add the two new table interfaces. Insert them alphabetically among the existing table interfaces (before `MatchesTable` or near other match-related tables).**
 
 Add:
+
 ```ts
 export interface MatchMediaTable {
   id: string;
@@ -114,9 +118,10 @@ export interface MatchMediaReactionTable {
 - [ ] **Step 2: Register both tables on the `Database` interface.**
 
 Inside the existing `Database` interface (the one containing `matches`, `signups`, etc.), add:
+
 ```ts
-  match_media: MatchMediaTable;
-  match_media_reaction: MatchMediaReactionTable;
+match_media: MatchMediaTable;
+match_media_reaction: MatchMediaReactionTable;
 ```
 
 - [ ] **Step 3: Verify types compile.**
@@ -136,11 +141,13 @@ git commit -m "feat(shared): add match_media and match_media_reaction Kysely typ
 ### Task 3 — Create the DB migration
 
 **Files:**
+
 - Create: `migrations/20260417120000-add-match-media.ts`
 
 - [ ] **Step 1: Create the migration file with both `up` and `down`.**
 
 Contents (file name suffix must match the date `20260417120000` — today's date at noon):
+
 ```ts
 // Migration: add-match-media
 // Adds match_media and match_media_reaction tables for the multimedia feature.
@@ -170,7 +177,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `.execute(db);
-    await sql`CREATE INDEX idx_match_media_match_created ON match_media(match_id, created_at DESC)`.execute(db);
+    await sql`CREATE INDEX idx_match_media_match_created ON match_media(match_id, created_at DESC)`.execute(
+      db,
+    );
     await sql`CREATE INDEX idx_match_media_uploader ON match_media(uploader_user_id)`.execute(db);
     console.log("✅ Created match_media table and indexes");
   }
@@ -229,11 +238,13 @@ git commit -m "feat(db): add match_media and match_media_reaction migration"
 ### Task 4 — Add `MATCH_MEDIA` R2 binding in wrangler.toml
 
 **Files:**
+
 - Modify: `apps/api/wrangler.toml`
 
 - [ ] **Step 1: Add the production binding below the existing `PROFILE_PICTURES` block.**
 
 Locate:
+
 ```toml
 # R2 bucket for profile pictures
 [[r2_buckets]]
@@ -242,6 +253,7 @@ bucket_name = "football-profile-pictures"
 ```
 
 Add immediately after:
+
 ```toml
 # R2 bucket for match media (photos and videos uploaded to a match gallery)
 [[r2_buckets]]
@@ -252,6 +264,7 @@ bucket_name = "football-match-media"
 - [ ] **Step 2: Add the preview binding below the existing preview `PROFILE_PICTURES` block.**
 
 Locate:
+
 ```toml
 [[env.preview.r2_buckets]]
 binding = "PROFILE_PICTURES"
@@ -259,6 +272,7 @@ bucket_name = "football-profile-pictures-staging"
 ```
 
 Add immediately after:
+
 ```toml
 [[env.preview.r2_buckets]]
 binding = "MATCH_MEDIA"
@@ -284,6 +298,7 @@ git commit -m "feat(api): add MATCH_MEDIA R2 bucket bindings"
 ### Task 5 — Add R2 helpers for match-media keys
 
 **Files:**
+
 - Modify: `apps/api/src/lib/r2.ts`
 
 - [ ] **Step 1: Read the current file top to understand existing exports.**
@@ -294,6 +309,7 @@ Note the existing signatures for `uploadToR2`, `getFromR2`, `deleteFromR2`, `gen
 - [ ] **Step 2: Append the new key helpers at the bottom of the file.**
 
 Add:
+
 ```ts
 // Match media key helpers ------------------------------------------------
 
@@ -316,19 +332,12 @@ export function extFromMediaMime(mime: string): string | null {
 }
 
 /** R2 key for a match-media asset: `matches/{matchId}/{mediaId}.{ext}`. */
-export function generateMatchMediaKey(
-  matchId: string,
-  mediaId: string,
-  ext: string
-): string {
+export function generateMatchMediaKey(matchId: string, mediaId: string, ext: string): string {
   return `matches/${matchId}/${mediaId}.${ext}`;
 }
 
 /** R2 key for a video's poster frame: sibling of the main asset. */
-export function generateMatchMediaPosterKey(
-  matchId: string,
-  mediaId: string
-): string {
+export function generateMatchMediaPosterKey(matchId: string, mediaId: string): string {
   return `matches/${matchId}/${mediaId}.poster.jpg`;
 }
 ```
@@ -352,6 +361,7 @@ git commit -m "feat(api): add match-media R2 key helpers"
 ### Task 6 — Add `TursoMatchMediaRepository` skeleton + CRUD basics
 
 **Files:**
+
 - Modify: `packages/shared/src/repositories/turso-repositories.ts`
 
 - [ ] **Step 1: Open the file and locate the last repository class (likely `TursoMatchInvitationRepository` or `TursoPlayerStatsRepository`). Note the file pattern: one class per domain entity, using `getDatabase()`.**
@@ -366,6 +376,7 @@ Add to the existing type-import list: `MatchMedia`, `MatchMediaFeedGroup`, `Matc
 - [ ] **Step 3: Add the new class at the bottom of the file (before any `export` helpers, if any; otherwise truly at the end).**
 
 Add:
+
 ```ts
 // Turso Match Media Repository -------------------------------------------
 
@@ -461,11 +472,13 @@ git commit -m "feat(shared): add TursoMatchMediaRepository skeleton (create/find
 ### Task 7 — Add `listByMatch` with reaction aggregation
 
 **Files:**
+
 - Modify: `packages/shared/src/repositories/turso-repositories.ts`
 
 - [ ] **Step 1: Inside `TursoMatchMediaRepository` (after `countByMatch`), add the method.**
 
 Add:
+
 ```ts
   /**
    * List all media for a match, including the uploader's name, aggregated reaction counts,
@@ -567,11 +580,13 @@ git commit -m "feat(shared): add TursoMatchMediaRepository.listByMatch with reac
 ### Task 8 — Add `toggleReaction`
 
 **Files:**
+
 - Modify: `packages/shared/src/repositories/turso-repositories.ts`
 
 - [ ] **Step 1: Inside `TursoMatchMediaRepository`, add the method.**
 
 Add:
+
 ```ts
   /**
    * Toggle a reaction. Inserts if not present, deletes if present.
@@ -639,11 +654,13 @@ git commit -m "feat(shared): add TursoMatchMediaRepository.toggleReaction"
 ### Task 9 — Add `feed` (grouped-by-match pagination)
 
 **Files:**
+
 - Modify: `packages/shared/src/repositories/turso-repositories.ts`
 
 - [ ] **Step 1: Inside `TursoMatchMediaRepository`, add the method.**
 
 Add:
+
 ```ts
   /**
    * Returns a page of matches (ordered by most-recent-upload per match), with up to
@@ -748,11 +765,13 @@ git commit -m "feat(shared): add TursoMatchMediaRepository.feed with cursor pagi
 ### Task 10 — Create `match-media` route file with upload handler
 
 **Files:**
+
 - Create: `apps/api/src/routes/match-media.ts`
 
 - [ ] **Step 1: Create the file with the Hono app, imports, and the upload handler.**
 
 Contents:
+
 ```ts
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
@@ -788,8 +807,8 @@ type AppEnv = {
 
 const app = new Hono<AppEnv>();
 
-const PHOTO_MAX_BYTES = 10 * 1024 * 1024;   // 10 MB
-const VIDEO_MAX_BYTES = 50 * 1024 * 1024;   // 50 MB
+const PHOTO_MAX_BYTES = 10 * 1024 * 1024; // 10 MB
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 const PHOTO_MIMES = ["image/webp", "image/jpeg", "image/png"];
 const VIDEO_MIMES = ["video/mp4", "video/quicktime"];
 const CAPTION_MAX_LEN = 280;
@@ -805,7 +824,7 @@ function buildMediaUrl(c: Parameters<Parameters<typeof app.get>[1]>[0], key: str
 
 function reactionsFromCounts(
   counts: Record<string, number>,
-  own: Set<string>
+  own: Set<string>,
 ): MatchMediaReactionSummary[] {
   return REACTION_EMOJIS.map((emoji) => ({
     emoji,
@@ -924,6 +943,7 @@ Expected: exit code 0. If imports fail, confirm `@repo/shared/domain` exports th
 
 Check: `rtk grep -n "TursoMatchMediaRepository" packages/shared/src/repositories/index.ts`
 If no match, open that file and add:
+
 ```ts
 export { TursoMatchMediaRepository } from "./turso-repositories";
 ```
@@ -942,11 +962,13 @@ git commit -m "feat(api): add match-media upload route"
 ### Task 11 — Add list, count, delete handlers
 
 **Files:**
+
 - Modify: `apps/api/src/routes/match-media.ts`
 
 - [ ] **Step 1: Append the three handlers above the `export default app` line.**
 
 Add:
+
 ```ts
 // --- List ----------------------------------------------------------------
 
@@ -956,9 +978,7 @@ app.get("/:matchId", async (c) => {
 
   const rows = await mediaRepo.listByMatch(matchId, user.id);
   const items: MatchMedia[] = rows.map((r) => {
-    const posterKey = r.kind === "video"
-      ? generateMatchMediaPosterKey(r.matchId, r.id)
-      : null;
+    const posterKey = r.kind === "video" ? generateMatchMediaPosterKey(r.matchId, r.id) : null;
     return {
       id: r.id,
       matchId: r.matchId,
@@ -1035,11 +1055,13 @@ git commit -m "feat(api): add match-media list/count/delete routes"
 ### Task 12 — Add reaction toggle handler
 
 **Files:**
+
 - Modify: `apps/api/src/routes/match-media.ts`
 
 - [ ] **Step 1: Append the handler above `export default app`.**
 
 Add:
+
 ```ts
 // --- Reactions -----------------------------------------------------------
 
@@ -1081,11 +1103,13 @@ git commit -m "feat(api): add match-media reaction toggle route"
 ### Task 13 — Add file-serve handler
 
 **Files:**
+
 - Modify: `apps/api/src/routes/match-media.ts`
 
 - [ ] **Step 1: Append the handler above `export default app`.**
 
 Add:
+
 ```ts
 // --- Serve file ----------------------------------------------------------
 
@@ -1125,11 +1149,13 @@ git commit -m "feat(api): add match-media file serve route"
 ### Task 14 — Add feed handler
 
 **Files:**
+
 - Modify: `apps/api/src/routes/match-media.ts`
 
 - [ ] **Step 1: Append the handler above `export default app`.**
 
 Add:
+
 ```ts
 // --- Global feed ---------------------------------------------------------
 
@@ -1151,14 +1177,9 @@ app.get("/feed", async (c) => {
     const items = await mediaRepo.listByMatch(g.matchId, user.id);
     const filtered = items
       .filter((it) => g.mediaIds.includes(it.id))
-      .sort(
-        (a, b) =>
-          g.mediaIds.indexOf(a.id) - g.mediaIds.indexOf(b.id)
-      )
+      .sort((a, b) => g.mediaIds.indexOf(a.id) - g.mediaIds.indexOf(b.id))
       .map<MatchMedia>((r) => {
-        const posterKey = r.kind === "video"
-          ? generateMatchMediaPosterKey(r.matchId, r.id)
-          : null;
+        const posterKey = r.kind === "video" ? generateMatchMediaPosterKey(r.matchId, r.id) : null;
         return {
           id: r.id,
           matchId: r.matchId,
@@ -1205,11 +1226,13 @@ git commit -m "feat(api): add match-media global feed route"
 ### Task 15 — Register `match-media` route in the API router
 
 **Files:**
+
 - Modify: `apps/api/src/api-routes.ts`
 
 - [ ] **Step 1: Add the import alongside the other route imports.**
 
 In the import block at the top, add:
+
 ```ts
 import matchMediaRoute from "./routes/match-media";
 ```
@@ -1217,11 +1240,13 @@ import matchMediaRoute from "./routes/match-media";
 - [ ] **Step 2: Add the `.route()` call in `registerApiRoutes`.**
 
 Find:
+
 ```ts
     .route("/notifications", notificationsRoute);
 ```
 
 Replace with (append before the trailing `;` stays on the same line):
+
 ```ts
     .route("/notifications", notificationsRoute)
     .route("/match-media", matchMediaRoute);
@@ -1231,9 +1256,11 @@ Replace with (append before the trailing `;` stays on the same line):
 
 In one terminal: `pnpm dev:api`
 In another terminal, after the server says it's listening:
+
 ```bash
 rtk curl -i "http://localhost:3001/api/match-media/does-not-exist/count"
 ```
+
 Expected: `HTTP/1.1 401 Unauthorized` (auth middleware — proves the route is mounted and the global auth middleware runs).
 
 Stop the dev server (Ctrl-C in the first terminal).
@@ -1252,6 +1279,7 @@ git commit -m "feat(api): register /api/match-media route"
 ### Task 16 — Add `multimedia.*` locale keys; update `social.multimediaCardDesc`
 
 **Files:**
+
 - Modify: `locales/en/common.json`
 - Modify: `locales/es/common.json`
 
@@ -1260,6 +1288,7 @@ git commit -m "feat(api): register /api/match-media route"
 Change `"multimediaCardDesc": "Coming soon",` to `"multimediaCardDesc": "Photos and videos from our matches",`.
 
 Add a new `"multimedia": { ... }` block at the top level (sibling of `social`):
+
 ```json
   "multimedia": {
     "title": "Multimedia",
@@ -1294,6 +1323,7 @@ Add a new `"multimedia": { ... }` block at the top level (sibling of `social`):
 Change `"multimediaCardDesc": "Próximamente",` to `"multimediaCardDesc": "Fotos y videos de nuestros partidos",`.
 
 Add:
+
 ```json
   "multimedia": {
     "title": "Multimedia",
@@ -1342,6 +1372,7 @@ git commit -m "feat(i18n): add multimedia.* keys; update social.multimediaCardDe
 ### Task 17 — Create `ReactionBar` component
 
 **Files:**
+
 - Create: `packages/ui/src/components/ReactionBar.tsx`
 - Modify: `packages/ui/src/index.ts` (or wherever components are re-exported)
 
@@ -1353,9 +1384,14 @@ Look for an `index.ts` or `index.tsx`. Open it and check that components from `.
 - [ ] **Step 2: Create `packages/ui/src/components/ReactionBar.tsx`.**
 
 Contents:
+
 ```tsx
 // @ts-nocheck - Tamagui type recursion workaround
-import { REACTION_EMOJIS, type MatchMediaReactionSummary, type ReactionEmoji } from "@repo/shared/domain";
+import {
+  REACTION_EMOJIS,
+  type MatchMediaReactionSummary,
+  type ReactionEmoji,
+} from "@repo/shared/domain";
 import { XStack, YStack, Text } from "tamagui";
 import { Pressable } from "react-native";
 
@@ -1407,6 +1443,7 @@ export function ReactionBar({ reactions, onToggle, disabled }: ReactionBarProps)
 - [ ] **Step 3: Add the re-export in `packages/ui/src/index.ts`.**
 
 Add (or adapt to the existing pattern):
+
 ```ts
 export { ReactionBar } from "./components/ReactionBar";
 export type { ReactionBarProps } from "./components/ReactionBar";
@@ -1429,12 +1466,14 @@ git commit -m "feat(ui): add ReactionBar component"
 ### Task 18 — Create `MediaGrid` component
 
 **Files:**
+
 - Create: `packages/ui/src/components/MediaGrid.tsx`
 - Modify: `packages/ui/src/index.ts`
 
 - [ ] **Step 1: Create `packages/ui/src/components/MediaGrid.tsx`.**
 
 Contents:
+
 ```tsx
 // @ts-nocheck - Tamagui type recursion workaround
 import type { MatchMedia } from "@repo/shared/domain";
@@ -1450,12 +1489,7 @@ export type MediaGridProps = {
   overlayCount?: number | null; // shows "+N" on the last tile if set
 };
 
-export function MediaGrid({
-  items,
-  onItemPress,
-  columns,
-  overlayCount,
-}: MediaGridProps) {
+export function MediaGrid({ items, onItemPress, columns, overlayCount }: MediaGridProps) {
   const { width } = useWindowDimensions();
   const cols = columns ?? (width >= 768 ? 4 : 3);
   const gap = 4;
@@ -1484,7 +1518,15 @@ export function MediaGrid({
             accessibilityLabel={item.caption ?? `${item.kind} by ${item.uploaderName}`}
             style={{ width: tileSize, height: tileSize }}
           >
-            <View style={{ width: "100%", height: "100%", borderRadius: 4, overflow: "hidden", backgroundColor: "#222" }}>
+            <View
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: 4,
+                overflow: "hidden",
+                backgroundColor: "#222",
+              }}
+            >
               <Image
                 source={{ uri: thumbUrl }}
                 style={{ width: "100%", height: "100%" }}
@@ -1534,6 +1576,7 @@ export function MediaGrid({
 - [ ] **Step 2: Add the re-export.**
 
 In `packages/ui/src/index.ts`, add:
+
 ```ts
 export { MediaGrid } from "./components/MediaGrid";
 export type { MediaGridProps } from "./components/MediaGrid";
@@ -1556,12 +1599,14 @@ git commit -m "feat(ui): add MediaGrid component"
 ### Task 19 — Create `MediaLightbox` component
 
 **Files:**
+
 - Create: `packages/ui/src/components/MediaLightbox.tsx`
 - Modify: `packages/ui/src/index.ts`
 
 - [ ] **Step 1: Create `packages/ui/src/components/MediaLightbox.tsx`.**
 
 Contents:
+
 ```tsx
 // @ts-nocheck - Tamagui type recursion workaround
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
@@ -1701,6 +1746,7 @@ export function MediaLightbox({
 - [ ] **Step 2: Add the re-export.**
 
 In `packages/ui/src/index.ts`:
+
 ```ts
 export { MediaLightbox } from "./components/MediaLightbox";
 export type { MediaLightboxProps } from "./components/MediaLightbox";
@@ -1730,6 +1776,7 @@ git commit -m "feat(ui): add MediaLightbox component"
 ### Task 20 — Install `expo-video-thumbnails`
 
 **Files:**
+
 - Modify: `apps/mobile-web/package.json` (via pnpm)
 
 - [ ] **Step 1: Add the dependency pinned to the Expo SDK 55 range.**
@@ -1754,11 +1801,13 @@ git commit -m "chore(mobile-web): add expo-video-thumbnails dependency"
 ### Task 21 — Convert `[matchId].tsx` to folder form
 
 **Files:**
+
 - Move: `apps/mobile-web/app/(tabs)/matches/[matchId].tsx` → `apps/mobile-web/app/(tabs)/matches/[matchId]/index.tsx`
 
 - [ ] **Step 1: Use `git mv` to preserve history.**
 
 Run:
+
 ```bash
 rtk mkdir -p apps/mobile-web/app/\(tabs\)/matches/\[matchId\]
 rtk git mv "apps/mobile-web/app/(tabs)/matches/[matchId].tsx" "apps/mobile-web/app/(tabs)/matches/[matchId]/index.tsx"
@@ -1786,6 +1835,7 @@ git commit -m "refactor(mobile-web): move match detail route to folder form to h
 ### Task 22 — Build the per-match gallery screen (with upload flow inline)
 
 **Files:**
+
 - Create: `apps/mobile-web/app/(tabs)/matches/[matchId]/gallery.tsx`
 
 > This task is the largest in the plan. Break into the inner sub-steps below; commit once at the end.
@@ -1793,6 +1843,7 @@ git commit -m "refactor(mobile-web): move match detail route to folder form to h
 - [ ] **Step 1: Scaffold the screen with data fetching and an empty-state.**
 
 Create the file with:
+
 ```tsx
 // @ts-nocheck - Tamagui type recursion workaround
 import { MediaGrid, MediaLightbox } from "@repo/ui";
@@ -1800,7 +1851,14 @@ import { api, useQuery, useMutation, useQueryClient } from "@repo/api-client";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView } from "react-native";
+import {
+  ActionSheetIOS,
+  Alert,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as VideoThumbnails from "expo-video-thumbnails";
@@ -1840,7 +1898,7 @@ export default function MatchGalleryScreen() {
 
   const canDelete = useCallback(
     (item: MatchMedia) => !!userId && (item.uploaderUserId === userId || isAdmin),
-    [userId, isAdmin]
+    [userId, isAdmin],
   );
 
   // --- Upload ---
@@ -1871,7 +1929,7 @@ export default function MatchGalleryScreen() {
         (i) => {
           if (i === 0) void pick("photo");
           if (i === 1) void pick("video");
-        }
+        },
       );
     } else {
       // Minimal Android/web fallback: photo-only by default. A proper action sheet
@@ -1880,10 +1938,7 @@ export default function MatchGalleryScreen() {
     }
   };
 
-  const submitUpload = async (
-    asset: ImagePicker.ImagePickerAsset,
-    kind: "photo" | "video"
-  ) => {
+  const submitUpload = async (asset: ImagePicker.ImagePickerAsset, kind: "photo" | "video") => {
     try {
       setUploading(true);
 
@@ -1895,7 +1950,7 @@ export default function MatchGalleryScreen() {
         const processed = await ImageManipulator.manipulateAsync(
           asset.uri,
           [{ resize: { width: 1920 } }],
-          { compress: 0.82, format: ImageManipulator.SaveFormat.WEBP }
+          { compress: 0.82, format: ImageManipulator.SaveFormat.WEBP },
         );
         fileUri = processed.uri;
         fileMime = "image/webp";
@@ -1964,15 +2019,12 @@ export default function MatchGalleryScreen() {
   const toggleReactionMut = useMutation({
     mutationFn: async ({ mediaId, emoji }: { mediaId: string; emoji: ReactionEmoji }) => {
       const apiUrl = getConfiguredApiUrl();
-      const res = await fetch(
-        `${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ emoji }),
-        }
-      );
+      const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ emoji }),
+      });
       if (!res.ok) throw new Error("Reaction failed");
       return res.json();
     },
@@ -2006,12 +2058,7 @@ export default function MatchGalleryScreen() {
         >
           <XStack justifyContent="flex-end" marginBottom="$3">
             {canUpload && (
-              <Button
-                size="$3"
-                icon={<Plus size={16} />}
-                onPress={openUpload}
-                disabled={uploading}
-              >
+              <Button size="$3" icon={<Plus size={16} />} onPress={openUpload} disabled={uploading}>
                 {uploading ? t("multimedia.uploading", { percent: 0 }) : t("multimedia.upload")}
               </Button>
             )}
@@ -2021,10 +2068,7 @@ export default function MatchGalleryScreen() {
               <Text color="$gray11">{t("multimedia.emptyMatch")}</Text>
             </YStack>
           ) : (
-            <MediaGrid
-              items={items}
-              onItemPress={(_, i) => setLightboxIndex(i)}
-            />
+            <MediaGrid items={items} onItemPress={(_, i) => setLightboxIndex(i)} />
           )}
         </ScrollView>
       </Container>
@@ -2033,9 +2077,7 @@ export default function MatchGalleryScreen() {
         startIndex={lightboxIndex ?? 0}
         visible={lightboxIndex !== null}
         onClose={() => setLightboxIndex(null)}
-        onToggleReaction={(item, emoji) =>
-          toggleReactionMut.mutate({ mediaId: item.id, emoji })
-        }
+        onToggleReaction={(item, emoji) => toggleReactionMut.mutate({ mediaId: item.id, emoji })}
         onDelete={(item) => {
           Alert.alert(t("multimedia.deleteConfirm"), undefined, [
             { text: t("multimedia.cancel"), style: "cancel" },
@@ -2063,6 +2105,7 @@ Expected: page renders with empty state copy ("No photos yet. Be the first to sh
 - [ ] **Step 3: Upload a photo as a participant.**
 
 From the gallery screen, tap Upload → pick a photo. Observe:
+
 - Upload completes without error.
 - Thumbnail appears in the grid.
 - Tap thumbnail → lightbox opens with caption area blank (v1 has no caption input yet), reaction bar visible.
@@ -2082,11 +2125,13 @@ git commit -m "feat(mobile-web): add per-match gallery screen with upload + ligh
 ### Task 23 — Build the global feed screen
 
 **Files:**
+
 - Create: `apps/mobile-web/app/(tabs)/social/multimedia/index.tsx`
 
 - [ ] **Step 1: Create the file.**
 
 Contents:
+
 ```tsx
 // @ts-nocheck - Tamagui type recursion workaround
 import { MediaGrid } from "@repo/ui";
@@ -2129,8 +2174,7 @@ export default function MultimediaFeedScreen() {
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           onScroll={({ nativeEvent }) => {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const atBottom =
-              layoutMeasurement.height + contentOffset.y >= contentSize.height - 80;
+            const atBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 80;
             if (atBottom && hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}
           scrollEventThrottle={200}
@@ -2146,9 +2190,7 @@ export default function MultimediaFeedScreen() {
                 return (
                   <Card key={g.matchId} padding="$3">
                     <Pressable
-                      onPress={() =>
-                        router.push(`/(tabs)/matches/${g.matchId}/gallery`)
-                      }
+                      onPress={() => router.push(`/(tabs)/matches/${g.matchId}/gallery`)}
                       accessibilityRole="button"
                       accessibilityLabel={`Open gallery for ${formatDisplayDate(g.matchDate, "MMM d")}`}
                     >
@@ -2163,9 +2205,7 @@ export default function MultimediaFeedScreen() {
                     <MediaGrid
                       items={g.items}
                       overlayCount={overflow > 0 ? overflow : null}
-                      onItemPress={() =>
-                        router.push(`/(tabs)/matches/${g.matchId}/gallery`)
-                      }
+                      onItemPress={() => router.push(`/(tabs)/matches/${g.matchId}/gallery`)}
                     />
                   </Card>
                 );
@@ -2200,6 +2240,7 @@ git commit -m "feat(mobile-web): add global multimedia feed screen"
 ### Task 24 — Wire the Social hub Multimedia card
 
 **Files:**
+
 - Modify: `apps/mobile-web/app/(tabs)/social/index.tsx`
 
 - [ ] **Step 1: Open the file and locate the disabled Multimedia `Card` (current lines 52-73 per design spec).**
@@ -2209,57 +2250,59 @@ Run: `rtk grep -n "multimediaCard" apps/mobile-web/app/\(tabs\)/social/index.tsx
 - [ ] **Step 2: Wrap the Card in a `Pressable` and remove the `opacity={0.6}`.**
 
 Replace the existing block:
+
 ```tsx
-        <Card variant="elevated" padding="$5" opacity={0.6}>
-          <XStack gap="$4" alignItems="center">
-            <YStack
-              width={48}
-              height={48}
-              borderRadius={12}
-              backgroundColor="$purple4"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <Image size={24} color="$purple10" />
-            </YStack>
-            <YStack flex={1}>
-              <Text fontSize="$6" fontWeight="bold">
-                {t("social.multimediaCard")}
-              </Text>
-              <Text fontSize="$3" color="$gray11" marginTop="$1">
-                {t("social.multimediaCardDesc")}
-              </Text>
-            </YStack>
-          </XStack>
-        </Card>
+<Card variant="elevated" padding="$5" opacity={0.6}>
+  <XStack gap="$4" alignItems="center">
+    <YStack
+      width={48}
+      height={48}
+      borderRadius={12}
+      backgroundColor="$purple4"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Image size={24} color="$purple10" />
+    </YStack>
+    <YStack flex={1}>
+      <Text fontSize="$6" fontWeight="bold">
+        {t("social.multimediaCard")}
+      </Text>
+      <Text fontSize="$3" color="$gray11" marginTop="$1">
+        {t("social.multimediaCardDesc")}
+      </Text>
+    </YStack>
+  </XStack>
+</Card>
 ```
 
 With:
+
 ```tsx
-        <Pressable onPress={() => router.push("/(tabs)/social/multimedia")}>
-          <Card variant="elevated" padding="$5">
-            <XStack gap="$4" alignItems="center">
-              <YStack
-                width={48}
-                height={48}
-                borderRadius={12}
-                backgroundColor="$purple4"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Image size={24} color="$purple10" />
-              </YStack>
-              <YStack flex={1}>
-                <Text fontSize="$6" fontWeight="bold">
-                  {t("social.multimediaCard")}
-                </Text>
-                <Text fontSize="$3" color="$gray11" marginTop="$1">
-                  {t("social.multimediaCardDesc")}
-                </Text>
-              </YStack>
-            </XStack>
-          </Card>
-        </Pressable>
+<Pressable onPress={() => router.push("/(tabs)/social/multimedia")}>
+  <Card variant="elevated" padding="$5">
+    <XStack gap="$4" alignItems="center">
+      <YStack
+        width={48}
+        height={48}
+        borderRadius={12}
+        backgroundColor="$purple4"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Image size={24} color="$purple10" />
+      </YStack>
+      <YStack flex={1}>
+        <Text fontSize="$6" fontWeight="bold">
+          {t("social.multimediaCard")}
+        </Text>
+        <Text fontSize="$3" color="$gray11" marginTop="$1">
+          {t("social.multimediaCardDesc")}
+        </Text>
+      </YStack>
+    </XStack>
+  </Card>
+</Pressable>
 ```
 
 - [ ] **Step 3: Verify manually.**
@@ -2278,6 +2321,7 @@ git commit -m "feat(mobile-web): enable Multimedia card in Social hub"
 ### Task 25 — Add `GalleryCard` section to match detail
 
 **Files:**
+
 - Modify: `apps/mobile-web/app/(tabs)/matches/[matchId]/index.tsx`
 
 - [ ] **Step 1: Open the file and locate the area between the payment info section and the bottom action buttons.**
@@ -2288,6 +2332,7 @@ Pick the insertion point just before the "Action Buttons" block.
 - [ ] **Step 2: Add imports at the top of the file (alongside existing imports).**
 
 Add:
+
 ```tsx
 import { useQuery, api } from "@repo/api-client";
 import { Image as ImageIcon, ChevronRight } from "@tamagui/lucide-icons";
@@ -2296,52 +2341,53 @@ import { Image as ImageIcon, ChevronRight } from "@tamagui/lucide-icons";
 - [ ] **Step 3: Inside the component body (before the return, after other hooks), add the count query.**
 
 Add:
+
 ```tsx
-  const { data: mediaCountData } = useQuery({
-    queryKey: ["matchMediaCount", matchId],
-    queryFn: async () => {
-      const res = await api.api["match-media"][":matchId"].count.$get({ param: { matchId } });
-      if (!res.ok) return { count: 0 };
-      return (await res.json()) as { count: number };
-    },
-  });
-  const mediaCount = mediaCountData?.count ?? 0;
+const { data: mediaCountData } = useQuery({
+  queryKey: ["matchMediaCount", matchId],
+  queryFn: async () => {
+    const res = await api.api["match-media"][":matchId"].count.$get({ param: { matchId } });
+    if (!res.ok) return { count: 0 };
+    return (await res.json()) as { count: number };
+  },
+});
+const mediaCount = mediaCountData?.count ?? 0;
 ```
 
 - [ ] **Step 4: Add the Gallery card JSX at the chosen insertion point.**
 
 ```tsx
-          <Pressable
-            onPress={() => router.push(`/(tabs)/matches/${matchId}/gallery`)}
-            accessibilityRole="button"
-            accessibilityLabel={t("multimedia.viewGallery")}
-          >
-            <Card variant="elevated" padding="$4">
-              <XStack alignItems="center" gap="$3">
-                <YStack
-                  width={40}
-                  height={40}
-                  borderRadius={10}
-                  backgroundColor="$purple4"
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <ImageIcon size={20} color="$purple10" />
-                </YStack>
-                <YStack flex={1}>
-                  <Text fontSize="$5" fontWeight="bold">
-                    {t("multimedia.title")}
-                  </Text>
-                  <Text fontSize="$3" color="$gray11">
-                    {mediaCount === 0
-                      ? t("multimedia.addFirstPhoto")
-                      : t("multimedia.galleryCount", { count: mediaCount })}
-                  </Text>
-                </YStack>
-                <ChevronRight size={20} color="$gray10" />
-              </XStack>
-            </Card>
-          </Pressable>
+<Pressable
+  onPress={() => router.push(`/(tabs)/matches/${matchId}/gallery`)}
+  accessibilityRole="button"
+  accessibilityLabel={t("multimedia.viewGallery")}
+>
+  <Card variant="elevated" padding="$4">
+    <XStack alignItems="center" gap="$3">
+      <YStack
+        width={40}
+        height={40}
+        borderRadius={10}
+        backgroundColor="$purple4"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <ImageIcon size={20} color="$purple10" />
+      </YStack>
+      <YStack flex={1}>
+        <Text fontSize="$5" fontWeight="bold">
+          {t("multimedia.title")}
+        </Text>
+        <Text fontSize="$3" color="$gray11">
+          {mediaCount === 0
+            ? t("multimedia.addFirstPhoto")
+            : t("multimedia.galleryCount", { count: mediaCount })}
+        </Text>
+      </YStack>
+      <ChevronRight size={20} color="$gray10" />
+    </XStack>
+  </Card>
+</Pressable>
 ```
 
 - [ ] **Step 5: Verify.**
@@ -2366,9 +2412,11 @@ git commit -m "feat(mobile-web): add Gallery card to match detail"
 - [ ] **Step 1: Create the staging R2 bucket.**
 
 Via the Cloudflare dashboard → R2 → Create bucket, name `football-match-media-staging`. Or via CLI:
+
 ```bash
 cd apps/api && pnpm wrangler r2 bucket create football-match-media-staging
 ```
+
 Expected: `Creating bucket 'football-match-media-staging'. Bucket created.`
 
 - [ ] **Step 2: Run the migration against staging Turso.**
@@ -2395,9 +2443,11 @@ Expected: success; worker URL printed.
 - [ ] **Step 2: Verify the route is mounted via a simple curl.**
 
 Run (with no auth):
+
 ```bash
 rtk curl -i "https://football-api-staging.pepe-grillo-parlante.workers.dev/api/match-media/feed"
 ```
+
 Expected: `HTTP/2 401` (unauthorized) — confirms the route exists and auth is enforced.
 
 - [ ] **Step 3: Run the end-to-end manual test plan against the staging API + a mobile-web build pointed at staging.**
@@ -2429,6 +2479,7 @@ Record any failures. Fix forward — do not proceed to production until all 11 p
 ```bash
 cd apps/api && pnpm wrangler r2 bucket create football-match-media
 ```
+
 Expected: bucket created.
 
 - [ ] **Step 2: Run the migration against production Turso.**
@@ -2446,11 +2497,13 @@ Expected: success; production worker updated.
 ```bash
 rtk curl -i "https://football-api.pepe-grillo-parlante.workers.dev/api/match-media/feed"
 ```
+
 Expected: `HTTP/2 401`.
 
 - [ ] **Step 5: After Vercel auto-deploys the mobile-web build from `main`, re-run the manual test plan (subset) against production.**
 
 At minimum:
+
 - Upload a photo as an admin → appears in gallery.
 - Delete that photo → gone.
 - Load global feed with at least one match group showing.
@@ -2462,12 +2515,14 @@ At minimum:
 ### Task 29 — Mirror the design spec and update `.gitignore`
 
 **Files:**
+
 - Create: `docs/superpowers/specs/2026-04-17-multimedia-design.md`
 - Modify: `.gitignore`
 
 - [ ] **Step 1: Copy the design spec.**
 
 Run:
+
 ```bash
 rtk mkdir -p docs/superpowers/specs
 rtk cp "/Users/ignacioguri/.claude-personal/plans/i-think-is-time-iterative-sparrow.md" "docs/superpowers/specs/2026-04-17-multimedia-design.md"
@@ -2476,6 +2531,7 @@ rtk cp "/Users/ignacioguri/.claude-personal/plans/i-think-is-time-iterative-spar
 - [ ] **Step 2: Add `.superpowers/` to `.gitignore`.**
 
 If not already there, append:
+
 ```
 # Superpowers brainstorm companion session files
 .superpowers/

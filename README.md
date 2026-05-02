@@ -52,6 +52,7 @@
 ### Running the App
 
 Start the development server:
+
 ```bash
 pnpm dev
 # or

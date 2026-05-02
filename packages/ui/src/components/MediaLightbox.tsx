@@ -155,7 +155,12 @@ export function MediaLightbox({
         )}
 
         {/* Footer */}
-        <YStack nativeID="media-lightbox-footer" padding="$3" gap="$2" backgroundColor="$backgroundHover">
+        <YStack
+          nativeID="media-lightbox-footer"
+          padding="$3"
+          gap="$2"
+          backgroundColor="$backgroundHover"
+        >
           <XStack alignItems="center" justifyContent="space-between">
             <YStack flex={1}>
               <Text color="$color" fontSize="$4" fontWeight="600">

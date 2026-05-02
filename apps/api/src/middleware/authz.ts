@@ -34,9 +34,7 @@ export function requirePlatformAdmin(c: Context): Response | null {
 }
 
 export function requireOrganizer(c: Context): Response | null {
-  return isCurrentOrganizer(c)
-    ? null
-    : forbidden(c, "Organizer role required for this action");
+  return isCurrentOrganizer(c) ? null : forbidden(c, "Organizer role required for this action");
 }
 
 export function requireOwner(c: Context): Response | null {
@@ -63,8 +61,7 @@ export function assertInCurrentGroup(
   notFoundMessage = "Not found",
 ): Response | null {
   const current = requireCurrentGroup(c);
-  const groupId =
-    typeof entityOrId === "string" ? entityOrId : entityOrId?.groupId;
+  const groupId = typeof entityOrId === "string" ? entityOrId : entityOrId?.groupId;
   if (!groupId) {
     return c.json({ error: notFoundMessage }, 404);
   }

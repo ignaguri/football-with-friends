@@ -19,9 +19,7 @@ export interface RecordForRecipientsInput {
   payload: NotificationPayload;
 }
 
-export async function recordForRecipients(
-  input: RecordForRecipientsInput,
-): Promise<void> {
+export async function recordForRecipients(input: RecordForRecipientsInput): Promise<void> {
   const { userIds, groupId, type, category, payload } = input;
   if (userIds.length === 0) return;
 

@@ -1,10 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  signInWithPhone,
-  needsPasswordReset,
-  resetPasswordForMigration,
-} from "@repo/api-client";
+import { signInWithPhone, needsPasswordReset, resetPasswordForMigration } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -22,10 +18,7 @@ import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ScrollView } from "react-native";
 
-import {
-  phoneSignInSchema,
-  type PhoneSignInFormData,
-} from "../../lib/validation";
+import { phoneSignInSchema, type PhoneSignInFormData } from "../../lib/validation";
 
 export default function PhoneSignInScreen() {
   const { t } = useTranslation();
@@ -39,9 +32,7 @@ export default function PhoneSignInScreen() {
   // Honor ?redirectTo=/path set by deep-link entry points (e.g. /join/:token).
   // Only internal paths are allowed — anything else falls back to /(tabs).
   const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
-  const rawRedirect = Array.isArray(params.redirectTo)
-    ? params.redirectTo[0]
-    : params.redirectTo;
+  const rawRedirect = Array.isArray(params.redirectTo) ? params.redirectTo[0] : params.redirectTo;
   const postSignInPath =
     rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
       ? rawRedirect
@@ -122,17 +113,8 @@ export default function PhoneSignInScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack
-          gap="$6"
-          width="100%"
-          maxWidth={400}
-          marginHorizontal="auto"
-          paddingVertical="$8"
-        >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <YStack gap="$6" width="100%" maxWidth={400} marginHorizontal="auto" paddingVertical="$8">
           <YStack gap="$2" alignItems="center">
             <Text fontSize="$9" fontWeight="bold">
               {t("auth.signIn")}
@@ -157,10 +139,7 @@ export default function PhoneSignInScreen() {
                         onChangeValue={(phone) => onChange(phone)}
                         error={
                           phoneForm.formState.errors.phoneNumber
-                            ? t(
-                                phoneForm.formState.errors.phoneNumber
-                                  .message as string,
-                              )
+                            ? t(phoneForm.formState.errors.phoneNumber.message as string)
                             : undefined
                         }
                       />
@@ -201,22 +180,12 @@ export default function PhoneSignInScreen() {
               ) : (
                 <>
                   {resetSuccess ? (
-                    <Text
-                      color="$green10"
-                      fontSize="$3"
-                      textAlign="center"
-                      paddingVertical="$2"
-                    >
+                    <Text color="$green10" fontSize="$3" textAlign="center" paddingVertical="$2">
                       {t("auth.passwordResetSuccess")}
                     </Text>
                   ) : (
                     <>
-                      <Text
-                        color="$orange10"
-                        fontSize="$3"
-                        textAlign="center"
-                        paddingVertical="$2"
-                      >
+                      <Text color="$orange10" fontSize="$3" textAlign="center" paddingVertical="$2">
                         {t("auth.passwordResetRequired")}
                       </Text>
 
@@ -265,11 +234,7 @@ export default function PhoneSignInScreen() {
                     variant="primary"
                     testID="auth-phone-signin-reset-submit"
                   >
-                    {isLoading ? (
-                      <Spinner size="small" color="white" />
-                    ) : (
-                      t("auth.resetMyPassword")
-                    )}
+                    {isLoading ? <Spinner size="small" color="white" /> : t("auth.resetMyPassword")}
                   </Button>
                 ) : null}
               </YStack>

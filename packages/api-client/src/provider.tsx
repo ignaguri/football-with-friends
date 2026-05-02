@@ -31,18 +31,14 @@ export function APIProvider({ children, onMutationError }: APIProviderProps) {
       }),
   );
 
-  return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
 /**
  * Create a custom query client with specific options
  * Useful for testing or custom configurations
  */
-export function createQueryClient(
-  options?: ConstructorParameters<typeof QueryClient>[0],
-) {
+export function createQueryClient(options?: ConstructorParameters<typeof QueryClient>[0]) {
   return new QueryClient({
     defaultOptions: {
       queries: {
