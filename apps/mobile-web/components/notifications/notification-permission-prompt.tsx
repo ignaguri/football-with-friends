@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 
-import { Bell, CalendarPlus, Clock, UserCheck } from "@tamagui/lucide-icons";
+import { Bell, CalendarPlus, Clock, UserCheck } from "@tamagui/lucide-icons-2";
 import { Button, Dialog } from "@repo/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Platform, Pressable } from "react-native";
 import { YStack, Text, XStack, Button } from "tamagui";
-import { Clock } from "@tamagui/lucide-icons";
+import { Clock } from "@tamagui/lucide-icons-2";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 export interface TimePickerProps {

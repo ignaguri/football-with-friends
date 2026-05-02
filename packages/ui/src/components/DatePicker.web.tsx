@@ -7,7 +7,7 @@ import {
   Dialog as TamaguiDialog,
   styled,
 } from "tamagui";
-import { Calendar, ChevronLeft, ChevronRight } from "@tamagui/lucide-icons";
+import { Calendar, ChevronLeft, ChevronRight } from "@tamagui/lucide-icons-2";
 import {
   format,
   startOfMonth,

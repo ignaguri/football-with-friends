@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import type { MatchMedia } from "@repo/shared/domain";
 import { Image } from "expo-image";
-import { Play } from "@tamagui/lucide-icons";
+import { Play } from "@tamagui/lucide-icons-2";
 import { Pressable, Text, View, useWindowDimensions } from "react-native";
 import { YStack } from "tamagui";
 

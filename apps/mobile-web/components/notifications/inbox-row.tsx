@@ -15,7 +15,7 @@ import {
   UserPlus,
   UserX,
   Wallet,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";

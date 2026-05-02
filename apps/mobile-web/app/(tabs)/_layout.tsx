@@ -10,7 +10,7 @@ import {
   Users,
   Settings,
   CircleUser,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 import { Tabs, Redirect, router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useTheme, YStack, Spinner } from "tamagui";

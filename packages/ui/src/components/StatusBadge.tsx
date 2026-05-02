@@ -6,7 +6,7 @@ import {
   CalendarX,
   Calendar,
   Clock,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 
 export type PlayerStatusType = "PENDING" | "PAID" | "CANCELLED" | "SUBSTITUTE";
 export type MatchStatusType = "upcoming" | "cancelled" | "played";

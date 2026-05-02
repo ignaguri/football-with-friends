@@ -41,7 +41,7 @@ import {
   Trash2,
   Image as ImageIcon,
   ChevronRight,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 import { Image } from "expo-image";
 import { useLocalSearchParams, router } from "expo-router";
 import { useMemo, useState } from "react";

@@ -33,7 +33,7 @@ import {
   ShieldOff,
   Trash2,
   UserMinus,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";

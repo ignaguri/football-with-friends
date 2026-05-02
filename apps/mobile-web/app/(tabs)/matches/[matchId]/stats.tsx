@@ -18,7 +18,7 @@ import {
   AwardCard,
   useToastController,
 } from "@repo/ui";
-import { Beer, CheckCircle2, Lock, Unlock } from "@tamagui/lucide-icons";
+import { Beer, CheckCircle2, Lock, Unlock } from "@tamagui/lucide-icons-2";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";

@@ -2,7 +2,7 @@
 import { api, useInfiniteQuery } from "@repo/api-client";
 import { router, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Play } from "@tamagui/lucide-icons";
+import { ChevronRight, Play } from "@tamagui/lucide-icons-2";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { Image } from "expo-image";
 import { Container, Text, YStack, XStack, Card } from "@repo/ui";

@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Text, YStack } from "@repo/ui";
-import { Bell } from "@tamagui/lucide-icons";
+import { Bell } from "@tamagui/lucide-icons-2";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "tamagui";
 

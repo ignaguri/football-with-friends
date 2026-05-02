@@ -15,13 +15,13 @@
   "dependencies": {
     "@react-native-community/datetimepicker": "^8.6.0",
     "@repo/shared": "workspace:*",
-    "@tamagui/lucide-icons": "2.0.0-rc.26",
-    "@tamagui/toast": "2.0.0-rc.26",
+    "@tamagui/lucide-icons-2": "2.0.0-rc.41",
+    "@tamagui/toast": "2.0.0-rc.41",
     "date-fns": "^4.1.0",
     "expo-image": "~55.0.9",
     "expo-video": "^55.0.15",
     "react-dom": "19.2.5",
-    "tamagui": "2.0.0-rc.26"
+    "tamagui": "2.0.0-rc.41"
   },
   "peerDependencies": {
     "react": "^19.0.0",

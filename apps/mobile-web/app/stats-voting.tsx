@@ -20,7 +20,7 @@ import {
   type SelectionItem,
   getPlayerDisplayLabel,
 } from "@repo/ui";
-import { ChevronLeft, Minus, Plus, Check, Lock } from "@tamagui/lucide-icons";
+import { ChevronLeft, Minus, Plus, Check, Lock } from "@tamagui/lucide-icons-2";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";

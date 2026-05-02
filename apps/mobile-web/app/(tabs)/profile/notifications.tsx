@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 
 import { Card, Container, Text } from "@repo/ui";
-import { Settings } from "@tamagui/lucide-icons";
+import { Settings } from "@tamagui/lucide-icons-2";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, Platform, ScrollView } from "react-native";

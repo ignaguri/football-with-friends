@@ -11,7 +11,7 @@ import {
   Dialog,
   List,
 } from "@repo/ui";
-import { Calendar, Trophy, CircleUserRound } from "@tamagui/lucide-icons";
+import { Calendar, Trophy, CircleUserRound } from "@tamagui/lucide-icons-2";
 import { router } from "expo-router";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";

@@ -1,5 +1,5 @@
 import { Button as TamaguiButton, styled } from "tamagui";
-import { Sun, Moon } from "@tamagui/lucide-icons";
+import { Sun, Moon } from "@tamagui/lucide-icons-2";
 
 interface ThemeToggleProps {
   theme: "light" | "dark";

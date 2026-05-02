@@ -14,7 +14,7 @@ import {
   Tabs,
   Button,
 } from "@repo/ui";
-import { Plus, BookOpen } from "@tamagui/lucide-icons";
+import { Plus, BookOpen } from "@tamagui/lucide-icons-2";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

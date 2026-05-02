@@ -1,5 +1,5 @@
 import { Button as TamaguiButton, XStack, Text, styled } from "tamagui";
-import { Languages } from "@tamagui/lucide-icons";
+import { Languages } from "@tamagui/lucide-icons-2";
 
 type Language = "en" | "es";
 

@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui";
 import { Badge } from "./Badge";
-import { Award, Trophy } from "@tamagui/lucide-icons";
+import { Award, Trophy } from "@tamagui/lucide-icons-2";
 
 export interface VotingStatsSectionProps {
   stats: Array<{

@@ -1,5 +1,5 @@
 import { Dialog as TamaguiDialog, DialogProps, XStack } from "tamagui";
-import { X } from "@tamagui/lucide-icons";
+import { X } from "@tamagui/lucide-icons-2";
 import { Button } from "./Button";
 
 export interface CustomDialogProps extends DialogProps {

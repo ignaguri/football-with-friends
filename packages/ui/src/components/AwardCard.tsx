@@ -1,7 +1,7 @@
 import { Text, XStack, YStack } from "tamagui";
 import { Card } from "./Card";
 import { UserAvatar } from "./user-avatar";
-import { Award } from "@tamagui/lucide-icons";
+import { Award } from "@tamagui/lucide-icons-2";
 import { getCountryFlag } from "../utils/country-flags";
 
 export interface AwardCardProps {

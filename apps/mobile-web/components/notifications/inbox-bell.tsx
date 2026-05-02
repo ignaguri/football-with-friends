@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useUnreadNotificationCount } from "@repo/api-client";
 import { Text, XStack } from "@repo/ui";
-import { Bell } from "@tamagui/lucide-icons";
+import { Bell } from "@tamagui/lucide-icons-2";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";

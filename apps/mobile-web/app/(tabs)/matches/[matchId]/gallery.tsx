@@ -8,7 +8,7 @@ import { ActionSheetIOS, Alert, Platform, Pressable, RefreshControl, ScrollView 
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { Plus } from "@tamagui/lucide-icons";
+import { Plus } from "@tamagui/lucide-icons-2";
 import { Container, Text, YStack, XStack, Button } from "@repo/ui";
 import { useSession, getConfiguredApiUrl } from "@repo/api-client";
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";

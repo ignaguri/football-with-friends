@@ -2,7 +2,7 @@
 import { Component, ReactNode } from "react";
 import * as Sentry from "@sentry/react-native";
 import { Container, Card, Text, YStack, Button } from "@repo/ui";
-import { AlertTriangle } from "@tamagui/lucide-icons";
+import { AlertTriangle } from "@tamagui/lucide-icons-2";
 import i18next from "i18next";
 
 interface Props {

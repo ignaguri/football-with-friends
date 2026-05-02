@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui";
 import { UserAvatar } from "./user-avatar";
-import { Trophy, Award } from "@tamagui/lucide-icons";
+import { Trophy, Award } from "@tamagui/lucide-icons-2";
 import { getCountryFlag } from "../utils/country-flags";
 
 export interface PodiumDisplayProps {

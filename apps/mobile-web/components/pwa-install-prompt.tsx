@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { AnimatePresence, Button, XStack, YStack, Text } from "tamagui";
-import { X } from "@tamagui/lucide-icons";
+import { X } from "@tamagui/lucide-icons-2";
 import { useTranslation } from "react-i18next";
 
 interface BeforeInstallPromptEvent extends Event {

@@ -3,7 +3,7 @@
 // chrome unchanged.
 
 import { useCurrentGroup } from "@repo/api-client";
-import { Check, ChevronDown } from "@tamagui/lucide-icons";
+import { Check, ChevronDown } from "@tamagui/lucide-icons-2";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

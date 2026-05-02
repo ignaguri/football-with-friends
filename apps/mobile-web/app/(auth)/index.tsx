@@ -9,7 +9,7 @@ import {
   XStack,
   Image,
 } from "@repo/ui";
-import { Mail } from "@tamagui/lucide-icons";
+import { Mail } from "@tamagui/lucide-icons-2";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Device from "expo-device";
 import { router, useLocalSearchParams } from "expo-router";

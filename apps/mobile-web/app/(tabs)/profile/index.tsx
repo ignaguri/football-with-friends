@@ -25,7 +25,7 @@ import {
   getCountryFlag,
   getCountryName,
 } from "@repo/ui";
-import { Bell, Camera, ChevronRight } from "@tamagui/lucide-icons";
+import { Bell, Camera, ChevronRight } from "@tamagui/lucide-icons-2";
 import * as ImagePicker from "expo-image-picker";
 import { Link, router, Stack } from "expo-router";
 import { useState, useEffect } from "react";

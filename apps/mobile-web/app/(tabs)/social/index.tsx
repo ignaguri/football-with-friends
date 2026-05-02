@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { Container, Card, Text, YStack, XStack } from "@repo/ui";
-import { BarChart3, Image } from "@tamagui/lucide-icons";
+import { BarChart3, Image } from "@tamagui/lucide-icons-2";
 import { router, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";

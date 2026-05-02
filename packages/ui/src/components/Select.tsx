@@ -9,7 +9,7 @@ import {
   Sheet,
   Input as TamaguiInput,
 } from "tamagui";
-import { Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons";
+import { Check, ChevronDown, ChevronUp } from "@tamagui/lucide-icons-2";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface SelectOption {

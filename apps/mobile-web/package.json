@@ -25,7 +25,7 @@
     "@repo/shared": "workspace:*",
     "@repo/ui": "workspace:*",
     "@sentry/react-native": "~7.11.0",
-    "@tamagui/config": "2.0.0-rc.26",
+    "@tamagui/config": "2.0.0-rc.41",
     "burnt": "^0.13.0",
     "expo": "~55.0.19",
     "expo-apple-authentication": "^55.0.13",
@@ -63,12 +63,12 @@
     "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2",
     "react-native-worklets": "0.8.1",
-    "tamagui": "2.0.0-rc.26",
+    "tamagui": "2.0.0-rc.41",
     "zod": "^4.4.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@tamagui/babel-plugin": "2.0.0-rc.26",
+    "@tamagui/babel-plugin": "2.0.0-rc.41",
     "@types/react": "~19.2.14",
     "typescript": "~5.9.3",
     "workbox-cli": "^7.4.0"
