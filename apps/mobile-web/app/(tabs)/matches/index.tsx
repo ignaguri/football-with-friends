@@ -4,7 +4,7 @@ import { Plus, BookOpen } from "@tamagui/lucide-icons-2";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, Pressable } from "react-native";
+import { RefreshControl, ScrollView } from "react-native";
 import { formatMatchDateTime } from "../../../lib/date-utils";
 
 type MatchType = "upcoming" | "past";
@@ -122,10 +122,9 @@ export default function MatchesListScreen() {
               matches.map((match) => {
                 const dateTime = formatMatchDateTime(match.date, match.time);
                 return (
-                  <Pressable
+                  <YStack
                     key={match.id}
                     onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
-                    style={{ width: "100%" }}
                     accessibilityRole="button"
                     accessibilityLabel={
                       match.location?.name
@@ -136,48 +135,47 @@ export default function MatchesListScreen() {
                         : t("a11y.openMatchNoLocation", { date: dateTime })
                     }
                     testID={`matches-card-${match.id}`}
+                    width="100%"
+                    backgroundColor="$brandNavy"
+                    borderRadius={16}
+                    padding="$4"
+                    gap="$1"
+                    cursor="pointer"
+                    pressStyle={{ scale: 0.98, opacity: 0.9 }}
+                    $platform-web={{
+                      // @ts-ignore - boxShadow is web-only, reads a theme-scoped CSS var
+                      boxShadow: "0px 4px 8px var(--shadow3)",
+                    }}
                   >
-                    <YStack
-                      backgroundColor="$brandNavy"
-                      borderRadius={16}
-                      padding="$4"
-                      gap="$1"
-                      pressStyle={{ scale: 0.98, opacity: 0.9 }}
-                      $platform-web={{
-                        // @ts-ignore - boxShadow is web-only, reads a theme-scoped CSS var
-                        boxShadow: "0px 4px 8px var(--shadow3)",
-                      }}
-                    >
-                      <XStack justifyContent="space-between" alignItems="center">
-                        <YStack>
-                          <Text color="white" fontSize="$5" fontWeight="500" textAlign="left">
-                            {dateTime}
+                    <XStack justifyContent="space-between" alignItems="center">
+                      <YStack>
+                        <Text color="white" fontSize="$5" fontWeight="500" textAlign="left">
+                          {dateTime}
+                        </Text>
+                        {match.location?.name && (
+                          <Text color="white" fontSize="$5" fontWeight="600" textAlign="left">
+                            {match.location.name}
                           </Text>
-                          {match.location?.name && (
-                            <Text color="white" fontSize="$5" fontWeight="600" textAlign="left">
-                              {match.location.name}
-                            </Text>
-                          )}
-                        </YStack>
-                        {(match as any).userSignupStatus &&
-                          (match as any).userSignupStatus !== "CANCELLED" && (
-                            <Text
-                              fontSize="$2"
-                              fontWeight="600"
-                              color="white"
-                              backgroundColor="$brandNavyOverlay"
-                              paddingHorizontal="$2"
-                              paddingVertical="$1"
-                              borderRadius="$2"
-                            >
-                              {activeTab === "upcoming"
-                                ? t("matches.youJoined")
-                                : t("matches.youPlayed")}
-                            </Text>
-                          )}
-                      </XStack>
-                    </YStack>
-                  </Pressable>
+                        )}
+                      </YStack>
+                      {(match as any).userSignupStatus &&
+                        (match as any).userSignupStatus !== "CANCELLED" && (
+                          <Text
+                            fontSize="$2"
+                            fontWeight="600"
+                            color="white"
+                            backgroundColor="$brandNavyOverlay"
+                            paddingHorizontal="$2"
+                            paddingVertical="$1"
+                            borderRadius="$2"
+                          >
+                            {activeTab === "upcoming"
+                              ? t("matches.youJoined")
+                              : t("matches.youPlayed")}
+                          </Text>
+                        )}
+                    </XStack>
+                  </YStack>
                 );
               })}
 
