@@ -1,4 +1,5 @@
-import { YStack, YStackProps } from "tamagui";
+import type { YStackProps } from "tamagui";
+import { YStack } from "tamagui";
 
 export interface ContainerProps extends YStackProps {
   variant?: "default" | "centered" | "padded";

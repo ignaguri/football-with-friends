@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { Platform } from "react-native";
 import { YStack, XStack, Text, Card, Button } from "tamagui";
 import { X } from "@tamagui/lucide-icons-2";
-import { Select, SelectOption } from "./Select";
+import type { SelectOption } from "./Select";
+import { Select } from "./Select";
 
 export interface SelectionItem {
   id: string;

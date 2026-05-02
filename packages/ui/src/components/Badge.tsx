@@ -1,4 +1,5 @@
-import { Text, XStack, XStackProps } from "tamagui";
+import type { XStackProps } from "tamagui";
+import { Text, XStack } from "tamagui";
 
 export interface BadgeProps extends XStackProps {
   variant?: "default" | "success" | "warning" | "danger" | "info";

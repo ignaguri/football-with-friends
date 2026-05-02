@@ -1,4 +1,5 @@
-import { Card as TamaguiCard, CardProps } from "tamagui";
+import type { CardProps } from "tamagui";
+import { Card as TamaguiCard } from "tamagui";
 
 export interface CustomCardProps extends CardProps {
   variant?: "default" | "outlined" | "elevated";

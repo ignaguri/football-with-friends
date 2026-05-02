@@ -9,7 +9,6 @@
     "./components/*": "./src/components/*.tsx"
   },
   "scripts": {
-    "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

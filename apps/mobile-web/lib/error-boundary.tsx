@@ -1,5 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Component, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Component } from "react";
 import * as Sentry from "@sentry/react-native";
 import { Container, Card, Text, YStack, Button } from "@repo/ui";
 import { AlertTriangle } from "@tamagui/lucide-icons-2";

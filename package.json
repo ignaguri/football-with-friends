@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "lint": "turbo lint",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "clean": "turbo clean && rm -rf node_modules",
@@ -50,32 +52,18 @@
     "zod": "^4.4.2"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.5",
-    "@eslint/js": "^9.39.4",
     "@types/node": "^25.6.0",
     "@types/react": "~19.2.14",
     "@types/react-dom": "~19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.59.1",
-    "@typescript-eslint/parser": "^8.59.1",
     "dotenv": "^17.4.2",
     "esbuild": "^0.27.7",
-    "eslint": "^9.39.4",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-unused-imports": "^4.4.1",
-    "globals": "^17.6.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
+    "oxfmt": "^0.47.0",
+    "oxlint": "^1.62.0",
     "tsx": "^4.21.0",
     "turbo": "^2.9.7",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.1"
+    "typescript": "^5.9.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -93,12 +81,12 @@
   },
   "lint-staged": {
     "migrations/**/*.ts": [
-      "eslint --fix",
+      "oxlint --fix",
       "tsc --noEmit"
     ],
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
+    "*.{ts,tsx,js,mjs,cjs,json}": [
+      "oxlint --fix",
+      "oxfmt"
     ]
   }
 }

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Platform } from "react-native";
+import type {
+  SelectProps} from "tamagui";
 import {
   Select as TamaguiSelect,
-  SelectProps,
   YStack,
   Text,
   Adapt,
