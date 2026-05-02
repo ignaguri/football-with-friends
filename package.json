@@ -79,6 +79,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@sentry/cli",
       "unrs-resolver"
     ],
     "overrides": {
