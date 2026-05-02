@@ -1,7 +1,4 @@
-import type {
-  NotificationPreferences,
-  NotificationPreferencesUpdate,
-} from "@repo/shared/domain";
+import type { NotificationPreferences, NotificationPreferencesUpdate } from "@repo/shared/domain";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useSession } from "./auth";
@@ -57,19 +54,16 @@ export function useUpdateNotificationPreferences() {
         notificationPreferencesQueryKeys.me(),
       );
       if (previous) {
-        queryClient.setQueryData<NotificationPreferences>(
-          notificationPreferencesQueryKeys.me(),
-          { ...previous, ...update },
-        );
+        queryClient.setQueryData<NotificationPreferences>(notificationPreferencesQueryKeys.me(), {
+          ...previous,
+          ...update,
+        });
       }
       return { previous };
     },
     onError: (_err, _update, ctx) => {
       if (ctx?.previous) {
-        queryClient.setQueryData(
-          notificationPreferencesQueryKeys.me(),
-          ctx.previous,
-        );
+        queryClient.setQueryData(notificationPreferencesQueryKeys.me(), ctx.previous);
       }
     },
     onSuccess: (data) => {

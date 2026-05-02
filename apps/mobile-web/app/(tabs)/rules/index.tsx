@@ -22,9 +22,7 @@ export default function RulesScreen() {
 
               <List ordered bulletColor="$blue10">
                 {Array.isArray(generalRules) &&
-                  generalRules.map((rule, index) => (
-                    <List.Item key={index}>{rule}</List.Item>
-                  ))}
+                  generalRules.map((rule, index) => <List.Item key={index}>{rule}</List.Item>)}
               </List>
             </YStack>
           </Card>
@@ -38,9 +36,7 @@ export default function RulesScreen() {
 
               <List ordered bulletColor="$green10">
                 {Array.isArray(matchRules) &&
-                  matchRules.map((rule, index) => (
-                    <List.Item key={index}>{rule}</List.Item>
-                  ))}
+                  matchRules.map((rule, index) => <List.Item key={index}>{rule}</List.Item>)}
               </List>
             </YStack>
           </Card>

@@ -112,7 +112,12 @@ app.use("*", async (c, next) => {
       if (allowedOrigins.includes(origin)) return origin;
 
       // Allow project-specific Vercel preview deployments
-      if (/^https:\/\/football-with-friends(-[a-z0-9-]+)?(-ignacio-guris-projects)?\.vercel\.app$/.test(origin)) return origin;
+      if (
+        /^https:\/\/football-with-friends(-[a-z0-9-]+)?(-ignacio-guris-projects)?\.vercel\.app$/.test(
+          origin,
+        )
+      )
+        return origin;
 
       // Allow native app deep links
       if (origin.startsWith("football-with-friends://")) return origin;
@@ -140,7 +145,7 @@ app.get("/health", (c) =>
     status: "ok",
     timestamp: new Date().toISOString(),
     runtime: "cloudflare-workers",
-  })
+  }),
 );
 
 // Web OAuth callback - must be defined BEFORE the wildcard /api/auth/* route
@@ -217,7 +222,11 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
   if (path.includes("/callback/")) {
     const location = response.headers.get("location") || "";
     const setCookie = response.headers.get("set-cookie") || "";
-    if (location.startsWith("football-with-friends://") && !location.includes("cookie=") && setCookie) {
+    if (
+      location.startsWith("football-with-friends://") &&
+      !location.includes("cookie=") &&
+      setCookie
+    ) {
       const redirectURL = new URL(location);
       redirectURL.searchParams.set("cookie", setCookie);
       const newHeaders = new Headers(response.headers);
@@ -264,7 +273,6 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
 // API routes
 registerApiRoutes(app);
 
-
 // Export for Cloudflare Workers with Sentry error monitoring
 export default Sentry.withSentry(
   (env: Bindings) => ({
@@ -280,11 +288,7 @@ export default Sentry.withSentry(
       let tasks: Array<Promise<unknown>>;
       switch (event.cron) {
         case CRON_EVERY_30_MIN:
-          tasks = [
-            updateMatchStatuses(),
-            sendMatchReminders(),
-            sendEngagementReminders(),
-          ];
+          tasks = [updateMatchStatuses(), sendMatchReminders(), sendEngagementReminders()];
           break;
         case CRON_DAILY_01_UTC:
           tasks = [pruneInboxNotifications()];

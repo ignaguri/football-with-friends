@@ -1,8 +1,8 @@
 module.exports = function (api) {
-  api.cache(true)
+  api.cache(true);
   return {
-    presets: ['babel-preset-expo'],
-    plugins: [['@tamagui/babel-plugin']],
-    babelrcRoots: ['.', './apps/*', './packages/*'],
-  }
-}
+    presets: ["babel-preset-expo"],
+    plugins: [["@tamagui/babel-plugin"]],
+    babelrcRoots: [".", "./apps/*", "./packages/*"],
+  };
+};

@@ -18,7 +18,7 @@ import {
   AwardCard,
   useToastController,
 } from "@repo/ui";
-import { Beer, CheckCircle2, Lock, Unlock } from "@tamagui/lucide-icons";
+import { Beer, CheckCircle2, Lock, Unlock } from "@tamagui/lucide-icons-2";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -57,9 +57,7 @@ export default function MatchStatsScreen() {
 
   const closeMutation = useMutation({
     mutationFn: async () => {
-      const res = await client.api.voting.matches[":matchId"][
-        "close-voting"
-      ].$post({
+      const res = await client.api.voting.matches[":matchId"]["close-voting"].$post({
         param: { matchId },
       });
       if (!res.ok) {
@@ -79,9 +77,7 @@ export default function MatchStatsScreen() {
 
   const reopenMutation = useMutation({
     mutationFn: async () => {
-      const res = await client.api.voting.matches[":matchId"][
-        "reopen-voting"
-      ].$post({
+      const res = await client.api.voting.matches[":matchId"]["reopen-voting"].$post({
         param: { matchId },
       });
       if (!res.ok) {
@@ -127,38 +123,30 @@ export default function MatchStatsScreen() {
   }, [stats]);
 
   const confirmClose = () => {
-    Alert.alert(
-      t("matchStats.closeVoting.action"),
-      t("matchStats.closeVoting.confirm"),
-      [
-        {
-          text: t("shared.cancel", { defaultValue: "Cancel" }),
-          style: "cancel",
-        },
-        {
-          text: t("matchStats.closeVoting.action"),
-          style: "destructive",
-          onPress: () => closeMutation.mutate(),
-        },
-      ],
-    );
+    Alert.alert(t("matchStats.closeVoting.action"), t("matchStats.closeVoting.confirm"), [
+      {
+        text: t("shared.cancel", { defaultValue: "Cancel" }),
+        style: "cancel",
+      },
+      {
+        text: t("matchStats.closeVoting.action"),
+        style: "destructive",
+        onPress: () => closeMutation.mutate(),
+      },
+    ]);
   };
 
   const confirmReopen = () => {
-    Alert.alert(
-      t("matchStats.reopenVoting.action"),
-      t("matchStats.reopenVoting.confirm"),
-      [
-        {
-          text: t("shared.cancel", { defaultValue: "Cancel" }),
-          style: "cancel",
-        },
-        {
-          text: t("matchStats.reopenVoting.action"),
-          onPress: () => reopenMutation.mutate(),
-        },
-      ],
-    );
+    Alert.alert(t("matchStats.reopenVoting.action"), t("matchStats.reopenVoting.confirm"), [
+      {
+        text: t("shared.cancel", { defaultValue: "Cancel" }),
+        style: "cancel",
+      },
+      {
+        text: t("matchStats.reopenVoting.action"),
+        onPress: () => reopenMutation.mutate(),
+      },
+    ]);
   };
 
   return (
@@ -184,9 +172,7 @@ export default function MatchStatsScreen() {
       {stats && (
         <ScrollView
           style={{ flex: 1 }}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         >
           <YStack gap="$3" paddingBottom="$6">
             {/* Status banner */}
@@ -202,10 +188,7 @@ export default function MatchStatsScreen() {
                     {stats.isVotingClosed
                       ? t("matchStats.votingClosed")
                       : t("matchStats.votingClosesIn", {
-                          when: formatLocalizedDate(
-                            stats.votingAutoCloseAt,
-                            "MMM d, yyyy",
-                          ),
+                          when: formatLocalizedDate(stats.votingAutoCloseAt, "MMM d, yyyy"),
                         })}
                   </Text>
                 </XStack>
@@ -228,19 +211,17 @@ export default function MatchStatsScreen() {
                     {t("matchStats.closeVoting.action")}
                   </Button>
                 )}
-                {isOrganizer &&
-                  stats.isVotingClosed &&
-                  stats.votingClosedAt && (
-                    <Button
-                      variant="outline"
-                      size="$3"
-                      onPress={confirmReopen}
-                      disabled={reopenMutation.isPending}
-                      testID="match-stats-reopen-voting-btn"
-                    >
-                      {t("matchStats.reopenVoting.action")}
-                    </Button>
-                  )}
+                {isOrganizer && stats.isVotingClosed && stats.votingClosedAt && (
+                  <Button
+                    variant="outline"
+                    size="$3"
+                    onPress={confirmReopen}
+                    disabled={reopenMutation.isPending}
+                    testID="match-stats-reopen-voting-btn"
+                  >
+                    {t("matchStats.reopenVoting.action")}
+                  </Button>
+                )}
               </YStack>
             </Card>
 
@@ -264,15 +245,12 @@ export default function MatchStatsScreen() {
                         defaultValue: award.criteriaName,
                       })}
                       criteriaCode={award.criteriaCode}
-                      criteriaDescription={t(
-                        `voting.criteria.${award.criteriaCode}_desc`,
-                        { defaultValue: "" },
-                      )}
+                      criteriaDescription={t(`voting.criteria.${award.criteriaCode}_desc`, {
+                        defaultValue: "",
+                      })}
                       topPlayers={award.topPlayers}
                       noVotesLabel={t("matchStats.empty")}
-                      formatVotes={(count) =>
-                        t("matchStats.awards.voteCount", { count })
-                      }
+                      formatVotes={(count) => t("matchStats.awards.voteCount", { count })}
                     />
                   ))
                 )}
@@ -320,11 +298,7 @@ export default function MatchStatsScreen() {
                       </XStack>
                     ))
                   ) : (
-                    <Text
-                      color="$gray11"
-                      textAlign="center"
-                      paddingVertical="$3"
-                    >
+                    <Text color="$gray11" textAlign="center" paddingVertical="$3">
                       {t("matchStats.social.noEntries")}
                     </Text>
                   )}

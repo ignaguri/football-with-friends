@@ -7,15 +7,8 @@ import { z } from "zod";
 import type { Match } from "@repo/shared/domain";
 import type { Context } from "hono";
 
-import {
-  assertInCurrentGroup,
-  requireOrganizer,
-  requirePlatformAdmin,
-} from "../middleware/authz";
-import {
-  groupContextMiddleware,
-  requireCurrentGroup,
-} from "../middleware/group-context";
+import { assertInCurrentGroup, requireOrganizer, requirePlatformAdmin } from "../middleware/authz";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import { type AppVariables, requireUser } from "../middleware/security";
 
 const app = new Hono<{ Variables: AppVariables }>();
@@ -31,10 +24,7 @@ function getLanguage(acceptLanguage: string | null | undefined): "en" | "es" {
 // leaderboards and match-specific endpoints are scoped via `currentGroup.id`
 // (filtered by `match_votes.group_id`) and `assertMatchInCurrentGroup`
 // respectively — cross-group matchIds 404, other groups' votes never surface.
-async function assertMatchInCurrentGroup(
-  c: Context,
-  matchId: string,
-): Promise<Response | null> {
+async function assertMatchInCurrentGroup(c: Context, matchId: string): Promise<Response | null> {
   const match = await getRepositoryFactory().matches.findById(matchId);
   return assertInCurrentGroup(c, match, "Match not found");
 }
@@ -127,38 +117,31 @@ const updateCriteriaSchema = z.object({
   sortOrder: z.number().int().optional(),
 });
 
-app.patch(
-  "/criteria/:id",
-  zValidator("json", updateCriteriaSchema),
-  async (c) => {
-    try {
-      const denied = requirePlatformAdmin(c);
-      if (denied) return denied;
-      const id = c.req.param("id");
-      const data = c.req.valid("json");
-      const criteria = await votingService.updateCriteria(id, data);
-      return c.json({ criteria });
-    } catch (error: any) {
-      console.error("Update criteria error:", error);
-      if (error.message.includes("Admin")) {
-        return c.json({ error: error.message }, 403);
-      }
-      if (error.message.includes("authenticated")) {
-        return c.json({ error: error.message }, 401);
-      }
-      if (error.message.includes("not found")) {
-        return c.json({ error: error.message }, 404);
-      }
-      if (error.message.includes("already exists")) {
-        return c.json({ error: error.message }, 400);
-      }
-      return c.json(
-        { error: error.message || "Failed to update criteria" },
-        500,
-      );
+app.patch("/criteria/:id", zValidator("json", updateCriteriaSchema), async (c) => {
+  try {
+    const denied = requirePlatformAdmin(c);
+    if (denied) return denied;
+    const id = c.req.param("id");
+    const data = c.req.valid("json");
+    const criteria = await votingService.updateCriteria(id, data);
+    return c.json({ criteria });
+  } catch (error: any) {
+    console.error("Update criteria error:", error);
+    if (error.message.includes("Admin")) {
+      return c.json({ error: error.message }, 403);
     }
-  },
-);
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
+    }
+    if (error.message.includes("not found")) {
+      return c.json({ error: error.message }, 404);
+    }
+    if (error.message.includes("already exists")) {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: error.message || "Failed to update criteria" }, 500);
+  }
+});
 
 // Delete criteria (soft delete, admin only)
 app.delete("/criteria/:id", async (c) => {
@@ -213,40 +196,32 @@ const submitVotesSchema = z.object({
   ),
 });
 
-app.post(
-  "/matches/:matchId",
-  zValidator("json", submitVotesSchema),
-  async (c) => {
-    try {
-      const user = requireUser(c);
-      const matchId = c.req.param("matchId");
-      const notFound = await assertMatchInCurrentGroup(c, matchId);
-      if (notFound) return notFound;
-      const { votes } = c.req.valid("json");
+app.post("/matches/:matchId", zValidator("json", submitVotesSchema), async (c) => {
+  try {
+    const user = requireUser(c);
+    const matchId = c.req.param("matchId");
+    const notFound = await assertMatchInCurrentGroup(c, matchId);
+    if (notFound) return notFound;
+    const { votes } = c.req.valid("json");
 
-      const submittedVotes = await votingService.submitVotes(
-        matchId,
-        user.id,
-        votes,
-      );
+    const submittedVotes = await votingService.submitVotes(matchId, user.id, votes);
 
-      return c.json({ votes: submittedVotes }, 201);
-    } catch (error: any) {
-      console.error("Submit votes error:", error);
-      if (error.message.includes("authenticated")) {
-        return c.json({ error: error.message }, 401);
-      }
-      if (
-        error.message.includes("Invalid") ||
-        error.message.includes("inactive") ||
-        error.message.includes("only be voted")
-      ) {
-        return c.json({ error: error.message }, 400);
-      }
-      return c.json({ error: error.message || "Failed to submit votes" }, 500);
+    return c.json({ votes: submittedVotes }, 201);
+  } catch (error: any) {
+    console.error("Submit votes error:", error);
+    if (error.message.includes("authenticated")) {
+      return c.json({ error: error.message }, 401);
     }
-  },
-);
+    if (
+      error.message.includes("Invalid") ||
+      error.message.includes("inactive") ||
+      error.message.includes("only be voted")
+    ) {
+      return c.json({ error: error.message }, 400);
+    }
+    return c.json({ error: error.message || "Failed to submit votes" }, 500);
+  }
+});
 
 app.get("/matches/:matchId/stats", async (c) => {
   try {
@@ -315,10 +290,7 @@ app.get("/matches/:matchId/results", async (c) => {
     const notFound = await assertMatchInCurrentGroup(c, matchId);
     if (notFound) return notFound;
     const language = getLanguage(c.req.header("Accept-Language"));
-    const results = await votingService.getMatchVotingResults(
-      matchId,
-      language,
-    );
+    const results = await votingService.getMatchVotingResults(matchId, language);
     return c.json(results);
   } catch (error: any) {
     console.error("Get voting results error:", error);
@@ -361,10 +333,7 @@ app.get("/matches/:matchId/has-voted", async (c) => {
     if (error.message.includes("authenticated")) {
       return c.json({ error: error.message }, 401);
     }
-    return c.json(
-      { error: error.message || "Failed to check vote status" },
-      500,
-    );
+    return c.json({ error: error.message || "Failed to check vote status" }, 500);
   }
 });
 

@@ -24,6 +24,7 @@ allowed-tools:
 ## ⚠️ CRITICAL: D1 Adapter Requirement
 
 better-auth **DOES NOT** have `d1Adapter()`. You **MUST** use:
+
 - **Drizzle ORM** (recommended): `drizzleAdapter(db, { provider: "sqlite" })`
 - **Kysely**: `new Kysely({ dialect: new D1Dialect({ database: env.DB }) })`
 
@@ -34,6 +35,7 @@ See Issue #1 below for details.
 ## What's New in v1.4.10 (Dec 31, 2025)
 
 **Major Features:**
+
 - **OAuth 2.1 Provider plugin** - Build your own OAuth provider (replaces MCP plugin)
 - **Patreon OAuth provider** - Social sign-in with Patreon
 - **Kick OAuth provider** - With refresh token support
@@ -43,11 +45,13 @@ See Issue #1 below for details.
 - **Stripe enhancements** - Flexible subscription lifecycle, `disableRedirect` option
 
 **Admin Plugin Updates:**
+
 - ⚠️ **Breaking**: Impersonation of admins disabled by default (v1.4.6)
 - Support role with permission-based user updates
 - Role type inference improvements
 
 **Security Fixes:**
+
 - SAML XML parser hardening with configurable size constraints
 - SAML assertion timestamp validation with per-provider clock skew
 - SSO domain-verified provider trust
@@ -61,6 +65,7 @@ See Issue #1 below for details.
 ## What's New in v1.4.0 (Nov 22, 2025)
 
 **Major Features:**
+
 - **Stateless session management** - Sessions without database storage
 - **ESM-only package** ⚠️ Breaking: CommonJS no longer supported
 - **JWT key rotation** - Automatic key rotation for enhanced security
@@ -79,6 +84,7 @@ See Issue #1 below for details.
 ## What's New in v1.3 (July 2025)
 
 **Major Features:**
+
 - **SSO with SAML 2.0** - Enterprise single sign-on (moved to separate `@better-auth/sso` package)
 - **Multi-team support** ⚠️ Breaking: `teamId` removed from member table, new `teamMembers` table required
 - **Additional fields** - Custom fields for organization/member/invitation models
@@ -140,17 +146,17 @@ If your Drizzle schema uses `snake_case` column names (e.g., `email_verified`), 
 
 ```typescript
 // ❌ WRONG - DB binding not available outside request
-const db = drizzle(env.DB, { schema }) // env.DB doesn't exist here
-export const auth = betterAuth({ database: drizzleAdapter(db, { provider: "sqlite" }) })
+const db = drizzle(env.DB, { schema }); // env.DB doesn't exist here
+export const auth = betterAuth({ database: drizzleAdapter(db, { provider: "sqlite" }) });
 
 // ✅ CORRECT - Create auth instance per-request
 export default {
   fetch(request, env, ctx) {
-    const db = drizzle(env.DB, { schema })
-    const auth = betterAuth({ database: drizzleAdapter(db, { provider: "sqlite" }) })
-    return auth.handler(request)
-  }
-}
+    const db = drizzle(env.DB, { schema });
+    const auth = betterAuth({ database: drizzleAdapter(db, { provider: "sqlite" }) });
+    return auth.handler(request);
+  },
+};
 ```
 
 **Community Validation**: Multiple production implementations confirm this pattern (Medium, AnswerOverflow, official Hono examples).
@@ -185,11 +191,11 @@ export const auth = betterAuth({
 **Session Nullability Pattern**: When using `useSession()` in TanStack Start, the session object always exists, but `session.user` and `session.session` are `null` when not logged in:
 
 ```typescript
-const { data: session } = authClient.useSession()
+const { data: session } = authClient.useSession();
 
 // When NOT logged in:
-console.log(session) // { user: null, session: null }
-console.log(!!session) // true (unexpected!)
+console.log(session); // { user: null, session: null }
+console.log(!!session); // true (unexpected!)
 
 // Correct check:
 if (session?.user) {
@@ -200,18 +206,19 @@ if (session?.user) {
 **Always check `session?.user` or `session?.session`, not just `session`**. This is expected behavior (session object container always exists).
 
 **API Route Setup** (`/src/routes/api/auth/$.ts`):
-```typescript
-import { auth } from '@/lib/auth'
-import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/api/auth/$')({
+```typescript
+import { auth } from "@/lib/auth";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/api/auth/$")({
   server: {
     handlers: {
       GET: ({ request }) => auth.handler(request),
       POST: ({ request }) => auth.handler(request),
     },
   },
-})
+});
 ```
 
 📚 **Official Docs**: https://www.better-auth.com/docs/integrations/tanstack
@@ -222,13 +229,13 @@ export const Route = createFileRoute('/api/auth/$')({
 
 Better Auth provides plugins for advanced authentication features:
 
-| Plugin | Import | Description | Docs |
-|--------|--------|-------------|------|
+| Plugin                 | Import                | Description                                                                                 | Docs                                                          |
+| ---------------------- | --------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
 | **OAuth 2.1 Provider** | `better-auth/plugins` | Build OAuth 2.1 provider with PKCE, JWT tokens, consent flows (replaces MCP & OIDC plugins) | [📚](https://www.better-auth.com/docs/plugins/oauth-provider) |
-| **SSO** | `better-auth/plugins` | Enterprise Single Sign-On with OIDC, OAuth2, and SAML 2.0 support | [📚](https://www.better-auth.com/docs/plugins/sso) |
-| **Stripe** | `better-auth/plugins` | Payment and subscription management with flexible lifecycle handling | [📚](https://www.better-auth.com/docs/plugins/stripe) |
-| **MCP** | `better-auth/plugins` | ⚠️ **Deprecated** - Use OAuth 2.1 Provider instead | [📚](https://www.better-auth.com/docs/plugins/mcp) |
-| **Expo** | `better-auth/expo` | React Native/Expo with `webBrowserOptions` and last-login-method tracking | [📚](https://www.better-auth.com/docs/integrations/expo) |
+| **SSO**                | `better-auth/plugins` | Enterprise Single Sign-On with OIDC, OAuth2, and SAML 2.0 support                           | [📚](https://www.better-auth.com/docs/plugins/sso)            |
+| **Stripe**             | `better-auth/plugins` | Payment and subscription management with flexible lifecycle handling                        | [📚](https://www.better-auth.com/docs/plugins/stripe)         |
+| **MCP**                | `better-auth/plugins` | ⚠️ **Deprecated** - Use OAuth 2.1 Provider instead                                          | [📚](https://www.better-auth.com/docs/plugins/mcp)            |
+| **Expo**               | `better-auth/expo`    | React Native/Expo with `webBrowserOptions` and last-login-method tracking                   | [📚](https://www.better-auth.com/docs/integrations/expo)      |
 
 ### OAuth 2.1 Provider Plugin (New in v1.4.9)
 
@@ -244,8 +251,8 @@ export const auth = betterAuth({
     jwt(), // Required for token signing
     oauthProvider({
       // Token expiration (seconds)
-      accessTokenExpiresIn: 3600,      // 1 hour
-      refreshTokenExpiresIn: 2592000,  // 30 days
+      accessTokenExpiresIn: 3600, // 1 hour
+      refreshTokenExpiresIn: 2592000, // 30 days
       authorizationCodeExpiresIn: 600, // 10 minutes
     }),
   ],
@@ -253,6 +260,7 @@ export const auth = betterAuth({
 ```
 
 **Key Features:**
+
 - **OAuth 2.1 compliant** - PKCE mandatory, S256 only, no implicit flow
 - **Three grant types**: `authorization_code`, `refresh_token`, `client_credentials`
 - **JWT or opaque tokens** - Configurable token format
@@ -295,16 +303,16 @@ const client = await auth.api.createOAuthClient({
 
 ### Additional Plugins Reference
 
-| Plugin | Description | Docs |
-|--------|-------------|------|
-| **Bearer** | API token auth (alternative to cookies for APIs) | [📚](https://www.better-auth.com/docs/plugins/bearer) |
-| **One Tap** | Google One Tap frictionless sign-in | [📚](https://www.better-auth.com/docs/plugins/one-tap) |
-| **SCIM** | Enterprise user provisioning (SCIM 2.0) | [📚](https://www.better-auth.com/docs/plugins/scim) |
-| **Anonymous** | Guest user access without PII | [📚](https://www.better-auth.com/docs/plugins/anonymous) |
-| **Username** | Username-based sign-in (alternative to email) | [📚](https://www.better-auth.com/docs/plugins/username) |
-| **Generic OAuth** | Custom OAuth providers with PKCE | [📚](https://www.better-auth.com/docs/plugins/generic-oauth) |
-| **Multi-Session** | Multiple accounts in same browser | [📚](https://www.better-auth.com/docs/plugins/multi-session) |
-| **API Key** | Token-based auth with rate limits | [📚](https://www.better-auth.com/docs/plugins/api-key) |
+| Plugin            | Description                                      | Docs                                                         |
+| ----------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| **Bearer**        | API token auth (alternative to cookies for APIs) | [📚](https://www.better-auth.com/docs/plugins/bearer)        |
+| **One Tap**       | Google One Tap frictionless sign-in              | [📚](https://www.better-auth.com/docs/plugins/one-tap)       |
+| **SCIM**          | Enterprise user provisioning (SCIM 2.0)          | [📚](https://www.better-auth.com/docs/plugins/scim)          |
+| **Anonymous**     | Guest user access without PII                    | [📚](https://www.better-auth.com/docs/plugins/anonymous)     |
+| **Username**      | Username-based sign-in (alternative to email)    | [📚](https://www.better-auth.com/docs/plugins/username)      |
+| **Generic OAuth** | Custom OAuth providers with PKCE                 | [📚](https://www.better-auth.com/docs/plugins/generic-oauth) |
+| **Multi-Session** | Multiple accounts in same browser                | [📚](https://www.better-auth.com/docs/plugins/multi-session) |
+| **API Key**       | Token-based auth with rate limits                | [📚](https://www.better-auth.com/docs/plugins/api-key)       |
 
 #### Bearer Token Plugin
 
@@ -416,8 +424,8 @@ Built-in rate limiting with customizable rules:
 ```typescript
 export const auth = betterAuth({
   rateLimit: {
-    window: 60,  // seconds (default: 60)
-    max: 100,    // requests per window (default: 100)
+    window: 60, // seconds (default: 60)
+    max: 100, // requests per window (default: 100)
 
     // Custom rules for sensitive endpoints
     customRules: {
@@ -468,13 +476,14 @@ export const auth = betterAuth({
 
 **When to Use:**
 
-| Storage Type | Use Case | Tradeoffs |
-|--------------|----------|-----------|
+| Storage Type                | Use Case                                               | Tradeoffs                                   |
+| --------------------------- | ------------------------------------------------------ | ------------------------------------------- |
 | **Stateless (cookie-only)** | Read-heavy apps, edge/serverless, no revocation needed | Can't revoke sessions, limited payload size |
-| **D1 Database** | Full session management, audit trails, revocation | Eventual consistency issues |
-| **KV Storage** | Strong consistency, high read performance | Extra binding setup |
+| **D1 Database**             | Full session management, audit trails, revocation      | Eventual consistency issues                 |
+| **KV Storage**              | Strong consistency, high read performance              | Extra binding setup                         |
 
 **Key Points:**
+
 - Stateless sessions can't be revoked (user must wait for expiry)
 - Cookie size limit ~4KB (limits session data)
 - Use `encoding: "jwt"` for interoperability, `"jwe"` for encrypted
@@ -510,6 +519,7 @@ export const auth = betterAuth({
 ```
 
 **Key Points:**
+
 - Key rotation prevents compromised key from having indefinite validity
 - Old keys are kept temporarily to validate existing tokens
 - JWKS endpoint at `/api/auth/jwks` for external services
@@ -522,24 +532,24 @@ export const auth = betterAuth({
 
 Common OAuth providers and the scopes needed for user data:
 
-| Provider | Scope | Returns |
-|----------|-------|---------|
-| **Google** | `openid` | User ID only |
-| | `email` | Email address, email_verified |
-| | `profile` | Name, avatar (picture), locale |
-| **GitHub** | `user:email` | Email address (may be private) |
-| | `read:user` | Name, avatar, profile URL, bio |
-| **Microsoft** | `openid` | User ID only |
-| | `email` | Email address |
-| | `profile` | Name, locale |
-| | `User.Read` | Full profile from Graph API |
-| **Discord** | `identify` | Username, avatar, discriminator |
-| | `email` | Email address |
-| **Apple** | `name` | First/last name (first auth only) |
-| | `email` | Email or relay address |
-| **Patreon** | `identity` | User ID, name |
-| | `identity[email]` | Email address |
-| **Vercel** | (auto) | Email, name, avatar |
+| Provider      | Scope             | Returns                           |
+| ------------- | ----------------- | --------------------------------- |
+| **Google**    | `openid`          | User ID only                      |
+|               | `email`           | Email address, email_verified     |
+|               | `profile`         | Name, avatar (picture), locale    |
+| **GitHub**    | `user:email`      | Email address (may be private)    |
+|               | `read:user`       | Name, avatar, profile URL, bio    |
+| **Microsoft** | `openid`          | User ID only                      |
+|               | `email`           | Email address                     |
+|               | `profile`         | Name, locale                      |
+|               | `User.Read`       | Full profile from Graph API       |
+| **Discord**   | `identify`        | Username, avatar, discriminator   |
+|               | `email`           | Email address                     |
+| **Apple**     | `name`            | First/last name (first auth only) |
+|               | `email`           | Email or relay address            |
+| **Patreon**   | `identity`        | User ID, name                     |
+|               | `identity[email]` | Email address                     |
+| **Vercel**    | (auto)            | Email, name, avatar               |
 
 **Configuration Example:**
 
@@ -569,11 +579,11 @@ socialProviders: {
 
 Three encoding strategies for session cookies:
 
-| Strategy | Format | Use Case |
-|----------|--------|----------|
+| Strategy              | Format                  | Use Case          |
+| --------------------- | ----------------------- | ----------------- |
 | **Compact** (default) | Base64url + HMAC-SHA256 | Smallest, fastest |
-| **JWT** | Standard JWT | Interoperable |
-| **JWE** | A256CBC-HS512 encrypted | Most secure |
+| **JWT**               | Standard JWT            | Interoperable     |
+| **JWE**               | A256CBC-HS512 encrypted | Most secure       |
 
 ```typescript
 export const auth = betterAuth({
@@ -711,6 +721,7 @@ await fetch("https://api.example.com/data", {
 ```
 
 **app.json deep link setup**:
+
 ```json
 {
   "expo": {
@@ -720,8 +731,9 @@ await fetch("https://api.example.com/data", {
 ```
 
 **Server trustedOrigins** (development):
+
 ```typescript
-trustedOrigins: ["exp://**", "myapp://"]
+trustedOrigins: ["exp://**", "myapp://"];
 ```
 
 ---
@@ -733,6 +745,7 @@ trustedOrigins: ["exp://**", "myapp://"]
 When you call `auth.handler()`, better-auth automatically exposes **80+ production-ready REST endpoints** at `/api/auth/*`. Every endpoint is also available as a **server-side method** via `auth.api.*` for programmatic use.
 
 This dual-layer API system means:
+
 - **Clients** (React, Vue, mobile apps) call HTTP endpoints directly
 - **Server-side code** (middleware, background jobs) uses `auth.api.*` methods
 - **Zero boilerplate** - no need to write auth endpoints manually
@@ -747,38 +760,39 @@ All endpoints are automatically exposed at `/api/auth/*` when using `auth.handle
 
 #### Core Authentication Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/sign-up/email` | POST | Register with email/password |
-| `/sign-in/email` | POST | Authenticate with email/password |
-| `/sign-out` | POST | Logout user |
-| `/change-password` | POST | Update password (requires current password) |
-| `/forget-password` | POST | Initiate password reset flow |
-| `/reset-password` | POST | Complete password reset with token |
-| `/send-verification-email` | POST | Send email verification link |
-| `/verify-email` | GET | Verify email with token (`?token=<token>`) |
-| `/get-session` | GET | Retrieve current session |
-| `/list-sessions` | GET | Get all active user sessions |
-| `/revoke-session` | POST | End specific session |
-| `/revoke-other-sessions` | POST | End all sessions except current |
-| `/revoke-sessions` | POST | End all user sessions |
-| `/update-user` | POST | Modify user profile (name, image) |
-| `/change-email` | POST | Update email address |
-| `/set-password` | POST | Add password to OAuth-only account |
-| `/delete-user` | POST | Remove user account |
-| `/list-accounts` | GET | Get linked authentication providers |
-| `/link-social` | POST | Connect OAuth provider to account |
-| `/unlink-account` | POST | Disconnect provider |
+| Endpoint                   | Method | Description                                 |
+| -------------------------- | ------ | ------------------------------------------- |
+| `/sign-up/email`           | POST   | Register with email/password                |
+| `/sign-in/email`           | POST   | Authenticate with email/password            |
+| `/sign-out`                | POST   | Logout user                                 |
+| `/change-password`         | POST   | Update password (requires current password) |
+| `/forget-password`         | POST   | Initiate password reset flow                |
+| `/reset-password`          | POST   | Complete password reset with token          |
+| `/send-verification-email` | POST   | Send email verification link                |
+| `/verify-email`            | GET    | Verify email with token (`?token=<token>`)  |
+| `/get-session`             | GET    | Retrieve current session                    |
+| `/list-sessions`           | GET    | Get all active user sessions                |
+| `/revoke-session`          | POST   | End specific session                        |
+| `/revoke-other-sessions`   | POST   | End all sessions except current             |
+| `/revoke-sessions`         | POST   | End all user sessions                       |
+| `/update-user`             | POST   | Modify user profile (name, image)           |
+| `/change-email`            | POST   | Update email address                        |
+| `/set-password`            | POST   | Add password to OAuth-only account          |
+| `/delete-user`             | POST   | Remove user account                         |
+| `/list-accounts`           | GET    | Get linked authentication providers         |
+| `/link-social`             | POST   | Connect OAuth provider to account           |
+| `/unlink-account`          | POST   | Disconnect provider                         |
 
 #### Social OAuth Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/sign-in/social` | POST | Initiate OAuth flow (provider specified in body) |
-| `/callback/:provider` | GET | OAuth callback handler (e.g., `/callback/google`) |
-| `/get-access-token` | GET | Retrieve provider access token |
+| Endpoint              | Method | Description                                       |
+| --------------------- | ------ | ------------------------------------------------- |
+| `/sign-in/social`     | POST   | Initiate OAuth flow (provider specified in body)  |
+| `/callback/:provider` | GET    | OAuth callback handler (e.g., `/callback/google`) |
+| `/get-access-token`   | GET    | Retrieve provider access token                    |
 
 **Example OAuth flow**:
+
 ```typescript
 // Client initiates
 await authClient.signIn.social({
@@ -801,17 +815,17 @@ await authClient.signIn.social({
 import { twoFactor } from "better-auth/plugins";
 ```
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/two-factor/enable` | POST | Activate 2FA for user |
-| `/two-factor/disable` | POST | Deactivate 2FA |
-| `/two-factor/get-totp-uri` | GET | Get QR code URI for authenticator app |
-| `/two-factor/verify-totp` | POST | Validate TOTP code from authenticator |
-| `/two-factor/send-otp` | POST | Send OTP via email |
-| `/two-factor/verify-otp` | POST | Validate email OTP |
-| `/two-factor/generate-backup-codes` | POST | Create recovery codes |
-| `/two-factor/verify-backup-code` | POST | Use backup code for login |
-| `/two-factor/view-backup-codes` | GET | View current backup codes |
+| Endpoint                            | Method | Description                           |
+| ----------------------------------- | ------ | ------------------------------------- |
+| `/two-factor/enable`                | POST   | Activate 2FA for user                 |
+| `/two-factor/disable`               | POST   | Deactivate 2FA                        |
+| `/two-factor/get-totp-uri`          | GET    | Get QR code URI for authenticator app |
+| `/two-factor/verify-totp`           | POST   | Validate TOTP code from authenticator |
+| `/two-factor/send-otp`              | POST   | Send OTP via email                    |
+| `/two-factor/verify-otp`            | POST   | Validate email OTP                    |
+| `/two-factor/generate-backup-codes` | POST   | Create recovery codes                 |
+| `/two-factor/verify-backup-code`    | POST   | Use backup code for login             |
+| `/two-factor/view-backup-codes`     | GET    | View current backup codes             |
 
 📚 **Docs**: https://www.better-auth.com/docs/plugins/2fa
 
@@ -823,62 +837,62 @@ import { organization } from "better-auth/plugins";
 
 **Organizations** (10 endpoints):
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/organization/create` | POST | Create organization |
-| `/organization/list` | GET | List user's organizations |
-| `/organization/get-full` | GET | Get complete org details |
-| `/organization/update` | PUT | Modify organization |
-| `/organization/delete` | DELETE | Remove organization |
-| `/organization/check-slug` | GET | Verify slug availability |
-| `/organization/set-active` | POST | Set active organization context |
+| Endpoint                   | Method | Description                     |
+| -------------------------- | ------ | ------------------------------- |
+| `/organization/create`     | POST   | Create organization             |
+| `/organization/list`       | GET    | List user's organizations       |
+| `/organization/get-full`   | GET    | Get complete org details        |
+| `/organization/update`     | PUT    | Modify organization             |
+| `/organization/delete`     | DELETE | Remove organization             |
+| `/organization/check-slug` | GET    | Verify slug availability        |
+| `/organization/set-active` | POST   | Set active organization context |
 
 **Members** (8 endpoints):
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/organization/list-members` | GET | Get organization members |
-| `/organization/add-member` | POST | Add member directly |
-| `/organization/remove-member` | DELETE | Remove member |
-| `/organization/update-member-role` | PUT | Change member role |
-| `/organization/get-active-member` | GET | Get current member info |
-| `/organization/leave` | POST | Leave organization |
+| Endpoint                           | Method | Description              |
+| ---------------------------------- | ------ | ------------------------ |
+| `/organization/list-members`       | GET    | Get organization members |
+| `/organization/add-member`         | POST   | Add member directly      |
+| `/organization/remove-member`      | DELETE | Remove member            |
+| `/organization/update-member-role` | PUT    | Change member role       |
+| `/organization/get-active-member`  | GET    | Get current member info  |
+| `/organization/leave`              | POST   | Leave organization       |
 
 **Invitations** (7 endpoints):
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/organization/invite-member` | POST | Send invitation email |
-| `/organization/accept-invitation` | POST | Accept invite |
-| `/organization/reject-invitation` | POST | Reject invite |
-| `/organization/cancel-invitation` | POST | Cancel pending invite |
-| `/organization/get-invitation` | GET | Get invitation details |
-| `/organization/list-invitations` | GET | List org invitations |
-| `/organization/list-user-invitations` | GET | List user's pending invites |
+| Endpoint                              | Method | Description                 |
+| ------------------------------------- | ------ | --------------------------- |
+| `/organization/invite-member`         | POST   | Send invitation email       |
+| `/organization/accept-invitation`     | POST   | Accept invite               |
+| `/organization/reject-invitation`     | POST   | Reject invite               |
+| `/organization/cancel-invitation`     | POST   | Cancel pending invite       |
+| `/organization/get-invitation`        | GET    | Get invitation details      |
+| `/organization/list-invitations`      | GET    | List org invitations        |
+| `/organization/list-user-invitations` | GET    | List user's pending invites |
 
 **Teams** (8 endpoints):
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/organization/create-team` | POST | Create team within org |
-| `/organization/list-teams` | GET | List organization teams |
-| `/organization/update-team` | PUT | Modify team |
-| `/organization/remove-team` | DELETE | Remove team |
-| `/organization/set-active-team` | POST | Set active team context |
-| `/organization/list-team-members` | GET | List team members |
-| `/organization/add-team-member` | POST | Add member to team |
-| `/organization/remove-team-member` | DELETE | Remove team member |
+| Endpoint                           | Method | Description             |
+| ---------------------------------- | ------ | ----------------------- |
+| `/organization/create-team`        | POST   | Create team within org  |
+| `/organization/list-teams`         | GET    | List organization teams |
+| `/organization/update-team`        | PUT    | Modify team             |
+| `/organization/remove-team`        | DELETE | Remove team             |
+| `/organization/set-active-team`    | POST   | Set active team context |
+| `/organization/list-team-members`  | GET    | List team members       |
+| `/organization/add-team-member`    | POST   | Add member to team      |
+| `/organization/remove-team-member` | DELETE | Remove team member      |
 
 **Permissions & Roles** (6 endpoints):
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/organization/has-permission` | POST | Check if user has permission |
-| `/organization/create-role` | POST | Create custom role |
-| `/organization/delete-role` | DELETE | Delete custom role |
-| `/organization/list-roles` | GET | List all roles |
-| `/organization/get-role` | GET | Get role details |
-| `/organization/update-role` | PUT | Modify role permissions |
+| Endpoint                       | Method | Description                  |
+| ------------------------------ | ------ | ---------------------------- |
+| `/organization/has-permission` | POST   | Check if user has permission |
+| `/organization/create-role`    | POST   | Create custom role           |
+| `/organization/delete-role`    | DELETE | Delete custom role           |
+| `/organization/list-roles`     | GET    | List all roles               |
+| `/organization/get-role`       | GET    | Get role details             |
+| `/organization/update-role`    | PUT    | Modify role permissions      |
 
 📚 **Docs**: https://www.better-auth.com/docs/plugins/organization
 
@@ -896,24 +910,24 @@ admin({
   allowImpersonatingAdmins: false, // ⚠️ Default changed in v1.4.6
   defaultBanReason: "Violation of Terms of Service",
   bannedUserMessage: "Your account has been suspended",
-})
+});
 ```
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/admin/create-user` | POST | Create user as admin |
-| `/admin/list-users` | GET | List all users (with filters/pagination) |
-| `/admin/set-role` | POST | Assign user role |
-| `/admin/set-user-password` | POST | Change user password |
-| `/admin/update-user` | PUT | Modify user details |
-| `/admin/remove-user` | DELETE | Delete user account |
-| `/admin/ban-user` | POST | Ban user account (with optional expiry) |
-| `/admin/unban-user` | POST | Unban user |
-| `/admin/list-user-sessions` | GET | Get user's active sessions |
-| `/admin/revoke-user-session` | DELETE | End specific user session |
-| `/admin/revoke-user-sessions` | DELETE | End all user sessions |
-| `/admin/impersonate-user` | POST | Start impersonating user |
-| `/admin/stop-impersonating` | POST | End impersonation session |
+| Endpoint                      | Method | Description                              |
+| ----------------------------- | ------ | ---------------------------------------- |
+| `/admin/create-user`          | POST   | Create user as admin                     |
+| `/admin/list-users`           | GET    | List all users (with filters/pagination) |
+| `/admin/set-role`             | POST   | Assign user role                         |
+| `/admin/set-user-password`    | POST   | Change user password                     |
+| `/admin/update-user`          | PUT    | Modify user details                      |
+| `/admin/remove-user`          | DELETE | Delete user account                      |
+| `/admin/ban-user`             | POST   | Ban user account (with optional expiry)  |
+| `/admin/unban-user`           | POST   | Unban user                               |
+| `/admin/list-user-sessions`   | GET    | Get user's active sessions               |
+| `/admin/revoke-user-session`  | DELETE | End specific user session                |
+| `/admin/revoke-user-sessions` | DELETE | End all user sessions                    |
+| `/admin/impersonate-user`     | POST   | Start impersonating user                 |
+| `/admin/stop-impersonating`   | POST   | End impersonation session                |
 
 **⚠️ Breaking Change (v1.4.6)**: `allowImpersonatingAdmins` now defaults to `false`. Set to `true` explicitly if you need admin-on-admin impersonation.
 
@@ -930,8 +944,8 @@ const ac = createAccessControl({
 
 // Create custom roles
 const supportRole = ac.newRole({
-  user: ["read", "ban"],      // Can view and ban users
-  project: ["read"],          // Can view projects
+  user: ["read", "ban"], // Can view and ban users
+  project: ["read"], // Can view projects
 });
 
 const managerRole = ac.newRole({
@@ -946,7 +960,7 @@ admin({
     support: supportRole,
     manager: managerRole,
   },
-})
+});
 ```
 
 📚 **Docs**: https://www.better-auth.com/docs/plugins/admin
@@ -954,27 +968,35 @@ admin({
 ##### Other Plugin Endpoints
 
 **Passkey Plugin** (5 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/passkey):
+
 - `/passkey/add`, `/sign-in/passkey`, `/passkey/list`, `/passkey/delete`, `/passkey/update`
 
 **Magic Link Plugin** (2 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/magic-link):
+
 - `/sign-in/magic-link`, `/magic-link/verify`
 
 **Username Plugin** (2 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/username):
+
 - `/sign-in/username`, `/username/is-available`
 
 **Phone Number Plugin** (5 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/phone-number):
+
 - `/sign-in/phone-number`, `/phone-number/send-otp`, `/phone-number/verify`, `/phone-number/request-password-reset`, `/phone-number/reset-password`
 
 **Email OTP Plugin** (6 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/email-otp):
+
 - `/email-otp/send-verification-otp`, `/email-otp/check-verification-otp`, `/sign-in/email-otp`, `/email-otp/verify-email`, `/forget-password/email-otp`, `/email-otp/reset-password`
 
 **Anonymous Plugin** (1 endpoint) - [Docs](https://www.better-auth.com/docs/plugins/anonymous):
+
 - `/sign-in/anonymous`
 
 **JWT Plugin** (2 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/jwt):
+
 - `/token` (get JWT), `/jwks` (public key for verification)
 
 **OpenAPI Plugin** (2 endpoints) - [Docs](https://www.better-auth.com/docs/plugins/open-api):
+
 - `/reference` (interactive API docs with Scalar UI)
 - `/generate-openapi-schema` (get OpenAPI spec as JSON)
 
@@ -983,6 +1005,7 @@ admin({
 ### Server-Side API Methods (`auth.api.*`)
 
 Every HTTP endpoint has a corresponding server-side method. Use these for:
+
 - **Server-side middleware** (protecting routes)
 - **Background jobs** (user cleanup, notifications)
 - **Admin operations** (bulk user management)
@@ -1045,6 +1068,7 @@ await auth.api.unlinkAccount({
 #### Plugin API Methods
 
 **2FA Plugin**:
+
 ```typescript
 // Enable 2FA
 const { totpUri, backupCodes } = await auth.api.enableTwoFactor({
@@ -1065,6 +1089,7 @@ const { backupCodes } = await auth.api.generateBackupCodes({
 ```
 
 **Organization Plugin**:
+
 ```typescript
 // Create organization
 const org = await auth.api.createOrganization({
@@ -1093,6 +1118,7 @@ const hasPermission = await auth.api.hasPermission({
 ```
 
 **Admin Plugin**:
+
 ```typescript
 // List users with pagination
 const users = await auth.api.listUsers({
@@ -1130,15 +1156,15 @@ const impersonationSession = await auth.api.impersonateUser({
 
 ### When to Use Which
 
-| Use Case | Use HTTP Endpoints | Use `auth.api.*` Methods |
-|----------|-------------------|--------------------------|
-| **Client-side auth** | ✅ Yes | ❌ No |
-| **Server middleware** | ❌ No | ✅ Yes |
-| **Background jobs** | ❌ No | ✅ Yes |
-| **Admin dashboards** | ✅ Yes (from client) | ✅ Yes (from server) |
-| **Custom auth flows** | ❌ No | ✅ Yes |
-| **Mobile apps** | ✅ Yes | ❌ No |
-| **API routes** | ✅ Yes (proxy to handler) | ✅ Yes (direct calls) |
+| Use Case              | Use HTTP Endpoints        | Use `auth.api.*` Methods |
+| --------------------- | ------------------------- | ------------------------ |
+| **Client-side auth**  | ✅ Yes                    | ❌ No                    |
+| **Server middleware** | ❌ No                     | ✅ Yes                   |
+| **Background jobs**   | ❌ No                     | ✅ Yes                   |
+| **Admin dashboards**  | ✅ Yes (from client)      | ✅ Yes (from server)     |
+| **Custom auth flows** | ❌ No                     | ✅ Yes                   |
+| **Mobile apps**       | ✅ Yes                    | ❌ No                    |
+| **API routes**        | ✅ Yes (proxy to handler) | ✅ Yes (direct calls)    |
 
 **Example: Protected Route Middleware**
 
@@ -1198,6 +1224,7 @@ export const auth = betterAuth({
 **Interactive documentation**: Visit `http://localhost:8787/api/auth/reference`
 
 This shows a **Scalar UI** with:
+
 - ✅ All available endpoints grouped by feature
 - ✅ Request/response schemas with types
 - ✅ Try-it-out functionality (test endpoints in browser)
@@ -1205,6 +1232,7 @@ This shows a **Scalar UI** with:
 - ✅ Code examples in multiple languages
 
 **Programmatic access**:
+
 ```typescript
 const schema = await auth.api.generateOpenAPISchema();
 console.log(JSON.stringify(schema, null, 2));
@@ -1216,6 +1244,7 @@ console.log(JSON.stringify(schema, null, 2));
 ### Quantified Time Savings
 
 **Building from scratch** (manual implementation):
+
 - Core auth endpoints (sign-up, sign-in, OAuth, sessions): **40 hours**
 - Email verification & password reset: **10 hours**
 - 2FA system (TOTP, backup codes, email OTP): **20 hours**
@@ -1227,6 +1256,7 @@ console.log(JSON.stringify(schema, null, 2));
 **Total manual effort**: **~220 hours** (5.5 weeks full-time)
 
 **With better-auth**:
+
 - Initial setup: **2-4 hours**
 - Customization & styling: **2-4 hours**
 
@@ -1239,6 +1269,7 @@ console.log(JSON.stringify(schema, null, 2));
 ### Key Takeaway
 
 better-auth provides **80+ production-ready endpoints** covering:
+
 - ✅ Core authentication (20 endpoints)
 - ✅ 2FA & passwordless (15 endpoints)
 - ✅ Organizations & teams (35 endpoints)
@@ -1320,17 +1351,17 @@ wrangler d1 migrations apply my-app-db --remote
 // DB for better-auth (no CamelCasePlugin)
 const authDb = new Kysely({
   dialect: new D1Dialect({ database: env.DB }),
-})
+});
 
 // DB for app queries (with CamelCasePlugin)
 const appDb = new Kysely({
   dialect: new D1Dialect({ database: env.DB }),
   plugins: [new CamelCasePlugin()],
-})
+});
 
 export const auth = betterAuth({
   database: { db: authDb, type: "sqlite" },
-})
+});
 ```
 
 **Source**: [GitHub Issue #7136](https://github.com/better-auth/better-auth/issues/7136)
@@ -1372,6 +1403,7 @@ export function createAuth(db: Database, env: Env) {
 ```
 
 **Add to `wrangler.toml`**:
+
 ```toml
 [[kv_namespaces]]
 binding = "SESSIONS_KV"
@@ -1398,7 +1430,7 @@ app.use(
     origin: "http://localhost:5173", // Frontend URL (no trailing slash)
     credentials: true, // Allow cookies
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  })
+  }),
 );
 
 // And in better-auth config
@@ -1409,6 +1441,7 @@ export const auth = betterAuth({
 ```
 
 **Common Mistakes**:
+
 - Typo in origin URL (trailing slash, http vs https, wrong port)
 - Mismatched origins between CORS config and `trustedOrigins`
 - CORS middleware registered AFTER auth routes (must be before)
@@ -1434,6 +1467,7 @@ better-auth URL:  https://yourdomain.com/api/auth/callback/google
 ```
 
 **Check better-auth callback URL**:
+
 ```typescript
 // It's always: {baseURL}/api/auth/callback/{provider}
 const callbackURL = `${env.BETTER_AUTH_URL}/api/auth/callback/google`;
@@ -1451,11 +1485,13 @@ console.log("Configure this URL in Google Console:", callbackURL);
 **Solution**: Install all required packages:
 
 **For Drizzle approach**:
+
 ```bash
 npm install better-auth drizzle-orm drizzle-kit @cloudflare/workers-types
 ```
 
 **For Kysely approach**:
+
 ```bash
 npm install better-auth kysely kysely-d1 @cloudflare/workers-types
 ```
@@ -1599,19 +1635,20 @@ wrangler dev
 // Update user data
 const { data, error } = await authClient.updateUser({
   image: newAvatarUrl,
-  name: newName
-})
+  name: newName,
+});
 
 if (!error) {
   // Manually invalidate better-auth session state
-  authClient.$store.notify('$sessionSignal')
+  authClient.$store.notify("$sessionSignal");
 
   // Optional: Also invalidate React Query if using it for other data
-  queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+  queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 }
 ```
 
 **When to use**:
+
 - Using better-auth + TanStack Query together
 - Updating user profile fields (name, image, email)
 - Any operation that modifies session user data client-side
@@ -1619,9 +1656,9 @@ if (!error) {
 **Alternative**: Call `refetch()` from `useSession()`, but `$store.notify()` is more direct:
 
 ```typescript
-const { data: session, refetch } = authClient.useSession()
+const { data: session, refetch } = authClient.useSession();
 // After update
-await refetch()
+await refetch();
 ```
 
 **Note**: `$store` is an undocumented internal API. This pattern is production-validated but may change in future better-auth versions.
@@ -1667,12 +1704,14 @@ CREATE TABLE api_key (
 ```
 
 **Key Points**:
+
 - The table has exactly **21 columns** (as of better-auth v1.4+)
 - Column names use `snake_case` (e.g., `rate_limit_time_window`, not `rateLimitTimeWindow`)
 - D1 doesn't support `ALTER TABLE DROP COLUMN` - if schema drifts, use fresh migration pattern (drop and recreate tables)
 - In Drizzle adapter config, use `apikey` (lowercase) as the table name mapping
 
 **Fresh Migration Pattern for D1**:
+
 ```sql
 -- Drop in reverse dependency order
 DROP TABLE IF EXISTS api_key;
@@ -1694,6 +1733,7 @@ CREATE TABLE api_key (...);
 **Symptoms**: Custom `requireAdmin` middleware (checking ADMIN_EMAILS env var) passes, but `auth.api.listUsers()` returns 403.
 
 **Root Cause**: better-auth admin plugin has **two** authorization layers:
+
 1. **Your middleware** - Custom check (e.g., ADMIN_EMAILS)
 2. **better-auth internal** - Checks `user.role === 'admin'` in database
 
@@ -1719,6 +1759,7 @@ Or use the admin UI/API to set roles after initial setup.
 **Problem**: Organization creation fails with SQL constraint error even though API returns "slug already exists".
 
 **Symptoms**:
+
 - Error message says "An organization with this slug already exists"
 - Database table is actually empty
 - `wrangler tail` shows: `Failed query: insert into "organization" ... values (?, ?, ?, null, null, ?, null)`
@@ -1729,14 +1770,14 @@ Or use the admin UI/API to set roles after initial setup.
 
 ```typescript
 // Drizzle schema - CORRECT
-export const organization = sqliteTable('organization', {
+export const organization = sqliteTable("organization", {
   // ...
-  updatedAt: integer('updated_at', { mode: 'timestamp' }), // No .notNull()
+  updatedAt: integer("updated_at", { mode: "timestamp" }), // No .notNull()
 });
 
-export const team = sqliteTable('team', {
+export const team = sqliteTable("team", {
   // ...
-  updatedAt: integer('updated_at', { mode: 'timestamp' }), // No .notNull()
+  updatedAt: integer("updated_at", { mode: "timestamp" }), // No .notNull()
 });
 ```
 
@@ -1778,6 +1819,7 @@ return c.json({ members });
 ```
 
 **Affected methods** (return objects, not arrays):
+
 - `listMembers` → `{ members: [...], total: N }`
 - `listUsers` → `{ users: [...], total: N, limit: N }`
 - `listOrganizations` → `{ organizations: [...] }` (check structure)
@@ -1798,12 +1840,13 @@ return c.json({ members });
 **Root Cause**: Regression introduced after PR #6933 (cookie-based OAuth state fix for Expo). One of 3 commits after f4a9f15 broke the build.
 
 **Solution**:
+
 - **Temporary**: Use continuous build at commit `f4a9f15` (pre-regression)
 - **Permanent**: Wait for fix (issue #7491 open as of 2026-01-20)
 
 ```typescript
 // Crashes on v1.4.16
-import { expoClient } from '@better-auth/expo/client'
+import { expoClient } from "@better-auth/expo/client";
 
 // Workaround: Use continuous build at f4a9f15
 // Or wait for fix in next release
@@ -1822,6 +1865,7 @@ import { expoClient } from '@better-auth/expo/client'
 **Root Cause**: In Drizzle adapter, `string[]` fields are stored with `mode: 'json'`, which expects arrays. But better-auth v1.4.4+ passes strings to Drizzle, causing double-stringification. When querying **directly via Drizzle**, the value is a string, but when using **better-auth `internalAdapter`**, a transformer correctly returns an array.
 
 **Solution**:
+
 1. **Use better-auth `internalAdapter`** instead of querying Drizzle directly (has transformer)
 2. **Change Drizzle schema** to `.jsonb()` for string[] fields
 3. **Manually parse** JSON strings until fixed
@@ -1856,6 +1900,7 @@ notificationTokens: ['token1', 'token2']
 **Root Cause**: The `returned: false` property blocks both read AND write operations, not just reads as intended. The `input: true` property should control write access independently.
 
 **Solution**:
+
 - Don't use `returned: false` if you need API write access
 - Write via server-side methods (`auth.api.*`) instead
 
@@ -1887,6 +1932,7 @@ additionalFields: {
 **Why It Happens**: The `freshSessionMiddleware` checks `Date.now() - (session.updatedAt || session.createdAt)`, but `updatedAt` only changes when the session is refreshed based on `updateAge`. If `updateAge > freshAge`, the session becomes "not fresh" before `updatedAt` is bumped.
 
 **Solution**:
+
 1. **Set `updateAge <= freshAge`** to ensure freshness is updated before expiry
 2. **Avoid "fresh session required"** gating for long-lived sessions
 3. **Accept as design**: freshAge is strictly time-since-creation (maintainer confirmed)
@@ -1922,6 +1968,7 @@ session: {
 **Root Cause**: The endpoint pipeline returns `{ response, headers, status }` for internal use, which gets serialized directly for HTTP requests. This breaks OAuth/OIDC spec requirements.
 
 **Solution**:
+
 - **Temporary**: Manually unwrap `.response` field on client
 - **Permanent**: Wait for fix (issue #7355 open, accepting contributions)
 
@@ -1944,6 +1991,7 @@ session: {
 ### From Clerk
 
 **Key differences**:
+
 - Clerk: Third-party service → better-auth: Self-hosted
 - Clerk: Proprietary → better-auth: Open source
 - Clerk: Monthly cost → better-auth: Free
@@ -1952,6 +2000,7 @@ session: {
 
 1. **Export user data** from Clerk (CSV or API)
 2. **Import into better-auth database**:
+
    ```typescript
    // migration script
    const clerkUsers = await fetchClerkUsers();
@@ -1966,7 +2015,9 @@ session: {
      });
    }
    ```
+
 3. **Replace Clerk SDK** with better-auth client:
+
    ```typescript
    // Before (Clerk)
    import { useUser } from "@clerk/nextjs";
@@ -1977,6 +2028,7 @@ session: {
    const { data: session } = authClient.useSession();
    const user = session?.user;
    ```
+
 4. **Update middleware** for session verification
 5. **Configure social providers** (same OAuth apps, different config)
 
@@ -1985,6 +2037,7 @@ session: {
 ### From Auth.js (NextAuth)
 
 **Key differences**:
+
 - Auth.js: Limited features → better-auth: Comprehensive (2FA, orgs, etc.)
 - Auth.js: Callbacks-heavy → better-auth: Plugin-based
 - Auth.js: Session handling varies → better-auth: Consistent
@@ -1993,13 +2046,18 @@ session: {
 
 1. **Database schema**: Auth.js and better-auth use similar schemas, but column names differ
 2. **Replace configuration**:
+
    ```typescript
    // Before (Auth.js)
    import NextAuth from "next-auth";
    import GoogleProvider from "next-auth/providers/google";
 
    export default NextAuth({
-     providers: [GoogleProvider({ /* ... */ })],
+     providers: [
+       GoogleProvider({
+         /* ... */
+       }),
+     ],
    });
 
    // After (better-auth)
@@ -2007,11 +2065,15 @@ session: {
 
    export const auth = betterAuth({
      socialProviders: {
-       google: { /* ... */ },
+       google: {
+         /* ... */
+       },
      },
    });
    ```
+
 3. **Update client hooks**:
+
    ```typescript
    // Before
    import { useSession } from "next-auth/react";
@@ -2047,6 +2109,7 @@ session: {
 ### Plugin Documentation
 
 **Core Plugins**:
+
 - **2FA (Two-Factor)**: https://www.better-auth.com/docs/plugins/2fa
 - **Organization**: https://www.better-auth.com/docs/plugins/organization
 - **Admin**: https://www.better-auth.com/docs/plugins/admin
@@ -2055,6 +2118,7 @@ session: {
 - **Generic OAuth**: https://www.better-auth.com/docs/plugins/generic-oauth
 
 **Passwordless Plugins**:
+
 - **Passkey**: https://www.better-auth.com/docs/plugins/passkey
 - **Magic Link**: https://www.better-auth.com/docs/plugins/magic-link
 - **Email OTP**: https://www.better-auth.com/docs/plugins/email-otp
@@ -2062,6 +2126,7 @@ session: {
 - **Anonymous**: https://www.better-auth.com/docs/plugins/anonymous
 
 **Advanced Plugins**:
+
 - **Username**: https://www.better-auth.com/docs/plugins/username
 - **JWT**: https://www.better-auth.com/docs/plugins/jwt
 - **OpenAPI**: https://www.better-auth.com/docs/plugins/open-api
@@ -2105,6 +2170,7 @@ session: {
 ## Version Compatibility
 
 **Tested with**:
+
 - `better-auth@1.4.10`
 - `drizzle-orm@0.45.1`
 - `drizzle-kit@0.31.8`
@@ -2115,6 +2181,7 @@ session: {
 - Node.js 18+, Bun 1.0+
 
 **Breaking changes**:
+
 - v1.4.6: `allowImpersonatingAdmins` defaults to `false`
 - v1.4.0: ESM-only (no CommonJS)
 - v1.3.0: Multi-team table structure change
@@ -2126,6 +2193,7 @@ Check changelog: https://github.com/better-auth/better-auth/releases
 ## Community Resources
 
 **Cloudflare-specific guides:**
+
 - [zpg6/better-auth-cloudflare](https://github.com/zpg6/better-auth-cloudflare) - Drizzle + D1 reference
 - [Hono + better-auth on Cloudflare](https://hono.dev/examples/better-auth-on-cloudflare) - Official Hono example
 - [React Router + Cloudflare D1](https://dev.to/atman33/setup-better-auth-with-react-router-cloudflare-d1-2ad4) - React Router v7 guide
@@ -2134,6 +2202,7 @@ Check changelog: https://github.com/better-auth/better-auth/releases
 ---
 
 **Token Efficiency**:
+
 - **Without skill**: ~35,000 tokens (D1 adapter errors, 15+ plugins, rate limiting, session caching, database hooks, mobile integration)
 - **With skill**: ~8,000 tokens (focused on errors + patterns + all plugins + API reference)
 - **Savings**: ~77% (~27,000 tokens)

@@ -46,11 +46,7 @@ export function UserAvatar({
         {avatarUrl ? (
           <AvatarImage src={avatarUrl} />
         ) : (
-          <AvatarFallback
-            backgroundColor="$blue9"
-            alignItems="center"
-            justifyContent="center"
-          >
+          <AvatarFallback backgroundColor="$blue9" alignItems="center" justifyContent="center">
             <Text color="white" fontWeight="bold" fontSize={size / 2.5}>
               {initials}
             </Text>

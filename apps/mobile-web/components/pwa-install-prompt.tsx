@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { AnimatePresence, Button, XStack, YStack, Text } from "tamagui";
-import { X } from "@tamagui/lucide-icons";
+import { X } from "@tamagui/lucide-icons-2";
 import { useTranslation } from "react-i18next";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -11,8 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PWAInstallPrompt() {
   const { t } = useTranslation();
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
@@ -42,10 +41,7 @@ export function PWAInstallPrompt() {
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt
-      );
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
   }, []);
 
@@ -131,12 +127,7 @@ export function PWAInstallPrompt() {
                 circular
                 chromeless
               />
-              <Button
-                size="$3"
-                theme="green"
-                onPress={handleInstall}
-                fontWeight="600"
-              >
+              <Button size="$3" theme="green" onPress={handleInstall} fontWeight="600">
                 {t("pwa.install")}
               </Button>
             </XStack>

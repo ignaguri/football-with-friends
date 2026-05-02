@@ -10,6 +10,7 @@ The application uses a split deployment architecture.
 - Set `EXPO_PUBLIC_API_URL` in Vercel to point to the Cloudflare Workers API
 
 **Vercel Environment Variables**:
+
 - Production: `EXPO_PUBLIC_API_URL=https://football-api.pepe-grillo-parlante.workers.dev`
 - Preview: `EXPO_PUBLIC_API_URL=https://football-api-staging.pepe-grillo-parlante.workers.dev`
 
@@ -18,12 +19,13 @@ The application uses a split deployment architecture.
 - Deployed via `wrangler` from `apps/api`
 - Configuration in `apps/api/wrangler.toml`
 
-| Environment | URL | Database |
-|-------------|-----|----------|
-| Production | `https://football-api.pepe-grillo-parlante.workers.dev` | `football-with-friends-pepegrillo` |
-| Staging | `https://football-api-staging.pepe-grillo-parlante.workers.dev` | `football-with-friends-staging-pepegrillo` |
+| Environment | URL                                                             | Database                                   |
+| ----------- | --------------------------------------------------------------- | ------------------------------------------ |
+| Production  | `https://football-api.pepe-grillo-parlante.workers.dev`         | `football-with-friends-pepegrillo`         |
+| Staging     | `https://football-api-staging.pepe-grillo-parlante.workers.dev` | `football-with-friends-staging-pepegrillo` |
 
 **Deploy commands** (from `apps/api`):
+
 ```bash
 pnpm cf:deploy           # Deploy to production
 pnpm cf:deploy:preview   # Deploy to staging

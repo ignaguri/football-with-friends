@@ -27,10 +27,7 @@ import {
 
 const PROMPT_SHOWN_KEY = "notif-prompt-shown-v1";
 
-export type NotificationCategoryKey =
-  | "pushNewMatch"
-  | "pushMatchReminder"
-  | "pushPromoToConfirmed";
+export type NotificationCategoryKey = "pushNewMatch" | "pushMatchReminder" | "pushPromoToConfirmed";
 
 interface NotificationPreferencesContextValue {
   osStatus: OsPermissionStatus;
@@ -53,14 +50,11 @@ interface NotificationPreferencesContextValue {
   setCategory: (category: NotificationCategoryKey, value: boolean) => Promise<void>;
 }
 
-const NotificationPreferencesContext =
-  createContext<NotificationPreferencesContextValue | null>(null);
+const NotificationPreferencesContext = createContext<NotificationPreferencesContextValue | null>(
+  null,
+);
 
-export function NotificationPreferencesProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function NotificationPreferencesProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const isAuthed = Boolean(session?.user);
 
@@ -87,10 +81,7 @@ export function NotificationPreferencesProvider({
   useEffect(() => {
     if (Platform.OS === "web") return;
 
-    Promise.all([
-      getOsPermissionStatus(),
-      AsyncStorage.getItem(PROMPT_SHOWN_KEY),
-    ])
+    Promise.all([getOsPermissionStatus(), AsyncStorage.getItem(PROMPT_SHOWN_KEY)])
       .then(([status, shown]) => {
         setOsStatus(status);
         setHasShownPrompt(shown === "1");
@@ -142,8 +133,7 @@ export function NotificationPreferencesProvider({
     [patch],
   );
 
-  const effectivelyEnabled =
-    osStatus === "granted" && Boolean(prefsQuery.data?.pushEnabled);
+  const effectivelyEnabled = osStatus === "granted" && Boolean(prefsQuery.data?.pushEnabled);
 
   const value = useMemo<NotificationPreferencesContextValue>(
     () => ({

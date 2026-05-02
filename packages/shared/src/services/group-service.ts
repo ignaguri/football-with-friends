@@ -22,17 +22,12 @@ import type {
   TursoGroupRosterRepository,
   TursoGroupSettingsRepository,
 } from "../repositories/group-repositories";
-import type {
-  LocationRepository,
-  CourtRepository,
-} from "../repositories/interfaces";
+import type { LocationRepository, CourtRepository } from "../repositories/interfaces";
 
 // Structured log line. Cloudflare Workers ingests `console.log` output and
 // indexes on top-level JSON fields, so every event emits a single JSON line.
 function logEvent(event: string, payload: Record<string, unknown>): void {
-  console.log(
-    JSON.stringify({ event, ...payload, ts: new Date().toISOString() }),
-  );
+  console.log(JSON.stringify({ event, ...payload, ts: new Date().toISOString() }));
 }
 
 export interface GroupDetails extends Group {
@@ -88,10 +83,7 @@ export type DeleteRosterOutcome =
       referencingSignupCount: number;
     };
 
-export type RosterListEntry = Omit<
-  GroupRoster,
-  "claimedByUser" | "createdByUser"
-> & {
+export type RosterListEntry = Omit<GroupRoster, "claimedByUser" | "createdByUser"> & {
   claimedByUser?: { id: string; name: string };
 };
 
@@ -174,11 +166,7 @@ export class GroupService {
     return this.memberRepo.listByGroupWithUsers(groupId);
   }
 
-  async updateMemberRole(
-    groupId: string,
-    userId: string,
-    role: MemberRole,
-  ): Promise<void> {
+  async updateMemberRole(groupId: string, userId: string, role: MemberRole): Promise<void> {
     const membership = await this.memberRepo.find(groupId, userId);
     if (!membership) throw new Error("Member not found");
     await this.memberRepo.updateRole(groupId, userId, role);
@@ -211,11 +199,7 @@ export class GroupService {
    * a member with organizer role — promoting + transferring in a single step
    * would hide intent and make audit trails harder to read.
    */
-  async transferOwnership(
-    groupId: string,
-    fromUserId: string,
-    toUserId: string,
-  ): Promise<void> {
+  async transferOwnership(groupId: string, fromUserId: string, toUserId: string): Promise<void> {
     const group = await this.groupRepo.findById(groupId);
     if (!group) throw new Error("Group not found");
     if (group.ownerUserId !== fromUserId) {
@@ -292,9 +276,7 @@ export class GroupService {
     return {
       valid: true,
       group: { id: group.id, name: group.name },
-      inviter: inviterRow
-        ? { id: inviterRow.id, name: inviterRow.name ?? "" }
-        : undefined,
+      inviter: inviterRow ? { id: inviterRow.id, name: inviterRow.name ?? "" } : undefined,
       expiresAt: invite.expiresAt,
     };
   }
@@ -311,10 +293,7 @@ export class GroupService {
    * acceptable at small-tenancy scale, would need a row-lock or serializable
    * txn to close fully.
    */
-  async acceptInvite(params: {
-    token: string;
-    userId: string;
-  }): Promise<InviteAcceptOutcome> {
+  async acceptInvite(params: { token: string; userId: string }): Promise<InviteAcceptOutcome> {
     const invite = await this.inviteRepo.findByToken(params.token);
     if (!invite) return { joined: false, reason: "not_found" };
     if (invite.revokedAt) return { joined: false, reason: "revoked" };
@@ -343,10 +322,7 @@ export class GroupService {
     const userEmail = userRow?.email ?? undefined;
     const userPhone = userRow?.phoneNumber ?? undefined;
 
-    if (
-      invite.targetPhone &&
-      (!userPhone || invite.targetPhone !== userPhone)
-    ) {
+    if (invite.targetPhone && (!userPhone || invite.targetPhone !== userPhone)) {
       return { joined: false, reason: "target_mismatch" };
     }
 
@@ -425,9 +401,7 @@ export class GroupService {
   async listRoster(groupId: string): Promise<RosterListEntry[]> {
     const entries = await this.rosterRepo.listByGroup(groupId);
     const claimedIds = Array.from(
-      new Set(
-        entries.map((e) => e.claimedByUserId).filter((v): v is string => !!v),
-      ),
+      new Set(entries.map((e) => e.claimedByUserId).filter((v): v is string => !!v)),
     );
     if (claimedIds.length === 0) return entries;
 
@@ -450,10 +424,10 @@ export class GroupService {
    * surfaces the existing userId so the UI can link to an invite flow.
    */
   async createRosterEntry(params: RosterCreateParams): Promise<CreateRosterOutcome> {
-    const collidingMemberId = await this.memberRepo.findMemberByContact(
-      params.groupId,
-      { phone: params.phone, email: params.email },
-    );
+    const collidingMemberId = await this.memberRepo.findMemberByContact(params.groupId, {
+      phone: params.phone,
+      email: params.email,
+    });
     if (collidingMemberId) {
       return {
         created: false,
@@ -487,10 +461,7 @@ export class GroupService {
       throw new Error("Roster entry not found");
     }
     if (patch.claimedByUserId) {
-      const membership = await this.memberRepo.find(
-        currentGroupId,
-        patch.claimedByUserId,
-      );
+      const membership = await this.memberRepo.find(currentGroupId, patch.claimedByUserId);
       if (!membership) {
         throw new Error("Target user is not a member of this group");
       }
@@ -547,10 +518,7 @@ export class GroupService {
    * write fails halfway; organizers can clean up manually. Acceptable at
    * current scale (setup-time tool, low frequency).
    */
-  async copyVenues(
-    sourceGroupId: string,
-    targetGroupId: string,
-  ): Promise<CopyVenuesOutcome> {
+  async copyVenues(sourceGroupId: string, targetGroupId: string): Promise<CopyVenuesOutcome> {
     if (sourceGroupId === targetGroupId) {
       throw new Error("Source and target group must differ");
     }
@@ -571,10 +539,7 @@ export class GroupService {
     // with its real court rows.
     const courtsByLocationId = new Map<string, number>();
     for (const court of sourceCourts) {
-      courtsByLocationId.set(
-        court.locationId,
-        (courtsByLocationId.get(court.locationId) ?? 0) + 1,
-      );
+      courtsByLocationId.set(court.locationId, (courtsByLocationId.get(court.locationId) ?? 0) + 1);
     }
 
     const createdLocations = await Promise.all(

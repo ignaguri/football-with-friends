@@ -70,20 +70,22 @@ app.get(
     "query",
     z.object({
       type: z.enum(["upcoming", "past", "all"]).optional(),
-      limit: z.string().optional().transform((val) => val ? parseInt(val, 10) : 5),
-      offset: z.string().optional().transform((val) => val ? parseInt(val, 10) : 0),
-    })
+      limit: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 5)),
+      offset: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 0)),
+    }),
   ),
   async (c) => {
     const { type, limit, offset } = c.req.valid("query");
     const userId = requireUser(c).id;
     const current = requireCurrentGroup(c);
 
-    const status = type === "past"
-      ? "completed"
-      : type === "all"
-        ? undefined
-        : "upcoming";
+    const status = type === "past" ? "completed" : type === "all" ? undefined : "upcoming";
 
     const result = await getMatchService().getAllMatches({
       groupId: current.id,
@@ -100,23 +102,20 @@ app.get(
       hasMore: offset + result.matches.length < result.total,
       page: Math.floor(offset / limit),
     });
-  }
+  },
 );
 
 // Get single match by ID
-app.get(
-  "/:id",
-  async (c) => {
-    const id = c.req.param("id");
-    const userId = requireUser(c).id;
-    const current = requireCurrentGroup(c);
-    const match = await getMatchService().getMatchDetails(id, userId);
-    if (!match || match.groupId !== current.id) {
-      return c.json({ error: "Match not found" }, 404);
-    }
-    return c.json(match);
+app.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const userId = requireUser(c).id;
+  const current = requireCurrentGroup(c);
+  const match = await getMatchService().getMatchDetails(id, userId);
+  if (!match || match.groupId !== current.id) {
+    return c.json({ error: "Match not found" }, 404);
   }
-);
+  return c.json(match);
+});
 
 // Get players for a match (for voting)
 app.get("/:matchId/players", async (c) => {
@@ -159,7 +158,7 @@ app.post(
       maxSubstitutes: z.number().min(0).default(2),
       costPerPlayer: z.string().optional(),
       sameDayCost: z.string().optional(),
-    })
+    }),
   ),
   async (c) => {
     const denied = requireOrganizer(c);
@@ -171,11 +170,7 @@ app.post(
     const matchData = c.req.valid("json");
 
     try {
-      const match = await getMatchService().createMatch(
-        current.id,
-        matchData,
-        user,
-      );
+      const match = await getMatchService().createMatch(current.id, matchData, user);
 
       fireAndForget(c, notifyMatchCreated(match, user.id));
 
@@ -183,7 +178,7 @@ app.post(
     } catch (error) {
       return errorJson(c, error, "Failed to create match");
     }
-  }
+  },
 );
 
 // Update a match (organizer only)
@@ -192,8 +187,14 @@ app.patch(
   zValidator(
     "json",
     z.object({
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-      time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+      date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .optional(),
+      time: z
+        .string()
+        .regex(/^\d{2}:\d{2}$/)
+        .optional(),
       locationId: z.string().optional(),
       courtId: z.string().nullable().optional(),
       maxPlayers: z.number().min(2).optional(),
@@ -201,7 +202,7 @@ app.patch(
       costPerPlayer: z.string().nullable().optional(),
       sameDayCost: z.string().nullable().optional(),
       status: z.enum(["upcoming", "completed", "cancelled"]).optional(),
-    })
+    }),
   ),
   async (c) => {
     const denied = requireOrganizer(c);
@@ -212,16 +213,12 @@ app.patch(
     const updates = c.req.valid("json");
 
     try {
-      const match = await getMatchService().updateMatch(
-        current.id,
-        matchId,
-        {
-          ...updates,
-          courtId: updates.courtId === null ? undefined : updates.courtId,
-          costPerPlayer: updates.costPerPlayer === null ? undefined : updates.costPerPlayer,
-          sameDayCost: updates.sameDayCost === null ? undefined : updates.sameDayCost,
-        },
-      );
+      const match = await getMatchService().updateMatch(current.id, matchId, {
+        ...updates,
+        courtId: updates.courtId === null ? undefined : updates.courtId,
+        costPerPlayer: updates.costPerPlayer === null ? undefined : updates.costPerPlayer,
+        sameDayCost: updates.sameDayCost === null ? undefined : updates.sameDayCost,
+      });
 
       if (updates.status === "cancelled") {
         fireAndForget(c, notifyMatchCancelled(match));
@@ -237,7 +234,7 @@ app.patch(
     } catch (error) {
       return errorJson(c, error, "Failed to update match");
     }
-  }
+  },
 );
 
 // Delete a match (organizer only)
@@ -294,7 +291,7 @@ app.post(
         email: z.string().trim().email().optional(),
         status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
       }),
-    ])
+    ]),
   ),
   async (c) => {
     const matchId = c.req.param("id");
@@ -312,12 +309,7 @@ app.post(
     const current = requireCurrentGroup(c);
 
     try {
-      const signup = await getMatchService().addGuestPlayer(
-        current.id,
-        matchId,
-        body,
-        user,
-      );
+      const signup = await getMatchService().addGuestPlayer(current.id, matchId, body, user);
       return c.json({ signup }, 201);
     } catch (error) {
       if (error instanceof RosterMemberCollisionError) {
@@ -325,7 +317,7 @@ app.post(
       }
       return errorJson(c, error, "Failed to add guest");
     }
-  }
+  },
 );
 
 // Organizer: Add a player to a match
@@ -338,7 +330,7 @@ app.post(
       playerName: z.string().min(1, "Player name is required"),
       playerEmail: z.string().email("Valid email is required"),
       status: z.enum(["PENDING", "PAID", "SUBSTITUTE"]).default("PENDING"),
-    })
+    }),
   ),
   async (c) => {
     const denied = requireOrganizer(c);
@@ -361,7 +353,7 @@ app.post(
     } catch (error) {
       return errorJson(c, error, "Failed to add player");
     }
-  }
+  },
 );
 
 // Update a signup (status change). Organizers can update anyone's signup;
@@ -373,7 +365,7 @@ app.patch(
     z.object({
       status: z.enum(["PENDING", "PAID", "CANCELLED", "SUBSTITUTE"]).optional(),
       playerName: z.string().min(1).optional(),
-    })
+    }),
   ),
   async (c) => {
     const signupId = c.req.param("signupId");
@@ -410,7 +402,7 @@ app.patch(
     } catch (error) {
       return errorJson(c, error, "Failed to update signup");
     }
-  }
+  },
 );
 
 // Organizer: Remove a player from a match (hard delete)
@@ -455,8 +447,7 @@ app.get("/:id/player-stats", async (c) => {
     const stats = await getPlayerStatsService().getMatchStats(matchId);
     return c.json(stats);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get match stats";
+    const message = error instanceof Error ? error.message : "Failed to get match stats";
     return c.json({ error: message }, 500);
   }
 });
@@ -492,8 +483,7 @@ app.post(
       );
       return c.json({ stats }, 201);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to record stats";
+      const message = error instanceof Error ? error.message : "Failed to record stats";
       return c.json({ error: message }, 400);
     }
   },
@@ -531,8 +521,7 @@ app.patch(
       );
       return c.json({ stats });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to update stats";
+      const message = error instanceof Error ? error.message : "Failed to update stats";
       return c.json({ error: message }, 400);
     }
   },

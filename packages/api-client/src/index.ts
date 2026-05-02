@@ -43,11 +43,7 @@ export type { Session, User, PhoneSignUpData, PhoneSignInData } from "./auth";
 
 // Active group storage — consumed by the client fetch interceptor and
 // exposed for the mobile-web switcher (Phase 2).
-export {
-  getActiveGroupId,
-  setActiveGroupId,
-  GROUP_HEADER,
-} from "./group-storage";
+export { getActiveGroupId, setActiveGroupId, GROUP_HEADER } from "./group-storage";
 
 // Group-management React Query hooks (Phase 2).
 export {
@@ -90,10 +86,7 @@ export {
   useUpdateNotificationPreferences,
   notificationPreferencesQueryKeys,
 } from "./notification-preferences";
-export type {
-  NotificationPreferences,
-  NotificationPreferencesUpdate,
-} from "@repo/shared/domain";
+export type { NotificationPreferences, NotificationPreferencesUpdate } from "@repo/shared/domain";
 
 // Notifications inbox (group-scoped) — list + unread badge + mark read
 export {

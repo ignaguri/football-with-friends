@@ -55,7 +55,7 @@ export const user = sqliteTable(
   },
   (table) => ({
     emailIdx: index("user_email_idx").on(table.email),
-  })
+  }),
 );
 
 /**
@@ -85,7 +85,7 @@ export const session = sqliteTable(
   (table) => ({
     userIdIdx: index("session_user_id_idx").on(table.userId),
     tokenIdx: index("session_token_idx").on(table.token),
-  })
+  }),
 );
 
 /**
@@ -116,11 +116,8 @@ export const account = sqliteTable(
   },
   (table) => ({
     userIdIdx: index("account_user_id_idx").on(table.userId),
-    providerIdx: index("account_provider_idx").on(
-      table.providerId,
-      table.accountId
-    ),
-  })
+    providerIdx: index("account_provider_idx").on(table.providerId, table.accountId),
+  }),
 );
 
 /**
@@ -143,7 +140,7 @@ export const verification = sqliteTable(
   (table) => ({
     identifierIdx: index("verification_identifier_idx").on(table.identifier),
     valueIdx: index("verification_value_idx").on(table.value),
-  })
+  }),
 );
 
 // ═══════════════════════════════════════════════════════════════
@@ -169,7 +166,7 @@ export const twoFactor = sqliteTable(
   },
   (table) => ({
     userIdIdx: index("two_factor_user_id_idx").on(table.userId),
-  })
+  }),
 );
 
 /**
@@ -209,7 +206,7 @@ export const organizationMember = sqliteTable(
   (table) => ({
     orgIdIdx: index("org_member_org_id_idx").on(table.organizationId),
     userIdIdx: index("org_member_user_id_idx").on(table.userId),
-  })
+  }),
 );
 
 // ═══════════════════════════════════════════════════════════════

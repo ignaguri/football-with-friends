@@ -7,6 +7,7 @@ TypeScript's type checker crashes with `RangeError: Maximum call stack size exce
 ### Root Cause
 
 Tamagui uses deeply recursive TypeScript types for:
+
 - Theme system with infinite component variations
 - Styled component props with comprehensive type transformations
 - Cross-platform type unification (web/native)
@@ -28,10 +29,12 @@ When TypeScript attempts to resolve these types across our app, it exceeds the c
 The following files have `@ts-nocheck` added to prevent type recursion during development:
 
 **Configuration Files:**
+
 - `tamagui.config.ts` - Tamagui config with module augmentation
 - `lib/themes.ts` - Theme generation using `createThemes`
 
 **Layout Files (using Tamagui themes):**
+
 - `app/_layout.tsx` - Root layout with TamaguiProvider
 - `app/(auth)/_layout.tsx`
 - `app/(tabs)/_layout.tsx`
@@ -41,6 +44,7 @@ The following files have `@ts-nocheck` added to prevent type recursion during de
 - `app/(tabs)/rules/_layout.tsx`
 
 **Page Files (using Tamagui components):**
+
 - `app/(tabs)/index.tsx`
 - `app/(tabs)/matches/[matchId].tsx`
 
@@ -69,6 +73,7 @@ The following files have `@ts-nocheck` added to prevent type recursion during de
 ## Future Improvements
 
 If TypeScript resolves the recursive type limitation or Tamagui simplifies their type system:
+
 1. Remove `@ts-nocheck` directives from files listed above
 2. Restore `typecheck` script to `tsc --noEmit`
 3. Test with `pnpm typecheck` from mobile-web directory

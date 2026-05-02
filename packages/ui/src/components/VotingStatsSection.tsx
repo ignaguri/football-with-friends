@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui";
 import { Badge } from "./Badge";
-import { Award, Trophy } from "@tamagui/lucide-icons";
+import { Award, Trophy } from "@tamagui/lucide-icons-2";
 
 export interface VotingStatsSectionProps {
   stats: Array<{
@@ -56,7 +56,9 @@ export function VotingStatsSection({
       >
         <Trophy size={20} color="$green10" />
         <Text fontSize="$5" fontWeight="700" color="$green11">
-          {formatTotalVotes ? formatTotalVotes(totalVotes) : `${totalVotes} Total ${totalVotes === 1 ? "Vote" : "Votes"}`}
+          {formatTotalVotes
+            ? formatTotalVotes(totalVotes)
+            : `${totalVotes} Total ${totalVotes === 1 ? "Vote" : "Votes"}`}
         </Text>
       </XStack>
 
@@ -68,8 +70,8 @@ export function VotingStatsSection({
             ? stat.rank === 1
               ? "$yellow2"
               : stat.rank === 2
-              ? "$gray2"
-              : "$orange2"
+                ? "$gray2"
+                : "$orange2"
             : "$background";
 
           return (
@@ -96,19 +98,15 @@ export function VotingStatsSection({
               {/* Vote count and rank */}
               <YStack gap="$1" alignItems="flex-end">
                 <Badge variant={isTopRank ? "success" : "info"}>
-                  {formatVotes ? formatVotes(stat.timesVoted) : `${stat.timesVoted} ${stat.timesVoted === 1 ? "vote" : "votes"}`}
+                  {formatVotes
+                    ? formatVotes(stat.timesVoted)
+                    : `${stat.timesVoted} ${stat.timesVoted === 1 ? "vote" : "votes"}`}
                 </Badge>
                 {isTopRank && stat.rank && (
                   <XStack gap="$1" alignItems="center">
                     <Trophy
                       size={12}
-                      color={
-                        stat.rank === 1
-                          ? "$yellow9"
-                          : stat.rank === 2
-                          ? "$gray9"
-                          : "$orange9"
-                      }
+                      color={stat.rank === 1 ? "$yellow9" : stat.rank === 2 ? "$gray9" : "$orange9"}
                     />
                     <Text fontSize="$2" color="$gray11" fontWeight="600">
                       #{stat.rank} {overallLabel}

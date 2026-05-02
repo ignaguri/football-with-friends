@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Input as TamaguiInput, InputProps, YStack, XStack, Text } from "tamagui";
-import { Eye, EyeOff } from "@tamagui/lucide-icons";
+import type { InputProps } from "tamagui";
+import { Input as TamaguiInput, YStack, XStack, Text } from "tamagui";
+import { Eye, EyeOff } from "@tamagui/lucide-icons-2";
 import { Platform, Pressable } from "react-native";
 
 export interface CustomInputProps extends InputProps {

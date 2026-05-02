@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { Platform } from "react-native";
 import { YStack, XStack, Text, Card, Button } from "tamagui";
-import { X } from "@tamagui/lucide-icons";
-import { Select, SelectOption } from "./Select";
+import { X } from "@tamagui/lucide-icons-2";
+import type { SelectOption } from "./Select";
+import { Select } from "./Select";
 
 export interface SelectionItem {
   id: string;
@@ -181,9 +182,7 @@ function WebExclusiveSelect({
         paddingRight: "40px",
       }}
     >
-      <option value="">
-        {value ? `— ${placeholder} —` : placeholder}
-      </option>
+      <option value="">{value ? `— ${placeholder} —` : placeholder}</option>
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}

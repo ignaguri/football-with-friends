@@ -35,22 +35,18 @@ export function PlayerStatsCard({
       cursor={onPress ? "pointer" : undefined}
     >
       <XStack alignItems="center" gap="$3">
-        <UserAvatar
-          name={name}
-          profilePicture={profilePicture}
-          size={44}
-        />
+        <UserAvatar name={name} profilePicture={profilePicture} size={44} />
         <YStack flex={1} gap="$1">
           <XStack gap="$1.5" alignItems="center">
-            {nationality && (
-              <Text fontSize="$5">{getCountryFlag(nationality)}</Text>
-            )}
+            {nationality && <Text fontSize="$5">{getCountryFlag(nationality)}</Text>}
             <YStack>
               <Text fontSize="$5" fontWeight="600">
                 {userNickname ?? name}
               </Text>
               {userNickname && userNickname !== name && (
-                <Text fontSize="$2" color="$gray10" fontWeight="400">({name})</Text>
+                <Text fontSize="$2" color="$gray10" fontWeight="400">
+                  ({name})
+                </Text>
               )}
             </YStack>
           </XStack>

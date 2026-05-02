@@ -130,14 +130,70 @@ const now = isoNow();
 const unixMs = unixMsNow();
 
 const USERS = [
-  { id: "seed_user_01", name: "Ignacio Guri", email: "ignacio@example.com", nationality: "AR", role: "admin", username: "ignacio" },
-  { id: "seed_user_02", name: "Carlos Tevez", email: "carlos@example.com", nationality: "AR", role: "user", username: "carlitos" },
-  { id: "seed_user_03", name: "Lucas Silva", email: "lucas@example.com", nationality: "BR", role: "user", username: "lucas" },
-  { id: "seed_user_04", name: "Marco Rossi", email: "marco@example.com", nationality: "IT", role: "user", username: "marco" },
-  { id: "seed_user_05", name: "Hans Müller", email: "hans@example.com", nationality: "DE", role: "user", username: "hans" },
-  { id: "seed_user_06", name: "Pablo García", email: "pablo@example.com", nationality: "ES", role: "user", username: "pablo" },
-  { id: "seed_user_07", name: "Santiago López", email: "santiago@example.com", nationality: "UY", role: "user", username: "santiago" },
-  { id: "seed_user_08", name: "Diego Ramírez", email: "diego@example.com", nationality: "CO", role: "user", username: "diego" },
+  {
+    id: "seed_user_01",
+    name: "Ignacio Guri",
+    email: "ignacio@example.com",
+    nationality: "AR",
+    role: "admin",
+    username: "ignacio",
+  },
+  {
+    id: "seed_user_02",
+    name: "Carlos Tevez",
+    email: "carlos@example.com",
+    nationality: "AR",
+    role: "user",
+    username: "carlitos",
+  },
+  {
+    id: "seed_user_03",
+    name: "Lucas Silva",
+    email: "lucas@example.com",
+    nationality: "BR",
+    role: "user",
+    username: "lucas",
+  },
+  {
+    id: "seed_user_04",
+    name: "Marco Rossi",
+    email: "marco@example.com",
+    nationality: "IT",
+    role: "user",
+    username: "marco",
+  },
+  {
+    id: "seed_user_05",
+    name: "Hans Müller",
+    email: "hans@example.com",
+    nationality: "DE",
+    role: "user",
+    username: "hans",
+  },
+  {
+    id: "seed_user_06",
+    name: "Pablo García",
+    email: "pablo@example.com",
+    nationality: "ES",
+    role: "user",
+    username: "pablo",
+  },
+  {
+    id: "seed_user_07",
+    name: "Santiago López",
+    email: "santiago@example.com",
+    nationality: "UY",
+    role: "user",
+    username: "santiago",
+  },
+  {
+    id: "seed_user_08",
+    name: "Diego Ramírez",
+    email: "diego@example.com",
+    nationality: "CO",
+    role: "user",
+    username: "diego",
+  },
 ];
 
 const LOCATION = {
@@ -165,55 +221,94 @@ const MATCHES = [
   { id: "seed_match_02", dayOffset: -21, time: "19:00", status: "completed", cost: "10" },
   { id: "seed_match_03", dayOffset: -14, time: "19:00", status: "completed", cost: "10" },
   { id: "seed_match_04", dayOffset: -10, time: "20:00", status: "cancelled", cost: "10" },
-  { id: "seed_match_05", dayOffset: -7,  time: "19:00", status: "completed", cost: "10" },
-  { id: "seed_match_06", dayOffset: -3,  time: "20:00", status: "cancelled", cost: "10" },
-  { id: "seed_match_07", dayOffset: 3,   time: "19:00", status: "upcoming",  cost: "10" },
-  { id: "seed_match_08", dayOffset: 7,   time: "19:30", status: "upcoming",  cost: "10" },
-  { id: "seed_match_09", dayOffset: 14,  time: "19:00", status: "upcoming",  cost: "12" },
-  { id: "seed_match_10", dayOffset: 21,  time: "19:00", status: "upcoming",  cost: "12" },
+  { id: "seed_match_05", dayOffset: -7, time: "19:00", status: "completed", cost: "10" },
+  { id: "seed_match_06", dayOffset: -3, time: "20:00", status: "cancelled", cost: "10" },
+  { id: "seed_match_07", dayOffset: 3, time: "19:00", status: "upcoming", cost: "10" },
+  { id: "seed_match_08", dayOffset: 7, time: "19:30", status: "upcoming", cost: "10" },
+  { id: "seed_match_09", dayOffset: 14, time: "19:00", status: "upcoming", cost: "12" },
+  { id: "seed_match_10", dayOffset: 21, time: "19:00", status: "upcoming", cost: "12" },
 ];
 
 // Which users are signed up for each match, and their status
 // Users referenced by index (0-7) into USERS array
 const MATCH_SIGNUPS: Record<string, { userIdx: number; status: string }[]> = {
   seed_match_01: [
-    { userIdx: 0, status: "PAID" }, { userIdx: 1, status: "PAID" }, { userIdx: 2, status: "PAID" }, { userIdx: 3, status: "PAID" },
-    { userIdx: 4, status: "PAID" }, { userIdx: 5, status: "PAID" }, { userIdx: 6, status: "PAID" }, { userIdx: 7, status: "PAID" },
+    { userIdx: 0, status: "PAID" },
+    { userIdx: 1, status: "PAID" },
+    { userIdx: 2, status: "PAID" },
+    { userIdx: 3, status: "PAID" },
+    { userIdx: 4, status: "PAID" },
+    { userIdx: 5, status: "PAID" },
+    { userIdx: 6, status: "PAID" },
+    { userIdx: 7, status: "PAID" },
   ],
   seed_match_02: [
-    { userIdx: 0, status: "PAID" }, { userIdx: 1, status: "PAID" }, { userIdx: 2, status: "PAID" }, { userIdx: 3, status: "PAID" },
-    { userIdx: 4, status: "PAID" }, { userIdx: 5, status: "PAID" }, { userIdx: 6, status: "PAID" }, { userIdx: 7, status: "PAID" },
+    { userIdx: 0, status: "PAID" },
+    { userIdx: 1, status: "PAID" },
+    { userIdx: 2, status: "PAID" },
+    { userIdx: 3, status: "PAID" },
+    { userIdx: 4, status: "PAID" },
+    { userIdx: 5, status: "PAID" },
+    { userIdx: 6, status: "PAID" },
+    { userIdx: 7, status: "PAID" },
   ],
   seed_match_03: [
-    { userIdx: 0, status: "PAID" }, { userIdx: 1, status: "PAID" }, { userIdx: 2, status: "PAID" },
-    { userIdx: 4, status: "PAID" }, { userIdx: 6, status: "PAID" }, { userIdx: 7, status: "PAID" },
+    { userIdx: 0, status: "PAID" },
+    { userIdx: 1, status: "PAID" },
+    { userIdx: 2, status: "PAID" },
+    { userIdx: 4, status: "PAID" },
+    { userIdx: 6, status: "PAID" },
+    { userIdx: 7, status: "PAID" },
   ],
   seed_match_04: [
-    { userIdx: 0, status: "CANCELLED" }, { userIdx: 1, status: "CANCELLED" }, { userIdx: 3, status: "CANCELLED" },
+    { userIdx: 0, status: "CANCELLED" },
+    { userIdx: 1, status: "CANCELLED" },
+    { userIdx: 3, status: "CANCELLED" },
   ],
   seed_match_05: [
-    { userIdx: 0, status: "PAID" }, { userIdx: 1, status: "PAID" }, { userIdx: 2, status: "PAID" }, { userIdx: 3, status: "PAID" },
-    { userIdx: 4, status: "PAID" }, { userIdx: 5, status: "PAID" }, { userIdx: 6, status: "PAID" }, { userIdx: 7, status: "PAID" },
+    { userIdx: 0, status: "PAID" },
+    { userIdx: 1, status: "PAID" },
+    { userIdx: 2, status: "PAID" },
+    { userIdx: 3, status: "PAID" },
+    { userIdx: 4, status: "PAID" },
+    { userIdx: 5, status: "PAID" },
+    { userIdx: 6, status: "PAID" },
+    { userIdx: 7, status: "PAID" },
   ],
   seed_match_06: [
-    { userIdx: 2, status: "CANCELLED" }, { userIdx: 4, status: "CANCELLED" },
+    { userIdx: 2, status: "CANCELLED" },
+    { userIdx: 4, status: "CANCELLED" },
   ],
   seed_match_07: [
-    { userIdx: 0, status: "PAID" }, { userIdx: 1, status: "PAID" }, { userIdx: 2, status: "PAID" }, { userIdx: 3, status: "PAID" },
-    { userIdx: 4, status: "PENDING" }, { userIdx: 5, status: "PENDING" },
+    { userIdx: 0, status: "PAID" },
+    { userIdx: 1, status: "PAID" },
+    { userIdx: 2, status: "PAID" },
+    { userIdx: 3, status: "PAID" },
+    { userIdx: 4, status: "PENDING" },
+    { userIdx: 5, status: "PENDING" },
   ],
   seed_match_08: [
-    { userIdx: 0, status: "PAID" }, { userIdx: 2, status: "PAID" }, { userIdx: 6, status: "PENDING" }, { userIdx: 7, status: "PENDING" },
+    { userIdx: 0, status: "PAID" },
+    { userIdx: 2, status: "PAID" },
+    { userIdx: 6, status: "PENDING" },
+    { userIdx: 7, status: "PENDING" },
   ],
   seed_match_09: [
-    { userIdx: 0, status: "PENDING" }, { userIdx: 1, status: "PENDING" },
+    { userIdx: 0, status: "PENDING" },
+    { userIdx: 1, status: "PENDING" },
   ],
   // seed_match_10: no signups
 };
 
 // Player stats for completed matches
 // { matchId, userIdx, goals, thirdTime (0|1), beers }
-const PLAYER_STATS: { matchId: string; userIdx: number; goals: number; thirdTime: number; beers: number }[] = [
+const PLAYER_STATS: {
+  matchId: string;
+  userIdx: number;
+  goals: number;
+  thirdTime: number;
+  beers: number;
+}[] = [
   // Match 1
   { matchId: "seed_match_01", userIdx: 0, goals: 2, thirdTime: 1, beers: 3 },
   { matchId: "seed_match_01", userIdx: 1, goals: 1, thirdTime: 1, beers: 2 },
@@ -324,23 +419,26 @@ async function main() {
     console.log("\n👤 Inserting users...");
 
     for (const u of USERS) {
-      await db.insertInto("user").values({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        emailVerified: 1,
-        image: null,
-        role: u.role,
-        banned: null,
-        banReason: null,
-        banExpires: null,
-        createdAt: unixMs,
-        updatedAt: unixMs,
-        username: u.username,
-        displayUsername: u.name,
-        profilePicture: null,
-        nationality: u.nationality,
-      }).execute();
+      await db
+        .insertInto("user")
+        .values({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          emailVerified: 1,
+          image: null,
+          role: u.role,
+          banned: null,
+          banReason: null,
+          banExpires: null,
+          createdAt: unixMs,
+          updatedAt: unixMs,
+          username: u.username,
+          displayUsername: u.name,
+          profilePicture: null,
+          nationality: u.nationality,
+        })
+        .execute();
     }
 
     console.log(`   ✅ Inserted ${USERS.length} users`);
@@ -362,7 +460,8 @@ async function main() {
     console.log("\n⚽ Inserting matches...");
 
     // Get existing non-seed match dates to avoid UNIQUE constraint conflicts
-    const existingDatesResult = await sql`SELECT date FROM matches WHERE id NOT LIKE 'seed_%'`.execute(db);
+    const existingDatesResult =
+      await sql`SELECT date FROM matches WHERE id NOT LIKE 'seed_%'`.execute(db);
     const existingDates = new Set((existingDatesResult.rows as any[]).map((r) => r.date));
 
     const skippedMatches = new Set<string>();
@@ -388,25 +487,30 @@ async function main() {
         console.log(`   ℹ️  ${m.id} shifted to ${dateStr} (real match on original date)`);
       }
 
-      await db.insertInto("matches").values({
-        id: m.id,
-        location_id: LOCATION.id,
-        court_id: COURT.id,
-        date: dateStr,
-        time: m.time,
-        status: m.status,
-        max_players: 10,
-        max_substitutes: 2,
-        cost_per_player: m.cost,
-        same_day_cost: "2",
-        created_by_user_id: USERS[0].id,
-        created_at: now,
-        updated_at: now,
-      }).execute();
+      await db
+        .insertInto("matches")
+        .values({
+          id: m.id,
+          location_id: LOCATION.id,
+          court_id: COURT.id,
+          date: dateStr,
+          time: m.time,
+          status: m.status,
+          max_players: 10,
+          max_substitutes: 2,
+          cost_per_player: m.cost,
+          same_day_cost: "2",
+          created_by_user_id: USERS[0].id,
+          created_at: now,
+          updated_at: now,
+        })
+        .execute();
     }
 
     const insertedMatches = MATCHES.length - skippedMatches.size;
-    console.log(`   ✅ Inserted ${insertedMatches} matches${skippedMatches.size > 0 ? ` (${skippedMatches.size} skipped)` : ""}`);
+    console.log(
+      `   ✅ Inserted ${insertedMatches} matches${skippedMatches.size > 0 ? ` (${skippedMatches.size} skipped)` : ""}`,
+    );
 
     // ── Step 6: Insert signups ─────────────────────────────────────────
 
@@ -420,19 +524,22 @@ async function main() {
         const user = USERS[s.userIdx];
         const signupId = `seed_signup_${matchId.replace("seed_match_", "m")}_u${String(s.userIdx + 1).padStart(2, "0")}`;
 
-        await db.insertInto("signups").values({
-          id: signupId,
-          match_id: matchId,
-          user_id: user.id,
-          player_name: user.name,
-          player_email: user.email,
-          status: s.status,
-          signup_type: "self",
-          guest_owner_id: null,
-          added_by_user_id: user.id,
-          signed_up_at: now,
-          updated_at: now,
-        }).execute();
+        await db
+          .insertInto("signups")
+          .values({
+            id: signupId,
+            match_id: matchId,
+            user_id: user.id,
+            player_name: user.name,
+            player_email: user.email,
+            status: s.status,
+            signup_type: "self",
+            guest_owner_id: null,
+            added_by_user_id: user.id,
+            signed_up_at: now,
+            updated_at: now,
+          })
+          .execute();
         signupCount++;
       }
     }
@@ -448,17 +555,20 @@ async function main() {
       const user = USERS[ps.userIdx];
       const statId = `seed_stat_${ps.matchId.replace("seed_match_", "m")}_u${String(ps.userIdx + 1).padStart(2, "0")}`;
 
-      await db.insertInto("match_player_stats").values({
-        id: statId,
-        match_id: ps.matchId,
-        user_id: user.id,
-        goals: ps.goals,
-        third_time_attended: ps.thirdTime,
-        third_time_beers: ps.beers,
-        confirmed: 1,
-        created_at: now,
-        updated_at: now,
-      }).execute();
+      await db
+        .insertInto("match_player_stats")
+        .values({
+          id: statId,
+          match_id: ps.matchId,
+          user_id: user.id,
+          goals: ps.goals,
+          third_time_attended: ps.thirdTime,
+          third_time_beers: ps.beers,
+          confirmed: 1,
+          created_at: now,
+          updated_at: now,
+        })
+        .execute();
     }
 
     console.log(`   ✅ Inserted ${PLAYER_STATS.length} player stats`);
@@ -468,7 +578,8 @@ async function main() {
     console.log("\n⚙️  Inserting settings...");
 
     for (const s of SETTINGS) {
-      await db.insertInto("settings")
+      await db
+        .insertInto("settings")
         .values({ key: s.key, value: s.value, updated_at: now })
         .onConflict((oc) => oc.column("key").doUpdateSet({ value: s.value, updated_at: now }))
         .execute();

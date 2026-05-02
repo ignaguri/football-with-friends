@@ -1,5 +1,5 @@
 import { Button as TamaguiButton, styled } from "tamagui";
-import { Sun, Moon } from "@tamagui/lucide-icons";
+import { Sun, Moon } from "@tamagui/lucide-icons-2";
 
 interface ThemeToggleProps {
   theme: "light" | "dark";
@@ -15,15 +15,15 @@ const IconButton = styled(TamaguiButton, {
 
   variants: {
     size: {
-      "$2": {
+      $2: {
         width: 32,
         height: 32,
       },
-      "$3": {
+      $3: {
         width: 40,
         height: 40,
       },
-      "$4": {
+      $4: {
         width: 48,
         height: 48,
       },

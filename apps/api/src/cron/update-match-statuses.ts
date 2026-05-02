@@ -61,11 +61,7 @@ export async function updateMatchStatuses() {
           .where("status", "!=", "CANCELLED")
           .where("user_id", "is not", null)
           .execute(),
-        db
-          .selectFrom("locations")
-          .select(["id", "name"])
-          .where("id", "in", locationIds)
-          .execute(),
+        db.selectFrom("locations").select(["id", "name"]).where("id", "in", locationIds).execute(),
       ]);
 
       const userIdsByMatch = new Map<string, string[]>();
@@ -101,7 +97,9 @@ export async function updateMatchStatuses() {
           }
 
           await notificationService.sendToUsers(userIds, payload);
-          console.log(`[CRON] Sent voting reminder for match ${match.id} to ${userIds.length} users`);
+          console.log(
+            `[CRON] Sent voting reminder for match ${match.id} to ${userIds.length} users`,
+          );
         } catch (error) {
           console.error(`[CRON] Failed to send voting reminder for match ${match.id}:`, error);
         }

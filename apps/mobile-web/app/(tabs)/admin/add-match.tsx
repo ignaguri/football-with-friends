@@ -56,17 +56,12 @@ export default function AddMatchScreen() {
   const [locationId, setLocationId] = useState("");
   const [courtId, setCourtId] = useState("");
   const [maxPlayers, setMaxPlayers] = useState("10");
-  const [costPerPlayerOverride, setCostPerPlayerOverride] = useState<
-    string | null
-  >(null);
-  const [sameDayCostOverride, setSameDayCostOverride] = useState<string | null>(
-    null,
-  );
+  const [costPerPlayerOverride, setCostPerPlayerOverride] = useState<string | null>(null);
+  const [sameDayCostOverride, setSameDayCostOverride] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { myRole } = useCurrentGroup();
-  const canManage =
-    session?.user?.role === "admin" || myRole === "organizer";
+  const canManage = session?.user?.role === "admin" || myRole === "organizer";
 
   // Fetch settings to pre-fill costs
   const { data: settings } = useQuery({
@@ -77,10 +72,8 @@ export default function AddMatchScreen() {
     },
   });
 
-  const costPerPlayer =
-    costPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
-  const sameDayCost =
-    sameDayCostOverride ?? settings?.same_day_extra_cost ?? "";
+  const costPerPlayer = costPerPlayerOverride ?? settings?.default_cost_per_player ?? "";
+  const sameDayCost = sameDayCostOverride ?? settings?.same_day_extra_cost ?? "";
 
   // Fetch locations
   const { data: locations = [], isLoading: isLoadingLocations } = useQuery({
@@ -320,9 +313,7 @@ export default function AddMatchScreen() {
             disabled={createMutation.isPending}
             testID="admin-add-match-submit"
           >
-            {createMutation.isPending
-              ? t("addMatch.adding")
-              : t("addMatch.add")}
+            {createMutation.isPending ? t("addMatch.adding") : t("addMatch.add")}
           </Button>
         </YStack>
       </ScrollView>

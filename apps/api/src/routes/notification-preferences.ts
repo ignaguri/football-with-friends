@@ -1,9 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { getDatabase } from "@repo/shared/database";
-import {
-  type NotificationPreferences,
-  NOTIFICATION_PREF_TO_COLUMN,
-} from "@repo/shared/domain";
+import { type NotificationPreferences, NOTIFICATION_PREF_TO_COLUMN } from "@repo/shared/domain";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -84,9 +81,7 @@ app.patch("/", zValidator("json", patchSchema), async (c) => {
       updated_at: now,
       ...columnUpdates,
     })
-    .onConflict((oc) =>
-      oc.column("user_id").doUpdateSet({ ...columnUpdates, updated_at: now }),
-    )
+    .onConflict((oc) => oc.column("user_id").doUpdateSet({ ...columnUpdates, updated_at: now }))
     .execute();
 
   const row = await db

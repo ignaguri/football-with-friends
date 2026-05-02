@@ -11,6 +11,7 @@ Follow these steps to configure better-auth with Drizzle ORM and D1.
 ### 1. Check Prerequisites
 
 Verify the project has:
+
 - Cloudflare Workers with D1 binding
 - Drizzle ORM configured (run `/drizzle-orm-d1/init` first if not)
 - TypeScript
@@ -27,15 +28,15 @@ npm install -D @better-auth/cli
 Create `src/lib/auth/index.ts`:
 
 ```typescript
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import type { DrizzleD1Database } from 'drizzle-orm/d1';
-import * as schema from '@/db/schema';
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import type { DrizzleD1Database } from "drizzle-orm/d1";
+import * as schema from "@/db/schema";
 
 export function createAuth(db: DrizzleD1Database<typeof schema>, env: Env) {
   return betterAuth({
     database: drizzleAdapter(db, {
-      provider: 'sqlite',
+      provider: "sqlite",
       schema: {
         user: schema.users,
         session: schema.sessions,
@@ -64,21 +65,22 @@ export function createAuth(db: DrizzleD1Database<typeof schema>, env: Env) {
 Create `src/lib/auth/cli.ts` for schema generation:
 
 ```typescript
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
 
-const sqlite = new Database(':memory:');
+const sqlite = new Database(":memory:");
 const db = drizzle(sqlite);
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: 'sqlite' }),
+  database: drizzleAdapter(db, { provider: "sqlite" }),
   emailAndPassword: { enabled: true },
 });
 ```
 
 Run schema generation:
+
 ```bash
 npx @better-auth/cli generate --config ./src/lib/auth/cli.ts
 ```
@@ -88,46 +90,50 @@ npx @better-auth/cli generate --config ./src/lib/auth/cli.ts
 Update `src/db/schema.ts` with generated tables:
 
 ```typescript
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 // Your existing tables...
 
 // Auth tables (from better-auth generate)
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
-  name: text('name'),
-  image: text('image'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  emailVerified: integer("email_verified", { mode: "boolean" }).default(false),
+  name: text("name"),
+  image: text("image"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
-export const sessions = sqliteTable('sessions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  token: text('token').notNull().unique(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
 });
 
-export const accounts = sqliteTable('accounts', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  providerId: text('provider_id').notNull(),
-  providerAccountId: text('provider_account_id').notNull(),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+export const accounts = sqliteTable("accounts", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  providerId: text("provider_id").notNull(),
+  providerAccountId: text("provider_account_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
 });
 
-export const verifications = sqliteTable('verifications', {
-  id: text('id').primaryKey(),
-  identifier: text('identifier').notNull(),
-  value: text('value').notNull(),
-  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+export const verifications = sqliteTable("verifications", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
 });
 ```
 
@@ -136,21 +142,24 @@ export const verifications = sqliteTable('verifications', {
 Add to your Hono app (`src/index.ts`):
 
 ```typescript
-import { Hono } from 'hono';
-import { cors } from 'hono/cors';
-import { createAuth } from './lib/auth';
-import { createDb } from './db';
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { createAuth } from "./lib/auth";
+import { createDb } from "./db";
 
 const app = new Hono<{ Bindings: Env }>();
 
 // CORS for credentials
-app.use('/api/auth/*', cors({
-  origin: (origin) => origin,
-  credentials: true,
-}));
+app.use(
+  "/api/auth/*",
+  cors({
+    origin: (origin) => origin,
+    credentials: true,
+  }),
+);
 
 // Auth routes
-app.all('/api/auth/*', async (c) => {
+app.all("/api/auth/*", async (c) => {
   const db = createDb(c.env.DB);
   const auth = createAuth(db, c.env);
   return auth.handler(c.req.raw);
@@ -160,20 +169,23 @@ app.all('/api/auth/*', async (c) => {
 ### 7. Configure Environment
 
 Add to `wrangler.jsonc`:
+
 ```jsonc
 {
   "vars": {
-    "BETTER_AUTH_URL": "http://localhost:8787"
-  }
+    "BETTER_AUTH_URL": "http://localhost:8787",
+  },
 }
 ```
 
 Create `.dev.vars`:
+
 ```bash
 BETTER_AUTH_SECRET=your-secret-at-least-32-characters-here
 ```
 
 Set production secret:
+
 ```bash
 echo "your-production-secret" | npx wrangler secret put BETTER_AUTH_SECRET
 ```
@@ -191,7 +203,7 @@ npm run db:migrate:remote
 Create `src/client/lib/auth.ts`:
 
 ```typescript
-import { createAuthClient } from 'better-auth/react';
+import { createAuthClient } from "better-auth/react";
 
 export const authClient = createAuthClient({
   baseURL: import.meta.env.VITE_API_URL || window.location.origin,

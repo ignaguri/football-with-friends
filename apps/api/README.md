@@ -51,13 +51,16 @@ The API will be available at `http://localhost:3001`
 ### API Endpoints
 
 #### Health Check
+
 - `GET /health` - Health check endpoint
 
 #### Authentication (Better Auth)
+
 - `POST /api/auth/*` - Better Auth endpoints
 - `GET /api/auth/*` - Better Auth endpoints
 
 #### oRPC Endpoint
+
 - `POST /rpc/*` - oRPC procedures
 
 ## oRPC Procedures

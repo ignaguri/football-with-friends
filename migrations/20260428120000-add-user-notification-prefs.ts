@@ -19,15 +19,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .createTable("user_notification_prefs")
       .addColumn("user_id", "text", (col) => col.primaryKey().notNull())
       .addColumn("push_enabled", "integer", (col) => col.defaultTo(1).notNull())
-      .addColumn("push_new_match", "integer", (col) =>
-        col.defaultTo(1).notNull(),
-      )
-      .addColumn("push_match_reminder", "integer", (col) =>
-        col.defaultTo(1).notNull(),
-      )
-      .addColumn("push_promo_to_confirmed", "integer", (col) =>
-        col.defaultTo(1).notNull(),
-      )
+      .addColumn("push_new_match", "integer", (col) => col.defaultTo(1).notNull())
+      .addColumn("push_match_reminder", "integer", (col) => col.defaultTo(1).notNull())
+      .addColumn("push_promo_to_confirmed", "integer", (col) => col.defaultTo(1).notNull())
       .addColumn("updated_at", "text", (col) => col.notNull())
       .execute();
 

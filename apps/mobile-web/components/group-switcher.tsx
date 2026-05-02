@@ -3,7 +3,7 @@
 // chrome unchanged.
 
 import { useCurrentGroup } from "@repo/api-client";
-import { Check, ChevronDown } from "@tamagui/lucide-icons";
+import { Check, ChevronDown } from "@tamagui/lucide-icons-2";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -52,10 +52,7 @@ export function GroupSwitcher() {
       >
         <Sheet.Overlay />
         <Sheet.Handle />
-        <Sheet.Frame
-          backgroundColor="$background"
-          paddingBottom={insets.bottom + 16}
-        >
+        <Sheet.Frame backgroundColor="$background" paddingBottom={insets.bottom + 16}>
           <YStack padding="$4" gap="$1">
             <Text fontSize="$5" fontWeight="700" marginBottom="$2">
               {t("groups.switcher.label")}

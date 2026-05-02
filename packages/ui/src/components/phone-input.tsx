@@ -27,7 +27,7 @@ export function parsePhoneNumber(phone: string): {
 
   // Try to match against known dial codes (longest match first)
   const sortedCountries = [...COUNTRIES_WITH_DIAL_CODES].sort(
-    (a, b) => b.dialCode.length - a.dialCode.length
+    (a, b) => b.dialCode.length - a.dialCode.length,
   );
 
   for (const country of sortedCountries) {
@@ -65,9 +65,7 @@ export function isValidPhoneNumber(phone: string): boolean {
 
 // Get country by code
 function getCountryByCode(code: string): CountryWithDialCode | undefined {
-  return COUNTRIES_WITH_DIAL_CODES.find(
-    (c) => c.code.toUpperCase() === code.toUpperCase()
-  );
+  return COUNTRIES_WITH_DIAL_CODES.find((c) => c.code.toUpperCase() === code.toUpperCase());
 }
 
 export function PhoneInput({
@@ -83,7 +81,7 @@ export function PhoneInput({
 }: PhoneInputProps) {
   const parsed = parsePhoneNumber(value);
   const [countryCode, setCountryCode] = useState(
-    parsed.localNumber ? parsed.countryCode : defaultCountryCode
+    parsed.localNumber ? parsed.countryCode : defaultCountryCode,
   );
   const [localNumber, setLocalNumber] = useState(parsed.localNumber);
 
@@ -96,17 +94,14 @@ export function PhoneInput({
     }
   }, [value, defaultCountryCode]);
 
-  const getFullPhoneNumber = useCallback(
-    (code: string, local: string) => {
-      if (!local) return "";
-      const country = getCountryByCode(code);
-      const dialCode = country?.dialCode || "+49";
-      // Remove any non-digit characters from local number
-      const cleanLocal = local.replace(/\D/g, "");
-      return `${dialCode}${cleanLocal}`;
-    },
-    []
-  );
+  const getFullPhoneNumber = useCallback((code: string, local: string) => {
+    if (!local) return "";
+    const country = getCountryByCode(code);
+    const dialCode = country?.dialCode || "+49";
+    // Remove any non-digit characters from local number
+    const cleanLocal = local.replace(/\D/g, "");
+    return `${dialCode}${cleanLocal}`;
+  }, []);
 
   const handleCountryChange = useCallback(
     (newCountryCode: string) => {
@@ -114,7 +109,7 @@ export function PhoneInput({
       const fullPhone = getFullPhoneNumber(newCountryCode, localNumber);
       onChangeValue?.(fullPhone, isValidPhoneNumber(fullPhone));
     },
-    [localNumber, getFullPhoneNumber, onChangeValue]
+    [localNumber, getFullPhoneNumber, onChangeValue],
   );
 
   const handleLocalNumberChange = useCallback(
@@ -125,7 +120,7 @@ export function PhoneInput({
       const fullPhone = getFullPhoneNumber(countryCode, cleanLocal);
       onChangeValue?.(fullPhone, isValidPhoneNumber(fullPhone));
     },
-    [countryCode, getFullPhoneNumber, onChangeValue]
+    [countryCode, getFullPhoneNumber, onChangeValue],
   );
 
   const _selectedCountry = getCountryByCode(countryCode);

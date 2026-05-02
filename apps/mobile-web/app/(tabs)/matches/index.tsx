@@ -1,24 +1,10 @@
-import {
-  useInfiniteQuery,
-  client,
-  useSession,
-  useCurrentGroup,
-} from "@repo/api-client";
-import {
-  Container,
-  Card,
-  Text,
-  YStack,
-  XStack,
-  Spinner,
-  Tabs,
-  Button,
-} from "@repo/ui";
-import { Plus, BookOpen } from "@tamagui/lucide-icons";
+import { useInfiniteQuery, client, useSession, useCurrentGroup } from "@repo/api-client";
+import { Container, Card, Text, YStack, XStack, Spinner, Tabs, Button } from "@repo/ui";
+import { Plus, BookOpen } from "@tamagui/lucide-icons-2";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView, Pressable } from "react-native";
+import { RefreshControl, ScrollView } from "react-native";
 import { formatMatchDateTime } from "../../../lib/date-utils";
 
 type MatchType = "upcoming" | "past";
@@ -27,8 +13,7 @@ export default function MatchesListScreen() {
   const { t } = useTranslation();
   const { data: session } = useSession();
   const { myRole } = useCurrentGroup();
-  const canManage =
-    session?.user?.role === "admin" || myRole === "organizer";
+  const canManage = session?.user?.role === "admin" || myRole === "organizer";
   const [activeTab, setActiveTab] = useState<MatchType>("upcoming");
 
   const {
@@ -52,8 +37,7 @@ export default function MatchesListScreen() {
       });
       return res.json();
     },
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? (lastPage.page + 1) * 5 : undefined,
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? (lastPage.page + 1) * 5 : undefined),
     initialPageParam: 0,
   });
 
@@ -102,9 +86,7 @@ export default function MatchesListScreen() {
         <ScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
         >
           <YStack gap="$3" paddingBottom="$4">
             {isLoading && (
@@ -140,26 +122,25 @@ export default function MatchesListScreen() {
               matches.map((match) => {
                 const dateTime = formatMatchDateTime(match.date, match.time);
                 return (
-                <Pressable
-                  key={match.id}
-                  onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
-                  style={{ width: "100%" }}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    match.location?.name
-                      ? t("a11y.openMatch", {
-                          date: dateTime,
-                          location: match.location.name,
-                        })
-                      : t("a11y.openMatchNoLocation", { date: dateTime })
-                  }
-                  testID={`matches-card-${match.id}`}
-                >
                   <YStack
+                    key={match.id}
+                    onPress={() => router.push(`/(tabs)/matches/${match.id}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      match.location?.name
+                        ? t("a11y.openMatch", {
+                            date: dateTime,
+                            location: match.location.name,
+                          })
+                        : t("a11y.openMatchNoLocation", { date: dateTime })
+                    }
+                    testID={`matches-card-${match.id}`}
+                    width="100%"
                     backgroundColor="$brandNavy"
                     borderRadius={16}
                     padding="$4"
                     gap="$1"
+                    cursor="pointer"
                     pressStyle={{ scale: 0.98, opacity: 0.9 }}
                     $platform-web={{
                       // @ts-ignore - boxShadow is web-only, reads a theme-scoped CSS var
@@ -168,21 +149,11 @@ export default function MatchesListScreen() {
                   >
                     <XStack justifyContent="space-between" alignItems="center">
                       <YStack>
-                        <Text
-                          color="white"
-                          fontSize="$5"
-                          fontWeight="500"
-                          textAlign="left"
-                        >
+                        <Text color="white" fontSize="$5" fontWeight="500" textAlign="left">
                           {dateTime}
                         </Text>
                         {match.location?.name && (
-                          <Text
-                            color="white"
-                            fontSize="$5"
-                            fontWeight="600"
-                            textAlign="left"
-                          >
+                          <Text color="white" fontSize="$5" fontWeight="600" textAlign="left">
                             {match.location.name}
                           </Text>
                         )}
@@ -205,7 +176,6 @@ export default function MatchesListScreen() {
                         )}
                     </XStack>
                   </YStack>
-                </Pressable>
                 );
               })}
 
@@ -219,11 +189,7 @@ export default function MatchesListScreen() {
                 accessibilityLabel={t("a11y.loadMoreMatches")}
                 testID="matches-load-more"
               >
-                {isFetchingNextPage ? (
-                  <Spinner size="small" />
-                ) : (
-                  t("shared.loadMore")
-                )}
+                {isFetchingNextPage ? <Spinner size="small" /> : t("shared.loadMore")}
               </Button>
             )}
           </YStack>

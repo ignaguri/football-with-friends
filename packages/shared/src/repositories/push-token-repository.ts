@@ -4,11 +4,7 @@ import { sql } from "kysely";
 import { nanoid } from "nanoid";
 
 import type { PushTokenRepository } from "./interfaces";
-import type {
-  NotificationCategory,
-  PushTokenInfo,
-  RegisterPushTokenData,
-} from "../domain/types";
+import type { NotificationCategory, PushTokenInfo, RegisterPushTokenData } from "../domain/types";
 import { CATEGORY_TO_COLUMN } from "../domain/types";
 
 import { getDatabase } from "../database/connection";
@@ -121,18 +117,10 @@ export class TursoPushTokenRepository implements PushTokenRepository {
   private applyPrefFilters<T>(query: T, category?: NotificationCategory): T {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q = query as any;
-    q = q.where(
-      sql`COALESCE(user_notification_prefs.push_enabled, 1)`,
-      "=",
-      1,
-    );
+    q = q.where(sql`COALESCE(user_notification_prefs.push_enabled, 1)`, "=", 1);
     if (category) {
       const column = CATEGORY_TO_COLUMN[category];
-      q = q.where(
-        sql.raw(`COALESCE(user_notification_prefs.${column}, 1)`),
-        "=",
-        1,
-      );
+      q = q.where(sql.raw(`COALESCE(user_notification_prefs.${column}, 1)`), "=", 1);
     }
     return q as T;
   }
@@ -167,9 +155,6 @@ export class TursoPushTokenRepository implements PushTokenRepository {
   }
 
   async deleteByToken(token: string): Promise<void> {
-    await this.db
-      .deleteFrom("push_tokens")
-      .where("token", "=", token)
-      .execute();
+    await this.db.deleteFrom("push_tokens").where("token", "=", token).execute();
   }
 }

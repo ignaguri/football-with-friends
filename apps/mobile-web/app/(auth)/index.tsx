@@ -1,15 +1,8 @@
 import { getConfiguredApiUrl, signIn, getSession, storeBearerToken } from "@repo/api-client";
 import * as Sentry from "@sentry/react-native";
 // @ts-nocheck - Tamagui type recursion workaround
-import {
-  Container,
-  Button,
-  Text,
-  YStack,
-  XStack,
-  Image,
-} from "@repo/ui";
-import { Mail } from "@tamagui/lucide-icons";
+import { Container, Button, Text, YStack, XStack, Image } from "@repo/ui";
+import { Mail } from "@tamagui/lucide-icons-2";
 import * as AppleAuthentication from "expo-apple-authentication";
 import * as Device from "expo-device";
 import { router, useLocalSearchParams } from "expo-router";
@@ -30,9 +23,7 @@ export default function AuthLandingScreen() {
   // Only internal paths are accepted — anything else falls back to /(tabs)
   // to avoid open-redirect abuse if someone crafts a malicious link.
   const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
-  const rawRedirect = Array.isArray(params.redirectTo)
-    ? params.redirectTo[0]
-    : params.redirectTo;
+  const rawRedirect = Array.isArray(params.redirectTo) ? params.redirectTo[0] : params.redirectTo;
   const redirectTo =
     rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
       ? rawRedirect
@@ -67,8 +58,7 @@ export default function AuthLandingScreen() {
           callbackURL,
           fetchOptions: {
             onSuccess: (ctx) => {
-              const redirectUrl =
-                ctx.response.headers.get("location") || (ctx.data as any)?.url;
+              const redirectUrl = ctx.response.headers.get("location") || (ctx.data as any)?.url;
               if (redirectUrl) {
                 window.location.assign(redirectUrl);
               }
@@ -128,7 +118,11 @@ export default function AuthLandingScreen() {
 
   const handleAppleSignIn = async () => {
     setServerError(null);
-    Sentry.addBreadcrumb({ category: "apple-auth", message: "Starting Apple sign-in", level: "info" });
+    Sentry.addBreadcrumb({
+      category: "apple-auth",
+      message: "Starting Apple sign-in",
+      level: "info",
+    });
 
     try {
       const credential = await AppleAuthentication.signInAsync({
@@ -234,12 +228,7 @@ export default function AuthLandingScreen() {
                 style={{ width: 24, height: 24 }}
                 tintColor={whatsappTintColor}
               />
-              <Text
-                color="white"
-                fontSize="$5"
-                fontFamily="$body"
-                fontWeight="400"
-              >
+              <Text color="white" fontSize="$5" fontFamily="$body" fontWeight="400">
                 {t("auth.signInWithPhone")}
               </Text>
             </XStack>
@@ -282,11 +271,7 @@ export default function AuthLandingScreen() {
                       source={require("../../assets/google/google-logo.svg")}
                       style={{ width: 24, height: 24 }}
                     />
-                    <Text
-                      fontSize="$5"
-                      fontFamily="$body"
-                      fontWeight="400"
-                    >
+                    <Text fontSize="$5" fontFamily="$body" fontWeight="400">
                       {isGoogleLoading ? t("auth.signingIn") : t("auth.signInWithGmail")}
                     </Text>
                   </XStack>
@@ -320,11 +305,7 @@ export default function AuthLandingScreen() {
             >
               <XStack gap="$3" alignItems="center" justifyContent="center">
                 {isGoogleLoading ? (
-                  <Text
-                    color="$googleButtonText"
-                    fontSize="$5"
-                    fontFamily="$body"
-                  >
+                  <Text color="$googleButtonText" fontSize="$5" fontFamily="$body">
                     ...
                   </Text>
                 ) : (
@@ -394,7 +375,6 @@ export default function AuthLandingScreen() {
             {serverError}
           </Text>
         )}
-
       </YStack>
     </Container>
   );

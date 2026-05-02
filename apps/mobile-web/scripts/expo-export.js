@@ -13,14 +13,10 @@ const { resolve } = require("path");
 const OUTPUT_DIR = resolve(__dirname, "..", "dist");
 let bundleComplete = false;
 
-const child = spawn(
-  "npx",
-  ["expo", "export", "--platform", "web", "--output-dir", "dist"],
-  {
-    stdio: ["inherit", "pipe", "pipe"],
-    env: { ...process.env },
-  }
-);
+const child = spawn("npx", ["expo", "export", "--platform", "web", "--output-dir", "dist"], {
+  stdio: ["inherit", "pipe", "pipe"],
+  env: { ...process.env },
+});
 
 // Forward output to parent's stdio while monitoring for completion
 child.stdout.on("data", (data) => {
@@ -60,10 +56,13 @@ const checker = setInterval(() => {
 checker.unref();
 
 // Hard timeout: 10 minutes
-const hardTimeout = setTimeout(() => {
-  console.error("expo export timed out after 10 minutes");
-  child.kill("SIGKILL");
-  // If output exists, consider it a success
-  process.exit(existsSync(resolve(OUTPUT_DIR, "index.html")) ? 0 : 1);
-}, 10 * 60 * 1000);
+const hardTimeout = setTimeout(
+  () => {
+    console.error("expo export timed out after 10 minutes");
+    child.kill("SIGKILL");
+    // If output exists, consider it a success
+    process.exit(existsSync(resolve(OUTPUT_DIR, "index.html")) ? 0 : 1);
+  },
+  10 * 60 * 1000,
+);
 hardTimeout.unref();

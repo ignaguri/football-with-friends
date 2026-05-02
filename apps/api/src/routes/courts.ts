@@ -19,7 +19,7 @@ app.get(
     "query",
     z.object({
       locationId: z.string().optional(),
-    })
+    }),
   ),
   async (c) => {
     const { locationId } = c.req.valid("query");
@@ -28,7 +28,7 @@ app.get(
       ? await getCourtService().getCourtsByLocationId(current.id, locationId)
       : await getCourtService().getAllCourts(current.id);
     return c.json(courts);
-  }
+  },
 );
 
 // Get single court by ID (404 on cross-group).
@@ -52,7 +52,7 @@ app.post(
       locationId: z.string().min(1, "Location is required"),
       description: z.string().optional(),
       isActive: z.boolean().default(true),
-    })
+    }),
   ),
   async (c) => {
     const denied = requireOrganizer(c);
@@ -71,7 +71,7 @@ app.post(
       const message = error instanceof Error ? error.message : "Failed to create court";
       return c.json({ error: message }, 400);
     }
-  }
+  },
 );
 
 // Update a court (organizer only)
@@ -83,7 +83,7 @@ app.patch(
       name: z.string().min(1).optional(),
       description: z.string().optional(),
       isActive: z.boolean().optional(),
-    })
+    }),
   ),
   async (c) => {
     const denied = requireOrganizer(c);
@@ -104,7 +104,7 @@ app.patch(
       const message = error instanceof Error ? error.message : "Failed to update court";
       return c.json({ error: message }, 400);
     }
-  }
+  },
 );
 
 // Delete a court (organizer only)

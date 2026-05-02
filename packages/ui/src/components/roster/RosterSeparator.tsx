@@ -4,11 +4,6 @@ import { View as TView } from "tamagui";
 // colored View instead — theme-aware via backgroundColor.
 export function RosterSeparator() {
   return (
-    <TView
-      backgroundColor="$borderColor"
-      height={1}
-      marginHorizontal="$3"
-      marginVertical="$1.5"
-    />
+    <TView backgroundColor="$borderColor" height={1} marginHorizontal="$3" marginVertical="$1.5" />
   );
 }

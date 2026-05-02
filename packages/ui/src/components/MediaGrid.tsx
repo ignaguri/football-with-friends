@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import type { MatchMedia } from "@repo/shared/domain";
 import { Image } from "expo-image";
-import { Play } from "@tamagui/lucide-icons";
+import { Play } from "@tamagui/lucide-icons-2";
 import { Pressable, Text, View, useWindowDimensions } from "react-native";
 import { YStack } from "tamagui";
 
@@ -12,12 +12,7 @@ export type MediaGridProps = {
   overlayCount?: number | null; // shows "+N" on the last tile if set
 };
 
-export function MediaGrid({
-  items,
-  onItemPress,
-  columns,
-  overlayCount,
-}: MediaGridProps) {
+export function MediaGrid({ items, onItemPress, columns, overlayCount }: MediaGridProps) {
   const { width } = useWindowDimensions();
   const cols = columns ?? (width >= 768 ? 4 : 3);
   const gap = 4;
@@ -46,7 +41,15 @@ export function MediaGrid({
             accessibilityLabel={item.caption ?? `${item.kind} by ${item.uploaderName}`}
             style={{ width: tileSize, height: tileSize }}
           >
-            <View style={{ width: "100%", height: "100%", borderRadius: 4, overflow: "hidden", backgroundColor: "#222" }}>
+            <View
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: 4,
+                overflow: "hidden",
+                backgroundColor: "#222",
+              }}
+            >
               <Image
                 source={{ uri: thumbUrl }}
                 style={{ width: "100%", height: "100%" }}

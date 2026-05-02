@@ -121,22 +121,27 @@ A simple, modern web app (React + Bun, deployable on Vercel) that acts as a UI f
 ### 5.6. Remaining MVP Steps (Detailed)
 
 #### Player Signup/Payment Flow (PayPal Integration)
+
 - ~~Backend: API endpoint to initiate PayPal payment and handle confirmation (update player status in match sheet).~~
 - ~~Frontend: "Sign Up & Pay" button, PayPal checkout integration, update UI after payment, show payment status/history.~~
 - **Note:** PayPal integration was abandoned due to the requirement for a business account and transaction fees, which are not acceptable for this project. Payment will be handled outside the app.
 
 #### Rules/Info Page (Static)
+
 - No backend API needed; rules, pozo, and summary stats are stored as static content in the codebase.
 - Frontend: `/rules` or `/info` page, mobile-friendly, accessible from main navigation.
 
 #### Organizer Dashboard
+
 - Backend: API endpoints for adding/editing matches, updating costs, canceling matches, and fetching financial summaries.
 - Frontend: Dashboard page (organizer-only), forms for match management, financial summary table.
 
 #### API for Costs & Summary Data
+
 - Extend backend to read/write costs and summary data per match sheet (if needed for dashboard/financials).
 
 #### Polish & Deploy
+
 - Audit and optimize Web Vitals (LCP, CLS, FID).
 - Optimize images (WebP, lazy loading, size data).
 - Final deploy to Vercel.

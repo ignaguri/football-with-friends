@@ -14,7 +14,9 @@ const columnExists = async (db: Kysely<any>, table: string, column: string) => {
 
 export const up: Migration["up"] = async (db: Kysely<any>) => {
   if (await columnExists(db, "user", "last_engagement_reminder_at")) {
-    await sql`ALTER TABLE user RENAME COLUMN last_engagement_reminder_at TO lastEngagementReminderAt`.execute(db);
+    await sql`ALTER TABLE user RENAME COLUMN last_engagement_reminder_at TO lastEngagementReminderAt`.execute(
+      db,
+    );
     console.log("✅ Renamed last_engagement_reminder_at to lastEngagementReminderAt");
   } else {
     console.log("ℹ️ last_engagement_reminder_at not present; rename is a no-op");
@@ -23,7 +25,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
 export const down: Migration["down"] = async (db: Kysely<any>) => {
   if (await columnExists(db, "user", "lastEngagementReminderAt")) {
-    await sql`ALTER TABLE user RENAME COLUMN lastEngagementReminderAt TO last_engagement_reminder_at`.execute(db);
+    await sql`ALTER TABLE user RENAME COLUMN lastEngagementReminderAt TO last_engagement_reminder_at`.execute(
+      db,
+    );
     console.log("↩️ Renamed lastEngagementReminderAt back to last_engagement_reminder_at");
   } else {
     console.log("ℹ️ lastEngagementReminderAt not present; rename is a no-op");

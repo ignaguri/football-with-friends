@@ -61,17 +61,16 @@ export class MatchService {
   /**
    * Get all matches with optional filtering and pagination
    */
-  async getAllMatches(filters?: MatchFilters & { limit?: number; offset?: number }): Promise<{ matches: Match[]; total: number }> {
+  async getAllMatches(
+    filters?: MatchFilters & { limit?: number; offset?: number },
+  ): Promise<{ matches: Match[]; total: number }> {
     return this.matchRepository.findAll(filters);
   }
 
   /**
    * Get a match by ID with full details
    */
-  async getMatchDetails(
-    matchId: string,
-    userId?: string,
-  ): Promise<MatchDetails | null> {
+  async getMatchDetails(matchId: string, userId?: string): Promise<MatchDetails | null> {
     return this.matchRepository.findByIdWithDetails(matchId, userId);
   }
 
@@ -89,9 +88,7 @@ export class MatchService {
     this.validateMatchData(matchData);
 
     // Ensure location exists first and belongs to the same group.
-    const location = await this.locationRepository.findById(
-      matchData.locationId,
-    );
+    const location = await this.locationRepository.findById(matchData.locationId);
     if (!location || location.groupId !== groupId) {
       throw new Error("Location not found");
     }
@@ -108,10 +105,7 @@ export class MatchService {
     }
 
     // Check for duplicate matches on the same date within this group.
-    const existsOnDate = await this.matchRepository.existsOnDate(
-      groupId,
-      matchData.date,
-    );
+    const existsOnDate = await this.matchRepository.existsOnDate(groupId, matchData.date);
     if (existsOnDate) {
       throw new Error("A match already exists on this date");
     }
@@ -128,11 +122,7 @@ export class MatchService {
    * at the route boundary); this method re-validates that the match belongs
    * to the group it claims to, preventing cross-group writes by id.
    */
-  async updateMatch(
-    groupId: string,
-    matchId: string,
-    updates: UpdateMatchData,
-  ): Promise<Match> {
+  async updateMatch(groupId: string, matchId: string, updates: UpdateMatchData): Promise<Match> {
     const existingMatch = await this.matchRepository.findById(matchId);
     if (!existingMatch || existingMatch.groupId !== groupId) {
       throw new Error("Match not found");
@@ -140,9 +130,7 @@ export class MatchService {
 
     // If updating location, ensure it exists AND belongs to the same group.
     if (updates.locationId) {
-      const location = await this.locationRepository.findById(
-        updates.locationId,
-      );
+      const location = await this.locationRepository.findById(updates.locationId);
       if (!location || location.groupId !== groupId) {
         throw new Error("Location not found");
       }
@@ -150,10 +138,7 @@ export class MatchService {
 
     // If updating date, check for duplicates (excluding current match) within group.
     if (updates.date && updates.date !== existingMatch.date) {
-      const existsOnDate = await this.matchRepository.existsOnDate(
-        groupId,
-        updates.date,
-      );
+      const existsOnDate = await this.matchRepository.existsOnDate(groupId, updates.date);
       if (existsOnDate) {
         throw new Error("A match already exists on this date");
       }
@@ -206,19 +191,13 @@ export class MatchService {
     }
 
     // Check if user is already signed up
-    const isAlreadySignedUp = await this.signupRepository.isUserSignedUp(
-      matchId,
-      user.id,
-    );
+    const isAlreadySignedUp = await this.signupRepository.isUserSignedUp(matchId, user.id);
     if (isAlreadySignedUp) {
       throw new Error("User is already signed up for this match");
     }
 
     // Check capacity (based on paid players only)
-    const isFull = await this.signupRepository.isMatchFull(
-      matchId,
-      match.maxPlayers,
-    );
+    const isFull = await this.signupRepository.isMatchFull(matchId, match.maxPlayers);
 
     let signupStatus: PlayerStatus = (playerData?.status as PlayerStatus) || "PENDING";
 
@@ -272,10 +251,7 @@ export class MatchService {
       throw new Error("Cannot add guests to this match");
     }
 
-    const isFull = await this.signupRepository.isMatchFull(
-      matchId,
-      match.maxPlayers,
-    );
+    const isFull = await this.signupRepository.isMatchFull(matchId, match.maxPlayers);
     let guestStatus: PlayerStatus = input.status || "PENDING";
     if (isFull) {
       const substituteCount = await this.signupRepository.getSubstituteCount(matchId);
@@ -298,10 +274,10 @@ export class MatchService {
     } else {
       // Same collision precheck as GroupService.createRosterEntry so the
       // inline-create path can't stealth-bypass the "already a member" rule.
-      const collidingMemberId = await this.memberRepository.findMemberByContact(
-        groupId,
-        { phone: input.phone, email: input.email },
-      );
+      const collidingMemberId = await this.memberRepository.findMemberByContact(groupId, {
+        phone: input.phone,
+        email: input.email,
+      });
       if (collidingMemberId) {
         throw new RosterMemberCollisionError(collidingMemberId);
       }
@@ -359,23 +335,14 @@ export class MatchService {
       }
     }
 
-    return this.signupRepository.addPlayerAsOrganizer(
-      groupId,
-      matchId,
-      playerData,
-      actor.id,
-    );
+    return this.signupRepository.addPlayerAsOrganizer(groupId, matchId, playerData, actor.id);
   }
 
   /**
    * Organizer: Remove a player from a match. Authz at route; here we
    * verify cross-group isolation via the signup's group_id.
    */
-  async removePlayerAsOrganizer(
-    groupId: string,
-    signupId: string,
-    actor: User,
-  ): Promise<void> {
+  async removePlayerAsOrganizer(groupId: string, signupId: string, actor: User): Promise<void> {
     const signup = await this.signupRepository.findById(signupId);
     if (!signup || signup.groupId !== groupId) {
       throw new Error("Signup not found");
@@ -413,9 +380,7 @@ export class MatchService {
     // Authorization: organizer of the current group, the user who added the
     // signup, or the signup's own user can update it.
     const canUpdate =
-      isOrganizer ||
-      updatedBy.id === signup.addedByUserId ||
-      updatedBy.id === signup.userId;
+      isOrganizer || updatedBy.id === signup.addedByUserId || updatedBy.id === signup.userId;
 
     if (!canUpdate) {
       throw new Error("Not authorized to update this signup");
@@ -458,7 +423,7 @@ export class MatchService {
             };
 
             console.log(
-              `[AUTO-PROMOTE] Substitute ${firstSubstitute.id} (${firstSubstitute.playerName}) promoted to PENDING for match ${signup.matchId}`
+              `[AUTO-PROMOTE] Substitute ${firstSubstitute.id} (${firstSubstitute.playerName}) promoted to PENDING for match ${signup.matchId}`,
             );
           }
         }
@@ -502,10 +467,7 @@ export class MatchService {
       };
     }
 
-    const isUserSignedUp = await this.signupRepository.isUserSignedUp(
-      matchId,
-      userId,
-    );
+    const isUserSignedUp = await this.signupRepository.isUserSignedUp(matchId, userId);
     if (!isUserSignedUp) {
       return {
         canAdd: false,
@@ -556,9 +518,7 @@ export class MatchService {
   /**
    * Validate match data
    */
-  private validateMatchData(
-    matchData: Omit<CreateMatchData, "groupId" | "createdByUserId">,
-  ): void {
+  private validateMatchData(matchData: Omit<CreateMatchData, "groupId" | "createdByUserId">): void {
     if (!matchData.date || !matchData.time) {
       throw new Error("Date and time are required");
     }

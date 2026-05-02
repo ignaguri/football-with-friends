@@ -1,21 +1,11 @@
 // Domain types for the football match application
 
 // Player status types for match participation
-export const PLAYER_STATUSES = [
-  "PAID",
-  "PENDING",
-  "CANCELLED",
-  "SUBSTITUTE",
-] as const;
+export const PLAYER_STATUSES = ["PAID", "PENDING", "CANCELLED", "SUBSTITUTE"] as const;
 export type PlayerStatus = (typeof PLAYER_STATUSES)[number];
 
 // Signup types to track how a player was added
-export const SIGNUP_TYPES = [
-  "self",
-  "guest",
-  "admin_added",
-  "invitation",
-] as const;
+export const SIGNUP_TYPES = ["self", "guest", "admin_added", "invitation"] as const;
 export type SignupType = (typeof SIGNUP_TYPES)[number];
 
 // Match status types
@@ -192,11 +182,7 @@ export interface PlayerSummary {
 
 // Ranking types for player leaderboards
 
-export type RankingCriteria =
-  | "matches"
-  | "third_times"
-  | "beers"
-  | "total_votes";
+export type RankingCriteria = "matches" | "third_times" | "beers" | "total_votes";
 
 export interface PlayerRanking {
   rank: number;
@@ -248,9 +234,7 @@ export interface CreateLocationData {
   courtCount?: number;
 }
 
-export interface UpdateLocationData extends Partial<
-  Omit<CreateLocationData, "groupId">
-> {}
+export interface UpdateLocationData extends Partial<Omit<CreateLocationData, "groupId">> {}
 
 export interface CreateCourtData {
   groupId: string;
@@ -260,9 +244,7 @@ export interface CreateCourtData {
   isActive?: boolean;
 }
 
-export interface UpdateCourtData extends Partial<
-  Omit<CreateCourtData, "groupId">
-> {}
+export interface UpdateCourtData extends Partial<Omit<CreateCourtData, "groupId">> {}
 
 export interface CreateMatchData {
   groupId: string;
@@ -557,11 +539,7 @@ export interface ExpoPushTicket {
   id?: string;
   message?: string;
   details?: {
-    error?:
-      | "DeviceNotRegistered"
-      | "InvalidCredentials"
-      | "MessageTooBig"
-      | "MessageRateExceeded";
+    error?: "DeviceNotRegistered" | "InvalidCredentials" | "MessageTooBig" | "MessageRateExceeded";
   };
 }
 
@@ -569,11 +547,7 @@ export interface ExpoPushReceipt {
   status: "ok" | "error";
   message?: string;
   details?: {
-    error?:
-      | "DeviceNotRegistered"
-      | "InvalidCredentials"
-      | "MessageTooBig"
-      | "MessageRateExceeded";
+    error?: "DeviceNotRegistered" | "InvalidCredentials" | "MessageTooBig" | "MessageRateExceeded";
   };
 }
 
@@ -605,8 +579,7 @@ export const NOTIFICATION_TYPES = {
   GROUP_INVITE: "group_invite",
 } as const;
 
-export type NotificationType =
-  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
+export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 
 // Per-user opt-in/opt-out categories (subset of NOTIFICATION_TYPES that map
 // to a column in user_notification_prefs). Sends without a category bypass
@@ -638,10 +611,7 @@ export type NotificationPreferencesUpdate = Partial<NotificationPreferences>;
 
 export const NOTIFICATION_PREF_TO_COLUMN: Record<
   keyof NotificationPreferences,
-  | "push_enabled"
-  | "push_new_match"
-  | "push_match_reminder"
-  | "push_promo_to_confirmed"
+  "push_enabled" | "push_new_match" | "push_match_reminder" | "push_promo_to_confirmed"
 > = {
   pushEnabled: "push_enabled",
   pushNewMatch: "push_new_match",

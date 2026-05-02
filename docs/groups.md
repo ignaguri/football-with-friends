@@ -5,10 +5,12 @@ Every group-scoped resource (match, location, court, signup, setting, invite, ro
 ## Roles
 
 **Platform roles** (`user.role`):
+
 - `user` — default; no platform-level privileges.
 - `admin` — full cross-group access; only one today (Ignacio). Acts as the "platform admin" escape hatch.
 
 **Group-relative roles** (`group_members.role`):
+
 - `member` — default; can view/join matches of the group.
 - `organizer` — can manage matches, locations, courts, invites, roster for that group. Owner (see below) is always an organizer.
 

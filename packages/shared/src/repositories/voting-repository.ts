@@ -57,8 +57,7 @@ function toLocalizedCriteria(
     id: criteria.id,
     code: criteria.code,
     name: language === "es" ? criteria.nameEs : criteria.nameEn,
-    description:
-      language === "es" ? criteria.descriptionEs : criteria.descriptionEn,
+    description: language === "es" ? criteria.descriptionEs : criteria.descriptionEn,
     isActive: criteria.isActive,
     sortOrder: criteria.sortOrder,
   };
@@ -72,10 +71,7 @@ export class VotingRepository {
    */
   async findAllCriteria(activeOnly = true): Promise<VotingCriteria[]> {
     const db = getDatabase();
-    let query = db
-      .selectFrom("voting_criteria")
-      .selectAll()
-      .orderBy("sort_order", "asc");
+    let query = db.selectFrom("voting_criteria").selectAll().orderBy("sort_order", "asc");
 
     if (activeOnly) {
       query = query.where("is_active", "=", 1);
@@ -187,19 +183,12 @@ export class VotingRepository {
     if (data.code !== undefined) updateData.code = data.code;
     if (data.nameEn !== undefined) updateData.name_en = data.nameEn;
     if (data.nameEs !== undefined) updateData.name_es = data.nameEs;
-    if (data.descriptionEn !== undefined)
-      updateData.description_en = data.descriptionEn;
-    if (data.descriptionEs !== undefined)
-      updateData.description_es = data.descriptionEs;
-    if (data.isActive !== undefined)
-      updateData.is_active = data.isActive ? 1 : 0;
+    if (data.descriptionEn !== undefined) updateData.description_en = data.descriptionEn;
+    if (data.descriptionEs !== undefined) updateData.description_es = data.descriptionEs;
+    if (data.isActive !== undefined) updateData.is_active = data.isActive ? 1 : 0;
     if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder;
 
-    await db
-      .updateTable("voting_criteria")
-      .set(updateData)
-      .where("id", "=", id)
-      .execute();
+    await db.updateTable("voting_criteria").set(updateData).where("id", "=", id).execute();
 
     const updated = await this.findCriteriaById(id);
     if (!updated) {
@@ -320,10 +309,7 @@ export class VotingRepository {
   /**
    * Get all votes by a user for a match
    */
-  async findUserVotesForMatch(
-    matchId: string,
-    userId: string,
-  ): Promise<UserMatchVotes> {
+  async findUserVotesForMatch(matchId: string, userId: string): Promise<UserMatchVotes> {
     const db = getDatabase();
     const rows = await db
       .selectFrom("match_votes")
@@ -364,11 +350,7 @@ export class VotingRepository {
     // Get vote counts per criteria and voted_for_user
     const results = await db
       .selectFrom("match_votes")
-      .innerJoin(
-        "voting_criteria",
-        "voting_criteria.id",
-        "match_votes.criteria_id",
-      )
+      .innerJoin("voting_criteria", "voting_criteria.id", "match_votes.criteria_id")
       .innerJoin("user", "user.id", "match_votes.voted_for_user_id")
       .select([
         "match_votes.criteria_id",
@@ -416,10 +398,7 @@ export class VotingRepository {
   /**
    * Delete all votes by a user for a match
    */
-  async deleteUserVotesForMatch(
-    matchId: string,
-    userId: string,
-  ): Promise<void> {
+  async deleteUserVotesForMatch(matchId: string, userId: string): Promise<void> {
     const db = getDatabase();
     await db
       .deleteFrom("match_votes")
@@ -431,10 +410,7 @@ export class VotingRepository {
   /**
    * Check if a user has voted for a specific match
    */
-  async hasUserVotedForMatch(
-    matchId: string,
-    userId: string,
-  ): Promise<boolean> {
+  async hasUserVotedForMatch(matchId: string, userId: string): Promise<boolean> {
     const db = getDatabase();
     const result = await db
       .selectFrom("match_votes")
@@ -447,9 +423,7 @@ export class VotingRepository {
   }
 
   // Inner-joins user to load user.name; rows whose user has been deleted drop out.
-  async getMatchPlayerSocialStats(
-    matchId: string,
-  ): Promise<MatchPlayerSocialStat[]> {
+  async getMatchPlayerSocialStats(matchId: string): Promise<MatchPlayerSocialStat[]> {
     const db = getDatabase();
     const rows = await db
       .selectFrom("match_player_stats")
@@ -485,10 +459,7 @@ export class VotingRepository {
     return Number(result?.count ?? 0);
   }
 
-  async setMatchVotingClosedAt(
-    matchId: string,
-    isoTimestamp: string | null,
-  ): Promise<void> {
+  async setMatchVotingClosedAt(matchId: string, isoTimestamp: string | null): Promise<void> {
     const db = getDatabase();
     await db
       .updateTable("matches")
@@ -533,10 +504,7 @@ export class VotingRepository {
       ORDER BY vote_count DESC
     `.execute(db);
 
-    const totalVotes = rows.rows.reduce(
-      (sum, row) => sum + Number(row.vote_count),
-      0,
-    );
+    const totalVotes = rows.rows.reduce((sum, row) => sum + Number(row.vote_count), 0);
 
     return {
       userId,
@@ -562,8 +530,7 @@ export class VotingRepository {
     const db = getDatabase();
 
     const nameColumn = language === "es" ? "vc.name_es" : "vc.name_en";
-    const descriptionColumn =
-      language === "es" ? "vc.description_es" : "vc.description_en";
+    const descriptionColumn = language === "es" ? "vc.description_es" : "vc.description_en";
 
     const rows = await sql<{
       criteria_id: string;
@@ -624,9 +591,7 @@ export class VotingRepository {
       const awardUserName = row.user_name || "Unknown";
       const awardRawNick = row.display_username || row.username || null;
       const awardNickname =
-        awardRawNick &&
-        !awardRawNick.includes("@") &&
-        awardRawNick !== awardUserName
+        awardRawNick && !awardRawNick.includes("@") && awardRawNick !== awardUserName
           ? awardRawNick
           : null;
       criteriaMap.get(row.criteria_id)!.topPlayers.push({
@@ -648,10 +613,7 @@ export class VotingRepository {
    * Get player rankings by total votes received across all criteria, scoped
    * to a group.
    */
-  async getRankingsByTotalVotes(
-    groupId: string,
-    limit: number,
-  ): Promise<PlayerRanking[]> {
+  async getRankingsByTotalVotes(groupId: string, limit: number): Promise<PlayerRanking[]> {
     const db = getDatabase();
 
     const rows = await sql<{
@@ -686,9 +648,7 @@ export class VotingRepository {
       const userName = row.user_name || row.user_email;
       const rawNick = row.display_username || row.username || null;
       const userNickname =
-        rawNick && !rawNick.includes("@") && rawNick !== userName
-          ? rawNick
-          : null;
+        rawNick && !rawNick.includes("@") && rawNick !== userName ? rawNick : null;
       return {
         rank: Number(row.rank),
         userId: row.user_id,

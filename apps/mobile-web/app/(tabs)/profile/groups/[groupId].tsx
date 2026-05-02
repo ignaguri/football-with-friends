@@ -33,29 +33,18 @@ import {
   ShieldOff,
   Trash2,
   UserMinus,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 import { router, useLocalSearchParams } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  Share,
-  useWindowDimensions,
-} from "react-native";
+import { Alert, Platform, Pressable, ScrollView, Share, useWindowDimensions } from "react-native";
 import { Button, Input, Spinner, Text, XStack, YStack } from "tamagui";
 
 // Mirrors `getApiErrorMessage` from admin/edit-match.tsx — duplicated
 // intentionally until we have a real shared helper to promote.
 function getApiErrorMessage(error: Error): string {
   const apiError = error as Error & { data?: { error?: string } };
-  if (
-    apiError.data &&
-    typeof apiError.data === "object" &&
-    "error" in apiError.data
-  ) {
+  if (apiError.data && typeof apiError.data === "object" && "error" in apiError.data) {
     return (apiError.data as { error: string }).error;
   }
   return error.message;
@@ -77,18 +66,11 @@ export default function GroupDetailScreen() {
   const { height: windowHeight } = useWindowDimensions();
   const membersMaxHeight = Math.max(300, Math.min(600, windowHeight * 0.5));
 
-  const {
-    data: group,
-    isLoading,
-    error,
-    refetch,
-  } = useGroupDetail(groupId ?? null);
+  const { data: group, isLoading, error, refetch } = useGroupDetail(groupId ?? null);
 
   const isPlatformAdmin = session?.user?.role === "admin";
   const isOrganizerView = isPlatformAdmin || myRole === "organizer";
-  const rawMembers: GroupMemberSummary[] = isOrganizerView
-    ? ((group as any)?.members ?? [])
-    : [];
+  const rawMembers: GroupMemberSummary[] = isOrganizerView ? ((group as any)?.members ?? []) : [];
 
   const leaveMutation = useLeaveGroup();
   const deleteMutation = useDeleteGroup();
@@ -96,7 +78,7 @@ export default function GroupDetailScreen() {
   const roleMutation = useUpdateMemberRole(groupId ?? "");
   const transferMutation = useTransferOwnership(groupId ?? "");
 
-  const invitesQuery = useGroupInvites(isOrganizerView ? groupId ?? null : null);
+  const invitesQuery = useGroupInvites(isOrganizerView ? (groupId ?? null) : null);
   const createInviteMutation = useCreateInvite(groupId ?? "");
   const revokeInviteMutation = useRevokeInvite(groupId ?? "");
 
@@ -121,9 +103,13 @@ export default function GroupDetailScreen() {
           ? "organizer"
           : "member";
 
-      const actions: Array<
-        | { icon: any; label: string; onPress: () => void; variant?: any; testID?: string }
-      > = [];
+      const actions: Array<{
+        icon: any;
+        label: string;
+        onPress: () => void;
+        variant?: any;
+        testID?: string;
+      }> = [];
 
       // Never show actions on owner row or self row. Both are covered by
       // other surfaces (transfer to someone else, global Leave button).
@@ -228,18 +214,16 @@ export default function GroupDetailScreen() {
     deleteMutation.mutate(groupId, {
       onSuccess: () => router.replace("/(tabs)/profile/groups"),
       onError: (err) =>
-        Alert.alert(
-          t("groups.detail.delete"),
-          err instanceof Error ? err.message : String(err),
-        ),
+        Alert.alert(t("groups.detail.delete"), err instanceof Error ? err.message : String(err)),
     });
   }
 
   function runPending(action: NonNullable<PendingAction>) {
-    const name = action.member.displayUsername
-      || action.member.username
-      || action.member.name
-      || action.member.userId;
+    const name =
+      action.member.displayUsername ||
+      action.member.username ||
+      action.member.name ||
+      action.member.userId;
 
     const onSuccess = (successKey: string) => {
       toast.show(t(successKey, { name }), {
@@ -248,10 +232,10 @@ export default function GroupDetailScreen() {
       });
     };
     const onError = (err: unknown) => {
-      toast.show(
-        err instanceof Error ? getApiErrorMessage(err) : String(err),
-        { duration: 4000, customData: { variant: "error" } },
-      );
+      toast.show(err instanceof Error ? getApiErrorMessage(err) : String(err), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     };
 
     if (action.type === "kick") {
@@ -290,11 +274,7 @@ export default function GroupDetailScreen() {
   async function onCopyInvite(token: string) {
     const link = inviteLink(token);
     try {
-      if (
-        Platform.OS === "web" &&
-        typeof navigator !== "undefined" &&
-        navigator.clipboard
-      ) {
+      if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(link);
         toast.show(t("groups.invite.copied"), {
           duration: 2000,
@@ -304,10 +284,10 @@ export default function GroupDetailScreen() {
       }
       await Share.share({ message: link });
     } catch (err) {
-      toast.show(
-        err instanceof Error ? err.message : String(err),
-        { duration: 4000, customData: { variant: "error" } },
-      );
+      toast.show(err instanceof Error ? err.message : String(err), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     }
   }
 
@@ -319,10 +299,10 @@ export default function GroupDetailScreen() {
         customData: { variant: "success" },
       });
     } catch (err) {
-      toast.show(
-        err instanceof Error ? getApiErrorMessage(err) : String(err),
-        { duration: 4000, customData: { variant: "error" } },
-      );
+      toast.show(err instanceof Error ? getApiErrorMessage(err) : String(err), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     }
   }
 
@@ -348,19 +328,22 @@ export default function GroupDetailScreen() {
         customData: { variant: "success" },
       });
     } catch (err) {
-      toast.show(
-        err instanceof Error ? getApiErrorMessage(err) : String(err),
-        { duration: 4000, customData: { variant: "error" } },
-      );
+      toast.show(err instanceof Error ? getApiErrorMessage(err) : String(err), {
+        duration: 4000,
+        customData: { variant: "error" },
+      });
     }
   }
 
-  const pendingCopy: Record<NonNullable<PendingAction>["type"], {
-    title: string;
-    descriptionKey: string;
-    confirmKey: string;
-    variant: "default" | "destructive";
-  }> = {
+  const pendingCopy: Record<
+    NonNullable<PendingAction>["type"],
+    {
+      title: string;
+      descriptionKey: string;
+      confirmKey: string;
+      variant: "default" | "destructive";
+    }
+  > = {
     kick: {
       title: t("groups.members.kick"),
       descriptionKey: "groups.members.kickConfirm",
@@ -403,8 +386,7 @@ export default function GroupDetailScreen() {
               <Text fontSize="$5" fontWeight="600">
                 {t("groups.detail.members")}
                 <Text fontSize="$3" color="$gray10" fontWeight="400">
-                  {"  "}
-                  ({memberRows.length})
+                  {"  "}({memberRows.length})
                 </Text>
               </Text>
               <Card variant="outlined" padding="$0">
@@ -459,11 +441,7 @@ export default function GroupDetailScreen() {
                   accessibilityLabel={t("groups.invite.phoneMode.title")}
                   testID="group-invite-phone-toggle"
                 >
-                  <XStack
-                    padding="$4"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
+                  <XStack padding="$4" justifyContent="space-between" alignItems="center">
                     <YStack flex={1} gap="$1">
                       <Text fontSize="$4" fontWeight="600">
                         {t("groups.invite.phoneMode.title")}

@@ -16,16 +16,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.0",
+    "@libsql/client": "^0.17.3",
     "@libsql/kysely-libsql": "^0.4.1",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
-    "kysely": "^0.28.12",
-    "libsql": "^0.5.22",
-    "nanoid": "^5.1.7",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "zod": "^4.3.6"
+    "kysely": "^0.28.16",
+    "libsql": "^0.5.29",
+    "nanoid": "^5.1.11",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
+    "zod": "^4.4.2"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

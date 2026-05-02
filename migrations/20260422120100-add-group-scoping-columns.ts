@@ -21,11 +21,7 @@ const SCOPED_TABLES = [
   "match_player_stats",
 ] as const;
 
-const columnExists = async (
-  db: Kysely<any>,
-  table: string,
-  column: string,
-) => {
+const columnExists = async (db: Kysely<any>, table: string, column: string) => {
   const result = await sql<{ name: string }>`PRAGMA table_info(${sql.raw(table)})`.execute(db);
   return result.rows.some((row) => row.name === column);
 };
@@ -40,20 +36,13 @@ const indexExists = async (db: Kysely<any>, name: string) => {
 export const up: Migration["up"] = async (db: Kysely<any>) => {
   for (const table of SCOPED_TABLES) {
     if (!(await columnExists(db, table, "group_id"))) {
-      await db.schema
-        .alterTable(table)
-        .addColumn("group_id", "text")
-        .execute();
+      await db.schema.alterTable(table).addColumn("group_id", "text").execute();
       console.log(`✅ Added group_id to ${table}`);
     }
 
     const indexName = `idx_${table}_group_id`;
     if (!(await indexExists(db, indexName))) {
-      await db.schema
-        .createIndex(indexName)
-        .on(table)
-        .column("group_id")
-        .execute();
+      await db.schema.createIndex(indexName).on(table).column("group_id").execute();
       console.log(`✅ Created ${indexName}`);
     }
   }
@@ -61,10 +50,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   // roster_id on signups will point into group_roster for guest entries once
   // legacy guest signups are converted in Phase 4. Nullable throughout.
   if (!(await columnExists(db, "signups", "roster_id"))) {
-    await db.schema
-      .alterTable("signups")
-      .addColumn("roster_id", "text")
-      .execute();
+    await db.schema.alterTable("signups").addColumn("roster_id", "text").execute();
     console.log("✅ Added roster_id to signups");
   }
 

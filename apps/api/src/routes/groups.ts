@@ -14,10 +14,7 @@ import { MEMBER_ROLES } from "@repo/shared/domain";
 import { notifyGroupInviteTarget } from "../lib/notify";
 import { fireAndForget } from "../lib/execution";
 import { type AppVariables, requireUser } from "../middleware/security";
-import {
-  groupContextMiddleware,
-  requireCurrentGroup,
-} from "../middleware/group-context";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import {
   assertInCurrentGroup,
   isPlatformAdmin,
@@ -114,7 +111,11 @@ app.patch(
     "json",
     z.object({
       name: z.string().min(1).max(120).optional(),
-      slug: z.string().regex(/^[a-z0-9-]+$/i).max(48).optional(),
+      slug: z
+        .string()
+        .regex(/^[a-z0-9-]+$/i)
+        .max(48)
+        .optional(),
       visibility: z.enum(["private", "public"]).optional(),
     }),
   ),
@@ -259,7 +260,12 @@ app.post(
   zValidator(
     "json",
     z.object({
-      expiresInHours: z.number().int().positive().max(24 * 365).optional(),
+      expiresInHours: z
+        .number()
+        .int()
+        .positive()
+        .max(24 * 365)
+        .optional(),
       maxUses: z.number().int().positive().max(10_000).optional(),
       targetPhone: z
         .string()
@@ -290,14 +296,13 @@ app.post(
           targetPhone: body.targetPhone,
           targetUserId: body.targetUserId,
         }),
-        body.targetPhone
-          ? getGroupService().getGroupBasics(id)
-          : Promise.resolve(null),
+        body.targetPhone ? getGroupService().getGroupBasics(id) : Promise.resolve(null),
       ]);
       if (body.targetPhone && group) {
         // Cloudflare Workers terminates background promises once the response
         // returns; `waitUntil` keeps the isolate alive until the push completes.
-        fireAndForget(c, 
+        fireAndForget(
+          c,
           notifyGroupInviteTarget({
             targetPhone: body.targetPhone,
             groupId: id,
@@ -383,10 +388,7 @@ app.post(
         createdByUserId: user.id,
       });
       if (!outcome.created) {
-        return c.json(
-          { error: outcome.reason, userId: outcome.userId },
-          409,
-        );
+        return c.json({ error: outcome.reason, userId: outcome.userId }, 409);
       }
       return c.json({ entry: outcome.entry }, 201);
     } catch (error) {
@@ -446,32 +448,32 @@ app.delete(
   "/:id/roster/:rosterId",
   zValidator("query", z.object({ force: z.enum(["true", "false"]).optional() })),
   async (c) => {
-  const id = c.req.param("id");
-  const rosterId = c.req.param("rosterId");
-  const mismatched = assertInCurrentGroup(c, id, "Group not found");
-  if (mismatched) return mismatched;
+    const id = c.req.param("id");
+    const rosterId = c.req.param("rosterId");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
 
-  const denied = requireOrganizer(c);
-  if (denied) return denied;
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
 
-  const force = c.req.valid("query").force === "true";
+    const force = c.req.valid("query").force === "true";
 
-  try {
-    const outcome = await getGroupService().deleteRosterEntry(rosterId, id, { force });
-    if (!outcome.deleted) {
-      return c.json(
-        {
-          error: outcome.reason,
-          referencingSignupCount: outcome.referencingSignupCount,
-        },
-        409,
-      );
+    try {
+      const outcome = await getGroupService().deleteRosterEntry(rosterId, id, { force });
+      if (!outcome.deleted) {
+        return c.json(
+          {
+            error: outcome.reason,
+            referencingSignupCount: outcome.referencingSignupCount,
+          },
+          409,
+        );
+      }
+      return c.json({ success: true });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to delete roster entry";
+      return c.json({ error: message }, 404);
     }
-    return c.json({ success: true });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to delete roster entry";
-    return c.json({ error: message }, 404);
-  }
   },
 );
 

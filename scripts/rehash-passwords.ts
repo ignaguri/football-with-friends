@@ -46,7 +46,7 @@ async function main() {
 
   // Find all credential accounts with password hashes
   const result = await client.execute(
-    `SELECT id, "userId", password FROM account WHERE "providerId" = 'credential' AND password IS NOT NULL`
+    `SELECT id, "userId", password FROM account WHERE "providerId" = 'credential' AND password IS NOT NULL`,
   );
 
   const total = result.rows.length;
@@ -101,7 +101,7 @@ async function main() {
       const user = userResult.rows[0];
       if (user) {
         console.log(
-          `   - ${user.name || "?"} | ${user.email || "?"} | ${user.phoneNumber || "no phone"}`
+          `   - ${user.name || "?"} | ${user.email || "?"} | ${user.phoneNumber || "no phone"}`,
         );
       }
     }

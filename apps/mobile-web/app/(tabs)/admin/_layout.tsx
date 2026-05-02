@@ -1,5 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { ChevronLeft } from "@tamagui/lucide-icons";
+import { ChevronLeft } from "@tamagui/lucide-icons-2";
 import { Stack, router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable } from "react-native";
@@ -49,10 +49,7 @@ export default function AdminLayout() {
           title: t("organizer.editMatch"),
           headerBackVisible: false,
           headerLeft: () => (
-            <Pressable
-              onPress={() => router.navigate("/(tabs)/admin")}
-              style={{ marginLeft: 8 }}
-            >
+            <Pressable onPress={() => router.navigate("/(tabs)/admin")} style={{ marginLeft: 8 }}>
               <ChevronLeft size={28} color={theme.color?.val} />
             </Pressable>
           ),
@@ -70,10 +67,7 @@ export default function AdminLayout() {
           title: t("groups.roster.title"),
           headerBackVisible: false,
           headerLeft: () => (
-            <Pressable
-              onPress={() => router.navigate("/(tabs)/admin")}
-              style={{ marginLeft: 8 }}
-            >
+            <Pressable onPress={() => router.navigate("/(tabs)/admin")} style={{ marginLeft: 8 }}>
               <ChevronLeft size={28} color={theme.color?.val} />
             </Pressable>
           ),

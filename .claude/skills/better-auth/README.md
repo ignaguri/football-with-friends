@@ -76,6 +76,7 @@ This skill should be automatically invoked when you mention:
 ## When to Use This Skill
 
 ✅ **Use this skill when**:
+
 - Building authentication for Cloudflare Workers + D1 applications
 - Need a self-hosted, vendor-independent auth solution
 - Migrating from Clerk to avoid vendor lock-in and costs
@@ -85,6 +86,7 @@ This skill should be automatically invoked when you mention:
 - Want full control over auth logic and data
 
 ❌ **Don't use this skill when**:
+
 - You're happy with Clerk and don't mind the cost
 - Using Firebase Auth (different ecosystem)
 - Building a simple prototype (Auth.js may be faster)
@@ -141,24 +143,24 @@ This skill should be automatically invoked when you mention:
 **⚠️ CRITICAL**: better-auth requires **Drizzle ORM** or **Kysely** for D1. There is NO direct `d1Adapter()`.
 
 ```typescript
-import { betterAuth } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { drizzle } from 'drizzle-orm/d1'
-import { Hono } from 'hono'
-import * as schema from './db/schema' // Your Drizzle schema
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzle } from "drizzle-orm/d1";
+import { Hono } from "hono";
+import * as schema from "./db/schema"; // Your Drizzle schema
 
 type Env = {
-  DB: D1Database
-  BETTER_AUTH_SECRET: string
-  GOOGLE_CLIENT_ID: string
-  GOOGLE_CLIENT_SECRET: string
-}
+  DB: D1Database;
+  BETTER_AUTH_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+};
 
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<{ Bindings: Env }>();
 
-app.all('/api/auth/*', async (c) => {
+app.all("/api/auth/*", async (c) => {
   // Initialize Drizzle with D1
-  const db = drizzle(c.env.DB, { schema })
+  const db = drizzle(c.env.DB, { schema });
 
   const auth = betterAuth({
     // Use Drizzle adapter with SQLite provider
@@ -170,18 +172,19 @@ app.all('/api/auth/*', async (c) => {
     socialProviders: {
       google: {
         clientId: c.env.GOOGLE_CLIENT_ID,
-        clientSecret: c.env.GOOGLE_CLIENT_SECRET
-      }
-    }
-  })
+        clientSecret: c.env.GOOGLE_CLIENT_SECRET,
+      },
+    },
+  });
 
-  return auth.handler(c.req.raw)
-})
+  return auth.handler(c.req.raw);
+});
 
-export default app
+export default app;
 ```
 
 **Required dependencies**:
+
 ```bash
 npm install better-auth drizzle-orm drizzle-kit @cloudflare/workers-types hono
 ```
@@ -202,14 +205,14 @@ npm install better-auth drizzle-orm drizzle-kit @cloudflare/workers-types hono
 
 ## Comparison to Alternatives
 
-| Feature | better-auth | Clerk | Auth.js |
-|---------|-------------|-------|---------|
-| **Hosting** | Self-hosted | Third-party | Self-hosted |
-| **Cost** | Free | $25/mo+ | Free |
-| **Cloudflare D1** | ✅ First-class | ❌ No | ✅ Adapter |
-| **2FA/Passkeys** | ✅ Plugin | ✅ Built-in | ⚠️ Limited |
-| **Organizations** | ✅ Plugin | ✅ Built-in | ❌ No |
-| **Vendor Lock-in** | ✅ None | ❌ High | ✅ None |
+| Feature            | better-auth    | Clerk       | Auth.js     |
+| ------------------ | -------------- | ----------- | ----------- |
+| **Hosting**        | Self-hosted    | Third-party | Self-hosted |
+| **Cost**           | Free           | $25/mo+     | Free        |
+| **Cloudflare D1**  | ✅ First-class | ❌ No       | ✅ Adapter  |
+| **2FA/Passkeys**   | ✅ Plugin      | ✅ Built-in | ⚠️ Limited  |
+| **Organizations**  | ✅ Plugin      | ✅ Built-in | ❌ No       |
+| **Vendor Lock-in** | ✅ None        | ❌ High     | ✅ None     |
 
 ---
 
@@ -246,11 +249,13 @@ yarn add better-auth
 ```
 
 **For Cloudflare D1**:
+
 ```bash
 npm install @cloudflare/workers-types
 ```
 
 **For PostgreSQL**:
+
 ```bash
 npm install pg drizzle-orm
 ```

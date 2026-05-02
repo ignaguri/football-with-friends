@@ -22,8 +22,7 @@ app.get("/", async (c) => {
     const players = await getPlayerStatsService().getAllPlayers();
     return c.json(players);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get players";
+    const message = error instanceof Error ? error.message : "Failed to get players";
     return c.json({ error: message }, 500);
   }
 });
@@ -43,10 +42,7 @@ app.get("/me/finished-matches", async (c) => {
     );
     return c.json(matches);
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Failed to get finished matches";
+    const message = error instanceof Error ? error.message : "Failed to get finished matches";
     return c.json({ error: message }, 500);
   }
 });
@@ -65,8 +61,7 @@ app.get("/:userId/voting-stats", async (c) => {
     const stats = await getRankingService().getPlayerVotingStats(userId, language);
     return c.json(stats);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get voting stats";
+    const message = error instanceof Error ? error.message : "Failed to get voting stats";
     return c.json({ error: message }, 500);
   }
 });
@@ -87,8 +82,7 @@ app.get("/:userId", async (c) => {
     }
     return c.json(profile);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to get player profile";
+    const message = error instanceof Error ? error.message : "Failed to get player profile";
     return c.json({ error: message }, 500);
   }
 });

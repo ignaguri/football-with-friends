@@ -34,10 +34,7 @@ export function getLocale() {
  * @param formatStr - date-fns format string (e.g., "dd.MM.yy", "EEEE")
  * @returns Formatted date string in current locale
  */
-export function formatLocalizedDate(
-  date: string | Date,
-  formatStr: string,
-): string {
+export function formatLocalizedDate(date: string | Date, formatStr: string): string {
   const dateObj = typeof date === "string" ? parseDate(date) : date;
   const locale = getLocale();
   return format(dateObj, formatStr, { locale });
@@ -50,10 +47,7 @@ export function formatLocalizedDate(
  * @param timeString - Time string (e.g., "19:30")
  * @returns Combined formatted string
  */
-export function formatMatchDateTime(
-  dateString: string,
-  timeString: string,
-): string {
+export function formatMatchDateTime(dateString: string, timeString: string): string {
   const date = parseDate(dateString);
   const locale = getLocale();
 
@@ -75,10 +69,7 @@ export function formatFullDate(dateString: string): string {
 
   // English uses ordinals: "Tuesday, February 3rd, 2026"
   // Spanish doesn't use ordinals: "Martes, 3 de febrero de 2026"
-  const formatStr =
-    currentLang === "es"
-      ? "EEEE, d 'de' MMMM 'de' yyyy"
-      : "EEEE, MMMM do, yyyy";
+  const formatStr = currentLang === "es" ? "EEEE, d 'de' MMMM 'de' yyyy" : "EEEE, MMMM do, yyyy";
 
   const formatted = format(date, formatStr, { locale });
   return capitalizeFirst(formatted);

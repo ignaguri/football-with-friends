@@ -13,22 +13,22 @@ Intended outcome: a live, usable multimedia feature with per-match galleries and
 
 ## Decisions (from brainstorming)
 
-| Decision | Choice |
-|---|---|
-| Scope | Per-match gallery **+** global feed (grouped by match) |
-| Content types | Photos + short videos (no server-side transcoding) |
-| Upload permissions | Match participants only (admins always allowed) |
-| View permissions | Any logged-in user |
-| Social depth (v1) | Caption (≤280 chars) + emoji reactions |
-| Reaction emojis | ❤️ 🔥 ⚽ 😂 🍺 |
-| Delete rights | Uploader + admins |
-| File size caps | Photo ≤ 10 MB · Video ≤ 50 MB |
-| Match-detail entry | "View Gallery" card → dedicated gallery screen |
-| Global feed layout | Grouped by match (sections with thumbnail preview + "+N more") |
-| Upload architecture | Proxy through the Worker (mirrors the profile-picture flow) |
-| Image compression | Client-side via `expo-image-manipulator` — resize to 1920px max, output **WebP q0.82** |
-| Video compression | None; enforce caps + use picker's medium quality + 30s max duration |
-| Video poster frames | Client-side via `expo-video-thumbnails`; stored as sibling `.poster.jpg` in R2 |
+| Decision            | Choice                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------- |
+| Scope               | Per-match gallery **+** global feed (grouped by match)                                 |
+| Content types       | Photos + short videos (no server-side transcoding)                                     |
+| Upload permissions  | Match participants only (admins always allowed)                                        |
+| View permissions    | Any logged-in user                                                                     |
+| Social depth (v1)   | Caption (≤280 chars) + emoji reactions                                                 |
+| Reaction emojis     | ❤️ 🔥 ⚽ 😂 🍺                                                                         |
+| Delete rights       | Uploader + admins                                                                      |
+| File size caps      | Photo ≤ 10 MB · Video ≤ 50 MB                                                          |
+| Match-detail entry  | "View Gallery" card → dedicated gallery screen                                         |
+| Global feed layout  | Grouped by match (sections with thumbnail preview + "+N more")                         |
+| Upload architecture | Proxy through the Worker (mirrors the profile-picture flow)                            |
+| Image compression   | Client-side via `expo-image-manipulator` — resize to 1920px max, output **WebP q0.82** |
+| Video compression   | None; enforce caps + use picker's medium quality + 30s max duration                    |
+| Video poster frames | Client-side via `expo-video-thumbnails`; stored as sibling `.poster.jpg` in R2         |
 
 ## Architecture
 
@@ -83,9 +83,9 @@ export type MatchMedia = {
   mimeType: string;
   sizeBytes: number;
   caption: string | null;
-  url: string;                 // computed: /api/match-media/file/:key
-  posterUrl: string | null;    // computed for videos only
-  createdAt: string;           // ISO timestamp
+  url: string; // computed: /api/match-media/file/:key
+  posterUrl: string | null; // computed for videos only
+  createdAt: string; // ISO timestamp
   reactions: Array<{ emoji: ReactionEmoji; count: number; didReact: boolean }>;
 };
 ```
@@ -93,6 +93,7 @@ export type MatchMedia = {
 ### Repository (`packages/shared/src/repositories/turso-repositories.ts`)
 
 Add `TursoMatchMediaRepository` with methods:
+
 - `create(row)` / `findById(id)` / `deleteById(id)`
 - `listByMatch(matchId)` — joins reactions aggregated by emoji
 - `feed({ cursor, limit })` — pages of match groups ordered by most-recent-upload
@@ -104,11 +105,13 @@ Reuse existing cheap query `TursoSignupRepository.getSignedUpUserIds(matchId)` f
 ### API surface — follows the existing `profile.ts` split
 
 **Hono raw routes** (multipart + binary) — add `apps/api/src/routes/match-media.ts`, mount on main app:
+
 - `POST /api/matches/:matchId/media` — upload photo or video (+ optional poster)
 - `GET /api/matches/:matchId/media/:key{.+}` — stream R2 object with 1-year cache
 - `DELETE /api/matches/:matchId/media/:mediaId` — uploader or admin
 
 **oRPC procedures** — add `apps/api/src/procedures/match-media.ts`, register on the main oRPC router:
+
 - `matchMedia.listByMatch({ matchId })` → `MatchMedia[]`
 - `matchMedia.feed({ cursor?, limit? })` → paged groups `{ matchId, matchDate, fieldName, items: MatchMedia[] }`
 - `matchMedia.toggleReaction({ mediaId, emoji })` → idempotent
@@ -133,6 +136,7 @@ All procedures use `authedProcedure` from `apps/api/src/procedures/base.ts`. The
 ### Route changes (Expo Router)
 
 Convert the current flat match-detail file into a folder to enable sub-routes:
+
 - `apps/mobile-web/app/(tabs)/matches/[matchId].tsx` → move to `apps/mobile-web/app/(tabs)/matches/[matchId]/index.tsx` (no behavior change).
 - New: `apps/mobile-web/app/(tabs)/matches/[matchId]/gallery.tsx`.
 - New: `apps/mobile-web/app/(tabs)/social/multimedia/index.tsx`.
@@ -140,6 +144,7 @@ Convert the current flat match-detail file into a folder to enable sub-routes:
 ### Screens
 
 **Per-match gallery — `matches/[matchId]/gallery.tsx`**
+
 - Header: match date + field (from existing match detail query).
 - Top bar: "Upload" button (hidden if not participant & not admin).
 - 3-column grid on mobile, 4 on web (`md+`). Square crops via `expo-image`'s `contentFit="cover"`.
@@ -150,6 +155,7 @@ Convert the current flat match-detail file into a folder to enable sub-routes:
 - Pull-to-refresh via `RefreshControl`.
 
 **Global feed — `social/multimedia/index.tsx`**
+
 - Title: `t("multimedia.title")`.
 - Vertical `FlatList` of match sections; each section:
   - Row header: `APR 20 · FIELD X` + chevron; tapping navigates to the per-match gallery.
@@ -159,6 +165,7 @@ Convert the current flat match-detail file into a folder to enable sub-routes:
 - Empty state: `t("multimedia.emptyFeed")`.
 
 **Lightbox viewer (modal inside the gallery screen)**
+
 - Full-bleed `expo-image` (photos) or `expo-av` `Video` (videos).
 - Swipe left/right to navigate items within the same match (keyboard arrows on web).
 - Caption below (if present).
@@ -167,6 +174,7 @@ Convert the current flat match-detail file into a folder to enable sub-routes:
 - Overflow menu with **Delete** (uploader or admin); confirmation dialog.
 
 **Upload flow**
+
 - Action sheet: Camera · Photo Library · Video Library · Cancel.
 - On pick:
   - Photo → `ImageManipulator.manipulateAsync(uri, [{ resize: { width: 1920 } }], { compress: 0.82, format: SaveFormat.WEBP })`.
@@ -176,16 +184,19 @@ Convert the current flat match-detail file into a folder to enable sub-routes:
 - On success: invalidate `matchMedia.listByMatch` and `matchMedia.feed`; close modal.
 
 **Match detail (`matches/[matchId]/index.tsx`)**
+
 - Add a new section between the payment card and the bottom action buttons:
   - `📷 Gallery · N items ›` → route to `matches/[matchId]/gallery.tsx`.
   - If `N === 0` and viewer is a participant: copy becomes `📷 Add the first photo →`.
 - Fetch count via `matchMedia.countByMatch({ matchId })`.
 
 **Social hub (`social/index.tsx`)**
+
 - Remove `opacity={0.6}` from the existing Multimedia card.
 - Wrap in `<Pressable onPress={() => router.push("/(tabs)/social/multimedia")}>` (mirrors the pattern of the stats card just above).
 
 ### New shared UI components — `packages/ui/src/components/`
+
 - `MediaGrid` — 3/4-column grid, `items[]` + `onItemPress`; handles photo/video tile rendering.
 - `MediaLightbox` — modal viewer, swipe nav, ReactionBar, overflow menu.
 - `ReactionBar` — 5-emoji toggle row with counts and own-reaction highlight.
@@ -226,12 +237,14 @@ Add to both `locales/en/common.json` and `locales/es/common.json`:
 ```
 
 Update existing key `social.multimediaCardDesc`:
+
 - EN: `"Photos and videos from our matches"` (was `"Coming soon"`)
 - ES: `"Fotos y videos de nuestros partidos"` (was `"Próximamente"`)
 
 ## Critical files to create / modify
 
 ### Create
+
 - `migrations/YYYYMMDDHHmmss-add-match-media.ts`
 - `apps/api/src/routes/match-media.ts`
 - `apps/api/src/procedures/match-media.ts`
@@ -242,6 +255,7 @@ Update existing key `social.multimediaCardDesc`:
 - `packages/ui/src/components/ReactionBar.tsx`
 
 ### Modify
+
 - `apps/api/wrangler.toml` — add `MATCH_MEDIA` bucket binding under `[default]` and `[env.preview]`.
 - `apps/api/src/index.ts` (or wherever routes/procedures are registered) — mount new route + oRPC procedures.
 - `apps/api/src/lib/r2.ts` — add a generic `generateMatchMediaKey(matchId, mediaId, ext)` helper (keep the existing profile helper).
@@ -278,6 +292,7 @@ Update existing key `social.multimediaCardDesc`:
 ## Verification
 
 ### Automated
+
 Backend integration tests (in the existing `apps/api/src/routes/**/__tests__/` style, hitting real Turso per the project's no-mocks rule):
 
 - `POST /api/matches/:matchId/media` — 401 unauth, 403 non-participant, 404 bad match, 400 oversize, 400 bad mime, 201 success (asserts R2 + DB row).
@@ -287,6 +302,7 @@ Backend integration tests (in the existing `apps/api/src/routes/**/__tests__/` s
 - `matchMedia.feed` — groups by match; cursor pagination yields correct next page.
 
 ### Manual end-to-end test plan
+
 Run through this on staging before production deploy, and again after production deploy.
 
 1. Log in as participant → upload a photo → appears in per-match gallery → appears in global feed grouped under the right match.
@@ -303,6 +319,7 @@ Run through this on staging before production deploy, and again after production
 12. Pull-to-refresh works on both gallery and feed.
 
 ### Tooling for verification
+
 - Run `pnpm typecheck` and `pnpm lint` at the repo root.
 - `pnpm --filter api test` for backend integration tests.
 - Chrome DevTools MCP to exercise the web build (gallery grid rendering, lightbox keyboard nav).

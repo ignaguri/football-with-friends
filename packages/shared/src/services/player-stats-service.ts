@@ -38,8 +38,7 @@ export class PlayerStatsService {
       return null;
     }
 
-    const aggregateStats =
-      await this.playerStatsRepository.getPlayerAggregateStats(userId);
+    const aggregateStats = await this.playerStatsRepository.getPlayerAggregateStats(userId);
     const matchStats = await this.playerStatsRepository.findByUserId(userId);
 
     return {
@@ -108,10 +107,7 @@ export class PlayerStatsService {
       throw new Error("You can only update your own stats or be an organizer");
     }
 
-    const existing = await this.playerStatsRepository.findByMatchAndUser(
-      matchId,
-      userId,
-    );
+    const existing = await this.playerStatsRepository.findByMatchAndUser(matchId, userId);
 
     if (!existing) {
       return this.playerStatsRepository.upsert({
@@ -141,10 +137,7 @@ export class PlayerStatsService {
   /**
    * Get stats for a specific user in a specific match
    */
-  async getPlayerMatchStats(
-    matchId: string,
-    userId: string,
-  ): Promise<MatchPlayerStats | null> {
+  async getPlayerMatchStats(matchId: string, userId: string): Promise<MatchPlayerStats | null> {
     return this.playerStatsRepository.findByMatchAndUser(matchId, userId);
   }
 
@@ -169,9 +162,7 @@ export class PlayerStatsService {
     const completedMatches = completedMatchesResult.matches;
 
     const signupMatchIds = new Set(
-      userSignups
-        .filter((s) => s.status !== "CANCELLED")
-        .map((s) => s.matchId),
+      userSignups.filter((s) => s.status !== "CANCELLED").map((s) => s.matchId),
     );
 
     const statsMap = new Map(userStats.map((s) => [s.matchId, s]));

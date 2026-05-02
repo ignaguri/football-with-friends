@@ -125,7 +125,9 @@ function AppContent({ updateReady }: { updateReady: boolean }) {
     configureLanguage(i18n.language);
     const onLanguageChanged = (lng: string) => configureLanguage(lng);
     i18n.on("languageChanged", onLanguageChanged);
-    return () => { i18n.off("languageChanged", onLanguageChanged); };
+    return () => {
+      i18n.off("languageChanged", onLanguageChanged);
+    };
   }, []);
 
   return (
@@ -133,11 +135,7 @@ function AppContent({ updateReady }: { updateReady: boolean }) {
       {Platform.OS === "web" && (
         <Head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link
             href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
             rel="stylesheet"
@@ -145,37 +143,15 @@ function AppContent({ updateReady }: { updateReady: boolean }) {
 
           {/* PWA Meta Tags */}
           <meta name="application-name" content="Football with Friends" />
-          <meta
-            name="description"
-            content="Organize and manage football matches with friends"
-          />
-          <meta
-            name="theme-color"
-            content="#3d7c48"
-            media="(prefers-color-scheme: light)"
-          />
-          <meta
-            name="theme-color"
-            content="#0F0E0B"
-            media="(prefers-color-scheme: dark)"
-          />
+          <meta name="description" content="Organize and manage football matches with friends" />
+          <meta name="theme-color" content="#3d7c48" media="(prefers-color-scheme: light)" />
+          <meta name="theme-color" content="#0F0E0B" media="(prefers-color-scheme: dark)" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
-          <meta
-            name="apple-mobile-web-app-status-bar-style"
-            content="default"
-          />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
           <meta name="apple-mobile-web-app-title" content="Football" />
           <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
-          <link
-            rel="apple-touch-icon"
-            sizes="152x152"
-            href="/icons/icon-152x152.png"
-          />
-          <link
-            rel="apple-touch-icon"
-            sizes="192x192"
-            href="/icons/icon-192x192.png"
-          />
+          <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+          <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
           <link rel="manifest" href="/manifest.json" />
 
           {/* Google Identity Services for OAuth without redirect flow */}

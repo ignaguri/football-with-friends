@@ -1,6 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 
-import { Bell, CalendarPlus, Clock, UserCheck } from "@tamagui/lucide-icons";
+import { Bell, CalendarPlus, Clock, UserCheck } from "@tamagui/lucide-icons-2";
 import { Button, Dialog } from "@repo/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,17 +32,11 @@ export function NotificationPermissionPrompt({ open, onClose }: Props) {
       await markPromptShown();
       onClose();
       if (status === "denied") {
-        Alert.alert(
-          t("notifications.denied.title"),
-          t("notifications.denied.body"),
-        );
+        Alert.alert(t("notifications.denied.title"), t("notifications.denied.body"));
       }
     } catch (e) {
       console.error("Failed to enable notifications:", e);
-      Alert.alert(
-        t("notifications.errors.generic"),
-        e instanceof Error ? e.message : "",
-      );
+      Alert.alert(t("notifications.errors.generic"), e instanceof Error ? e.message : "");
     } finally {
       setIsWorking(false);
     }
@@ -101,11 +95,7 @@ export function NotificationPermissionPrompt({ open, onClose }: Props) {
           disabled={isWorking}
           testID="notification-prompt-enable"
         >
-          {isWorking ? (
-            <Spinner size="small" />
-          ) : (
-            t("notifications.prompt.enable")
-          )}
+          {isWorking ? <Spinner size="small" /> : t("notifications.prompt.enable")}
         </Button>
         <Button
           variant="ghost"
@@ -120,15 +110,7 @@ export function NotificationPermissionPrompt({ open, onClose }: Props) {
   );
 }
 
-function Benefit({
-  Icon,
-  title,
-  body,
-}: {
-  Icon: typeof Bell;
-  title: string;
-  body: string;
-}) {
+function Benefit({ Icon, title, body }: { Icon: typeof Bell; title: string; body: string }) {
   return (
     <XStack gap="$3" alignItems="flex-start">
       <YStack

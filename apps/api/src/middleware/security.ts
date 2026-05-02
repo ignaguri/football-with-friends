@@ -45,16 +45,16 @@ export function requireUser(c: Context): SessionUser {
 
 // Routes that bypass the global auth middleware
 export const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
-  { path: /^\/api\/auth\// },                                      // BetterAuth
-  { path: /^\/api\/phone-auth\// },                                 // Phone auth
-  { path: /^\/api\/matches\/[^/]+\/preview$/, method: "GET" },      // OG metadata preview
-  { path: /^\/api\/invites\/[^/]+$/, method: "GET" },               // Invite preview (POST accept requires auth)
-  { path: /^\/api\/profile\/picture\//, method: "GET" },            // Served images
-  { path: /^\/health$/ },                                           // Health check
-  { path: /^\/api\/cron\/update-matches$/, method: "POST" },        // Cron (has own secret check)
-  { path: /^\/api\/cron\/send-reminders$/, method: "POST" },        // Cron (has own secret check)
-  { path: /^\/api\/cron\/send-engagement$/, method: "POST" },       // Cron (has own secret check)
-  { path: /^\/api\/cron\/prune-inbox$/, method: "POST" },           // Cron (has own secret check)
+  { path: /^\/api\/auth\// }, // BetterAuth
+  { path: /^\/api\/phone-auth\// }, // Phone auth
+  { path: /^\/api\/matches\/[^/]+\/preview$/, method: "GET" }, // OG metadata preview
+  { path: /^\/api\/invites\/[^/]+$/, method: "GET" }, // Invite preview (POST accept requires auth)
+  { path: /^\/api\/profile\/picture\//, method: "GET" }, // Served images
+  { path: /^\/health$/ }, // Health check
+  { path: /^\/api\/cron\/update-matches$/, method: "POST" }, // Cron (has own secret check)
+  { path: /^\/api\/cron\/send-reminders$/, method: "POST" }, // Cron (has own secret check)
+  { path: /^\/api\/cron\/send-engagement$/, method: "POST" }, // Cron (has own secret check)
+  { path: /^\/api\/cron\/prune-inbox$/, method: "POST" }, // Cron (has own secret check)
 ];
 
 // Global auth middleware — secure by default.
@@ -64,7 +64,7 @@ export async function authMiddleware(c: Context, next: Next) {
   const path = new URL(c.req.url).pathname;
 
   const isPublic = PUBLIC_ROUTES.some(
-    (r) => r.path.test(path) && (!r.method || r.method === method)
+    (r) => r.path.test(path) && (!r.method || r.method === method),
   );
   if (isPublic) return next();
 
@@ -133,7 +133,10 @@ export function rateLimitMiddleware(keyPrefix?: string) {
     const key = keyPrefix ? `${keyPrefix}:${ip}` : ip;
     const retryAfter = checkRateLimit(key, Date.now());
     if (retryAfter !== null) {
-      return c.json({ error: "Too many requests" }, { status: 429, headers: { "Retry-After": String(retryAfter) } });
+      return c.json(
+        { error: "Too many requests" },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } },
+      );
     }
     return next();
   };

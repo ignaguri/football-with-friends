@@ -1,5 +1,5 @@
 import { YStack, Text, XStack } from "tamagui";
-import { Clock } from "@tamagui/lucide-icons";
+import { Clock } from "@tamagui/lucide-icons-2";
 
 export interface TimePickerProps {
   value: string;

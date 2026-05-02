@@ -1,7 +1,7 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { useUnreadNotificationCount } from "@repo/api-client";
 import { Text, XStack } from "@repo/ui";
-import { Bell } from "@tamagui/lucide-icons";
+import { Bell } from "@tamagui/lucide-icons-2";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";
@@ -17,9 +17,7 @@ export function InboxBell() {
   const showBadge = unread > 0;
   const badgeText = unread > MAX_VISIBLE ? `${MAX_VISIBLE}+` : String(unread);
 
-  const label = showBadge
-    ? t("a11y.openInboxWithUnread", { count: unread })
-    : t("a11y.openInbox");
+  const label = showBadge ? t("a11y.openInboxWithUnread", { count: unread }) : t("a11y.openInbox");
 
   return (
     <Pressable

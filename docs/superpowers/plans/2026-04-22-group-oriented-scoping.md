@@ -12,8 +12,8 @@
 
 - [x] **Phase 0** — Schema foundation (no behavior change)
 - [x] **Phase 1** — Backfill + scoping (core path scoped; staging verification + tests deferred)
-- [x] **Phase 2** — Group management API + mobile-web switcher *(all user-facing items landed; test harness is the only deferred piece, same as Phase 1/3)*
-- [x] **Phase 3** — Invites (link + accept flow) *(core path landed; tests + E2E + staging verification deferred)*
+- [x] **Phase 2** — Group management API + mobile-web switcher _(all user-facing items landed; test harness is the only deferred piece, same as Phase 1/3)_
+- [x] **Phase 3** — Invites (link + accept flow) _(core path landed; tests + E2E + staging verification deferred)_
 - [ ] **Phase 4** — Ghost roster (full lifecycle + legacy guest conversion)
 - [ ] **Phase 5** — Polish (phone invites, copy-venues helper, public-directory flag, i18n pass)
 
@@ -137,7 +137,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 - [x] `pnpm migrate:up` re-applied both — full `up → down → down → up` reversibility confirmed.
 - [x] `pnpm typecheck` green.
 - [x] SQL-level spot-check: all 5 new tables + 16 new indexes present after up; all scoped tables have nullable `group_id` column; no rows mutated in existing tables.
-- [ ] Manual smoke (user-side, before/after this PR merges): sign in, list matches, create match as admin — behavior identical to pre-PR. *(Deferred to PR review; all new columns are nullable so existing queries continue to work unchanged.)*
+- [ ] Manual smoke (user-side, before/after this PR merges): sign in, list matches, create match as admin — behavior identical to pre-PR. _(Deferred to PR review; all new columns are nullable so existing queries continue to work unchanged.)_
 - [ ] `pnpm lint` — ran but tripped a Node V8 OOM crash during `eslint -f json .` (pre-existing tooling issue, unrelated to Phase 0 code). Investigate / run per-package lint before merging.
 
 ---
@@ -190,7 +190,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — Wire middleware & replace checks
 
-- [x] `groupContextMiddleware` is mounted per-router at the top of every scoped route file (`matches`, `locations`, `courts`, `players`, `voting`, `rankings`, `settings`). `/matches/:id/preview` is registered *before* the middleware so link previews stay public. Auth at `/api/*` is unchanged.
+- [x] `groupContextMiddleware` is mounted per-router at the top of every scoped route file (`matches`, `locations`, `courts`, `players`, `voting`, `rankings`, `settings`). `/matches/:id/preview` is registered _before_ the middleware so link previews stay public. Auth at `/api/*` is unchanged.
 - [x] Admin `user.role !== "admin"` gates replaced with `requireOrganizer(c)` (or `requireSuperadmin` for the transitional voting-criteria endpoints). For superadmin-only ops like `POST /settings/test-notification` and `PATCH /profile/:id` we swap to a direct `role === "superadmin"` check — the semantics are identical, it's just a rename.
   - [x] `apps/api/src/routes/matches.ts`
   - [x] `apps/api/src/routes/locations.ts`
@@ -246,7 +246,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 
 ### Subtasks — API (`apps/api/src/routes/groups.ts`)
 
-- [x] Created the route file. Mounted under `/api/groups` in `apps/api/src/api-routes.ts`. `GET /api/groups/me` + `POST /api/groups` are registered *before* `app.use("*", groupContextMiddleware)`; everything else runs scoped.
+- [x] Created the route file. Mounted under `/api/groups` in `apps/api/src/api-routes.ts`. `GET /api/groups/me` + `POST /api/groups` are registered _before_ `app.use("*", groupContextMiddleware)`; everything else runs scoped.
 - [x] `GET /api/groups/me` → lists my groups with role + owner flag. No `X-Group-Id` required.
 - [x] `POST /api/groups` → superadmin-only (direct `requireSuperadmin` check; the `allowUserCreateGroups` setting is deferred to Phase 5). Body: `{name, slug?}`. Inserts group + organizer membership.
 - [x] `GET /api/groups/:id` → service splits into `getGroupDetails` (full, organizer view) and `getGroupBasics` (member view: id/name/slug/visibility/myRole).
@@ -338,7 +338,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
   - [x] Signed in → auto-calls `useAcceptInvite` which sets active group on success → navigates to `/(tabs)/matches`.
 - [x] Group detail screen: organizer-only Invites section — list active invites, "Create invite link" (default 7-day expiry), web-clipboard copy / native Share fallback, revoke.
 - [x] Web: registered `join/[token]` in root `_layout.tsx`. Mobile: `scheme: "football-with-friends"` already in `app.config.ts`; Expo Router handles `football-with-friends://join/<token>` automatically.
-- [x] i18n: `groups.invite.*` keys (create/copy/revoke/expiresAt/neverExpires/previewTitle/invitedBy/signInToJoin/joining + invalidReason.* + loadError* + acceptFailed*). EN + ES both landed.
+- [x] i18n: `groups.invite.*` keys (create/copy/revoke/expiresAt/neverExpires/previewTitle/invitedBy/signInToJoin/joining + invalidReason._ + loadError_ + acceptFailed\*). EN + ES both landed.
 
 ### Subtasks — Tests
 
@@ -434,6 +434,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 ## Critical Files Index
 
 ### API
+
 - `apps/api/src/middleware/security.ts` — extend `AppVariables`, public route allowlist
 - `apps/api/src/middleware/group-context.ts` — **new**
 - `apps/api/src/middleware/authz.ts` — **new**
@@ -451,6 +452,7 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 - `apps/api/src/index.ts` — mount new routers
 
 ### Shared
+
 - `packages/shared/src/domain/types.ts` — add Group, GroupMember, GroupInvite, GroupRoster, GroupSettings types
 - `packages/shared/src/repositories/turso-repositories.ts` — new repos + thread groupId through existing ones
 - `packages/shared/src/services/group-service.ts` — **new**
@@ -459,11 +461,13 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 - `packages/shared/src/database/audit/verify-legacy-backfill.sql` — **new**
 
 ### Client
+
 - `packages/api-client/src/client.ts` — add X-Group-Id interceptor
 - `packages/api-client/src/group-storage.ts` — **new**
 - `packages/api-client/src/groups.ts` — **new** hooks
 
 ### Mobile-Web
+
 - `apps/mobile-web/app/(tabs)/_layout.tsx` — switcher + admin-tab visibility swap
 - `apps/mobile-web/app/(tabs)/profile/groups/index.tsx` — **new**
 - `apps/mobile-web/app/(tabs)/profile/groups/[groupId].tsx` — **new**
@@ -485,22 +489,26 @@ group_id TEXT UNIQUE REFERENCES groups(id) ON DELETE CASCADE
 ## Verification (cross-phase)
 
 **Unit / Integration (API):**
+
 - Group-context middleware: all five scenarios above.
 - Cross-group leak: parameterized test hitting every scoped endpoint with a wrong-group user.
 - Ghost auto-claim: exact-one-match claims, multi-match doesn't guess.
 
 **E2E (Chrome DevTools MCP — web):**
+
 - Sign in as single-group user → only A's matches.
 - Superadmin → switch to arbitrary group.
 - Invite flow end-to-end.
 - Ghost-claim end-to-end.
 
 **Mobile (iOS sim / Android emu MCP):**
+
 - Switcher only shows with ≥2 groups.
 - Deep link `footballwithfriends://join/<token>` on cold-start and warm-state.
 - Active group persists across app relaunches.
 
 **Migration:**
+
 - `pnpm migrate-remote:up` on staging → audit SQL passes.
 - Full `up → down → up` reversibility.
 - Post-migration smoke: no UX regression for any pre-existing user.

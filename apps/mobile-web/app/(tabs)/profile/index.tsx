@@ -1,11 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import {
-  useSession,
-  signOut,
-  client,
-  getConfiguredApiUrl,
-  getWebAppUrl,
-} from "@repo/api-client";
+import { useSession, signOut, client, getConfiguredApiUrl, getWebAppUrl } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -25,19 +19,12 @@ import {
   getCountryFlag,
   getCountryName,
 } from "@repo/ui";
-import { Bell, Camera, ChevronRight } from "@tamagui/lucide-icons";
+import { Bell, Camera, ChevronRight } from "@tamagui/lucide-icons-2";
 import * as ImagePicker from "expo-image-picker";
 import { Link, router, Stack } from "expo-router";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ScrollView,
-  RefreshControl,
-  Pressable,
-  Platform,
-  Alert,
-  Linking,
-} from "react-native";
+import { ScrollView, RefreshControl, Pressable, Platform, Alert, Linking } from "react-native";
 import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -68,8 +55,7 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [isChangingPasswordLoading, setIsChangingPasswordLoading] =
-    useState(false);
+  const [isChangingPasswordLoading, setIsChangingPasswordLoading] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [requiresCurrentPassword, setRequiresCurrentPassword] = useState(false);
 
@@ -217,9 +203,7 @@ export default function ProfileScreen() {
 
       // Try to extract error response from the exception
       // The API client attaches response data to the error
-      const errorData = err?.data as
-        | { hasExistingPassword?: boolean }
-        | undefined;
+      const errorData = err?.data as { hasExistingPassword?: boolean } | undefined;
       if (errorData?.hasExistingPassword) {
         setRequiresCurrentPassword(true);
         setPasswordError(t("profile.currentPasswordRequired"));
@@ -237,8 +221,7 @@ export default function ProfileScreen() {
     if (!session?.user) return;
 
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         setError(t("profile.photoPermissionDenied"));
         return;
@@ -374,369 +357,351 @@ export default function ProfileScreen() {
         }}
       />
       <Container variant="padded" paddingTop={insets.top + 16}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-        }
-      >
-        <YStack gap="$4">
-          {/* Profile Card with Inline Editing */}
-          <Card variant="elevated" padding="$4">
-            <YStack gap="$4">
-              {/* Avatar with upload button */}
-              <XStack justifyContent="center">
-                <YStack alignItems="center">
-                  <Pressable
-                    onPress={handleUploadPhoto}
-                    disabled={isUploadingPhoto}
-                  >
-                    <YStack position="relative">
-                      <UserAvatar
-                        name={user.name}
-                        username={user.username}
-                        displayUsername={user.displayUsername}
-                        image={user.image}
-                        profilePicture={user.profilePicture}
-                        size={100}
-                      />
-                      <YStack
-                        position="absolute"
-                        bottom={0}
-                        right={0}
-                        backgroundColor="$blue10"
-                        borderRadius="$10"
-                        padding="$2"
-                        zIndex={10}
-                      >
-                        {isUploadingPhoto ? (
-                          <Spinner size="small" color="white" />
-                        ) : (
-                          <Camera size={16} color="white" />
-                        )}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+        >
+          <YStack gap="$4">
+            {/* Profile Card with Inline Editing */}
+            <Card variant="elevated" padding="$4">
+              <YStack gap="$4">
+                {/* Avatar with upload button */}
+                <XStack justifyContent="center">
+                  <YStack alignItems="center">
+                    <Pressable onPress={handleUploadPhoto} disabled={isUploadingPhoto}>
+                      <YStack position="relative">
+                        <UserAvatar
+                          name={user.name}
+                          username={user.username}
+                          displayUsername={user.displayUsername}
+                          image={user.image}
+                          profilePicture={user.profilePicture}
+                          size={100}
+                        />
+                        <YStack
+                          position="absolute"
+                          bottom={0}
+                          right={0}
+                          backgroundColor="$blue10"
+                          borderRadius="$10"
+                          padding="$2"
+                          zIndex={10}
+                        >
+                          {isUploadingPhoto ? (
+                            <Spinner size="small" color="white" />
+                          ) : (
+                            <Camera size={16} color="white" />
+                          )}
+                        </YStack>
                       </YStack>
-                    </YStack>
-                  </Pressable>
-                </YStack>
-              </XStack>
+                    </Pressable>
+                  </YStack>
+                </XStack>
 
-              {/* Profile Fields - Display or Edit Mode */}
-              {isEditing ? (
-                <YStack gap="$3">
-                  <Input
-                    label={t("profile.fullName")}
-                    placeholder={t("auth.namePlaceholder")}
-                    value={name}
-                    onChangeText={setName}
-                  />
+                {/* Profile Fields - Display or Edit Mode */}
+                {isEditing ? (
+                  <YStack gap="$3">
+                    <Input
+                      label={t("profile.fullName")}
+                      placeholder={t("auth.namePlaceholder")}
+                      value={name}
+                      onChangeText={setName}
+                    />
 
-                  <Input
-                    label={t("auth.username")}
-                    placeholder={t("auth.usernamePlaceholder")}
-                    value={username}
-                    onChangeText={setUsername}
-                    autoCapitalize="none"
-                    helperText={t("auth.usernameHelp")}
-                  />
+                    <Input
+                      label={t("auth.username")}
+                      placeholder={t("auth.usernamePlaceholder")}
+                      value={username}
+                      onChangeText={setUsername}
+                      autoCapitalize="none"
+                      helperText={t("auth.usernameHelp")}
+                    />
 
-                  <Select
-                    label={t("profile.nationality")}
-                    placeholder={t("profile.nationalityPlaceholder")}
-                    value={nationality}
-                    onValueChange={setNationality}
-                    searchable
-                    searchPlaceholder={t("shared.search")}
-                    options={[
-                      { label: t("shared.none"), value: "" },
-                      ...COUNTRIES.map((country) => ({
-                        label: `${country.flag} ${country.name}`,
-                        value: country.code,
-                      })),
-                    ]}
-                  />
+                    <Select
+                      label={t("profile.nationality")}
+                      placeholder={t("profile.nationalityPlaceholder")}
+                      value={nationality}
+                      onValueChange={setNationality}
+                      searchable
+                      searchPlaceholder={t("shared.search")}
+                      options={[
+                        { label: t("shared.none"), value: "" },
+                        ...COUNTRIES.map((country) => ({
+                          label: `${country.flag} ${country.name}`,
+                          value: country.code,
+                        })),
+                      ]}
+                    />
 
-                  <PhoneInput
-                    label={t("auth.phone")}
-                    placeholder={t("auth.phonePlaceholder")}
-                    value={phoneNumber}
-                    onChangeValue={(phone) => setPhoneNumber(phone)}
-                    disabled={!canEditPhone}
-                    helperText={
-                      !canEditPhone
-                        ? t("profile.phoneLockedByAuth")
-                        : t("profile.phoneHelp")
-                    }
-                  />
+                    <PhoneInput
+                      label={t("auth.phone")}
+                      placeholder={t("auth.phonePlaceholder")}
+                      value={phoneNumber}
+                      onChangeValue={(phone) => setPhoneNumber(phone)}
+                      disabled={!canEditPhone}
+                      helperText={
+                        !canEditPhone ? t("profile.phoneLockedByAuth") : t("profile.phoneHelp")
+                      }
+                    />
 
-                  <Input
-                    label={t("auth.email")}
-                    placeholder={t("auth.emailPlaceholder")}
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    disabled={!canEditEmail}
-                    helperText={
-                      !canEditEmail ? t("profile.emailLockedByAuth") : undefined
-                    }
-                  />
-                </YStack>
-              ) : (
-                <YStack gap="$2">
-                  {/* Display name prominently */}
-                  <YStack alignItems="center" gap="$1">
-                    <XStack gap="$2" alignItems="center" justifyContent="center">
-                      {user.nationality && (
-                        <Text fontSize="$7">
-                          {getCountryFlag(user.nationality)}
+                    <Input
+                      label={t("auth.email")}
+                      placeholder={t("auth.emailPlaceholder")}
+                      value={email}
+                      onChangeText={setEmail}
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      disabled={!canEditEmail}
+                      helperText={!canEditEmail ? t("profile.emailLockedByAuth") : undefined}
+                    />
+                  </YStack>
+                ) : (
+                  <YStack gap="$2">
+                    {/* Display name prominently */}
+                    <YStack alignItems="center" gap="$1">
+                      <XStack gap="$2" alignItems="center" justifyContent="center">
+                        {user.nationality && (
+                          <Text fontSize="$7">{getCountryFlag(user.nationality)}</Text>
+                        )}
+                        <Text fontSize="$7" fontWeight="bold">
+                          {displayName}
+                        </Text>
+                      </XStack>
+                      {user.username && (
+                        <Text color="$gray10" fontSize="$4">
+                          @{user.username}
                         </Text>
                       )}
-                      <Text fontSize="$7" fontWeight="bold">
-                        {displayName}
-                      </Text>
-                    </XStack>
-                    {user.username && (
-                      <Text color="$gray10" fontSize="$4">
-                        @{user.username}
-                      </Text>
-                    )}
+                    </YStack>
                   </YStack>
-                </YStack>
-              )}
+                )}
 
-              {error && (
-                <Text color="$red10" fontSize="$3" textAlign="center">
-                  {error}
-                </Text>
-              )}
+                {error && (
+                  <Text color="$red10" fontSize="$3" textAlign="center">
+                    {error}
+                  </Text>
+                )}
 
-              {/* Action buttons */}
-              {isEditing ? (
-                <XStack gap="$2" marginTop="$2">
-                  <Button
-                    flex={1}
-                    variant="outline"
-                    onPress={() => {
-                      setIsEditing(false);
-                      setError(null);
-                      // Reset to original values
-                      const u = session.user as any;
-                      setUsername(u.username || "");
-                      setNationality(u.nationality || "");
-                      setPhoneNumber(u.phoneNumber || "");
-                      setEmail(u.email || "");
-                      setName(u.name || "");
-                    }}
-                    disabled={isSaving}
-                  >
-                    {t("shared.cancel")}
-                  </Button>
-                  <Button
-                    flex={1}
-                    variant="primary"
-                    onPress={handleSaveProfile}
-                    disabled={isSaving}
-                  >
-                    {isSaving ? <Spinner size="small" /> : t("shared.save")}
-                  </Button>
-                </XStack>
-              ) : (
-                <YStack gap="$2" marginTop="$2">
-                  <Button
-                    variant="outline"
-                    onPress={() => setIsEditing(true)}
-                  >
-                    {t("profile.editProfile")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onPress={() => router.push("/stats-voting")}
-                  >
-                    {t("profile.openStatsVoting")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onPress={() => router.push("/(tabs)/profile/groups")}
-                  >
-                    {t("groups.myGroups.title")}
-                  </Button>
-                </YStack>
-              )}
-            </YStack>
-          </Card>
-
-          {/* Settings Card - Combined with Password Change and Sign Out */}
-          <Card variant="outlined">
-            <YStack gap="$3">
-              <Text fontSize="$5" fontWeight="600">
-                {t("shared.settings")}
-              </Text>
-
-              {/* Language Switcher */}
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color="$gray11">{t("shared.language")}</Text>
-                <LanguageSwitcher
-                  currentLanguage={currentLanguage}
-                  onLanguageChange={handleLanguageChange}
-                />
-              </XStack>
-
-              {/* Theme Toggle */}
-              <XStack justifyContent="space-between" alignItems="center">
-                <Text color="$gray11">{t("shared.toggleTheme")}</Text>
-                <ThemeToggle theme={theme} onToggle={toggleTheme} />
-              </XStack>
-
-              {/* Notifications entry — push is mobile-only for now */}
-              {Platform.OS !== "web" && (
-                <Button
-                  variant="outline"
-                  onPress={() => router.push("/(tabs)/profile/notifications")}
-                  testID="profile-notifications-entry"
-                  marginTop="$2"
-                >
-                  <XStack
-                    flex={1}
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <XStack gap="$2" alignItems="center">
-                      <Bell size={18} color="$gray11" />
-                      <Text>{t("notifications.settings.entry")}</Text>
-                    </XStack>
-                    <ChevronRight size={18} color="$gray10" />
-                  </XStack>
-                </Button>
-              )}
-
-              {/* Change Password Section */}
-              {isChangingPassword ? (
-                <YStack gap="$3" marginTop="$2">
-                  {requiresCurrentPassword && (
-                    <Input
-                      label={t("profile.currentPassword")}
-                      placeholder={t("profile.currentPasswordPlaceholder")}
-                      value={currentPassword}
-                      onChangeText={setCurrentPassword}
-                      secureTextEntry
-                      hidePasswordToggle
-                    />
-                  )}
-                  <Input
-                    label={t("profile.newPassword")}
-                    placeholder={t("auth.passwordMinLength")}
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    secureTextEntry
-                  />
-                  <Input
-                    label={t("profile.confirmPassword")}
-                    placeholder={t("auth.passwordMinLength")}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                  />
-
-                  {passwordError && (
-                    <Text color="$red10" fontSize="$3">
-                      {passwordError}
-                    </Text>
-                  )}
-
+                {/* Action buttons */}
+                {isEditing ? (
                   <XStack gap="$2" marginTop="$2">
                     <Button
                       flex={1}
                       variant="outline"
                       onPress={() => {
-                        setIsChangingPassword(false);
-                        setPasswordError(null);
-                        setCurrentPassword("");
-                        setNewPassword("");
-                        setConfirmPassword("");
-                        setRequiresCurrentPassword(false);
+                        setIsEditing(false);
+                        setError(null);
+                        // Reset to original values
+                        const u = session.user as any;
+                        setUsername(u.username || "");
+                        setNationality(u.nationality || "");
+                        setPhoneNumber(u.phoneNumber || "");
+                        setEmail(u.email || "");
+                        setName(u.name || "");
                       }}
-                      disabled={isChangingPasswordLoading}
+                      disabled={isSaving}
                     >
                       {t("shared.cancel")}
                     </Button>
                     <Button
                       flex={1}
                       variant="primary"
-                      onPress={handleChangePasswordWithConfirmation}
-                      disabled={isChangingPasswordLoading}
+                      onPress={handleSaveProfile}
+                      disabled={isSaving}
                     >
-                      {isChangingPasswordLoading ? (
-                        <Spinner size="small" />
-                      ) : (
-                        t("profile.changePassword")
-                      )}
+                      {isSaving ? <Spinner size="small" /> : t("shared.save")}
                     </Button>
                   </XStack>
-                </YStack>
-              ) : (
-                <Button
-                  variant="outline"
-                  onPress={() => setIsChangingPassword(true)}
-                >
-                  {t("profile.changePassword")}
-                </Button>
-              )}
+                ) : (
+                  <YStack gap="$2" marginTop="$2">
+                    <Button variant="outline" onPress={() => setIsEditing(true)}>
+                      {t("profile.editProfile")}
+                    </Button>
+                    <Button variant="outline" onPress={() => router.push("/stats-voting")}>
+                      {t("profile.openStatsVoting")}
+                    </Button>
+                    <Button variant="outline" onPress={() => router.push("/(tabs)/profile/groups")}>
+                      {t("groups.myGroups.title")}
+                    </Button>
+                  </YStack>
+                )}
+              </YStack>
+            </Card>
 
-              {/* Sign Out Button */}
-              <Button variant="danger" onPress={handleSignOut} marginTop="$3">
-                {t("shared.signOut")}
-              </Button>
-            </YStack>
-          </Card>
-
-          {/* Legal & Account Card */}
-          <Card variant="outlined">
-            <YStack gap="$3">
-              <Text fontSize="$5" fontWeight="600">
-                {t("profile.legal")}
-              </Text>
-
-              {[
-                { label: "profile.privacyPolicy", url: `${getWebAppUrl()}/privacy.html` },
-                { label: "profile.termsOfService", url: `${getWebAppUrl()}/terms.html` },
-                { label: "profile.support", url: "mailto:pepe.grillo.parlante@gmail.com" },
-              ].map((link) => (
-                <Pressable key={link.label} onPress={() => Linking.openURL(link.url).catch(() => {})}>
-                  <XStack justifyContent="space-between" alignItems="center" paddingVertical="$2">
-                    <Text color="$gray11" fontSize="$2">{t(link.label)}</Text>
-                    <Text color="$gray10" fontSize="$2">&#8250;</Text>
-                  </XStack>
-                </Pressable>
-              ))}
-
-              {/* App Version */}
-              <XStack justifyContent="space-between" alignItems="center" marginTop="$1">
-                <Text color="$gray10" fontSize="$3">{t("profile.appVersion")}</Text>
-                <Text color="$gray10" fontSize="$3">
-                  {Constants.expoConfig?.version || "1.0.0"}
+            {/* Settings Card - Combined with Password Change and Sign Out */}
+            <Card variant="outlined">
+              <YStack gap="$3">
+                <Text fontSize="$5" fontWeight="600">
+                  {t("shared.settings")}
                 </Text>
-              </XStack>
 
-              {/* Delete Account */}
-              <DeleteAccountSection primaryAuthMethod={primaryAuthMethod} />
-            </YStack>
-          </Card>
-        </YStack>
-      </ScrollView>
+                {/* Language Switcher */}
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text color="$gray11">{t("shared.language")}</Text>
+                  <LanguageSwitcher
+                    currentLanguage={currentLanguage}
+                    onLanguageChange={handleLanguageChange}
+                  />
+                </XStack>
 
-      {/* Password Change Confirmation Dialog */}
-      <AlertDialog
-        open={showPasswordConfirm}
-        onOpenChange={setShowPasswordConfirm}
-        title={t("profile.changePassword")}
-        description={t("profile.changePasswordConfirm")}
-        confirmText={t("profile.changePassword")}
-        cancelText={t("shared.cancel")}
-        onConfirm={handleChangePassword}
-        variant="default"
-      />
-    </Container>
+                {/* Theme Toggle */}
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text color="$gray11">{t("shared.toggleTheme")}</Text>
+                  <ThemeToggle theme={theme} onToggle={toggleTheme} />
+                </XStack>
+
+                {/* Notifications entry — push is mobile-only for now */}
+                {Platform.OS !== "web" && (
+                  <Button
+                    variant="outline"
+                    onPress={() => router.push("/(tabs)/profile/notifications")}
+                    testID="profile-notifications-entry"
+                    marginTop="$2"
+                  >
+                    <XStack flex={1} alignItems="center" justifyContent="space-between">
+                      <XStack gap="$2" alignItems="center">
+                        <Bell size={18} color="$gray11" />
+                        <Text>{t("notifications.settings.entry")}</Text>
+                      </XStack>
+                      <ChevronRight size={18} color="$gray10" />
+                    </XStack>
+                  </Button>
+                )}
+
+                {/* Change Password Section */}
+                {isChangingPassword ? (
+                  <YStack gap="$3" marginTop="$2">
+                    {requiresCurrentPassword && (
+                      <Input
+                        label={t("profile.currentPassword")}
+                        placeholder={t("profile.currentPasswordPlaceholder")}
+                        value={currentPassword}
+                        onChangeText={setCurrentPassword}
+                        secureTextEntry
+                        hidePasswordToggle
+                      />
+                    )}
+                    <Input
+                      label={t("profile.newPassword")}
+                      placeholder={t("auth.passwordMinLength")}
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      secureTextEntry
+                    />
+                    <Input
+                      label={t("profile.confirmPassword")}
+                      placeholder={t("auth.passwordMinLength")}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      secureTextEntry
+                    />
+
+                    {passwordError && (
+                      <Text color="$red10" fontSize="$3">
+                        {passwordError}
+                      </Text>
+                    )}
+
+                    <XStack gap="$2" marginTop="$2">
+                      <Button
+                        flex={1}
+                        variant="outline"
+                        onPress={() => {
+                          setIsChangingPassword(false);
+                          setPasswordError(null);
+                          setCurrentPassword("");
+                          setNewPassword("");
+                          setConfirmPassword("");
+                          setRequiresCurrentPassword(false);
+                        }}
+                        disabled={isChangingPasswordLoading}
+                      >
+                        {t("shared.cancel")}
+                      </Button>
+                      <Button
+                        flex={1}
+                        variant="primary"
+                        onPress={handleChangePasswordWithConfirmation}
+                        disabled={isChangingPasswordLoading}
+                      >
+                        {isChangingPasswordLoading ? (
+                          <Spinner size="small" />
+                        ) : (
+                          t("profile.changePassword")
+                        )}
+                      </Button>
+                    </XStack>
+                  </YStack>
+                ) : (
+                  <Button variant="outline" onPress={() => setIsChangingPassword(true)}>
+                    {t("profile.changePassword")}
+                  </Button>
+                )}
+
+                {/* Sign Out Button */}
+                <Button variant="danger" onPress={handleSignOut} marginTop="$3">
+                  {t("shared.signOut")}
+                </Button>
+              </YStack>
+            </Card>
+
+            {/* Legal & Account Card */}
+            <Card variant="outlined">
+              <YStack gap="$3">
+                <Text fontSize="$5" fontWeight="600">
+                  {t("profile.legal")}
+                </Text>
+
+                {[
+                  { label: "profile.privacyPolicy", url: `${getWebAppUrl()}/privacy.html` },
+                  { label: "profile.termsOfService", url: `${getWebAppUrl()}/terms.html` },
+                  { label: "profile.support", url: "mailto:pepe.grillo.parlante@gmail.com" },
+                ].map((link) => (
+                  <Pressable
+                    key={link.label}
+                    onPress={() => Linking.openURL(link.url).catch(() => {})}
+                  >
+                    <XStack justifyContent="space-between" alignItems="center" paddingVertical="$2">
+                      <Text color="$gray11" fontSize="$2">
+                        {t(link.label)}
+                      </Text>
+                      <Text color="$gray10" fontSize="$2">
+                        &#8250;
+                      </Text>
+                    </XStack>
+                  </Pressable>
+                ))}
+
+                {/* App Version */}
+                <XStack justifyContent="space-between" alignItems="center" marginTop="$1">
+                  <Text color="$gray10" fontSize="$3">
+                    {t("profile.appVersion")}
+                  </Text>
+                  <Text color="$gray10" fontSize="$3">
+                    {Constants.expoConfig?.version || "1.0.0"}
+                  </Text>
+                </XStack>
+
+                {/* Delete Account */}
+                <DeleteAccountSection primaryAuthMethod={primaryAuthMethod} />
+              </YStack>
+            </Card>
+          </YStack>
+        </ScrollView>
+
+        {/* Password Change Confirmation Dialog */}
+        <AlertDialog
+          open={showPasswordConfirm}
+          onOpenChange={setShowPasswordConfirm}
+          title={t("profile.changePassword")}
+          description={t("profile.changePasswordConfirm")}
+          confirmText={t("profile.changePassword")}
+          cancelText={t("shared.cancel")}
+          onConfirm={handleChangePassword}
+          variant="default"
+        />
+      </Container>
     </>
   );
 }

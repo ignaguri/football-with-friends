@@ -15,10 +15,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // Add nationality column if it doesn't exist
   if (!(await columnExists("user", "nationality"))) {
-    await db.schema
-      .alterTable("user")
-      .addColumn("nationality", "text")
-      .execute();
+    await db.schema.alterTable("user").addColumn("nationality", "text").execute();
     console.log("✅ Added nationality column");
   } else {
     console.log("⏭️  nationality column already exists, skipping");

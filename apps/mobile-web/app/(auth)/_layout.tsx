@@ -36,58 +36,58 @@ export default function AuthLayout() {
         </YStack>
       )}
       <Stack
-      screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.background?.val,
-        },
-        headerTintColor: theme.color?.val,
-        headerShadowVisible: false,
-        headerBackButtonDisplayMode: "minimal",
-        headerTitle: "", // Hide the route name from header
-        contentStyle: {
-          backgroundColor: theme.background?.val,
-        },
-        // Disable slide animation on web to prevent bleed-through
-        ...(Platform.OS === "web" ? { animation: "none" } : {}),
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          headerShown: false,
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: theme.background?.val,
+          },
+          headerTintColor: theme.color?.val,
+          headerShadowVisible: false,
+          headerBackButtonDisplayMode: "minimal",
+          headerTitle: "", // Hide the route name from header
+          contentStyle: {
+            backgroundColor: theme.background?.val,
+          },
+          // Disable slide animation on web to prevent bleed-through
+          ...(Platform.OS === "web" ? { animation: "none" } : {}),
         }}
-      />
-      <Stack.Screen
-        name="phone-signin"
-        options={{
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="phone-signup"
-        options={{
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="email-signin"
-        options={{
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="email-signup"
-        options={{
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="forgot-password"
-        options={{
-          headerTitle: "",
-        }}
-      />
-    </Stack>
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="phone-signin"
+          options={{
+            headerTitle: "",
+          }}
+        />
+        <Stack.Screen
+          name="phone-signup"
+          options={{
+            headerTitle: "",
+          }}
+        />
+        <Stack.Screen
+          name="email-signin"
+          options={{
+            headerTitle: "",
+          }}
+        />
+        <Stack.Screen
+          name="email-signup"
+          options={{
+            headerTitle: "",
+          }}
+        />
+        <Stack.Screen
+          name="forgot-password"
+          options={{
+            headerTitle: "",
+          }}
+        />
+      </Stack>
     </>
   );
 }

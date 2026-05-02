@@ -41,19 +41,12 @@ import {
   Trash2,
   Image as ImageIcon,
   ChevronRight,
-} from "@tamagui/lucide-icons";
+} from "@tamagui/lucide-icons-2";
 import { Image } from "expo-image";
 import { useLocalSearchParams, router } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
-import {
-  Platform,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Share,
-  Linking,
-} from "react-native";
+import { Platform, Pressable, RefreshControl, ScrollView, Share, Linking } from "react-native";
 
 import {
   generateICS as generateICSFromUtils,
@@ -135,16 +128,12 @@ export default function MatchDetailScreen() {
   const { groupId: currentGroupId, myRole } = useCurrentGroup();
   const isOrganizer = myRole === "organizer" || session?.user?.role === "admin";
   // Roster list is organizer-only; don't trigger a 403 for regular members.
-  const rosterForGuest = useGroupRoster(
-    showGuestDialog && isOrganizer ? currentGroupId : null,
-  );
+  const rosterForGuest = useGroupRoster(showGuestDialog && isOrganizer ? currentGroupId : null);
   const filteredRoster = useMemo(() => {
     const entries = rosterForGuest.data ?? [];
     const q = guestSearch.trim().toLowerCase();
     return q
-      ? entries.filter((e: GroupRosterEntry) =>
-          e.displayName.toLowerCase().includes(q),
-        )
+      ? entries.filter((e: GroupRosterEntry) => e.displayName.toLowerCase().includes(q))
       : entries;
   }, [rosterForGuest.data, guestSearch]);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
@@ -212,8 +201,7 @@ export default function MatchDetailScreen() {
   const isPlayed = match?.status === "completed";
   const isParticipating = match?.isUserSignedUp;
   const userWasParticipant =
-    match?.userSignup?.status === "PAID" ||
-    match?.userSignup?.status === "PENDING";
+    match?.userSignup?.status === "PAID" || match?.userSignup?.status === "PENDING";
 
   const { data: isVotingClosed = false } = useQuery<MatchStats, Error, boolean>({
     queryKey: ["match-stats", matchId],
@@ -234,9 +222,7 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          (data as { error?: string }).error || "Failed to sign up",
-        );
+        throw new Error((data as { error?: string }).error || "Failed to sign up");
       }
       return res.json();
     },
@@ -254,22 +240,14 @@ export default function MatchDetailScreen() {
   });
 
   const updateSignupMutation = useMutation({
-    mutationFn: async ({
-      signupId,
-      status,
-    }: {
-      signupId: string;
-      status: PlayerStatusType;
-    }) => {
+    mutationFn: async ({ signupId, status }: { signupId: string; status: PlayerStatusType }) => {
       const res = await client.api.matches[":id"].signup[":signupId"].$patch({
         param: { id: matchId!, signupId },
         json: { status },
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          (data as { error?: string }).error || "Failed to update",
-        );
+        throw new Error((data as { error?: string }).error || "Failed to update");
       }
       return res.json();
     },
@@ -286,9 +264,7 @@ export default function MatchDetailScreen() {
 
   const addGuestMutation = useMutation({
     mutationFn: async (
-      input:
-        | { rosterId: string }
-        | { guestName: string; phone?: string; email?: string },
+      input: { rosterId: string } | { guestName: string; phone?: string; email?: string },
     ) => {
       const res = await client.api.matches[":id"].guest.$post({
         param: { id: matchId! },
@@ -296,9 +272,7 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          (data as { error?: string }).error || "Failed to add guest",
-        );
+        throw new Error((data as { error?: string }).error || "Failed to add guest");
       }
       return res.json();
     },
@@ -322,22 +296,14 @@ export default function MatchDetailScreen() {
   });
 
   const editPlayerNameMutation = useMutation({
-    mutationFn: async ({
-      signupId,
-      playerName,
-    }: {
-      signupId: string;
-      playerName: string;
-    }) => {
+    mutationFn: async ({ signupId, playerName }: { signupId: string; playerName: string }) => {
       const res = await client.api.matches[":id"].signup[":signupId"].$patch({
         param: { id: matchId!, signupId },
         json: { playerName },
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          (data as { error?: string }).error || "Failed to update name",
-        );
+        throw new Error((data as { error?: string }).error || "Failed to update name");
       }
       return res.json();
     },
@@ -362,9 +328,7 @@ export default function MatchDetailScreen() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(
-          (data as { error?: string }).error || "Failed to remove player",
-        );
+        throw new Error((data as { error?: string }).error || "Failed to remove player");
       }
       return res.json();
     },
@@ -379,10 +343,7 @@ export default function MatchDetailScreen() {
     },
   });
 
-  const handleCancelSignup = (
-    signupId: string,
-    currentStatus: PlayerStatusType,
-  ) => {
+  const handleCancelSignup = (signupId: string, currentStatus: PlayerStatusType) => {
     setSignupToCancel({ id: signupId, status: currentStatus });
     setShowCancelAlert(true);
   };
@@ -506,8 +467,7 @@ export default function MatchDetailScreen() {
   const handleShareMatch = () => {
     if (!match) return;
     const baseUrl =
-      (typeof process !== "undefined" &&
-        process.env?.EXPO_PUBLIC_WEB_BASE_URL) ||
+      (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_WEB_BASE_URL) ||
       "https://footballwithfriends.vercel.app";
     const matchUrl =
       Platform.OS === "web" && typeof window !== "undefined"
@@ -643,9 +603,7 @@ export default function MatchDetailScreen() {
   };
 
   // Check if match is today (in app timezone, not device timezone)
-  const isMatchToday = match
-    ? formatMatchDate(new Date()) === match.date
-    : false;
+  const isMatchToday = match ? formatMatchDate(new Date()) === match.date : false;
 
   // Calculate total cost for same-day matches
   const baseCost = parseFloat(match?.costPerPlayer || "0");
@@ -689,9 +647,7 @@ export default function MatchDetailScreen() {
       <ScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
+        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       >
         <YStack gap="$3" paddingBottom="$6">
           {/* Match Header Card */}
@@ -715,26 +671,24 @@ export default function MatchDetailScreen() {
                 {/* Action buttons */}
                 <XStack gap="$2">
                   {/* Edit Button (admin only, non-cancelled) */}
-                  {isAdmin &&
-                    match.status !== "cancelled" &&
-                    match.status !== "completed" && (
-                      <Button
-                        variant="outline"
-                        size="$3"
-                        circular
-                        onPress={() =>
-                          router.push({
-                            pathname: "/(tabs)/admin/edit-match",
-                            params: { matchId: match.id },
-                          })
-                        }
-                        padding="$2"
-                        accessibilityLabel={t("a11y.editMatch")}
-                        testID="match-detail-edit-btn"
-                      >
-                        <Pencil size={20} />
-                      </Button>
-                    )}
+                  {isAdmin && match.status !== "cancelled" && match.status !== "completed" && (
+                    <Button
+                      variant="outline"
+                      size="$3"
+                      circular
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(tabs)/admin/edit-match",
+                          params: { matchId: match.id },
+                        })
+                      }
+                      padding="$2"
+                      accessibilityLabel={t("a11y.editMatch")}
+                      testID="match-detail-edit-btn"
+                    >
+                      <Pencil size={20} />
+                    </Button>
+                  )}
 
                   {/* Add to Calendar Button */}
                   {(isParticipating || match.userSignup?.status === "PAID") && (
@@ -870,9 +824,7 @@ export default function MatchDetailScreen() {
                 })
               }
             >
-              {isVotingClosed
-                ? t("voting.seeMyVotes")
-                : t("voting.voteForMatch")}
+              {isVotingClosed ? t("voting.seeMyVotes") : t("voting.voteForMatch")}
             </Button>
           )}
 
@@ -974,10 +926,7 @@ export default function MatchDetailScreen() {
                 <Text color="$gray11" textAlign="center">
                   {t("home.signInPrompt")}
                 </Text>
-                <Button
-                  variant="primary"
-                  onPress={() => router.push("/(auth)")}
-                >
+                <Button variant="primary" onPress={() => router.push("/(auth)")}>
                   {t("shared.signIn")}
                 </Button>
               </YStack>
@@ -1003,9 +952,7 @@ export default function MatchDetailScreen() {
           }
         }}
         onCancel={() => setShowJoinModal(false)}
-        confirmText={
-          signupMutation.isPending ? t("actions.joining") : t("actions.join")
-        }
+        confirmText={signupMutation.isPending ? t("actions.joining") : t("actions.join")}
         cancelText={t("shared.cancel")}
       >
         {/* Payment Information */}
@@ -1023,16 +970,14 @@ export default function MatchDetailScreen() {
               </Text>
             </XStack>
           )}
-          {isMatchToday &&
-            match.sameDayCost &&
-            parseFloat(match.sameDayCost) > 0 && (
-              <XStack justifyContent="space-between">
-                <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
-                <Text fontWeight="500" color="$orange10">
-                  +{match.sameDayCost}€
-                </Text>
-              </XStack>
-            )}
+          {isMatchToday && match.sameDayCost && parseFloat(match.sameDayCost) > 0 && (
+            <XStack justifyContent="space-between">
+              <Text color="$orange10">{t("matchDetail.sameDayFee")}</Text>
+              <Text fontWeight="500" color="$orange10">
+                +{match.sameDayCost}€
+              </Text>
+            </XStack>
+          )}
           {isMatchToday &&
             match.sameDayCost &&
             parseFloat(match.sameDayCost) > 0 &&
@@ -1123,9 +1068,7 @@ export default function MatchDetailScreen() {
                     <Button
                       key={e.id}
                       variant="outline"
-                      onPress={() =>
-                        addGuestMutation.mutate({ rosterId: e.id })
-                      }
+                      onPress={() => addGuestMutation.mutate({ rosterId: e.id })}
                       disabled={addGuestMutation.isPending}
                       testID={`guest-roster-pick-${e.id}`}
                     >
@@ -1177,9 +1120,7 @@ export default function MatchDetailScreen() {
                 }
                 disabled={!guestName.trim() || addGuestMutation.isPending}
               >
-                {addGuestMutation.isPending
-                  ? t("guest.adding")
-                  : t("guest.add")}
+                {addGuestMutation.isPending ? t("guest.adding") : t("guest.add")}
               </Button>
             </YStack>
           )}
@@ -1232,11 +1173,7 @@ export default function MatchDetailScreen() {
             onChangeText={setEditedName}
           />
           <XStack gap="$2">
-            <Button
-              variant="outline"
-              flex={1}
-              onPress={() => setShowEditNameDialog(false)}
-            >
+            <Button variant="outline" flex={1} onPress={() => setShowEditNameDialog(false)}>
               {t("shared.cancel")}
             </Button>
             <Button
@@ -1252,9 +1189,7 @@ export default function MatchDetailScreen() {
               }}
               disabled={!editedName.trim() || editPlayerNameMutation.isPending}
             >
-              {editPlayerNameMutation.isPending
-                ? t("shared.saving")
-                : t("shared.save")}
+              {editPlayerNameMutation.isPending ? t("shared.saving") : t("shared.save")}
             </Button>
           </XStack>
         </YStack>
@@ -1277,11 +1212,7 @@ export default function MatchDetailScreen() {
       />
 
       {/* Rules Modal */}
-      <Dialog
-        open={showRulesModal}
-        onOpenChange={setShowRulesModal}
-        title={t("rules.title")}
-      >
+      <Dialog open={showRulesModal} onOpenChange={setShowRulesModal} title={t("rules.title")}>
         <ScrollView style={{ maxHeight: 400 }}>
           <YStack gap="$4" padding="$4">
             <YStack gap="$2">
@@ -1295,9 +1226,7 @@ export default function MatchDetailScreen() {
                   }) as string[];
                   return (
                     Array.isArray(generalRules) &&
-                    generalRules.map((rule, index) => (
-                      <List.Item key={index}>{rule}</List.Item>
-                    ))
+                    generalRules.map((rule, index) => <List.Item key={index}>{rule}</List.Item>)
                   );
                 })()}
               </List>
@@ -1314,9 +1243,7 @@ export default function MatchDetailScreen() {
                   }) as string[];
                   return (
                     Array.isArray(matchRules) &&
-                    matchRules.map((rule, index) => (
-                      <List.Item key={index}>{rule}</List.Item>
-                    ))
+                    matchRules.map((rule, index) => <List.Item key={index}>{rule}</List.Item>)
                   );
                 })()}
               </List>

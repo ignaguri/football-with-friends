@@ -30,11 +30,14 @@ declare global {
               logo_alignment?: "left" | "center";
               width?: string | number;
               locale?: string;
-            }
+            },
           ) => void;
           prompt: (momentListener?: (notification: PromptMomentNotification) => void) => void;
           disableAutoSelect: () => void;
-          storeCredential: (credential: { id: string; password: string }, callback?: () => void) => void;
+          storeCredential: (
+            credential: { id: string; password: string },
+            callback?: () => void,
+          ) => void;
           cancel: () => void;
           revoke: (hint: string, callback?: (response: RevocationResponse) => void) => void;
         };

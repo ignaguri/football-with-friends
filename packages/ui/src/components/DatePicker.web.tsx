@@ -1,13 +1,6 @@
 import { useState, useMemo } from "react";
-import {
-  YStack,
-  XStack,
-  Text,
-  Button,
-  Dialog as TamaguiDialog,
-  styled,
-} from "tamagui";
-import { Calendar, ChevronLeft, ChevronRight } from "@tamagui/lucide-icons";
+import { YStack, XStack, Text, Button, Dialog as TamaguiDialog, styled } from "tamagui";
+import { Calendar, ChevronLeft, ChevronRight } from "@tamagui/lucide-icons-2";
 import {
   format,
   startOfMonth,
@@ -119,10 +112,7 @@ export function DatePicker({
     setCurrentMonth(addMonths(currentMonth, 1));
   };
 
-  const isPrevDisabled = isBefore(
-    endOfMonth(subMonths(currentMonth, 1)),
-    effectiveMinDate
-  );
+  const isPrevDisabled = isBefore(endOfMonth(subMonths(currentMonth, 1)), effectiveMinDate);
 
   return (
     <YStack gap="$2">
@@ -200,12 +190,7 @@ export function DatePicker({
                 <Text fontSize="$5" fontWeight="600">
                   {format(currentMonth, "MMMM yyyy")}
                 </Text>
-                <Button
-                  size="$3"
-                  circular
-                  icon={ChevronRight}
-                  onPress={handleNextMonth}
-                />
+                <Button size="$3" circular icon={ChevronRight} onPress={handleNextMonth} />
               </XStack>
 
               {/* Weekday headers */}
@@ -217,49 +202,35 @@ export function DatePicker({
 
               {/* Calendar grid */}
               <YStack gap="$1">
-                {Array.from({ length: Math.ceil(calendarDays.length / 7) }).map(
-                  (_, weekIndex) => (
-                    <XStack
-                      key={weekIndex}
-                      justifyContent="space-between"
-                      paddingHorizontal="$1"
-                    >
-                      {calendarDays
-                        .slice(weekIndex * 7, (weekIndex + 1) * 7)
-                        .map((day) => {
-                          const isCurrentMonth = isSameMonth(day, currentMonth);
-                          const isSelected = value && isSameDay(day, value);
-                          const isTodayDate = isSameDay(day, today);
-                          const isBeforeMin = isBefore(day, effectiveMinDate);
+                {Array.from({ length: Math.ceil(calendarDays.length / 7) }).map((_, weekIndex) => (
+                  <XStack key={weekIndex} justifyContent="space-between" paddingHorizontal="$1">
+                    {calendarDays.slice(weekIndex * 7, (weekIndex + 1) * 7).map((day) => {
+                      const isCurrentMonth = isSameMonth(day, currentMonth);
+                      const isSelected = value && isSameDay(day, value);
+                      const isTodayDate = isSameDay(day, today);
+                      const isBeforeMin = isBefore(day, effectiveMinDate);
 
-                          return (
-                            <DayButton
-                              key={day.toISOString()}
-                              onPress={() => handleSelectDate(day)}
-                              isSelected={isSelected}
-                              isToday={isTodayDate && !isSelected}
-                              isOutside={!isCurrentMonth}
-                              isDisabled={isBeforeMin}
-                            >
-                              <Text
-                                color={
-                                  isSelected
-                                    ? "white"
-                                    : isCurrentMonth
-                                    ? "$color"
-                                    : "$gray8"
-                                }
-                                fontSize="$3"
-                                fontWeight={isTodayDate ? "700" : "400"}
-                              >
-                                {format(day, "d")}
-                              </Text>
-                            </DayButton>
-                          );
-                        })}
-                    </XStack>
-                  )
-                )}
+                      return (
+                        <DayButton
+                          key={day.toISOString()}
+                          onPress={() => handleSelectDate(day)}
+                          isSelected={isSelected}
+                          isToday={isTodayDate && !isSelected}
+                          isOutside={!isCurrentMonth}
+                          isDisabled={isBeforeMin}
+                        >
+                          <Text
+                            color={isSelected ? "white" : isCurrentMonth ? "$color" : "$gray8"}
+                            fontSize="$3"
+                            fontWeight={isTodayDate ? "700" : "400"}
+                          >
+                            {format(day, "d")}
+                          </Text>
+                        </DayButton>
+                      );
+                    })}
+                  </XStack>
+                ))}
               </YStack>
 
               {/* Quick actions */}

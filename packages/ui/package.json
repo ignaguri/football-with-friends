@@ -9,27 +9,26 @@
     "./components/*": "./src/components/*.tsx"
   },
   "scripts": {
-    "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-native-community/datetimepicker": "^8.6.0",
+    "@react-native-community/datetimepicker": "^9.1.0",
     "@repo/shared": "workspace:*",
-    "expo-image": "~55.0.6",
-    "expo-video": "^55.0.15",
-    "@tamagui/lucide-icons": "2.0.0-rc.26",
-    "@tamagui/toast": "2.0.0-rc.26",
+    "@tamagui/lucide-icons-2": "2.0.0-rc.41",
+    "@tamagui/toast": "2.0.0-rc.41",
     "date-fns": "^4.1.0",
-    "react-dom": "19.2.4",
-    "tamagui": "2.0.0-rc.26"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-native": "*"
+    "expo-image": "~55.0.9",
+    "expo-video": "^55.0.15",
+    "react-dom": "19.2.5",
+    "tamagui": "2.0.0-rc.41"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/react": "~19.2.14",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-native": "*"
   }
 }

@@ -1,30 +1,14 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  signIn,
-  needsPasswordReset,
-  resetPasswordForMigration,
-} from "@repo/api-client";
-import {
-  Container,
-  Card,
-  Text,
-  YStack,
-  XStack,
-  Input,
-  Button,
-  Spinner,
-} from "@repo/ui";
+import { signIn, needsPasswordReset, resetPasswordForMigration } from "@repo/api-client";
+import { Container, Card, Text, YStack, XStack, Input, Button, Spinner } from "@repo/ui";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { ScrollView } from "react-native";
 
-import {
-  signInSchema,
-  type SignInFormData,
-} from "../../lib/validation";
+import { signInSchema, type SignInFormData } from "../../lib/validation";
 
 export default function EmailSignInScreen() {
   const { t } = useTranslation();
@@ -37,9 +21,7 @@ export default function EmailSignInScreen() {
 
   // Honor ?redirectTo=/path from deep-link entry points (e.g. /join/:token).
   const params = useLocalSearchParams<{ redirectTo?: string | string[] }>();
-  const rawRedirect = Array.isArray(params.redirectTo)
-    ? params.redirectTo[0]
-    : params.redirectTo;
+  const rawRedirect = Array.isArray(params.redirectTo) ? params.redirectTo[0] : params.redirectTo;
   const postSignInPath =
     rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("//")
       ? rawRedirect
@@ -121,17 +103,8 @@ export default function EmailSignInScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack
-          gap="$6"
-          width="100%"
-          maxWidth={400}
-          marginHorizontal="auto"
-          paddingVertical="$8"
-        >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <YStack gap="$6" width="100%" maxWidth={400} marginHorizontal="auto" paddingVertical="$8">
           <YStack gap="$2" alignItems="center">
             <Text fontSize="$9" fontWeight="bold">
               {t("auth.signIn")}
@@ -159,10 +132,7 @@ export default function EmailSignInScreen() {
                         testID="auth-email-signin-email"
                         error={
                           emailForm.formState.errors.email
-                            ? t(
-                                emailForm.formState.errors.email
-                                  .message as string,
-                              )
+                            ? t(emailForm.formState.errors.email.message as string)
                             : undefined
                         }
                       />
@@ -182,10 +152,7 @@ export default function EmailSignInScreen() {
                         testID="auth-email-signin-password"
                         error={
                           emailForm.formState.errors.password
-                            ? t(
-                                emailForm.formState.errors.password
-                                  .message as string,
-                              )
+                            ? t(emailForm.formState.errors.password.message as string)
                             : undefined
                         }
                       />
@@ -206,22 +173,12 @@ export default function EmailSignInScreen() {
               ) : (
                 <>
                   {resetSuccess ? (
-                    <Text
-                      color="$green10"
-                      fontSize="$3"
-                      textAlign="center"
-                      paddingVertical="$2"
-                    >
+                    <Text color="$green10" fontSize="$3" textAlign="center" paddingVertical="$2">
                       {t("auth.passwordResetSuccess")}
                     </Text>
                   ) : (
                     <>
-                      <Text
-                        color="$orange10"
-                        fontSize="$3"
-                        textAlign="center"
-                        paddingVertical="$2"
-                      >
+                      <Text color="$orange10" fontSize="$3" textAlign="center" paddingVertical="$2">
                         {t("auth.passwordResetRequired")}
                       </Text>
 
@@ -270,11 +227,7 @@ export default function EmailSignInScreen() {
                     variant="primary"
                     testID="auth-email-signin-reset-submit"
                   >
-                    {isLoading ? (
-                      <Spinner size="small" color="white" />
-                    ) : (
-                      t("auth.resetMyPassword")
-                    )}
+                    {isLoading ? <Spinner size="small" color="white" /> : t("auth.resetMyPassword")}
                   </Button>
                 ) : null}
               </YStack>

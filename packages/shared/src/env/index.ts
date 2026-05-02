@@ -103,8 +103,4 @@ export function getLocalDbEnv() {
 
 // Re-export types and utilities
 export type { ValidatedEnvironment } from "./validator";
-export {
-  generateEnvTemplate,
-  getRequiredVariables,
-  validateEnvironment,
-} from "./validator";
+export { generateEnvTemplate, getRequiredVariables, validateEnvironment } from "./validator";

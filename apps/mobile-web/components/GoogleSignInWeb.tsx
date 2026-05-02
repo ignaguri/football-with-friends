@@ -72,7 +72,7 @@ export function GoogleSignInWeb({
         setIsLoading(false);
       }
     },
-    [onSuccess, onError]
+    [onSuccess, onError],
   );
 
   // Trigger Google Sign-In by clicking the hidden button
@@ -139,11 +139,7 @@ export function GoogleSignInWeb({
   return (
     <View style={styles.container}>
       {/* Hidden official button (always rendered for authentication) */}
-      <div
-        ref={hiddenButtonRef}
-        style={{ display: "none" }}
-        aria-hidden="true"
-      />
+      <div ref={hiddenButtonRef} style={{ display: "none" }} aria-hidden="true" />
 
       {/* Custom button OR official visible button */}
       {renderCustomButton ? (

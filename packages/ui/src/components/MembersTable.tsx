@@ -10,16 +10,16 @@ import {
 export type MemberRole = "owner" | "organizer" | "member";
 
 export interface MemberRow {
-  id: string;                       // row id (group_members.id)
+  id: string; // row id (group_members.id)
   userId: string;
-  role: MemberRole;                 // "owner" is synthetic: derive from groups.ownerUserId before constructing rows
+  role: MemberRole; // "owner" is synthetic: derive from groups.ownerUserId before constructing rows
   name: string | null;
   email: string | null;
   phoneNumber: string | null;
   username?: string | null;
   displayUsername?: string | null;
   isCurrentUser?: boolean;
-  actions?: RosterAction[];         // icon-only action buttons (kick, promote, demote, transfer)
+  actions?: RosterAction[]; // icon-only action buttons (kick, promote, demote, transfer)
   testID?: string;
 }
 
@@ -44,12 +44,7 @@ function displayEmail(email: string | null): string | null {
 }
 
 function displayNameOf(member: MemberRow): string {
-  return (
-    member.displayUsername ||
-    member.username ||
-    member.name ||
-    member.userId
-  );
+  return member.displayUsername || member.username || member.name || member.userId;
 }
 
 function secondaryOf(member: MemberRow): string | null {
@@ -71,12 +66,7 @@ function MemberRoleBadge({ role, label }: { role: MemberRole; label: string }) {
         ? { bg: "$blue3", fg: "$blue11" }
         : { bg: "$gray3", fg: "$gray11" };
   return (
-    <XStack
-      paddingHorizontal="$2"
-      paddingVertical="$1"
-      borderRadius="$4"
-      backgroundColor={tone.bg}
-    >
+    <XStack paddingHorizontal="$2" paddingVertical="$1" borderRadius="$4" backgroundColor={tone.bg}>
       <Text fontSize="$1" fontWeight="600" color={tone.fg}>
         {label}
       </Text>
@@ -114,8 +104,7 @@ export function MembersTable({
   const renderMemberRow = (member: MemberRow) => {
     const primaryName = displayNameOf(member);
     const secondary = secondaryOf(member);
-    const actions =
-      member.actions && member.actions.length > 0 ? member.actions : undefined;
+    const actions = member.actions && member.actions.length > 0 ? member.actions : undefined;
 
     return (
       <RosterRow
@@ -157,15 +146,10 @@ export function MembersTable({
   return (
     <YStack>
       {owner && (
-        <RosterSection label={sectionLabels?.owner}>
-          {renderMemberRow(owner)}
-        </RosterSection>
+        <RosterSection label={sectionLabels?.owner}>{renderMemberRow(owner)}</RosterSection>
       )}
       {organizers.length > 0 && (
-        <RosterSection
-          label={sectionLabels?.organizer}
-          showSeparatorBefore={!!owner}
-        >
+        <RosterSection label={sectionLabels?.organizer} showSeparatorBefore={!!owner}>
           {renderWithSeparators(organizers, renderMemberRow)}
         </RosterSection>
       )}

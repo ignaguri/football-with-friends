@@ -12,19 +12,19 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@orpc/client": "^1.13.7",
-    "@orpc/react": "^1.13.7",
+    "@orpc/client": "^1.14.0",
+    "@orpc/react": "^1.14.0",
     "@repo/shared": "workspace:*",
-    "@tanstack/react-query": "^5.90.21",
-    "hono": "^4.12.8",
-    "react-dom": "19.2.4"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0"
+    "@tanstack/react-query": "^5.100.8",
+    "hono": "^4.12.16",
+    "react-dom": "19.2.5"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/react": "~19.2.14",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
   }
 }

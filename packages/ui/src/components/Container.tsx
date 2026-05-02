@@ -1,4 +1,5 @@
-import { YStack, YStackProps } from "tamagui";
+import type { YStackProps } from "tamagui";
+import { YStack } from "tamagui";
 
 export interface ContainerProps extends YStackProps {
   variant?: "default" | "centered" | "padded";
@@ -29,11 +30,5 @@ export function Container({ variant = "default", ...props }: ContainerProps) {
     },
   };
 
-  return (
-    <YStack
-      backgroundColor="$background"
-      {...variantStyles[variant]}
-      {...props}
-    />
-  );
+  return <YStack backgroundColor="$background" {...variantStyles[variant]} {...props} />;
 }

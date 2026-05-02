@@ -36,39 +36,42 @@ function createAuthInstance() {
   return betterAuth({
     appName: "Fulbo con los pibes",
     baseURL: process.env.BETTER_AUTH_BASE_URL || "http://localhost:3001",
-    trustedOrigins: process.env.TRUSTED_ORIGINS?.split(",") || ((request) => {
-      const staticOrigins = [
-        "http://localhost:8081",
-        "http://localhost:8085",
-        "http://localhost:19006",
-        "http://localhost:3000",
-        "http://localhost:3001",
-        // Vercel production
-        "https://football-with-friends.vercel.app",
-        // Allow native app deep link callback (production + dev client schemes)
-        "football-with-friends://",
-        "exp+football-with-friends://",
-      ];
+    trustedOrigins:
+      process.env.TRUSTED_ORIGINS?.split(",") ||
+      ((request) => {
+        const staticOrigins = [
+          "http://localhost:8081",
+          "http://localhost:8085",
+          "http://localhost:19006",
+          "http://localhost:3000",
+          "http://localhost:3001",
+          // Vercel production
+          "https://football-with-friends.vercel.app",
+          // Allow native app deep link callback (production + dev client schemes)
+          "football-with-friends://",
+          "exp+football-with-friends://",
+        ];
 
-      // If no request, return static origins (used during initialization)
-      if (!request) {
+        // If no request, return static origins (used during initialization)
+        if (!request) {
+          return staticOrigins;
+        }
+
+        // Get the origin from request headers
+        const origin = request.headers.get("origin") || "";
+
+        // Check if it's a Vercel preview deployment for our project
+        // Patterns:
+        // - Hash: football-with-friends-{hash}-ignacio-guris-projects.vercel.app
+        // - Git branch: football-with-friends-git-{branch}-ignacio-guris-projects.vercel.app
+        const vercelPreviewPattern =
+          /^https:\/\/football-with-friends-.+-ignacio-guris-projects\.vercel\.app$/;
+        if (vercelPreviewPattern.test(origin)) {
+          return [...staticOrigins, origin];
+        }
+
         return staticOrigins;
-      }
-
-      // Get the origin from request headers
-      const origin = request.headers.get("origin") || "";
-
-      // Check if it's a Vercel preview deployment for our project
-      // Patterns:
-      // - Hash: football-with-friends-{hash}-ignacio-guris-projects.vercel.app
-      // - Git branch: football-with-friends-git-{branch}-ignacio-guris-projects.vercel.app
-      const vercelPreviewPattern = /^https:\/\/football-with-friends-.+-ignacio-guris-projects\.vercel\.app$/;
-      if (vercelPreviewPattern.test(origin)) {
-        return [...staticOrigins, origin];
-      }
-
-      return staticOrigins;
-    }),
+      }),
     // Allow requests without origin header (mobile apps)
     advanced: {
       crossSubDomainCookies: {
@@ -199,10 +202,10 @@ function createAuthInstance() {
         verifyOTP: async ({ phoneNumber: phone, code }, ctx) => {
           // 'code' is actually the user's password
           // Find user by phone number
-          const user = await ctx?.context.adapter.findOne({
+          const user = (await ctx?.context.adapter.findOne({
             model: "user",
             where: [{ field: "phoneNumber", value: phone }],
-          }) as { id: string } | null;
+          })) as { id: string } | null;
 
           if (!user) return false;
 
@@ -226,7 +229,9 @@ function createAuthInstance() {
       // This allows preview deployments (Vercel) to work with OAuth without
       // needing to register each preview URL with the OAuth provider
       oAuthProxy({
-        productionURL: process.env.BETTER_AUTH_BASE_URL || "https://football-api.pepe-grillo-parlante.workers.dev",
+        productionURL:
+          process.env.BETTER_AUTH_BASE_URL ||
+          "https://football-api.pepe-grillo-parlante.workers.dev",
       }),
       // One Tap plugin - enables ID token-based Google authentication
       // This bypasses cross-domain cookie issues by using Google Identity Services
@@ -241,9 +246,7 @@ function createAuthInstance() {
       after: [
         {
           matcher(context: any) {
-            return (
-              context.path === "/sign-in/social" && context.method === "POST"
-            );
+            return context.path === "/sign-in/social" && context.method === "POST";
           },
           handler(context: any) {
             console.log("Google OAuth callback triggered:", {

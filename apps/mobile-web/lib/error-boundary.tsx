@@ -1,8 +1,9 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { Component, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Component } from "react";
 import * as Sentry from "@sentry/react-native";
 import { Container, Card, Text, YStack, Button } from "@repo/ui";
-import { AlertTriangle } from "@tamagui/lucide-icons";
+import { AlertTriangle } from "@tamagui/lucide-icons-2";
 import i18next from "i18next";
 
 interface Props {
@@ -42,12 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <Container variant="padded">
-          <YStack
-            flex={1}
-            justifyContent="center"
-            alignItems="center"
-            gap="$4"
-          >
+          <YStack flex={1} justifyContent="center" alignItems="center" gap="$4">
             <YStack
               width={64}
               height={64}
@@ -63,12 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <Text fontSize="$6" fontWeight="bold" textAlign="center">
                 {t("shared.errorOccurred")}
               </Text>
-              <Text
-                fontSize="$4"
-                color="$gray11"
-                textAlign="center"
-                maxWidth={300}
-              >
+              <Text fontSize="$4" color="$gray11" textAlign="center" maxWidth={300}>
                 {t("shared.errorBoundaryMessage")}
               </Text>
             </YStack>

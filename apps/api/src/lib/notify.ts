@@ -31,11 +31,7 @@ async function toMatchInfo(match: Match): Promise<NotificationMatchInfo> {
 
 async function getUserIdsWithPushTokens(excludeId?: string): Promise<string[]> {
   const db = getDatabase();
-  let query = db
-    .selectFrom("push_tokens")
-    .select("user_id")
-    .where("active", "=", 1)
-    .distinct();
+  let query = db.selectFrom("push_tokens").select("user_id").where("active", "=", 1).distinct();
 
   if (excludeId) {
     query = query.where("user_id", "!=", excludeId);
@@ -212,10 +208,7 @@ export async function notifyGroupInviteTarget(params: {
   await safeNotify("group invite target", async () => {
     const userId = await findUserIdByPhone(params.targetPhone);
     if (!userId) return;
-    const existing = await getRepositoryFactory().groupMembers.find(
-      params.groupId,
-      userId,
-    );
+    const existing = await getRepositoryFactory().groupMembers.find(params.groupId, userId);
     if (existing) return;
     await getNotificationService().sendToUser(
       userId,

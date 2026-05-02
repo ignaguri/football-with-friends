@@ -25,17 +25,13 @@ const MATCHES_FALLBACK_TYPES = new Set<NotificationType>([
   NOTIFICATION_TYPES.VOTING_OPEN,
 ]);
 
-export function getNotificationRoute(
-  data: NotificationPayload["data"] | null | undefined,
-): string {
+export function getNotificationRoute(data: NotificationPayload["data"] | null | undefined): string {
   if (!data) return FALLBACK_ROUTE;
   const screen = (data as { screen?: unknown }).screen;
   if (typeof screen === "string" && screen.length > 0) {
     return screen;
   }
-  const type = (data as { type?: unknown }).type as
-    | NotificationType
-    | undefined;
+  const type = (data as { type?: unknown }).type as NotificationType | undefined;
   if (type && MATCHES_FALLBACK_TYPES.has(type)) return MATCHES_ROUTE;
   return FALLBACK_ROUTE;
 }

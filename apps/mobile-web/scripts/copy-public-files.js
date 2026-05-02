@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const publicDir = path.join(__dirname, '../public');
-const distDir = path.join(__dirname, '../dist');
+const publicDir = path.join(__dirname, "../public");
+const distDir = path.join(__dirname, "../dist");
 
 function copyRecursive(src, dest) {
   if (!fs.existsSync(src)) {
@@ -28,6 +28,6 @@ function copyRecursive(src, dest) {
   }
 }
 
-console.log('Copying public files to dist...');
+console.log("Copying public files to dist...");
 copyRecursive(publicDir, distDir);
-console.log('Public files copied successfully!');
+console.log("Public files copied successfully!");

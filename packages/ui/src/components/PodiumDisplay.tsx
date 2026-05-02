@@ -1,6 +1,6 @@
 import { Text, XStack, YStack } from "tamagui";
 import { UserAvatar } from "./user-avatar";
-import { Trophy, Award } from "@tamagui/lucide-icons";
+import { Trophy, Award } from "@tamagui/lucide-icons-2";
 import { getCountryFlag } from "../utils/country-flags";
 
 export interface PodiumDisplayProps {
@@ -19,15 +19,15 @@ export interface PodiumDisplayProps {
 // Podium heights for visual hierarchy
 const PODIUM_HEIGHTS = {
   1: 120, // 1st place tallest
-  2: 90,  // 2nd place medium
-  3: 70,  // 3rd place shortest
+  2: 90, // 2nd place medium
+  3: 70, // 3rd place shortest
 };
 
 // Podium colors
 const PODIUM_COLORS = {
-  1: "$yellow9",  // Gold
-  2: "$gray9",    // Silver
-  3: "$orange9",  // Bronze
+  1: "$yellow9", // Gold
+  2: "$gray9", // Silver
+  3: "$orange9", // Bronze
 };
 
 const PODIUM_BG = {
@@ -64,11 +64,7 @@ function PodiumSpot({
     <YStack alignItems="center" flex={1} gap="$2">
       {/* Avatar with medal badge */}
       <YStack position="relative" alignItems="center" marginBottom="$2">
-        <UserAvatar
-          name={userName}
-          profilePicture={profilePicture}
-          size={avatarSize}
-        />
+        <UserAvatar name={userName} profilePicture={profilePicture} size={avatarSize} />
         <YStack
           position="absolute"
           top={-8}
@@ -77,20 +73,14 @@ function PodiumSpot({
           borderRadius={100}
           padding="$1.5"
         >
-          {rank === 1 ? (
-            <Trophy size={16} color="white" />
-          ) : (
-            <Award size={16} color="white" />
-          )}
+          {rank === 1 ? <Trophy size={16} color="white" /> : <Award size={16} color="white" />}
         </YStack>
       </YStack>
 
       {/* Player name */}
       <XStack gap="$1" alignItems="center" justifyContent="center">
         {nationality && (
-          <Text fontSize={rank === 1 ? "$5" : "$4"}>
-            {getCountryFlag(nationality)}
-          </Text>
+          <Text fontSize={rank === 1 ? "$5" : "$4"}>{getCountryFlag(nationality)}</Text>
         )}
         <YStack alignItems="center">
           <Text
@@ -135,7 +125,11 @@ function PodiumSpot({
   );
 }
 
-export function PodiumDisplay({ rankings, valueLabel, emptyLabel = "No rankings available yet" }: PodiumDisplayProps) {
+export function PodiumDisplay({
+  rankings,
+  valueLabel,
+  emptyLabel = "No rankings available yet",
+}: PodiumDisplayProps) {
   // Extract top 3
   const first = rankings.find((r) => r.rank === 1);
   const second = rankings.find((r) => r.rank === 2);

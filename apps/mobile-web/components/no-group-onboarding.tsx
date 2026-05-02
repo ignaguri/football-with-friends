@@ -6,7 +6,7 @@
 // both paths. Sign-out is the only escape hatch from this screen.
 
 import { signOut } from "@repo/api-client";
-import { Users } from "@tamagui/lucide-icons";
+import { Users } from "@tamagui/lucide-icons-2";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,9 +21,7 @@ export function NoGroupOnboarding() {
     // backend stops targeting this device. Matches the pattern in
     // `profile/index.tsx`.
     try {
-      const { unregisterPushToken } = await import(
-        "../lib/use-push-notifications"
-      );
+      const { unregisterPushToken } = await import("../lib/use-push-notifications");
       await unregisterPushToken();
     } catch {}
     await signOut();

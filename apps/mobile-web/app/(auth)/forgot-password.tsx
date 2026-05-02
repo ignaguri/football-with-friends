@@ -5,15 +5,7 @@ import {
   signInWithPhone,
   signIn,
 } from "@repo/api-client";
-import {
-  Container,
-  Card,
-  Text,
-  YStack,
-  Input,
-  Button,
-  Spinner,
-} from "@repo/ui";
+import { Container, Card, Text, YStack, Input, Button, Spinner } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -42,9 +34,7 @@ export default function ForgotPasswordScreen() {
 
     try {
       await requestPasswordReset(
-        isPhone
-          ? { phoneNumber: identifier.trim() }
-          : { email: identifier.trim() },
+        isPhone ? { phoneNumber: identifier.trim() } : { email: identifier.trim() },
       );
       setStep("verify");
     } catch (err: any) {
@@ -73,9 +63,7 @@ export default function ForgotPasswordScreen() {
 
     try {
       await resetPasswordWithCode({
-        ...(isPhone
-          ? { phoneNumber: identifier.trim() }
-          : { email: identifier.trim() }),
+        ...(isPhone ? { phoneNumber: identifier.trim() } : { email: identifier.trim() }),
         code,
         newPassword,
       });
@@ -96,9 +84,7 @@ export default function ForgotPasswordScreen() {
         router.replace("/(tabs)");
       } catch {
         // If auto sign-in fails, redirect to the appropriate signin screen
-        router.replace(
-          isPhone ? "/(auth)/phone-signin" : "/(auth)/email-signin",
-        );
+        router.replace(isPhone ? "/(auth)/phone-signin" : "/(auth)/email-signin");
       }
     } catch (err: any) {
       setServerError(err.message || t("auth.invalidResetCode"));
@@ -109,17 +95,8 @@ export default function ForgotPasswordScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        <YStack
-          gap="$6"
-          width="100%"
-          maxWidth={400}
-          marginHorizontal="auto"
-          paddingVertical="$8"
-        >
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
+        <YStack gap="$6" width="100%" maxWidth={400} marginHorizontal="auto" paddingVertical="$8">
           <YStack gap="$2" alignItems="center">
             <Text fontSize="$9" fontWeight="bold">
               {t("auth.forgotPasswordTitle")}
@@ -183,15 +160,11 @@ export default function ForgotPasswordScreen() {
 
               <YStack paddingTop="$4">
                 <Button
-                  onPress={
-                    step === "request" ? handleRequestCode : handleResetPassword
-                  }
+                  onPress={step === "request" ? handleRequestCode : handleResetPassword}
                   disabled={isLoading}
                   variant="primary"
                   testID={
-                    step === "request"
-                      ? "auth-forgot-request-submit"
-                      : "auth-forgot-reset-submit"
+                    step === "request" ? "auth-forgot-request-submit" : "auth-forgot-reset-submit"
                   }
                 >
                   {isLoading ? (

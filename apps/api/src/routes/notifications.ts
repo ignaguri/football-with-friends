@@ -4,10 +4,7 @@ import { getServiceFactory } from "@repo/shared/services";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import {
-  groupContextMiddleware,
-  requireCurrentGroup,
-} from "../middleware/group-context";
+import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import { type AppVariables, requireUser } from "../middleware/security";
 
 const app = new Hono<{ Variables: AppVariables }>();
@@ -88,10 +85,7 @@ app.post(
   async (c) => {
     const user = requireUser(c);
     if (user.role !== "admin") {
-      return c.json(
-        { error: "Only platform admin can send test notifications" },
-        403,
-      );
+      return c.json({ error: "Only platform admin can send test notifications" }, 403);
     }
 
     const { userId, title, body } = c.req.valid("json");
@@ -105,8 +99,7 @@ app.post(
 
       return c.json({ success: true, tickets });
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to send notification";
+      const message = error instanceof Error ? error.message : "Failed to send notification";
       return c.json({ error: message }, 400);
     }
   },

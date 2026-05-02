@@ -41,11 +41,7 @@ export default function CreateGroupScreen() {
         placeholder={t("groups.create.namePlaceholder")}
         autoFocus
       />
-      <Button
-        theme="blue"
-        onPress={onSubmit}
-        disabled={!name.trim() || createMutation.isPending}
-      >
+      <Button theme="blue" onPress={onSubmit} disabled={!name.trim() || createMutation.isPending}>
         {createMutation.isPending ? <Spinner /> : t("groups.create.cta")}
       </Button>
     </YStack>

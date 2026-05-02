@@ -1,11 +1,5 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import {
-  useSession,
-  client,
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from "@repo/api-client";
+import { useSession, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
 import {
   Container,
   Card,
@@ -20,7 +14,7 @@ import {
   type SelectionItem,
   getPlayerDisplayLabel,
 } from "@repo/ui";
-import { ChevronLeft, Minus, Plus, Check, Lock } from "@tamagui/lucide-icons";
+import { ChevronLeft, Minus, Plus, Check, Lock } from "@tamagui/lucide-icons-2";
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,16 +60,10 @@ export default function StatsVotingScreen() {
   const { matchId: preselectedMatchId } = useLocalSearchParams<{
     matchId?: string;
   }>();
-  const [selectedMatchId, setSelectedMatchId] = useState<string>(
-    preselectedMatchId || "",
-  );
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(preselectedMatchId || "");
   const [beersCount, setBeersCount] = useState(0);
-  const [attendedThirdTime, setAttendedThirdTime] = useState<boolean | null>(
-    null,
-  );
-  const [voteSelections, setVoteSelections] = useState<
-    Record<string, string | undefined>
-  >({});
+  const [attendedThirdTime, setAttendedThirdTime] = useState<boolean | null>(null);
+  const [voteSelections, setVoteSelections] = useState<Record<string, string | undefined>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -170,9 +158,7 @@ export default function StatsVotingScreen() {
 
   // Submit votes mutation
   const submitVotesMutation = useMutation({
-    mutationFn: async (
-      votes: Array<{ criteriaId: string; votedForUserId: string }>,
-    ) => {
+    mutationFn: async (votes: Array<{ criteriaId: string; votedForUserId: string }>) => {
       const res = await client.api.voting.matches[":matchId"].$post({
         param: { matchId: selectedMatchId },
         json: { votes },
@@ -192,10 +178,7 @@ export default function StatsVotingScreen() {
 
   // Submit player stats mutation (3rd time + beers)
   const submitStatsMutation = useMutation({
-    mutationFn: async (data: {
-      thirdTimeAttended: boolean;
-      thirdTimeBeers: number;
-    }) => {
+    mutationFn: async (data: { thirdTimeAttended: boolean; thirdTimeBeers: number }) => {
       const res = await client.api.matches[":id"]["player-stats"].$post({
         param: { id: selectedMatchId },
         json: {
@@ -206,9 +189,7 @@ export default function StatsVotingScreen() {
       });
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(
-          (error as any).error || "Failed to submit player stats",
-        );
+        throw new Error((error as any).error || "Failed to submit player stats");
       }
       return res.json();
     },
@@ -223,10 +204,7 @@ export default function StatsVotingScreen() {
   const getMyStats = (data: any) => {
     if (!data || !userId) return null;
     const stats = Array.isArray(data) ? data : data?.stats || [];
-    return (
-      stats.find((s: any) => s.userId === userId || s.user_id === userId) ||
-      null
-    );
+    return stats.find((s: any) => s.userId === userId || s.user_id === userId) || null;
   };
 
   // Pre-populate vote selections when user votes are loaded
@@ -303,23 +281,17 @@ export default function StatsVotingScreen() {
   const serverAttended = myStats
     ? Boolean(myStats.thirdTimeAttended ?? myStats.third_time_attended)
     : null;
-  const serverBeers = Number(
-    myStats?.thirdTimeBeers ?? myStats?.third_time_beers ?? 0,
-  );
+  const serverBeers = Number(myStats?.thirdTimeBeers ?? myStats?.third_time_beers ?? 0);
   // Beer diff only matters when attendance is true (false → beers persisted as 0)
   const statsDirty =
     attendedThirdTime !== serverAttended ||
     (attendedThirdTime === true && beersCount !== serverBeers);
 
   // Votes are immutable after first submit; stats stay editable until voting closes.
-  const isLocked =
-    isVotingClosed || (hasVoted && hasSubmittedStats && !statsDirty);
+  const isLocked = isVotingClosed || (hasVoted && hasSubmittedStats && !statsDirty);
 
-  const hasNewVotes =
-    !hasVoted && Object.values(voteSelections).some((v) => !!v);
-  const hasStatsToSubmit = hasSubmittedStats
-    ? statsDirty
-    : attendedThirdTime !== null;
+  const hasNewVotes = !hasVoted && Object.values(voteSelections).some((v) => !!v);
+  const hasStatsToSubmit = hasSubmittedStats ? statsDirty : attendedThirdTime !== null;
 
   const handleSubmitVotes = async () => {
     const votes = Object.entries(voteSelections)
@@ -463,9 +435,7 @@ export default function StatsVotingScreen() {
                     <XStack gap="$2">
                       <Button
                         size="$3"
-                        variant={
-                          attendedThirdTime === true ? "primary" : "outline"
-                        }
+                        variant={attendedThirdTime === true ? "primary" : "outline"}
                         onPress={() => setAttendedThirdTime(true)}
                         disabled={isVotingClosed}
                         opacity={isVotingClosed ? 0.5 : 1}
@@ -474,9 +444,7 @@ export default function StatsVotingScreen() {
                       </Button>
                       <Button
                         size="$3"
-                        variant={
-                          attendedThirdTime === false ? "primary" : "outline"
-                        }
+                        variant={attendedThirdTime === false ? "primary" : "outline"}
                         onPress={() => setAttendedThirdTime(false)}
                         disabled={isVotingClosed}
                         opacity={isVotingClosed ? 0.5 : 1}
@@ -495,16 +463,9 @@ export default function StatsVotingScreen() {
                           icon={Minus}
                           variant="outline"
                           disabled={beersCount <= 0 || isVotingClosed}
-                          onPress={() =>
-                            setBeersCount(Math.max(0, beersCount - 1))
-                          }
+                          onPress={() => setBeersCount(Math.max(0, beersCount - 1))}
                         />
-                        <Text
-                          fontSize="$5"
-                          fontWeight="600"
-                          width={40}
-                          textAlign="center"
-                        >
+                        <Text fontSize="$5" fontWeight="600" width={40} textAlign="center">
                           {beersCount}
                         </Text>
                         <Button
@@ -589,9 +550,7 @@ export default function StatsVotingScreen() {
                     <Button
                       variant="primary"
                       onPress={handleSubmitVotes}
-                      disabled={
-                        isSubmitting || (!hasNewVotes && !hasStatsToSubmit)
-                      }
+                      disabled={isSubmitting || (!hasNewVotes && !hasStatsToSubmit)}
                     >
                       {isSubmitting ? (
                         <XStack alignItems="center" gap="$2">

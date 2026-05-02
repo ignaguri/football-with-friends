@@ -17,28 +17,15 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     await db.schema
       .createTable("match_player_stats")
       .addColumn("id", "text", (col) => col.primaryKey().notNull())
-      .addColumn("match_id", "text", (col) =>
-        col.notNull().references("matches.id"),
-      )
-      .addColumn("user_id", "text", (col) =>
-        col.notNull().references("user.id"),
-      )
+      .addColumn("match_id", "text", (col) => col.notNull().references("matches.id"))
+      .addColumn("user_id", "text", (col) => col.notNull().references("user.id"))
       .addColumn("goals", "integer", (col) => col.defaultTo(0).notNull())
-      .addColumn("third_time_attended", "integer", (col) =>
-        col.defaultTo(0).notNull(),
-      )
-      .addColumn("third_time_beers", "integer", (col) =>
-        col.defaultTo(0).notNull(),
-      )
-      .addColumn("confirmed", "integer", (col) =>
-        col.defaultTo(0).notNull(),
-      )
+      .addColumn("third_time_attended", "integer", (col) => col.defaultTo(0).notNull())
+      .addColumn("third_time_beers", "integer", (col) => col.defaultTo(0).notNull())
+      .addColumn("confirmed", "integer", (col) => col.defaultTo(0).notNull())
       .addColumn("created_at", "text", (col) => col.notNull())
       .addColumn("updated_at", "text", (col) => col.notNull())
-      .addUniqueConstraint("unique_match_user_stats", [
-        "match_id",
-        "user_id",
-      ])
+      .addUniqueConstraint("unique_match_user_stats", ["match_id", "user_id"])
       .execute();
     console.log("✅ Created match_player_stats table");
   } else {

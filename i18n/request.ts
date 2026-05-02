@@ -7,9 +7,7 @@ export default getRequestConfig(async () => {
   const cookieStore = await cookies();
   const rawLocale = cookieStore.get("NEXT_LOCALE")?.value;
 
-  const locale: Locale = locales.includes(rawLocale as Locale)
-    ? (rawLocale as Locale)
-    : "es";
+  const locale: Locale = locales.includes(rawLocale as Locale) ? (rawLocale as Locale) : "es";
 
   return {
     locale,

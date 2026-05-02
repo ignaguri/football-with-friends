@@ -36,18 +36,14 @@ export class VotingService {
   /**
    * Get all active voting criteria (localized)
    */
-  async getActiveCriteria(
-    language: "en" | "es" = "en",
-  ): Promise<LocalizedVotingCriteria[]> {
+  async getActiveCriteria(language: "en" | "es" = "en"): Promise<LocalizedVotingCriteria[]> {
     return this.repository.findAllCriteriaLocalized(language, true);
   }
 
   /**
    * Get all voting criteria including inactive (admin only)
    */
-  async getAllCriteria(
-    language: "en" | "es" = "en",
-  ): Promise<LocalizedVotingCriteria[]> {
+  async getAllCriteria(language: "en" | "es" = "en"): Promise<LocalizedVotingCriteria[]> {
     return this.repository.findAllCriteriaLocalized(language, false);
   }
 
@@ -150,9 +146,7 @@ export class VotingService {
     const votedForUsers = new Set<string>();
     for (const vote of votes) {
       if (votedForUsers.has(vote.votedForUserId)) {
-        throw new Error(
-          "Each player can only be voted for one category per submission",
-        );
+        throw new Error("Each player can only be voted for one category per submission");
       }
       votedForUsers.add(vote.votedForUserId);
     }
@@ -164,10 +158,7 @@ export class VotingService {
   /**
    * Get user's votes for a match
    */
-  async getUserVotesForMatch(
-    matchId: string,
-    userId: string,
-  ): Promise<UserMatchVotes> {
+  async getUserVotesForMatch(matchId: string, userId: string): Promise<UserMatchVotes> {
     return this.repository.findUserVotesForMatch(matchId, userId);
   }
 
@@ -184,10 +175,7 @@ export class VotingService {
   /**
    * Check if a user has voted for a match
    */
-  async hasUserVotedForMatch(
-    matchId: string,
-    userId: string,
-  ): Promise<boolean> {
+  async hasUserVotedForMatch(matchId: string, userId: string): Promise<boolean> {
     return this.repository.hasUserVotedForMatch(matchId, userId);
   }
 
@@ -198,18 +186,11 @@ export class VotingService {
     return this.repository.deleteUserVotesForMatch(matchId, userId);
   }
 
-  async getMatchStats(
-    match: Match,
-    language: "en" | "es" = "en",
-  ): Promise<MatchStats> {
+  async getMatchStats(match: Match, language: "en" | "es" = "en"): Promise<MatchStats> {
     const matchId = match.id;
-    const votingAutoCloseAt = computeVotingAutoCloseAt(
-      match.date,
-      VOTING_AUTO_CLOSE_DAYS,
-    );
+    const votingAutoCloseAt = computeVotingAutoCloseAt(match.date, VOTING_AUTO_CLOSE_DAYS);
     const votingClosedAt = match.votingClosedAt;
-    const isVotingClosed =
-      votingClosedAt !== null || new Date().toISOString() >= votingAutoCloseAt;
+    const isVotingClosed = votingClosedAt !== null || new Date().toISOString() >= votingAutoCloseAt;
 
     if (!isVotingClosed) {
       return {
@@ -243,10 +224,7 @@ export class VotingService {
   }
 
   async setMatchVotingState(matchId: string, closed: boolean): Promise<void> {
-    await this.repository.setMatchVotingClosedAt(
-      matchId,
-      closed ? new Date().toISOString() : null,
-    );
+    await this.repository.setMatchVotingClosedAt(matchId, closed ? new Date().toISOString() : null);
   }
 }
 

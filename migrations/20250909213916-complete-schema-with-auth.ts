@@ -36,9 +36,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .addColumn("id", "text", (col) => col.primaryKey())
       .addColumn("name", "text")
       .addColumn("email", "text", (col) => col.notNull().unique())
-      .addColumn("emailVerified", "integer", (col) =>
-        col.notNull().defaultTo(0),
-      )
+      .addColumn("emailVerified", "integer", (col) => col.notNull().defaultTo(0))
       .addColumn("image", "text")
       .addColumn("role", "text", (col) => col.notNull().defaultTo("user"))
       .addColumn("banned", "integer")
@@ -57,9 +55,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     await db.schema
       .createTable("account")
       .addColumn("id", "text", (col) => col.primaryKey())
-      .addColumn("userId", "text", (col) =>
-        col.notNull().references("user.id").onDelete("cascade"),
-      )
+      .addColumn("userId", "text", (col) => col.notNull().references("user.id").onDelete("cascade"))
       .addColumn("accountId", "text", (col) => col.notNull())
       .addColumn("providerId", "text", (col) => col.notNull())
       .addColumn("accessToken", "text")
@@ -88,9 +84,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .addColumn("updatedAt", "integer", (col) => col.notNull())
       .addColumn("ipAddress", "text")
       .addColumn("userAgent", "text")
-      .addColumn("userId", "text", (col) =>
-        col.notNull().references("user.id").onDelete("cascade"),
-      )
+      .addColumn("userId", "text", (col) => col.notNull().references("user.id").onDelete("cascade"))
       .addColumn("impersonatedBy", "text")
       .execute();
     console.log("✅ Created session table");
@@ -125,12 +119,8 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .addColumn("address", "text")
       .addColumn("coordinates", "text")
       .addColumn("court_count", "integer", (col) => col.notNull().defaultTo(1))
-      .addColumn("created_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("created_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
     console.log("✅ Created locations table");
   } else {
@@ -152,12 +142,8 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .addColumn("cost_per_player", "text")
       .addColumn("shirt_cost", "text")
       .addColumn("created_by_user_id", "text", (col) => col.notNull())
-      .addColumn("created_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("created_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
     console.log("✅ Created matches table");
   } else {
@@ -176,17 +162,11 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .addColumn("player_name", "text", (col) => col.notNull())
       .addColumn("player_email", "text", (col) => col.notNull())
       .addColumn("status", "text", (col) => col.notNull().defaultTo("PENDING"))
-      .addColumn("signup_type", "text", (col) =>
-        col.notNull().defaultTo("self"),
-      )
+      .addColumn("signup_type", "text", (col) => col.notNull().defaultTo("self"))
       .addColumn("guest_owner_id", "text")
       .addColumn("added_by_user_id", "text", (col) => col.notNull())
-      .addColumn("signed_up_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
-      .addColumn("updated_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("signed_up_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
+      .addColumn("updated_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .execute();
     console.log("✅ Created signups table");
   } else {
@@ -204,9 +184,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .addColumn("email", "text", (col) => col.notNull())
       .addColumn("invited_by_user_id", "text", (col) => col.notNull())
       .addColumn("status", "text", (col) => col.notNull().defaultTo("pending"))
-      .addColumn("invited_at", "text", (col) =>
-        col.defaultTo("CURRENT_TIMESTAMP").notNull(),
-      )
+      .addColumn("invited_at", "text", (col) => col.defaultTo("CURRENT_TIMESTAMP").notNull())
       .addColumn("responded_at", "text")
       .execute();
     console.log("✅ Created match_invitations table");
@@ -218,22 +196,14 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
 
   // Matches indexes
   if (!(await indexExists("matches_date_index"))) {
-    await db.schema
-      .createIndex("matches_date_index")
-      .on("matches")
-      .column("date")
-      .execute();
+    await db.schema.createIndex("matches_date_index").on("matches").column("date").execute();
     console.log("✅ Created matches_date_index");
   } else {
     console.log("⏭️  Matches_date_index already exists, skipping");
   }
 
   if (!(await indexExists("matches_status_index"))) {
-    await db.schema
-      .createIndex("matches_status_index")
-      .on("matches")
-      .column("status")
-      .execute();
+    await db.schema.createIndex("matches_status_index").on("matches").column("status").execute();
     console.log("✅ Created matches_status_index");
   } else {
     console.log("⏭️  Matches_status_index already exists, skipping");
@@ -252,11 +222,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
   }
 
   if (!(await indexExists("signups_user_id_index"))) {
-    await db.schema
-      .createIndex("signups_user_id_index")
-      .on("signups")
-      .column("user_id")
-      .execute();
+    await db.schema.createIndex("signups_user_id_index").on("signups").column("user_id").execute();
     console.log("✅ Created signups_user_id_index");
   } else {
     console.log("⏭️  Signups_user_id_index already exists, skipping");
@@ -297,9 +263,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       .execute();
     console.log("✅ Created unique constraint on matches.date");
   } else {
-    console.log(
-      "⏭️  Unique constraint on matches.date already exists, skipping",
-    );
+    console.log("⏭️  Unique constraint on matches.date already exists, skipping");
   }
 
   // === DEFAULT DATA ===

@@ -11,14 +11,7 @@ export interface ToastProps {
 }
 
 export function ToastViewport() {
-  return (
-    <TamaguiToastViewport
-      flexDirection="column-reverse"
-      top="$4"
-      right="$4"
-      left="$4"
-    />
-  );
+  return <TamaguiToastViewport flexDirection="column-reverse" top="$4" right="$4" left="$4" />;
 }
 
 function ToastContent() {

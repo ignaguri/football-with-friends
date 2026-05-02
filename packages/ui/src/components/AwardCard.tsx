@@ -1,7 +1,7 @@
 import { Text, XStack, YStack } from "tamagui";
 import { Card } from "./Card";
 import { UserAvatar } from "./user-avatar";
-import { Award } from "@tamagui/lucide-icons";
+import { Award } from "@tamagui/lucide-icons-2";
 import { getCountryFlag } from "../utils/country-flags";
 
 export interface AwardCardProps {
@@ -42,11 +42,7 @@ export function AwardCard({
     >
       {/* Award Header */}
       <XStack gap="$2" alignItems="center" marginBottom="$3">
-        <YStack
-          backgroundColor="$green3"
-          padding="$2"
-          borderRadius="$3"
-        >
+        <YStack backgroundColor="$green3" padding="$2" borderRadius="$3">
           <Award size={20} color="$green10" />
         </YStack>
         <YStack flex={1}>
@@ -92,11 +88,7 @@ export function AwardCard({
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Text
-                    fontSize="$3"
-                    fontWeight="700"
-                    color={medalColor}
-                  >
+                  <Text fontSize="$3" fontWeight="700" color={medalColor}>
                     {index + 1}
                   </Text>
                 </YStack>
@@ -126,7 +118,9 @@ export function AwardCard({
                     </YStack>
                   </XStack>
                   <Text fontSize="$2" color="$gray11">
-                    {formatVotes ? formatVotes(player.voteCount) : `${player.voteCount} ${player.voteCount === 1 ? "vote" : "votes"}`}
+                    {formatVotes
+                      ? formatVotes(player.voteCount)
+                      : `${player.voteCount} ${player.voteCount === 1 ? "vote" : "votes"}`}
                   </Text>
                 </YStack>
               </XStack>

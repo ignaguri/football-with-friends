@@ -3,6 +3,7 @@
 **Date:** 2026-04-23
 **Branch under test:** `feat/group-scoping`
 **Related docs:**
+
 - Design spec: [`../specs/2026-04-22-group-oriented-scoping-design.md`](../specs/2026-04-22-group-oriented-scoping-design.md)
 - Implementation plan (per-phase checklists): [`2026-04-22-group-oriented-scoping.md`](2026-04-22-group-oriented-scoping.md)
 - Visibility flag notes: [`../../group-visibility.md`](../../group-visibility.md)
@@ -142,7 +143,7 @@ VALUES ('rst_preclaim', 'grp_legacy', 'Pre-Claim Ghost', '+4915100000099',
 
 1. Terminal A: `pnpm dev:api`. API listens on
    `http://localhost:3001` (see `apps/api/src/index.ts:138` — `const port =
-   process.env.PORT || 3001;`).
+process.env.PORT || 3001;`).
 2. Terminal B: `pnpm dev:app`. Expo dev server starts; press `w` to open
    web at `http://localhost:8081` (default Expo web port).
 3. Optional Terminal C: `cd apps/api && pnpm cf:tail` against staging, or
@@ -258,7 +259,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 **Expected**
 
 - Any scoped endpoint returns `409 {"error":"You do not belong to any
-  group","code":"NO_GROUP"}` (`group-context.ts:43`).
+group","code":"NO_GROUP"}` (`group-context.ts:43`).
 - Web UI renders the `<NoGroupOnboarding />` component in place of `<Tabs>`
   (see `apps/mobile-web/app/(tabs)/_layout.tsx:47`), using copy from
   `groups.noGroup.title` / `.body` / `.hint` / `.signOut`.
@@ -285,7 +286,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 **Expected**
 
 - First request with `X-Group-Id: grp_b` → `403 {"error":"Not a member of
-  this group","code":"FORBIDDEN_GROUP"}` (`group-context.ts:38`).
+this group","code":"FORBIDDEN_GROUP"}` (`group-context.ts:38`).
 - Client's `useCurrentGroup` self-heals: next scoped request omits the
   header, server auto-picks `grp_legacy`, response echoes
   `X-Group-Id: grp_legacy`. Matches list refetches to legacy data.
@@ -317,7 +318,7 @@ client self-healing via `packages/api-client/src/client.ts`.
 **Steps (non-platform admin side)**
 
 1. As organizer-a (no membership in `grp_b`), `fetch('/api/groups/grp_b',
-   {headers: {'X-Group-Id': 'grp_b'}})`.
+{headers: {'X-Group-Id': 'grp_b'}})`.
 
 **Expected**
 
@@ -388,7 +389,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 **Expected**
 
 - `200 {"groups": [{ id, name, slug, visibility, role, isOwner,
-  joinedAt }, ...]}` — both memberships present. `role` reflects per-group
+joinedAt }, ...]}` — both memberships present. `role` reflects per-group
   role. `isOwner` true only for groups owned.
 
 **Also verify**
@@ -413,7 +414,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 **Expected**
 
 - `201 {"group": {...}}`. Body echoes the created group with `owner_user_id =
-  Ignacio.id`.
+Ignacio.id`.
 - Client auto-switches via `useCreateGroup` onSuccess (sets active
   groupId), navigates to the new group's detail page.
 - Platform admin is present as `organizer` in `group_members` for the new group.
@@ -433,7 +434,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 **Steps**
 
 1. `curl -X POST -H "Cookie: <org-a-session>" -H "Content-Type: application/json" \
-      -d '{"name":"Sneaky"}' http://localhost:3001/api/groups`
+  -d '{"name":"Sneaky"}' http://localhost:3001/api/groups`
 
 **Expected**
 
@@ -488,7 +489,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 - Organizer view: members list, invites section, settings row, Transfer /
   Delete actions. Served by `getGroupDetails` branch in `routes/groups.ts:91`.
 - Member view: stripped payload — only `{id, name, slug, visibility,
-  myRole}` — with a **Leave group** button. `routes/groups.ts:97`.
+myRole}` — with a **Leave group** button. `routes/groups.ts:97`.
 
 ---
 
@@ -501,9 +502,9 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 **Steps (organizer-a)**
 
 1. `curl -X PATCH -H "X-Group-Id: grp_legacy" -H "Cookie: <org-a>" \
-      -H "Content-Type: application/json" \
-      -d '{"visibility":"public"}' \
-      http://localhost:3001/api/groups/grp_legacy`
+  -H "Content-Type: application/json" \
+  -d '{"visibility":"public"}' \
+  http://localhost:3001/api/groups/grp_legacy`
 
 **Expected**
 
@@ -531,7 +532,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 **Steps**
 
 1. As Ignacio, `POST /api/groups/grp_legacy/transfer-ownership
-   {"toUserId": "<organizer-a-id>"}`.
+{"toUserId": "<organizer-a-id>"}`.
 2. As organizer-a, `GET /api/groups/me`.
 
 **Expected**
@@ -544,7 +545,7 @@ Endpoints under `apps/api/src/routes/groups.ts`. Hooks under
 **Also verify**
 
 - Transfer to a non-organizer target (e.g. member-a) → `400 {"error":
-  "..."}`. Service guard in `group-service.ts` transferOwnership.
+"..."}`. Service guard in `group-service.ts` transferOwnership.
 - Transfer back to Ignacio at end of flow so later tests match baseline.
 
 ---
@@ -640,7 +641,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 **Expected**
 
 - `POST /api/groups/grp_legacy/invites` → `201 {invite: {token, expiresAt,
-  ...}}`. `expiresAt` ≈ `now + 7d` if no `expiresInHours` sent.
+...}}`. `expiresAt` ≈ `now + 7d` if no `expiresInHours` sent.
 - Token present in clipboard on web (use `navigator.clipboard.readText()`
   in DevTools console to confirm).
 - New invite appears in the list.
@@ -662,7 +663,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 - Invalid → inline error from zod refinement
   (`routes/groups.ts:263-267`, message `"targetPhone must be E.164 (e.g.
-  +1234567890)"`). UI copy: `groups.invite.phoneInvalid`.
++1234567890)"`). UI copy: `groups.invite.phoneInvalid`.
 - Valid → `201`. DB row has `target_phone='+4915100000099'`.
 - If the phone matches an existing user, a `PushNotification` is kicked off
   via `notifyGroupInviteTarget` (fire-and-forget through
@@ -679,7 +680,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 - Prepare four broken tokens by direct DB manipulation of the same row or
   separate rows:
   - Expired: `UPDATE group_invites SET expires_at = strftime('%s','now','-1
-    day')*1 WHERE id='<id>'` — save token as `T_EXPIRED`.
+day')*1 WHERE id='<id>'` — save token as `T_EXPIRED`.
   - Revoked: `DELETE /api/groups/:id/invites/:inviteId` via UI, then fetch
     preview on its token — save as `T_REVOKED`.
   - Exhausted: create an invite with `maxUses=1`, accept it once (flow
@@ -694,13 +695,13 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 
 **Expected**
 
-| Token          | Response                                                                                        |
-|----------------|-------------------------------------------------------------------------------------------------|
-| `T_VALID`      | `200 {valid:true, group:{name}, inviter:{name}, expiresAt}`                                     |
-| `T_EXPIRED`    | `200 {valid:false, reason:"expired"}`                                                           |
-| `T_REVOKED`    | `200 {valid:false, reason:"revoked"}`                                                           |
-| `T_EXHAUSTED`  | `200 {valid:false, reason:"exhausted"}`                                                         |
-| `T_BAD`        | `200 {valid:false, reason:"not_found"}`                                                         |
+| Token         | Response                                                    |
+| ------------- | ----------------------------------------------------------- |
+| `T_VALID`     | `200 {valid:true, group:{name}, inviter:{name}, expiresAt}` |
+| `T_EXPIRED`   | `200 {valid:false, reason:"expired"}`                       |
+| `T_REVOKED`   | `200 {valid:false, reason:"revoked"}`                       |
+| `T_EXHAUSTED` | `200 {valid:false, reason:"exhausted"}`                     |
+| `T_BAD`       | `200 {valid:false, reason:"not_found"}`                     |
 
 - No `X-Group-Id` header on request **or** response. Confirm in DevTools.
 - `target_mismatch` is surfaced only on `POST /accept` (see flow 3.6),
@@ -724,7 +725,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 **Expected**
 
 - `/join/[token]` screen renders preview using `groups.invite.previewTitle`
-  + `groups.invite.invitedBy`.
+  - `groups.invite.invitedBy`.
 - Sign-in CTA carries `redirectTo=/join/<token>`.
 - After auth, the app returns to `/join/<token>`, auto-calls
   `POST /api/invites/<token>/accept`, receives
@@ -767,7 +768,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 **Expected**
 
 - `200 {joined:true, groupId:'grp_b', claimedRosterId?:undefined,
-  ambiguousRosterMatches?:undefined}`.
+ambiguousRosterMatches?:undefined}`.
 - `memberRepo.tryAdd` returns `addedNewMembership=false`, so
   `tryConsumeUse` is NOT called (see service lines 349–361):
   `SELECT uses_count FROM group_invites WHERE token='T_B'` shows +1 over
@@ -791,10 +792,10 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 **Expected**
 
 - Exactly one returns `{joined:true}`; the other returns `400 {error:
-  "exhausted", joined:false}` (invites route body — `routes/invites.ts:29`).
+"exhausted", joined:false}` (invites route body — `routes/invites.ts:29`).
 - DB: `uses_count = 1`. Exactly one new row in `group_members`.
 - Per the service comment at `group-service.ts:301-308`, under extreme
-  concurrency an extra member row *may* slip in; acceptable at current
+  concurrency an extra member row _may_ slip in; acceptable at current
   scale. Note any such occurrence in the sign-off log.
 
 ---
@@ -838,7 +839,7 @@ Service: `acceptInvite` in `packages/shared/src/services/group-service.ts:310`.
 - Roster list shows the new entry with **Unclaimed** badge
   (`groups.roster.unclaimed`).
 - `SELECT claimed_by_user_id FROM group_roster WHERE display_name='Pibe
-  Nuevo'` → NULL.
+Nuevo'` → NULL.
 
 ---
 
@@ -914,9 +915,9 @@ VALUES ('rst_amb1', 'grp_legacy', 'Ambi One', '+4915100000055',
 
 - `409 {error:"already_member", userId:"<member-a-id>"}`
   (`routes/groups.ts:385-388`).
-- UI shows `groups.roster.alreadyMemberError` copy: *"A member with that
+- UI shows `groups.roster.alreadyMemberError` copy: _"A member with that
   phone or email is already in this group — invite them directly instead
-  of adding a ghost."*
+  of adding a ghost."_
 
 ---
 
@@ -1047,21 +1048,21 @@ groups (`apps/api/src/middleware/authz.ts:60-75`).
 
 ### 5.1 [x] Cross-group leak matrix
 
-| # | Method | Path                                               | Expected (member-a → `grp_legacy` active) | Expected (platform admin → `X-Group-Id: grp_b`) |
-|---|--------|----------------------------------------------------|-------------------------------------------|---------------------------------------------|
-| a | GET    | `/api/matches/:id`                                 | `404`                                     | `200`                                       |
-| b | PATCH  | `/api/matches/:id`                                 | `404`                                     | `200` (valid body)                          |
-| c | POST   | `/api/matches/:id/signup`                          | `404`                                     | `200` / `201`                               |
-| d | GET    | `/api/locations/:id`                               | `404`                                     | `200`                                       |
-| e | GET    | `/api/courts/:id`                                  | `404`                                     | `200`                                       |
-| f | GET    | `/api/groups/:id/members`                          | `404`                                     | `200`                                       |
-| g | GET    | `/api/groups/:id/roster`                           | `404`                                     | `200`                                       |
-| h | GET    | `/api/groups/:id/invites`                          | `404`                                     | `200`                                       |
-| i | GET    | `/api/voting/match/:matchId/criteria`              | `404`                                     | `200`                                       |
-| j | GET    | `/api/rankings?...`                                | `200` (scoped to `grp_legacy`)            | `200` (scoped to `grp_b`)                   |
-| k | GET    | `/api/player-stats/match/:matchId`                 | `404`                                     | `200`                                       |
-| l | GET    | `/api/match-media/:matchId`                        | `404`                                     | `200`                                       |
-| m | GET    | `/api/match-media/feed`                            | `200` (only `grp_legacy` media)           | `200` (only `grp_b` media)                  |
+| #   | Method | Path                                  | Expected (member-a → `grp_legacy` active) | Expected (platform admin → `X-Group-Id: grp_b`) |
+| --- | ------ | ------------------------------------- | ----------------------------------------- | ----------------------------------------------- |
+| a   | GET    | `/api/matches/:id`                    | `404`                                     | `200`                                           |
+| b   | PATCH  | `/api/matches/:id`                    | `404`                                     | `200` (valid body)                              |
+| c   | POST   | `/api/matches/:id/signup`             | `404`                                     | `200` / `201`                                   |
+| d   | GET    | `/api/locations/:id`                  | `404`                                     | `200`                                           |
+| e   | GET    | `/api/courts/:id`                     | `404`                                     | `200`                                           |
+| f   | GET    | `/api/groups/:id/members`             | `404`                                     | `200`                                           |
+| g   | GET    | `/api/groups/:id/roster`              | `404`                                     | `200`                                           |
+| h   | GET    | `/api/groups/:id/invites`             | `404`                                     | `200`                                           |
+| i   | GET    | `/api/voting/match/:matchId/criteria` | `404`                                     | `200`                                           |
+| j   | GET    | `/api/rankings?...`                   | `200` (scoped to `grp_legacy`)            | `200` (scoped to `grp_b`)                       |
+| k   | GET    | `/api/player-stats/match/:matchId`    | `404`                                     | `200`                                           |
+| l   | GET    | `/api/match-media/:matchId`           | `404`                                     | `200`                                           |
+| m   | GET    | `/api/match-media/feed`               | `200` (only `grp_legacy` media)           | `200` (only `grp_b` media)                      |
 
 **Expected across the board**
 
@@ -1104,7 +1105,7 @@ pre-migration global `settings` table (audit check #6).
 - Organizer-b sees the pre-existing / default value, **not** `10`. The
   write was scoped to `grp_legacy`.
 - `SELECT group_id, key, value FROM group_settings WHERE key LIKE
-  '%cost%';` shows the difference row-by-row.
+'%cost%';` shows the difference row-by-row.
 
 ---
 
@@ -1201,12 +1202,12 @@ const isAdmin = isPlatformAdmin || myRole === "organizer";
 `GroupService` emits structured JSON log lines. The event names below are
 the exact strings in `packages/shared/src/services/group-service.ts`:
 
-| Event                          | Emitted at                           | Source line (approx) |
-|--------------------------------|--------------------------------------|----------------------|
-| `group.created`                | `createGroup` success                | `:131`               |
-| `invite.accepted`              | `acceptInvite` after membership add  | `:390`               |
-| `ghost.claimed`                | `acceptInvite` after `tryClaim`      | `:397`               |
-| `group.ownership_transferred`  | `transferOwnership` success          | `:225`               |
+| Event                         | Emitted at                          | Source line (approx) |
+| ----------------------------- | ----------------------------------- | -------------------- |
+| `group.created`               | `createGroup` success               | `:131`               |
+| `invite.accepted`             | `acceptInvite` after membership add | `:390`               |
+| `ghost.claimed`               | `acceptInvite` after `tryClaim`     | `:397`               |
+| `group.ownership_transferred` | `transferOwnership` success         | `:225`               |
 
 ### 8.1 [x] Log events during core flows
 
@@ -1330,7 +1331,7 @@ Phase 5 polish or later follow-ups and are tracked elsewhere.
 - **Copy-venues helper.** Planned under admin > locations (Phase 5 in the
   implementation plan). No UI to exercise yet.
 - **Platform admin visibility toggle UI.** The `PATCH /api/groups/:id
-  {visibility}` endpoint works (flow 2.6), but no member-facing UI surface
+{visibility}` endpoint works (flow 2.6), but no member-facing UI surface
   exists. See [`docs/group-visibility.md`](../../group-visibility.md).
 - **Public directory UI.** Waiting on `visibility='public'` to mean
   something user-visible.
@@ -1369,12 +1370,15 @@ updated; helpers renamed `isSuperadmin → isPlatformAdmin` and
 ### Bug 2 — CORS blocked the `X-Group-Id` round-trip on web
 
 `apps/api/src/index.ts` + `apps/api/src/worker.ts` defined:
+
 ```
 allowHeaders: ["Content-Type", "Authorization"]
 exposeHeaders: ["set-auth-token"]
 ```
+
 Consequences on any cross-origin deploy (localhost:8084 → localhost:3001,
 Vercel → Cloudflare Workers):
+
 - Client couldn't **send** `X-Group-Id` — preflight blocked (wasn't in
   `allowHeaders`). Every scoped request arrived without the header, so the
   server fell back to auto-picking the first membership on every call →
@@ -1383,9 +1387,9 @@ Vercel → Cloudflare Workers):
   — CORS only exposes simple response headers plus what's explicitly listed.
   `recordGroupIdFromResponse` in `packages/api-client/src/group-storage.ts`
   was a no-op on web.
-Fix: both CORS configs now include `X-Group-Id` in `allowHeaders` and
-`exposeHeaders`. Verified in DevTools Network: subsequent requests carry
-`x-group-id: grp_legacy` and the echo is readable on the response.
+  Fix: both CORS configs now include `X-Group-Id` in `allowHeaders` and
+  `exposeHeaders`. Verified in DevTools Network: subsequent requests carry
+  `x-group-id: grp_legacy` and the echo is readable on the response.
 
 ### Bug 3 — Engagement-column rename migration breaks on fresh DB
 
@@ -1514,15 +1518,16 @@ admin organizer.
 Record a row per full or partial walkthrough. "Partial" is fine — note which
 section numbers were covered.
 
-| Date       | Tester           | Env         | Sections walked                                  | Notes                                                                 |
-|------------|------------------|-------------|--------------------------------------------------|-----------------------------------------------------------------------|
-| 2026-04-23 | Claude (agent)   | local       | 1.1–1.6, 2.1, 2.3–2.6, 3.1, 3.3, 3.5, 5.1/5.4/5.6, 7.1 | Bugs 1 & 2 below surfaced+fixed during walkthrough. 26 unit tests green. |
-| 2026-04-24 | Claude (agent)   | local       | 0.x, 2.2, 2.7–2.10, 3.2/3.6/3.7/3.8, 4.1–4.9, 5.1–5.11 (full leak matrix), 6.1–6.2, 7.1–7.4, 8.1, 9.1–9.4 | Walk done via curl + direct DB seed (bearer tokens planted into `session`). 3.4 still only verified at API contract layer — UI redirect walk skipped. Bug 4 found (pre-existing, non-group). |
-| 2026-04-24 | Claude (agent)   | staging     | Migrations + deploy + 1.1/1.4 (auto-pick + header echo), 2.1, 2.3, 5.1/5.2/5.6 (leak probes), match-detail smoke | Bug 6 surfaced + fixed + re-verified on staging. Backfill stats: 52 signups, 31 player stats, 10 voting criteria, 8 match votes, 11 courts, 5 settings, 3 admins demoted, 1 ghost linked. |
-| 2026-04-24 | Claude (agent)   | staging     | 1.2 (zero-group NO_GROUP), 2.2 (backfill member add → organizer), 3.1/3.2 (invite create default + phone), 4.1/4.4 (ghost create, already_member collision), 7.1/7.3 (organizer Admin tab + full dashboard: Matches/Settings/Roster/Group-detail) | Fresh phone-auth signup via password-as-OTP + direct SQL promotion to organizer of grp_legacy. Bugs 7 & 8 surfaced + fixed + re-verified (5 files across 2 commits: f21343f, 572ec95). |
-|            |                  | production  |                                                  |                                                                       |
+| Date       | Tester         | Env        | Sections walked                                                                                                                                                                                                                                   | Notes                                                                                                                                                                                        |
+| ---------- | -------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-04-23 | Claude (agent) | local      | 1.1–1.6, 2.1, 2.3–2.6, 3.1, 3.3, 3.5, 5.1/5.4/5.6, 7.1                                                                                                                                                                                            | Bugs 1 & 2 below surfaced+fixed during walkthrough. 26 unit tests green.                                                                                                                     |
+| 2026-04-24 | Claude (agent) | local      | 0.x, 2.2, 2.7–2.10, 3.2/3.6/3.7/3.8, 4.1–4.9, 5.1–5.11 (full leak matrix), 6.1–6.2, 7.1–7.4, 8.1, 9.1–9.4                                                                                                                                         | Walk done via curl + direct DB seed (bearer tokens planted into `session`). 3.4 still only verified at API contract layer — UI redirect walk skipped. Bug 4 found (pre-existing, non-group). |
+| 2026-04-24 | Claude (agent) | staging    | Migrations + deploy + 1.1/1.4 (auto-pick + header echo), 2.1, 2.3, 5.1/5.2/5.6 (leak probes), match-detail smoke                                                                                                                                  | Bug 6 surfaced + fixed + re-verified on staging. Backfill stats: 52 signups, 31 player stats, 10 voting criteria, 8 match votes, 11 courts, 5 settings, 3 admins demoted, 1 ghost linked.    |
+| 2026-04-24 | Claude (agent) | staging    | 1.2 (zero-group NO_GROUP), 2.2 (backfill member add → organizer), 3.1/3.2 (invite create default + phone), 4.1/4.4 (ghost create, already_member collision), 7.1/7.3 (organizer Admin tab + full dashboard: Matches/Settings/Roster/Group-detail) | Fresh phone-auth signup via password-as-OTP + direct SQL promotion to organizer of grp_legacy. Bugs 7 & 8 surfaced + fixed + re-verified (5 files across 2 commits: f21343f, 572ec95).       |
+|            |                | production |                                                                                                                                                                                                                                                   |                                                                                                                                                                                              |
 
 Legend:
+
 - **Env**: `local` (your dev box), `staging`
   (`https://football-api-staging.pepe-grillo-parlante.workers.dev` +
   Vercel preview), `production`.

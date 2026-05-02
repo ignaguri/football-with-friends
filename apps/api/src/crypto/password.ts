@@ -52,7 +52,7 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 async function pbkdf2DeriveKey(
   password: string,
   salt: Uint8Array,
-  iterations: number = PBKDF2_ITERATIONS
+  iterations: number = PBKDF2_ITERATIONS,
 ): Promise<Uint8Array> {
   const encoder = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -60,7 +60,7 @@ async function pbkdf2DeriveKey(
     encoder.encode(password) as any,
     "PBKDF2",
     false,
-    ["deriveBits"]
+    ["deriveBits"],
   );
 
   const derivedBits = await crypto.subtle.deriveBits(
@@ -71,7 +71,7 @@ async function pbkdf2DeriveKey(
       hash: PBKDF2_HASH,
     },
     keyMaterial,
-    PBKDF2_KEY_LENGTH * 8
+    PBKDF2_KEY_LENGTH * 8,
   );
 
   return new Uint8Array(derivedBits);
@@ -105,7 +105,11 @@ export async function verifyPassword({
     if (parts.length !== 4) return false;
 
     const iterations = parseInt(parts[1]!, 10);
-    if (!Number.isFinite(iterations) || iterations < MIN_ITERATIONS || iterations > MAX_ITERATIONS) {
+    if (
+      !Number.isFinite(iterations) ||
+      iterations < MIN_ITERATIONS ||
+      iterations > MAX_ITERATIONS
+    ) {
       return false;
     }
 

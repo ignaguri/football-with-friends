@@ -28,11 +28,7 @@ export function isAndroid(): boolean {
   return false;
 }
 
-export function generateICS(match: {
-  date: string;
-  time: string;
-  location?: string;
-}): string {
+export function generateICS(match: { date: string; time: string; location?: string }): string {
   // Create datetime string in Berlin timezone
   const dateTimeString = `${match.date} ${match.time}`;
 

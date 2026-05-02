@@ -102,8 +102,6 @@ export function resetRepositoryFactory(): void {
 /**
  * Create a repository factory for a specific provider (useful for testing)
  */
-export function createRepositoryFactory(
-  provider: StorageProvider,
-): AppRepositoryFactory {
+export function createRepositoryFactory(provider: StorageProvider): AppRepositoryFactory {
   return new AppRepositoryFactory(provider);
 }

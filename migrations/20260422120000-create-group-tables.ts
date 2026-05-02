@@ -29,7 +29,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       )
     `.execute(db);
     await sql`CREATE INDEX idx_groups_owner ON groups(owner_user_id)`.execute(db);
-    await sql`CREATE INDEX idx_groups_visibility ON groups(visibility) WHERE deleted_at IS NULL`.execute(db);
+    await sql`CREATE INDEX idx_groups_visibility ON groups(visibility) WHERE deleted_at IS NULL`.execute(
+      db,
+    );
     console.log("✅ Created groups table");
   }
 
@@ -46,7 +48,9 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       )
     `.execute(db);
     await sql`CREATE INDEX idx_group_members_user ON group_members(user_id)`.execute(db);
-    await sql`CREATE INDEX idx_group_members_group_role ON group_members(group_id, role)`.execute(db);
+    await sql`CREATE INDEX idx_group_members_group_role ON group_members(group_id, role)`.execute(
+      db,
+    );
     console.log("✅ Created group_members table");
   }
 
@@ -67,8 +71,12 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `.execute(db);
-    await sql`CREATE INDEX idx_group_invites_group_active ON group_invites(group_id, revoked_at)`.execute(db);
-    await sql`CREATE INDEX idx_group_invites_target_user ON group_invites(target_user_id) WHERE target_user_id IS NOT NULL`.execute(db);
+    await sql`CREATE INDEX idx_group_invites_group_active ON group_invites(group_id, revoked_at)`.execute(
+      db,
+    );
+    await sql`CREATE INDEX idx_group_invites_target_user ON group_invites(target_user_id) WHERE target_user_id IS NOT NULL`.execute(
+      db,
+    );
     console.log("✅ Created group_invites table");
   }
 
@@ -89,9 +97,15 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
     `.execute(db);
     // Auto-claim lookups hit (group_id, phone) / (group_id, email); partial indexes
     // skip rows without the lookup key.
-    await sql`CREATE INDEX idx_group_roster_group_phone ON group_roster(group_id, phone) WHERE phone IS NOT NULL`.execute(db);
-    await sql`CREATE INDEX idx_group_roster_group_email ON group_roster(group_id, email) WHERE email IS NOT NULL`.execute(db);
-    await sql`CREATE INDEX idx_group_roster_claimed_user ON group_roster(claimed_by_user_id) WHERE claimed_by_user_id IS NOT NULL`.execute(db);
+    await sql`CREATE INDEX idx_group_roster_group_phone ON group_roster(group_id, phone) WHERE phone IS NOT NULL`.execute(
+      db,
+    );
+    await sql`CREATE INDEX idx_group_roster_group_email ON group_roster(group_id, email) WHERE email IS NOT NULL`.execute(
+      db,
+    );
+    await sql`CREATE INDEX idx_group_roster_claimed_user ON group_roster(claimed_by_user_id) WHERE claimed_by_user_id IS NOT NULL`.execute(
+      db,
+    );
     console.log("✅ Created group_roster table");
   }
 

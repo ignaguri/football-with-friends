@@ -73,9 +73,10 @@ export default function PlayersStatsScreen() {
     enabled: activeTab === "awards",
   });
 
-  const filteredPlayers = players?.filter((player) =>
-    player.userName.toLowerCase().includes(search.toLowerCase()) ||
-    (player.userNickname?.toLowerCase().includes(search.toLowerCase()) ?? false),
+  const filteredPlayers = players?.filter(
+    (player) =>
+      player.userName.toLowerCase().includes(search.toLowerCase()) ||
+      (player.userNickname?.toLowerCase().includes(search.toLowerCase()) ?? false),
   );
 
   const tabs = [
@@ -111,9 +112,7 @@ export default function PlayersStatsScreen() {
 
           <ScrollView
             style={{ flex: 1 }}
-            refreshControl={
-              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-            }
+            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
           >
             <YStack gap="$3" paddingBottom="$4">
               {isLoading && (
@@ -133,18 +132,15 @@ export default function PlayersStatsScreen() {
                 </Card>
               )}
 
-              {!isLoading &&
-                !error &&
-                filteredPlayers &&
-                filteredPlayers.length === 0 && (
-                  <Card variant="outlined">
-                    <YStack padding="$4" alignItems="center">
-                      <Text fontSize="$5" color="$gray11">
-                        {t("playerStats.noPlayers")}
-                      </Text>
-                    </YStack>
-                  </Card>
-                )}
+              {!isLoading && !error && filteredPlayers && filteredPlayers.length === 0 && (
+                <Card variant="outlined">
+                  <YStack padding="$4" alignItems="center">
+                    <Text fontSize="$5" color="$gray11">
+                      {t("playerStats.noPlayers")}
+                    </Text>
+                  </YStack>
+                </Card>
+              )}
 
               {!isLoading &&
                 !error &&
@@ -160,9 +156,7 @@ export default function PlayersStatsScreen() {
                     totalThirdTimes={player.totalThirdTimes}
                     matchesLabel={t("playerStats.totalMatches")}
                     thirdTimesLabel={t("playerStats.thirdTime")}
-                    onPress={() =>
-                      router.push(`/(tabs)/social/${player.userId}`)
-                    }
+                    onPress={() => router.push(`/(tabs)/social/${player.userId}`)}
                   />
                 ))}
             </YStack>
@@ -186,10 +180,7 @@ export default function PlayersStatsScreen() {
           <ScrollView
             style={{ flex: 1 }}
             refreshControl={
-              <RefreshControl
-                refreshing={isRefetchingRankings}
-                onRefresh={refetchRankings}
-              />
+              <RefreshControl refreshing={isRefetchingRankings} onRefresh={refetchRankings} />
             }
           >
             <YStack gap="$3" paddingBottom="$4">
@@ -210,66 +201,54 @@ export default function PlayersStatsScreen() {
                 </Card>
               )}
 
-              {!isLoadingRankings &&
-                !rankingsError &&
-                rankings &&
-                rankings.length === 0 && (
-                  <Card variant="outlined">
-                    <YStack padding="$4" alignItems="center">
-                      <Text fontSize="$5" color="$gray11">
-                        {t("rankings.noData")}
-                      </Text>
-                    </YStack>
-                  </Card>
-                )}
+              {!isLoadingRankings && !rankingsError && rankings && rankings.length === 0 && (
+                <Card variant="outlined">
+                  <YStack padding="$4" alignItems="center">
+                    <Text fontSize="$5" color="$gray11">
+                      {t("rankings.noData")}
+                    </Text>
+                  </YStack>
+                </Card>
+              )}
 
-              {!isLoadingRankings &&
-                !rankingsError &&
-                rankings &&
-                rankings.length > 0 && (
-                  <>
-                    {/* Podium Display for Top 3 */}
-                    {rankings.length >= 3 && (
-                      <PodiumDisplay
-                        rankings={rankings.slice(0, 3).map((r) => ({
-                          rank: r.rank,
-                          userName: r.userName,
-                          userNickname: r.userNickname,
-                          nationality: r.nationality,
-                          profilePicture: r.profilePicture,
-                          value: r.value,
-                        }))}
-                        valueLabel={
-                          criteriaOptions.find(
-                            (opt) => opt.value === selectedCriteria,
-                          )?.label || ""
-                        }
-                      />
-                    )}
+              {!isLoadingRankings && !rankingsError && rankings && rankings.length > 0 && (
+                <>
+                  {/* Podium Display for Top 3 */}
+                  {rankings.length >= 3 && (
+                    <PodiumDisplay
+                      rankings={rankings.slice(0, 3).map((r) => ({
+                        rank: r.rank,
+                        userName: r.userName,
+                        userNickname: r.userNickname,
+                        nationality: r.nationality,
+                        profilePicture: r.profilePicture,
+                        value: r.value,
+                      }))}
+                      valueLabel={
+                        criteriaOptions.find((opt) => opt.value === selectedCriteria)?.label || ""
+                      }
+                    />
+                  )}
 
-                    {/* Ranking Cards List */}
-                    {rankings.map((ranking) => (
-                      <RankingCard
-                        key={ranking.userId}
-                        rank={ranking.rank}
-                        userName={ranking.userName}
-                        userNickname={ranking.userNickname}
-                        nationality={ranking.nationality}
-                        profilePicture={ranking.profilePicture}
-                        value={ranking.value}
-                        valueLabel={
-                          criteriaOptions.find(
-                            (opt) => opt.value === selectedCriteria,
-                          )?.label || ""
-                        }
-                        onPress={() =>
-                          router.push(`/(tabs)/social/${ranking.userId}`)
-                        }
-                        isPodium={ranking.rank <= 3}
-                      />
-                    ))}
-                  </>
-                )}
+                  {/* Ranking Cards List */}
+                  {rankings.map((ranking) => (
+                    <RankingCard
+                      key={ranking.userId}
+                      rank={ranking.rank}
+                      userName={ranking.userName}
+                      userNickname={ranking.userNickname}
+                      nationality={ranking.nationality}
+                      profilePicture={ranking.profilePicture}
+                      value={ranking.value}
+                      valueLabel={
+                        criteriaOptions.find((opt) => opt.value === selectedCriteria)?.label || ""
+                      }
+                      onPress={() => router.push(`/(tabs)/social/${ranking.userId}`)}
+                      isPodium={ranking.rank <= 3}
+                    />
+                  ))}
+                </>
+              )}
             </YStack>
           </ScrollView>
         </>
@@ -280,10 +259,7 @@ export default function PlayersStatsScreen() {
         <ScrollView
           style={{ flex: 1 }}
           refreshControl={
-            <RefreshControl
-              refreshing={isRefetchingLeaderboard}
-              onRefresh={refetchLeaderboard}
-            />
+            <RefreshControl refreshing={isRefetchingLeaderboard} onRefresh={refetchLeaderboard} />
           }
         >
           <YStack gap="$3" paddingBottom="$4">
@@ -323,9 +299,13 @@ export default function PlayersStatsScreen() {
               leaderboard.criteria.map((award) => (
                 <AwardCard
                   key={award.criteriaId}
-                  criteriaName={t(`voting.criteria.${award.criteriaCode}`, { defaultValue: award.criteriaName })}
+                  criteriaName={t(`voting.criteria.${award.criteriaCode}`, {
+                    defaultValue: award.criteriaName,
+                  })}
                   criteriaCode={award.criteriaCode}
-                  criteriaDescription={t(`voting.criteria.${award.criteriaCode}_desc`, { defaultValue: award.criteriaDescription })}
+                  criteriaDescription={t(`voting.criteria.${award.criteriaCode}_desc`, {
+                    defaultValue: award.criteriaDescription,
+                  })}
                   topPlayers={award.topPlayers.map((player) => ({
                     userName: player.userName,
                     userNickname: player.userNickname,

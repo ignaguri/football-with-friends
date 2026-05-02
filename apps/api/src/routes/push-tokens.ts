@@ -35,10 +35,7 @@ app.post(
 
       return c.json({ success: true, id: pushToken.id });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to register push token";
+      const message = error instanceof Error ? error.message : "Failed to register push token";
       return c.json({ error: message }, 400);
     }
   },
@@ -61,10 +58,7 @@ app.delete(
       await getNotificationService().unregisterToken(token, user.id);
       return c.json({ success: true });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to unregister push token";
+      const message = error instanceof Error ? error.message : "Failed to unregister push token";
       return c.json({ error: message }, 403);
     }
   },

@@ -46,7 +46,9 @@ async function generateClientSecret() {
   console.log(`\nExpires: ${expiryDate.toISOString()} (${EXPIRY_DAYS} days)\n`);
   console.log("To update Cloudflare Workers secret:");
   console.log("  cd apps/api && echo '<paste jwt>' | wrangler secret put APPLE_CLIENT_SECRET");
-  console.log("  cd apps/api && echo '<paste jwt>' | wrangler secret put APPLE_CLIENT_SECRET --env=preview");
+  console.log(
+    "  cd apps/api && echo '<paste jwt>' | wrangler secret put APPLE_CLIENT_SECRET --env=preview",
+  );
 }
 
 generateClientSecret().catch(console.error);

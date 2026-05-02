@@ -16,20 +16,14 @@ export class CourtService {
   /**
    * Get courts by location ID (scoped to group)
    */
-  async getCourtsByLocationId(
-    groupId: string,
-    locationId: string,
-  ): Promise<Court[]> {
+  async getCourtsByLocationId(groupId: string, locationId: string): Promise<Court[]> {
     return this.courtRepository.findByLocationId(groupId, locationId);
   }
 
   /**
    * Get active courts by location ID (scoped to group)
    */
-  async getActiveCourtsByLocationId(
-    groupId: string,
-    locationId: string,
-  ): Promise<Court[]> {
+  async getActiveCourtsByLocationId(groupId: string, locationId: string): Promise<Court[]> {
     return this.courtRepository.findActiveByLocationId(groupId, locationId);
   }
 
@@ -58,9 +52,7 @@ export class CourtService {
     );
 
     if (existingCourt) {
-      throw new Error(
-        `A court with the name "${courtData.name}" already exists at this location`,
-      );
+      throw new Error(`A court with the name "${courtData.name}" already exists at this location`);
     }
 
     return this.courtRepository.create(courtData);
@@ -85,9 +77,7 @@ export class CourtService {
       );
 
       if (nameExists) {
-        throw new Error(
-          `A court with the name "${updates.name}" already exists at this location`,
-        );
+        throw new Error(`A court with the name "${updates.name}" already exists at this location`);
       }
     }
 
@@ -119,10 +109,7 @@ export class CourtService {
   /**
    * Validate that a court belongs to a specific location
    */
-  async validateCourtBelongsToLocation(
-    courtId: string,
-    locationId: string,
-  ): Promise<boolean> {
+  async validateCourtBelongsToLocation(courtId: string, locationId: string): Promise<boolean> {
     const court = await this.courtRepository.findById(courtId);
     return court?.locationId === locationId;
   }

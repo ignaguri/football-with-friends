@@ -1,9 +1,7 @@
 import * as Sentry from "@sentry/react-native";
 import { isRunningInExpoGo } from "expo";
 
-let _navigationIntegration: ReturnType<
-  typeof Sentry.reactNavigationIntegration
-> | null = null;
+let _navigationIntegration: ReturnType<typeof Sentry.reactNavigationIntegration> | null = null;
 
 function initSentry() {
   _navigationIntegration = Sentry.reactNavigationIntegration({
@@ -17,9 +15,7 @@ function initSentry() {
     enableNativeFramesTracking: !isRunningInExpoGo(),
     integrations: [_navigationIntegration],
     environment: process.env.EXPO_PUBLIC_ENV || "development",
-    enabled:
-      !!process.env.EXPO_PUBLIC_SENTRY_DSN &&
-      process.env.EXPO_PUBLIC_ENV !== "development",
+    enabled: !!process.env.EXPO_PUBLIC_SENTRY_DSN && process.env.EXPO_PUBLIC_ENV !== "development",
   });
 }
 

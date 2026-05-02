@@ -1,5 +1,6 @@
-import { Dialog as TamaguiDialog, DialogProps, XStack } from "tamagui";
-import { X } from "@tamagui/lucide-icons";
+import type { DialogProps } from "tamagui";
+import { Dialog as TamaguiDialog, XStack } from "tamagui";
+import { X } from "@tamagui/lucide-icons-2";
 import { Button } from "./Button";
 
 export interface CustomDialogProps extends DialogProps {
@@ -30,9 +31,7 @@ export function Dialog({
 }: CustomDialogProps) {
   return (
     <TamaguiDialog {...props}>
-      {trigger && (
-        <TamaguiDialog.Trigger asChild>{trigger}</TamaguiDialog.Trigger>
-      )}
+      {trigger && <TamaguiDialog.Trigger asChild>{trigger}</TamaguiDialog.Trigger>}
 
       <TamaguiDialog.Portal>
         <TamaguiDialog.Overlay
@@ -74,13 +73,7 @@ export function Dialog({
               </TamaguiDialog.Title>
               {showClose && (
                 <TamaguiDialog.Close asChild>
-                  <Button
-                    variant="ghost"
-                    size="$3"
-                    circular
-                    icon={X}
-                    padding="$2"
-                  />
+                  <Button variant="ghost" size="$3" circular icon={X} padding="$2" />
                 </TamaguiDialog.Close>
               )}
             </XStack>

@@ -36,9 +36,7 @@ function apiErrorInfo(err: unknown): {
     if (data && typeof data === "object") {
       const reason = typeof data.error === "string" ? data.error : undefined;
       const referencingSignupCount =
-        typeof data.referencingSignupCount === "number"
-          ? data.referencingSignupCount
-          : undefined;
+        typeof data.referencingSignupCount === "number" ? data.referencingSignupCount : undefined;
       const userId = typeof data.userId === "string" ? data.userId : undefined;
       return {
         reason,
@@ -97,10 +95,7 @@ export default function AdminRosterScreen() {
     } catch (err) {
       const info = apiErrorInfo(err);
       if (info.reason === "already_member") {
-        Alert.alert(
-          t("groups.roster.title"),
-          t("groups.roster.alreadyMemberError"),
-        );
+        Alert.alert(t("groups.roster.title"), t("groups.roster.alreadyMemberError"));
       } else {
         Alert.alert(t("groups.roster.title"), info.message);
       }
@@ -274,9 +269,7 @@ export default function AdminRosterScreen() {
                       </Text>
                     ) : null}
                   </YStack>
-                  <Badge
-                    variant={entry.claimedByUserId ? "success" : "secondary"}
-                  >
+                  <Badge variant={entry.claimedByUserId ? "success" : "secondary"}>
                     {entry.claimedByUserId
                       ? t("groups.roster.claimed")
                       : t("groups.roster.unclaimed")}
@@ -418,10 +411,7 @@ export default function AdminRosterScreen() {
         variant="destructive"
         onConfirm={() =>
           deleteState &&
-          runDelete(
-            deleteState.entry,
-            deleteState.referencingSignupCount !== undefined,
-          )
+          runDelete(deleteState.entry, deleteState.referencingSignupCount !== undefined)
         }
       />
     </Container>

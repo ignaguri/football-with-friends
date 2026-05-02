@@ -21,13 +21,13 @@ The right ordering when making an element identifiable:
 
 React Native Web performs these translations automatically — props flow through without any extra wrapper code. Tamagui v2 forwards web-standard ARIA equivalents.
 
-| React Native prop         | Web output                  |
-| ------------------------- | --------------------------- |
-| `testID="x"`              | `data-testid="x"`           |
-| `accessibilityLabel="x"`  | `aria-label="x"`            |
-| `accessibilityRole="x"`   | `role="x"`                  |
-| `accessibilityHint="x"`   | `aria-describedby` / hint   |
-| `accessibilityState={...}`| `aria-disabled`, `aria-selected`, etc. |
+| React Native prop          | Web output                             |
+| -------------------------- | -------------------------------------- |
+| `testID="x"`               | `data-testid="x"`                      |
+| `accessibilityLabel="x"`   | `aria-label="x"`                       |
+| `accessibilityRole="x"`    | `role="x"`                             |
+| `accessibilityHint="x"`    | `aria-describedby` / hint              |
+| `accessibilityState={...}` | `aria-disabled`, `aria-selected`, etc. |
 
 The shared `Button` wrapper (`packages/ui/src/components/Button.tsx`) spreads `...props` to Tamagui's `Button`, so these props flow through at all call sites without modification.
 
@@ -88,14 +88,14 @@ Otherwise rely on role + accessible name.
 
 Kebab-case, hierarchical: `{screen}-{element}[-{dynamic-id}][-{action}]`.
 
-| Use case                | Pattern                              | Example                          |
-| ----------------------- | ------------------------------------ | -------------------------------- |
-| Simple button           | `{screen}-{element}-btn`             | `match-detail-join-btn`          |
-| Floating action button  | `{screen}-fab-{purpose}`             | `matches-fab-add`                |
-| Repeated card / row     | `{screen}-{type}-{id}`               | `matches-card-42`, `social-user-row-abc123` |
-| Row sub-action          | `{screen}-{type}-{id}-{action}`      | `admin-match-row-42-edit`        |
-| Form field              | `{screen}-{form}-{field}`            | `auth-signin-email`              |
-| Tab / segmented control | `{screen}-tab-{value}`               | `matches-tab-upcoming`           |
+| Use case                | Pattern                         | Example                                     |
+| ----------------------- | ------------------------------- | ------------------------------------------- |
+| Simple button           | `{screen}-{element}-btn`        | `match-detail-join-btn`                     |
+| Floating action button  | `{screen}-fab-{purpose}`        | `matches-fab-add`                           |
+| Repeated card / row     | `{screen}-{type}-{id}`          | `matches-card-42`, `social-user-row-abc123` |
+| Row sub-action          | `{screen}-{type}-{id}-{action}` | `admin-match-row-42-edit`                   |
+| Form field              | `{screen}-{form}-{field}`       | `auth-signin-email`                         |
+| Tab / segmented control | `{screen}-tab-{value}`          | `matches-tab-upcoming`                      |
 
 Stable IDs (database IDs) are preferred over array indices.
 
