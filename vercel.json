@@ -4,6 +4,11 @@
   "outputDirectory": "apps/mobile-web/dist",
   "framework": null,
   "installCommand": "pnpm install",
+  "functions": {
+    "api/og/[matchId].ts": {
+      "memory": 128
+    }
+  },
   "routes": [
     {
       "src": ".*",
