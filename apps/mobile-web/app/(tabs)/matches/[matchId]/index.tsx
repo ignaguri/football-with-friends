@@ -468,7 +468,7 @@ export default function MatchDetailScreen() {
     if (!match) return;
     const baseUrl =
       (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_WEB_BASE_URL) ||
-      "https://footballwithfriends.vercel.app";
+      "https://football-with-friends.vercel.app";
     const matchUrl =
       Platform.OS === "web" && typeof window !== "undefined"
         ? window.location.href

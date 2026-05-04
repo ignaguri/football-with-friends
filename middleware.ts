@@ -1,3 +1,4 @@
+import { formatDisplayDate } from "@repo/shared/utils";
 import { next } from "@vercel/functions";
 
 export const config = {
@@ -15,17 +16,6 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function formatDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split("-");
-  const date = new Date(Number(y), Number(m) - 1, Number(d));
-  return date.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 interface MatchResponse {
   date: string;
   time: string;
@@ -33,14 +23,20 @@ interface MatchResponse {
   location?: { name: string } | null;
 }
 
-function buildOgHtml(match: MatchResponse, pageUrl: string): string {
+function buildOgHtml(
+  match: MatchResponse,
+  pageUrl: string,
+  matchId: string,
+): string {
   const locationName = escapeHtml(match.location?.name || "TBD");
-  const date = escapeHtml(formatDate(match.date));
+  const date = escapeHtml(formatDisplayDate(match.date, "EEEE, MMMM d, yyyy"));
   const time = escapeHtml(match.time);
   const title = `Football Match - ${date}`;
   const description = `${time}hs | ${locationName} | ${match.maxPlayers} players`;
   const safeUrl = escapeHtml(pageUrl);
-  const ogImage = escapeHtml(new URL("/icons/icon-512x512.png", pageUrl).toString());
+  const ogImage = escapeHtml(
+    new URL(`/api/og/${encodeURIComponent(matchId)}`, pageUrl).toString(),
+  );
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -52,8 +48,10 @@ function buildOgHtml(match: MatchResponse, pageUrl: string): string {
   <meta property="og:description" content="${description}">
   <meta property="og:url" content="${safeUrl}">
   <meta property="og:image" content="${ogImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:site_name" content="Football with Friends">
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">
   <meta name="twitter:image" content="${ogImage}">
@@ -86,8 +84,12 @@ export default async function middleware(request: Request) {
     const res = await fetch(`${apiBase}/api/matches/${encodeURIComponent(matchId)}/preview`);
     if (!res.ok) return next();
     const match = (await res.json()) as MatchResponse;
-    return new Response(buildOgHtml(match, request.url), {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+    return new Response(buildOgHtml(match, request.url, matchId), {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control":
+          "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+      },
     });
   } catch {
     return next();
