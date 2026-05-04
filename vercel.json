@@ -6,6 +6,10 @@
   "installCommand": "pnpm install",
   "rewrites": [
     {
+      "source": "/api/og/:path*",
+      "destination": "/api/og/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://football-api.pepe-grillo-parlante.workers.dev/api/:path*"
     },
