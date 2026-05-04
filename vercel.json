@@ -4,51 +4,64 @@
   "outputDirectory": "apps/mobile-web/dist",
   "framework": null,
   "installCommand": "pnpm install",
-  "functions": {
-    "api/og/[matchId].ts": {
-      "memory": 128
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://football-api.pepe-grillo-parlante.workers.dev/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  },
-  "routes": [
+  ],
+  "headers": [
     {
-      "src": ".*",
-      "headers": {
-        "X-Frame-Options": "SAMEORIGIN",
-        "X-Content-Type-Options": "nosniff"
-      },
-      "continue": true
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
     },
     {
-      "src": "^/manifest\\.json$",
-      "headers": {
-        "Content-Type": "application/manifest+json",
-        "Cache-Control": "public, max-age=0, must-revalidate"
-      },
-      "continue": true
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     },
     {
-      "src": "^/service-worker\\.js$",
-      "headers": {
-        "Content-Type": "application/javascript",
-        "Cache-Control": "public, max-age=0, must-revalidate"
-      },
-      "continue": true
+      "source": "/service-worker.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     },
     {
-      "src": "^/icons/(.*)$",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      },
-      "continue": true
-    },
-    { "handle": "filesystem" },
-    {
-      "src": "^/api/(.*)$",
-      "dest": "https://football-api.pepe-grillo-parlante.workers.dev/api/$1"
-    },
-    {
-      "src": "^/(.*)$",
-      "dest": "/index.html"
+      "source": "/icons/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 }

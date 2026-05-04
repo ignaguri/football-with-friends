@@ -28,9 +28,6 @@ importers:
       '@vercel/functions':
         specifier: ^3.5.0
         version: 3.5.0
-      '@vercel/og':
-        specifier: ^0.11.1
-        version: 0.11.1
       better-auth:
         specifier: ^1.6.9
         version: 1.6.9(@cloudflare/workers-types@4.20260502.1)(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -49,9 +46,6 @@ importers:
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
-      react:
-        specifier: 19.2.5
-        version: 19.2.5
       zod:
         specifier: ^4.4.2
         version: 4.4.2
@@ -122,6 +116,9 @@ importers:
       react-dom:
         specifier: 19.2.5
         version: 19.2.5(react@19.2.5)
+      workers-og:
+        specifier: ^0.0.27
+        version: 0.0.27
       zod:
         specifier: ^4.4.2
         version: 4.4.2
@@ -3924,10 +3921,6 @@ packages:
       '@aws-sdk/credential-provider-web-identity':
         optional: true
 
-  '@vercel/og@0.11.1':
-    resolution: {integrity: sha512-02rXXRABFq1B03w3aNhcVfxkY+8Ba5QFi4ax0zS0oOiD/LL9WUd/LA7BjVPakrQmVhIBjuo2oBM5U25R9IuXMg==}
-    engines: {node: '>=16'}
-
   '@vercel/oidc@3.4.0':
     resolution: {integrity: sha512-p0sKfHkfRmMaqqDwNL4tjnX9TgRrLMlEtUjIxfrEns8pOxz1R9ztqOVI+ehqiq93/2/HnfPe/UBZkfAZwnx0UA==}
     engines: {node: '>= 20'}
@@ -4542,8 +4535,8 @@ packages:
     resolution: {integrity: sha512-FyyrDHZKEjXDpNJYvVsV960FiqQyXc/LlYmsxl2BcdMb2WPx0OGRVgTg55rPSyLSNMqP52R9r8geSp7apN3Ofg==}
     engines: {node: '>=4'}
 
-  css-gradient-parser@0.0.17:
-    resolution: {integrity: sha512-w2Xy9UMMwlKtou0vlRnXvWglPAceXCTtcmVSo8ZBUvqCV5aXEFP/PC6d+I464810I9FT++UACwTD5511bmGPUg==}
+  css-gradient-parser@0.0.16:
+    resolution: {integrity: sha512-3O5QdqgFRUbXvK1x5INf1YkBz1UKSWqrd63vWsum8MNHDBYD5urm3QtxZbKU259OrEXNM26lP/MPY3d1IGkBgA==}
     engines: {node: '>=16'}
 
   css-in-js-utils@3.1.0:
@@ -5827,6 +5820,9 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
+  just-camel-case@6.2.0:
+    resolution: {integrity: sha512-ICenRLXwkQYLk3UyvLQZ+uKuwFVJ3JHFYFn7F2782G2Mv2hW8WPePqgdhpnjGaqkYtSVWnyCESZhGXUmY3/bEg==}
+
   kind-of@6.0.3:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
@@ -6925,8 +6921,8 @@ packages:
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
-  satori@0.25.0:
-    resolution: {integrity: sha512-utINfLxrYrmSnLvxFT4ZwgwWa8KOjrz7ans32V5wItgHVmzESl/9i33nE38uG0miycab8hUqQtDlOpqrIpB/iw==}
+  satori@0.15.2:
+    resolution: {integrity: sha512-vu/49vdc8MzV5jUchs3TIRDCOkOvMc1iJ11MrZvhg9tE4ziKIEIBjBZvies6a9sfM2vQ2gc3dXeu6rCK7AztHA==}
     engines: {node: '>=16'}
 
   sax@1.6.0:
@@ -7691,6 +7687,9 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
+  workers-og@0.0.27:
+    resolution: {integrity: sha512-QvwptQ0twmouQHiITUi3kYxEPCLdueC/U4msQ2xMz2iktd+iseSs7zlREw3T1dAsPxPw73FQlw8cXFsfANZPlw==}
+
   wrangler@4.87.0:
     resolution: {integrity: sha512-lfhfKwLfQlowwgV0xhlYgE9fU3n0I30d4ccGY/rTCEm/n42Mjvlr0Ng3ZPNqlsrsKBcDR531V7dsPkgELvrk/Q==}
     engines: {node: '>=22.0.0'}
@@ -7796,8 +7795,8 @@ packages:
     resolution: {integrity: sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==}
     engines: {node: '>=12'}
 
-  yoga-layout@3.2.1:
-    resolution: {integrity: sha512-0LPOt3AxKqMdFBZA3HBAt/t/8vIKq7VaQYbuA8WxCgung+p9TVyKRYdpvCb80HcdTN2NkbIKbhNwKUfm3tQywQ==}
+  yoga-wasm-web@0.3.3:
+    resolution: {integrity: sha512-N+d4UJSJbt/R3wqY7Coqs5pcV0aUj2j9IaQ3rNj9bVCLld8tTGKRa2USARjnvZJWVx1NDmQev8EknoczaOQDOA==}
 
   youch-core@0.3.3:
     resolution: {integrity: sha512-ho7XuGjLaJ2hWHoK8yFnsUGy2Y5uDpqSTq1FkHLK4/oqKtyUU1AFbOOxY4IpC9f0fTLjwYbslUz0Po5BpD1wrA==}
@@ -10560,9 +10559,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-color@2.1.0': {}
 
@@ -14996,13 +14993,6 @@ snapshots:
     dependencies:
       '@vercel/oidc': 3.4.0
 
-  '@vercel/og@0.11.1':
-    dependencies:
-      '@resvg/resvg-wasm': 2.4.0
-      satori: 0.25.0
-    optionalDependencies:
-      sharp: 0.34.5
-
   '@vercel/oidc@3.4.0': {}
 
   '@xmldom/xmldom@0.8.13': {}
@@ -15677,7 +15667,7 @@ snapshots:
 
   css-color-keywords@1.0.0: {}
 
-  css-gradient-parser@0.0.17: {}
+  css-gradient-parser@0.0.16: {}
 
   css-in-js-utils@3.1.0:
     dependencies:
@@ -17261,6 +17251,8 @@ snapshots:
 
   jsonpointer@5.0.1: {}
 
+  just-camel-case@6.2.0: {}
+
   kind-of@6.0.3: {}
 
   kleur@3.0.3: {}
@@ -18732,19 +18724,19 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
-  satori@0.25.0:
+  satori@0.15.2:
     dependencies:
       '@shuding/opentype.js': 1.4.0-beta.0
       css-background-parser: 0.1.0
       css-box-shadow: 1.0.0-3
-      css-gradient-parser: 0.0.17
+      css-gradient-parser: 0.0.16
       css-to-react-native: 3.2.0
       emoji-regex-xs: 2.0.1
       escape-html: 1.0.3
       linebreak: 1.1.0
       parse-css-color: 0.2.1
       postcss-value-parser: 4.2.0
-      yoga-layout: 3.2.1
+      yoga-wasm-web: 0.3.3
 
   sax@1.6.0: {}
 
@@ -19786,6 +19778,13 @@ snapshots:
       '@cloudflare/workerd-linux-arm64': 1.20260430.1
       '@cloudflare/workerd-windows-64': 1.20260430.1
 
+  workers-og@0.0.27:
+    dependencies:
+      '@resvg/resvg-wasm': 2.4.0
+      just-camel-case: 6.2.0
+      satori: 0.15.2
+      yoga-wasm-web: 0.3.3
+
   wrangler@4.87.0(@cloudflare/workers-types@4.20260502.1):
     dependencies:
       '@cloudflare/kv-asset-handler': 0.5.0
@@ -19867,7 +19866,7 @@ snapshots:
       y18n: 5.0.8
       yargs-parser: 21.1.1
 
-  yoga-layout@3.2.1: {}
+  yoga-wasm-web@0.3.3: {}
 
   youch-core@0.3.3:
     dependencies:
