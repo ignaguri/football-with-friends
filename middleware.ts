@@ -89,11 +89,7 @@ export default async function middleware(request: Request) {
     if (!res.ok) return next();
     const match = (await res.json()) as MatchResponse;
     return new Response(buildOgHtml(match, request.url, matchId), {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control":
-          "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
-      },
+      headers: { "Content-Type": "text/html; charset=utf-8" },
     });
   } catch {
     return next();
