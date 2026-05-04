@@ -1,5 +1,7 @@
-import { formatDisplayDate } from "@repo/shared/utils";
 import { ImageResponse } from "@vercel/og";
+import { formatInTimeZone } from "date-fns-tz";
+
+const APP_TIMEZONE = process.env.DEFAULT_TIMEZONE || "Europe/Berlin";
 
 export const config = { runtime: "edge" };
 
@@ -36,7 +38,11 @@ export default async function handler(request: Request) {
     return new Response("Upstream error", { status: 502 });
   }
 
-  const dateLine = formatDisplayDate(match.date, "EEEE, MMMM d, yyyy");
+  const dateLine = formatInTimeZone(
+    match.date,
+    APP_TIMEZONE,
+    "EEEE, MMMM d, yyyy",
+  );
   const subtitle = `${match.time}hs · ${match.location?.name ?? "TBD"} · ${match.maxPlayers} players`;
 
   return new ImageResponse(

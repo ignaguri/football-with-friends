@@ -1,5 +1,7 @@
-import { formatDisplayDate } from "@repo/shared/utils";
 import { next } from "@vercel/functions";
+import { formatInTimeZone } from "date-fns-tz";
+
+const APP_TIMEZONE = process.env.DEFAULT_TIMEZONE || "Europe/Berlin";
 
 export const config = {
   matcher: "/matches/:matchId*",
@@ -29,7 +31,9 @@ function buildOgHtml(
   matchId: string,
 ): string {
   const locationName = escapeHtml(match.location?.name || "TBD");
-  const date = escapeHtml(formatDisplayDate(match.date, "EEEE, MMMM d, yyyy"));
+  const date = escapeHtml(
+    formatInTimeZone(match.date, APP_TIMEZONE, "EEEE, MMMM d, yyyy"),
+  );
   const time = escapeHtml(match.time);
   const title = `Football Match - ${date}`;
   const description = `${time}hs | ${locationName} | ${match.maxPlayers} players`;

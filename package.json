@@ -40,7 +40,6 @@
   "dependencies": {
     "@libsql/client": "^0.17.3",
     "@libsql/kysely-libsql": "^0.4.1",
-    "@repo/shared": "workspace:*",
     "@tanstack/react-query": "^5.100.8",
     "@vercel/functions": "^3.5.0",
     "@vercel/og": "^0.11.1",
