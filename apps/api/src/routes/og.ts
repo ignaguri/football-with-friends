@@ -31,6 +31,7 @@ app.get("/:matchId", async (c) => {
     return new ImageResponse(html, {
       width: 1200,
       height: 630,
+      emoji: "twemoji",
       headers: {
         "Cache-Control":
           "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
