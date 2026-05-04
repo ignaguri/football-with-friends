@@ -26,13 +26,7 @@ app.get("/:matchId", async (c) => {
       `${match.time}hs · ${match.location?.name ?? "TBD"} · ${match.maxPlayers} players`,
     );
 
-    const html = `
-      <div style="height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a3d2c 0%,#1a7a55 100%);color:white;padding:80px;">
-        <div style="font-size:36px;opacity:0.85;margin-bottom:16px;">⚽ Fútbol con los pibes</div>
-        <div style="font-size:80px;font-weight:700;text-align:center;line-height:1.1;">${dateLine}</div>
-        <div style="font-size:44px;opacity:0.95;margin-top:32px;text-align:center;">${subtitle}</div>
-      </div>
-    `;
+    const html = `<div style="height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a3d2c 0%,#1a7a55 100%);color:white;padding:80px;"><div style="display:flex;font-size:36px;opacity:0.85;margin-bottom:16px;">⚽ Fútbol con los pibes</div><div style="display:flex;font-size:80px;font-weight:700;text-align:center;line-height:1.1;">${dateLine}</div><div style="display:flex;font-size:44px;opacity:0.95;margin-top:32px;text-align:center;">${subtitle}</div></div>`;
 
     return new ImageResponse(html, {
       width: 1200,
