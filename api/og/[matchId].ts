@@ -1,9 +1,10 @@
 import { ImageResponse } from "@vercel/og";
 import { formatInTimeZone } from "date-fns-tz";
-
-const APP_TIMEZONE = process.env.DEFAULT_TIMEZONE || "Europe/Berlin";
+import { createElement } from "react";
 
 export const config = { runtime: "edge" };
+
+const APP_TIMEZONE = process.env.DEFAULT_TIMEZONE || "Europe/Berlin";
 
 interface MatchPreview {
   date: string;
@@ -46,9 +47,10 @@ export default async function handler(request: Request) {
   const subtitle = `${match.time}hs · ${match.location?.name ?? "TBD"} · ${match.maxPlayers} players`;
 
   return new ImageResponse(
-    (
-      <div
-        style={{
+    createElement(
+      "div",
+      {
+        style: {
           height: "100%",
           width: "100%",
           display: "flex",
@@ -58,32 +60,37 @@ export default async function handler(request: Request) {
           background: "linear-gradient(135deg, #0a3d2c 0%, #1a7a55 100%)",
           color: "white",
           padding: 80,
-        }}
-      >
-        <div style={{ fontSize: 36, opacity: 0.85, marginBottom: 16 }}>
-          ⚽ Fútbol con los pibes
-        </div>
-        <div
-          style={{
+        },
+      },
+      createElement(
+        "div",
+        { style: { fontSize: 36, opacity: 0.85, marginBottom: 16 } },
+        "⚽ Fútbol con los pibes",
+      ),
+      createElement(
+        "div",
+        {
+          style: {
             fontSize: 80,
             fontWeight: 700,
             textAlign: "center",
             lineHeight: 1.1,
-          }}
-        >
-          {dateLine}
-        </div>
-        <div
-          style={{
+          },
+        },
+        dateLine,
+      ),
+      createElement(
+        "div",
+        {
+          style: {
             fontSize: 44,
             opacity: 0.95,
             marginTop: 32,
             textAlign: "center",
-          }}
-        >
-          {subtitle}
-        </div>
-      </div>
+          },
+        },
+        subtitle,
+      ),
     ),
     {
       width: 1200,

@@ -49,6 +49,9 @@ importers:
       nanoid:
         specifier: ^5.1.11
         version: 5.1.11
+      react:
+        specifier: 19.2.5
+        version: 19.2.5
       zod:
         specifier: ^4.4.2
         version: 4.4.2
