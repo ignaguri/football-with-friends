@@ -32,6 +32,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         cameraPermission: "Football with Friends uses your camera to take a profile photo.",
       },
     ],
+    [
+      "expo-calendar",
+      {
+        calendarPermission:
+          "Football with Friends adds your matches to your calendar so you don't miss them.",
+      },
+    ],
     "expo-apple-authentication",
     "expo-localization",
     "expo-secure-store",
