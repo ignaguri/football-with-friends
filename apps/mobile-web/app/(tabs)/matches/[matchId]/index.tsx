@@ -49,9 +49,9 @@ import { useTranslation, Trans } from "react-i18next";
 import { Platform, Pressable, RefreshControl, ScrollView, Share, Linking } from "react-native";
 
 import {
-  generateICS as generateICSFromUtils,
   getGoogleCalendarUrl,
   openGoogleCalendar,
+  openSystemCalendarEventEditor,
 } from "@/lib/calendar-utils";
 import { formatFullDate } from "@/lib/date-utils";
 
@@ -442,24 +442,26 @@ export default function MatchDetailScreen() {
       ? `${match.location.name}${match.court ? ` - ${match.court.name}` : ""}`
       : undefined;
 
+    const title = t("shared.matchTitle");
     if (Platform.OS === "web") {
-      // On web, open Google Calendar directly (best cross-browser experience)
       const url = getGoogleCalendarUrl({
         date: match.date,
         time: match.time,
+        matchTitle: title,
         location,
       });
       openGoogleCalendar(url);
     } else {
-      // On native, use share sheet with ICS content
-      const icsContent = generateICSFromUtils({
+      openSystemCalendarEventEditor({
         date: match.date,
         time: match.time,
+        title,
         location,
-      });
-      Share.share({
-        message: icsContent,
-        title: t("shared.addToCalendar"),
+      }).catch(() => {
+        toast.show(t("matchDetail.calendarError"), {
+          duration: 4000,
+          customData: { variant: "error" },
+        });
       });
     }
   };
