@@ -1,5 +1,13 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useSession, signOut, client, getConfiguredApiUrl, getWebAppUrl } from "@repo/api-client";
+import {
+  useSession,
+  signOut,
+  client,
+  getConfiguredApiUrl,
+  getWebAppUrl,
+  getBearerToken,
+} from "@repo/api-client";
+import * as Sentry from "@sentry/react-native";
 import {
   Container,
   Card,
@@ -220,6 +228,7 @@ export default function ProfileScreen() {
   const handleUploadPhoto = async () => {
     if (!session?.user) return;
 
+    const token = getBearerToken();
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
@@ -255,15 +264,29 @@ export default function ProfileScreen() {
         } as any);
       }
       const apiUrl = getConfiguredApiUrl();
+      const headers = new Headers();
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+
       const uploadRes = await fetch(`${apiUrl}/api/profile/upload-picture`, {
         method: "POST",
         body: formData,
-        credentials: "include",
+        headers,
+        credentials: token ? "omit" : "include",
       });
 
       const data = await uploadRes.json();
 
       if (!uploadRes.ok) {
+        Sentry.captureMessage("Profile picture upload failed", {
+          level: "error",
+          tags: { source: "profile-upload" },
+          extra: {
+            status: uploadRes.status,
+            error: data?.error,
+            hasBearerToken: Boolean(token),
+            platform: Platform.OS,
+          },
+        });
         setError(data.error || t("profile.uploadFailed"));
         return;
       }
@@ -276,6 +299,14 @@ export default function ProfileScreen() {
 
       await refetchSession();
     } catch (err) {
+      Sentry.captureException(err, {
+        tags: { source: "profile-upload" },
+        extra: {
+          platform: Platform.OS,
+          hasBearerToken: Boolean(token),
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
+      });
       setError(t("profile.uploadFailed"));
       console.error("Upload photo error:", err);
     } finally {
