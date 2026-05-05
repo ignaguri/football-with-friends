@@ -36,10 +36,10 @@ interface Match {
   date: string;
   time: string;
   status: string;
-  max_players: number;
-  cost_per_player?: string;
-  location_name?: string;
-  court_name?: string;
+  maxPlayers: number;
+  costPerPlayer?: string;
+  location?: { name: string } | null;
+  court?: { name: string } | null;
 }
 
 interface Location {
@@ -314,9 +314,9 @@ function MatchesTab() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "cancelled":
-        return <Badge variant="destructive">{t("status.cancelled")}</Badge>;
-      case "played":
-        return <Badge variant="secondary">{t("status.played")}</Badge>;
+        return <Badge variant="danger">{t("status.cancelled")}</Badge>;
+      case "completed":
+        return <Badge variant="info">{t("status.completed")}</Badge>;
       default:
         return null;
     }
@@ -381,17 +381,19 @@ function MatchesTab() {
                 <XStack gap="$3">
                   <Text color="$gray11">{match.time}</Text>
                   <Text color="$gray11">
-                    {match.max_players} {t("players.title").toLowerCase()}
+                    {match.maxPlayers} {t("players.title").toLowerCase()}
                   </Text>
-                  {match.cost_per_player && <Text color="$gray11">{match.cost_per_player}</Text>}
+                  {match.costPerPlayer ? (
+                    <Text color="$gray11">{match.costPerPlayer}</Text>
+                  ) : null}
                 </XStack>
 
-                {match.location_name && (
+                {match.location?.name ? (
                   <Text fontSize="$3" color="$gray10">
-                    {match.location_name}
-                    {match.court_name && ` - ${match.court_name}`}
+                    {match.location.name}
+                    {match.court?.name ? ` - ${match.court.name}` : ""}
                   </Text>
-                )}
+                ) : null}
 
                 <YStack gap="$2" marginTop="$2">
                   <XStack gap="$2">
@@ -695,7 +697,7 @@ function LocationsTab() {
                 <Text fontSize="$5" fontWeight="600">
                   {location.name}
                 </Text>
-                {location.address && <Text color="$gray11">{location.address}</Text>}
+                {location.address ? <Text color="$gray11">{location.address}</Text> : null}
                 <XStack gap="$2" marginTop="$2">
                   <Button
                     flex={1}
@@ -1040,14 +1042,14 @@ function CourtsTab() {
                   <Text fontSize="$5" fontWeight="600">
                     {court.name}
                   </Text>
-                  {!court.isActive && <Badge variant="secondary">{t("status.inactive")}</Badge>}
+                  {!court.isActive && <Badge variant="default">{t("status.inactive")}</Badge>}
                 </XStack>
                 <Text color="$gray11">{getLocationName(court.locationId)}</Text>
-                {court.description && (
+                {court.description ? (
                   <Text fontSize="$3" color="$gray10">
                     {court.description}
                   </Text>
-                )}
+                ) : null}
                 <XStack gap="$2" marginTop="$2">
                   <Button
                     flex={1}
@@ -1705,7 +1707,7 @@ function VotingCriteriaTab() {
                     {getName(c)}
                   </Text>
                   <XStack alignItems="center" gap="$2">
-                    <Badge variant={c.isActive ? "default" : "secondary"}>
+                    <Badge variant={c.isActive ? "success" : "default"}>
                       {c.isActive ? t("status.active") : t("status.inactive")}
                     </Badge>
                     <Text color="$gray10" fontSize="$2">

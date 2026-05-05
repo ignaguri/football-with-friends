@@ -269,7 +269,7 @@ export default function AdminRosterScreen() {
                       </Text>
                     ) : null}
                   </YStack>
-                  <Badge variant={entry.claimedByUserId ? "success" : "secondary"}>
+                  <Badge variant={entry.claimedByUserId ? "success" : "default"}>
                     {entry.claimedByUserId
                       ? t("groups.roster.claimed")
                       : t("groups.roster.unclaimed")}

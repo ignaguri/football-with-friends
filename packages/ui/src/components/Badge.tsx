@@ -29,7 +29,7 @@ export function Badge({ variant = "default", children, ...props }: BadgeProps) {
       color: "$blue11",
     },
   };
-  const { color, backgroundColor } = variantStyles[variant];
+  const { color, backgroundColor } = variantStyles[variant] ?? variantStyles.default;
 
   return (
     <XStack
