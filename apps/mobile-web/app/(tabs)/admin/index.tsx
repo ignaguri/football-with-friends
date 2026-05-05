@@ -28,35 +28,9 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, RefreshControl } from "react-native";
+import type { Match, Location, Court } from "@repo/shared/domain";
 
 type Tab = "matches" | "locations" | "courts" | "settings" | "voting";
-
-interface Match {
-  id: string;
-  date: string;
-  time: string;
-  status: string;
-  maxPlayers: number;
-  costPerPlayer?: string;
-  location?: { name: string } | null;
-  court?: { name: string } | null;
-}
-
-interface Location {
-  id: string;
-  name: string;
-  address?: string;
-  coordinates?: string;
-  courtCount?: number;
-}
-
-interface Court {
-  id: string;
-  name: string;
-  description?: string;
-  locationId: string;
-  isActive: boolean;
-}
 
 // Extract the actual error message from API errors.
 // The custom fetch in api-client throws Error("API error: 400 ...") with
