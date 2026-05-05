@@ -228,6 +228,7 @@ export default function ProfileScreen() {
   const handleUploadPhoto = async () => {
     if (!session?.user) return;
 
+    const token = getBearerToken();
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
@@ -264,7 +265,6 @@ export default function ProfileScreen() {
       }
       const apiUrl = getConfiguredApiUrl();
       const headers = new Headers();
-      const token = getBearerToken();
       if (token) headers.set("Authorization", `Bearer ${token}`);
 
       const uploadRes = await fetch(`${apiUrl}/api/profile/upload-picture`, {
@@ -301,7 +301,11 @@ export default function ProfileScreen() {
     } catch (err) {
       Sentry.captureException(err, {
         tags: { source: "profile-upload" },
-        extra: { platform: Platform.OS },
+        extra: {
+          platform: Platform.OS,
+          hasBearerToken: Boolean(token),
+          errorMessage: err instanceof Error ? err.message : String(err),
+        },
       });
       setError(t("profile.uploadFailed"));
       console.error("Upload photo error:", err);
