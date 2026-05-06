@@ -487,7 +487,11 @@ export default function MatchDetailScreen() {
     if (isPlayed) return [];
 
     const isOwn = player.userId === userId;
-    const canAct = isAdmin || isOwn;
+    // Inviters can manage the guest signups they added (cancel/rejoin) —
+    // mirrors the backend authz at match-service.ts updateSignup, where
+    // `addedByUserId === updatedBy.id` grants update rights.
+    const isInviter = !!userId && player.addedByUserId === userId;
+    const canAct = isAdmin || isOwn || isInviter;
 
     if (!canAct) return [];
 
@@ -912,7 +916,6 @@ export default function MatchDetailScreen() {
 
                 <PlayersTable
                   players={buildPlayerRows()}
-                  isAdmin={isAdmin}
                   emptyMessage={t("players.noPlayers")}
                   statusLabels={statusLabels}
                   guestLabel={t("players.guest")}

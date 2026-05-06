@@ -306,8 +306,14 @@ app.post(
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
 
+    // PAID/SUBSTITUTE are organizer-managed states — force PENDING for
+    // members so they can't fake-mark a guest as paid or pre-place them on
+    // the substitute list. Service still auto-promotes to SUBSTITUTE when
+    // the match is full, regardless of caller role.
+    const input = isCurrentOrganizer(c) ? body : { ...body, status: "PENDING" as const };
+
     try {
-      const signup = await getMatchService().addGuestPlayer(current.id, matchId, body, user);
+      const signup = await getMatchService().addGuestPlayer(current.id, matchId, input, user);
       return c.json({ signup }, 201);
     } catch (error) {
       if (error instanceof RosterMemberCollisionError) {
