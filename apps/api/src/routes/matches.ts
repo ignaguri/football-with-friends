@@ -297,13 +297,11 @@ app.post(
     const matchId = c.req.param("id");
     const body = c.req.valid("json");
 
-    // Organizer-only: the `rosterId` branch could be safely open to members,
-    // but the `guestName` branch writes to `group_roster`, which is an
-    // organizer-managed table. Gating the whole endpoint keeps roster
-    // authorship consistent with the rest of the roster CRUD.
-    const denied = requireOrganizer(c);
-    if (denied) return denied;
-
+    // Open to any group member: members can invite friends to a match. The
+    // inline `guestName` branch creates a roster entry tagged with
+    // `createdByUserId = inviter`, so authorship is preserved even though
+    // members can now write to `group_roster` via this path. Roster CRUD
+    // outside this endpoint remains organizer-only.
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
