@@ -487,7 +487,11 @@ export default function MatchDetailScreen() {
     if (isPlayed) return [];
 
     const isOwn = player.userId === userId;
-    const canAct = isAdmin || isOwn;
+    // Inviters can manage the guest signups they added (cancel/rejoin) —
+    // mirrors the backend authz at match-service.ts updateSignup, where
+    // `addedByUserId === updatedBy.id` grants update rights.
+    const isInviter = !!userId && player.addedByUserId === userId;
+    const canAct = isAdmin || isOwn || isInviter;
 
     if (!canAct) return [];
 
@@ -883,8 +887,9 @@ export default function MatchDetailScreen() {
             </Pressable>
           )}
 
-          {/* View B: Participating or Played Match - Show Players Table */}
-          {(isParticipating || isPlayed || isAdmin) && (
+          {/* View B: Players table — visible to any logged-in group member,
+              plus anyone for played matches (preserves prior public behavior). */}
+          {(userId || isPlayed) && (
             <Card variant="elevated">
               <YStack gap="$2">
                 <XStack
@@ -896,7 +901,7 @@ export default function MatchDetailScreen() {
                   <Text fontSize="$6" fontWeight="bold">
                     {t("players.title")}
                   </Text>
-                  {!isPlayed && isOrganizer && match.availableSpots > 0 && (
+                  {!isPlayed && !isCancelled && userId && match.availableSpots > 0 && (
                     <Button
                       variant="outline"
                       size="$3"
@@ -911,7 +916,6 @@ export default function MatchDetailScreen() {
 
                 <PlayersTable
                   players={buildPlayerRows()}
-                  isAdmin={isAdmin}
                   emptyMessage={t("players.noPlayers")}
                   statusLabels={statusLabels}
                   guestLabel={t("players.guest")}
@@ -1038,26 +1042,28 @@ export default function MatchDetailScreen() {
         showActions={false}
       >
         <YStack gap="$3" padding="$4" maxHeight={560}>
-          <XStack gap="$2">
-            <Button
-              flex={1}
-              variant={guestMode === "pick" ? "primary" : "outline"}
-              onPress={() => setGuestMode("pick")}
-              testID="guest-mode-pick"
-            >
-              {t("groups.roster.guestPickerTitle")}
-            </Button>
-            <Button
-              flex={1}
-              variant={guestMode === "quick" ? "primary" : "outline"}
-              onPress={() => setGuestMode("quick")}
-              testID="guest-mode-quick"
-            >
-              {t("groups.roster.quickAddTitle")}
-            </Button>
-          </XStack>
+          {isOrganizer && (
+            <XStack gap="$2">
+              <Button
+                flex={1}
+                variant={guestMode === "pick" ? "primary" : "outline"}
+                onPress={() => setGuestMode("pick")}
+                testID="guest-mode-pick"
+              >
+                {t("groups.roster.guestPickerTitle")}
+              </Button>
+              <Button
+                flex={1}
+                variant={guestMode === "quick" ? "primary" : "outline"}
+                onPress={() => setGuestMode("quick")}
+                testID="guest-mode-quick"
+              >
+                {t("groups.roster.quickAddTitle")}
+              </Button>
+            </XStack>
+          )}
 
-          {guestMode === "pick" ? (
+          {isOrganizer && guestMode === "pick" ? (
             <>
               <Input
                 placeholder={t("groups.roster.guestPickerSearch")}

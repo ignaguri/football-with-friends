@@ -32,7 +32,6 @@ export interface PlayerRow {
 
 export interface PlayersTableProps {
   players: PlayerRow[];
-  isAdmin?: boolean;
   emptyMessage?: string;
   statusLabels?: Record<PlayerStatusType, string>;
   guestLabel?: string;
@@ -41,7 +40,6 @@ export interface PlayersTableProps {
 
 export function PlayersTable({
   players,
-  isAdmin = false,
   emptyMessage = "No players signed up yet",
   statusLabels,
   guestLabel = "Guest",
@@ -54,8 +52,6 @@ export function PlayersTable({
       </Text>
     );
   }
-
-  const canShowActions = (player: PlayerRow) => isAdmin || !!player.isCurrentUser;
 
   const getStatusLabel = (status: PlayerStatusType) => statusLabels?.[status] ?? status;
 
@@ -86,9 +82,7 @@ export function PlayersTable({
 
   const renderPlayerRow = (player: PlayerRow) => {
     const actions =
-      canShowActions(player) && player.actions && player.actions.length > 0
-        ? player.actions
-        : undefined;
+      player.actions && player.actions.length > 0 ? player.actions : undefined;
 
     const trailing = (
       <>

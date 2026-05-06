@@ -297,19 +297,23 @@ app.post(
     const matchId = c.req.param("id");
     const body = c.req.valid("json");
 
-    // Organizer-only: the `rosterId` branch could be safely open to members,
-    // but the `guestName` branch writes to `group_roster`, which is an
-    // organizer-managed table. Gating the whole endpoint keeps roster
-    // authorship consistent with the rest of the roster CRUD.
-    const denied = requireOrganizer(c);
-    if (denied) return denied;
-
+    // Open to any group member: members can invite friends to a match. The
+    // inline `guestName` branch creates a roster entry tagged with
+    // `createdByUserId = inviter`, so authorship is preserved even though
+    // members can now write to `group_roster` via this path. Roster CRUD
+    // outside this endpoint remains organizer-only.
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
 
+    // PAID/SUBSTITUTE are organizer-managed states — force PENDING for
+    // members so they can't fake-mark a guest as paid or pre-place them on
+    // the substitute list. Service still auto-promotes to SUBSTITUTE when
+    // the match is full, regardless of caller role.
+    const input = isCurrentOrganizer(c) ? body : { ...body, status: "PENDING" as const };
+
     try {
-      const signup = await getMatchService().addGuestPlayer(current.id, matchId, body, user);
+      const signup = await getMatchService().addGuestPlayer(current.id, matchId, input, user);
       return c.json({ signup }, 201);
     } catch (error) {
       if (error instanceof RosterMemberCollisionError) {
