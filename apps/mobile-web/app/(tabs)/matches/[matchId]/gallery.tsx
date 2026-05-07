@@ -17,7 +17,7 @@ import * as ImageManipulator from "expo-image-manipulator";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { Plus } from "@tamagui/lucide-icons-2";
 import { Container, Text, YStack, XStack, Button } from "@repo/ui";
-import { useSession, getConfiguredApiUrl } from "@repo/api-client";
+import { useSession, getConfiguredApiUrl, getBearerToken } from "@repo/api-client";
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
 
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
@@ -177,10 +177,15 @@ export default function MatchGalleryScreen() {
       fd.append("kind", kind);
 
       const apiUrl = getConfiguredApiUrl();
+      const token = getBearerToken();
+      const headers = new Headers();
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+
       const res = await fetch(`${apiUrl}/api/match-media/${matchId}`, {
         method: "POST",
         body: fd,
-        credentials: "include",
+        headers,
+        credentials: token ? "omit" : "include",
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Upload failed" }));
@@ -202,10 +207,13 @@ export default function MatchGalleryScreen() {
   const toggleReactionMut = useMutation({
     mutationFn: async ({ mediaId, emoji }: { mediaId: string; emoji: ReactionEmoji }) => {
       const apiUrl = getConfiguredApiUrl();
+      const token = getBearerToken();
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers,
+        credentials: token ? "omit" : "include",
         body: JSON.stringify({ emoji }),
       });
       if (!res.ok) throw new Error("Reaction failed");
@@ -218,9 +226,13 @@ export default function MatchGalleryScreen() {
   const deleteMut = useMutation({
     mutationFn: async (mediaId: string) => {
       const apiUrl = getConfiguredApiUrl();
+      const token = getBearerToken();
+      const headers = new Headers();
+      if (token) headers.set("Authorization", `Bearer ${token}`);
       const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}`, {
         method: "DELETE",
-        credentials: "include",
+        headers,
+        credentials: token ? "omit" : "include",
       });
       if (!res.ok) throw new Error("Delete failed");
     },
