@@ -7,7 +7,7 @@ import {
   useQueryClient,
   useSession,
   getConfiguredApiUrl,
-  getBearerToken,
+  authFetchInit,
 } from "@repo/api-client";
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
 import { Container, MediaGrid, MediaLightbox, Text, YStack, XStack, Button } from "@repo/ui";
@@ -184,16 +184,10 @@ export default function MatchGalleryScreen() {
       fd.append("kind", kind);
 
       const apiUrl = getConfiguredApiUrl();
-      const token = getBearerToken();
-      const headers = new Headers();
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-
-      const res = await fetch(`${apiUrl}/api/match-media/${matchId}`, {
-        method: "POST",
-        body: fd,
-        headers,
-        credentials: token ? "omit" : "include",
-      });
+      const res = await fetch(
+        `${apiUrl}/api/match-media/${matchId}`,
+        authFetchInit({ method: "POST", body: fd }),
+      );
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Upload failed" }));
         Alert.alert(err.error ?? t("multimedia.errors.uploadFailed"));
@@ -214,15 +208,14 @@ export default function MatchGalleryScreen() {
   const toggleReactionMut = useMutation({
     mutationFn: async ({ mediaId, emoji }: { mediaId: string; emoji: ReactionEmoji }) => {
       const apiUrl = getConfiguredApiUrl();
-      const token = getBearerToken();
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`, {
-        method: "POST",
-        headers,
-        credentials: token ? "omit" : "include",
-        body: JSON.stringify({ emoji }),
-      });
+      const res = await fetch(
+        `${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`,
+        authFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emoji }),
+        }),
+      );
       if (!res.ok) throw new Error("Reaction failed");
       return res.json();
     },
@@ -266,14 +259,10 @@ export default function MatchGalleryScreen() {
   const deleteMut = useMutation({
     mutationFn: async (mediaId: string) => {
       const apiUrl = getConfiguredApiUrl();
-      const token = getBearerToken();
-      const headers = new Headers();
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-      const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}`, {
-        method: "DELETE",
-        headers,
-        credentials: token ? "omit" : "include",
-      });
+      const res = await fetch(
+        `${apiUrl}/api/match-media/${matchId}/${mediaId}`,
+        authFetchInit({ method: "DELETE" }),
+      );
       if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () => {

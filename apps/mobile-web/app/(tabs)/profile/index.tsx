@@ -6,6 +6,7 @@ import {
   getConfiguredApiUrl,
   getWebAppUrl,
   getBearerToken,
+  authFetchInit,
 } from "@repo/api-client";
 import * as Sentry from "@sentry/react-native";
 import {
@@ -264,15 +265,10 @@ export default function ProfileScreen() {
         } as any);
       }
       const apiUrl = getConfiguredApiUrl();
-      const headers = new Headers();
-      if (token) headers.set("Authorization", `Bearer ${token}`);
-
-      const uploadRes = await fetch(`${apiUrl}/api/profile/upload-picture`, {
-        method: "POST",
-        body: formData,
-        headers,
-        credentials: token ? "omit" : "include",
-      });
+      const uploadRes = await fetch(
+        `${apiUrl}/api/profile/upload-picture`,
+        authFetchInit({ method: "POST", body: formData }),
+      );
 
       const data = await uploadRes.json();
 

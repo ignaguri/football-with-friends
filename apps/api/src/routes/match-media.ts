@@ -36,8 +36,7 @@ const app = new Hono<AppEnv>();
 // Public file-serving route is unauthenticated (URLs are unguessable nanoid keys);
 // skip the group-context middleware so <img>/<Image> can load without a session.
 app.use("*", async (c, next) => {
-  const path = new URL(c.req.url).pathname;
-  if (c.req.method === "GET" && path.startsWith("/api/match-media/file/")) {
+  if (c.req.method === "GET" && c.req.path.startsWith("/api/match-media/file/")) {
     return next();
   }
   return groupContextMiddleware(c, next);
