@@ -12,10 +12,10 @@ import {
   H2,
   VotingStatsSection,
   getCountryFlag,
+  RefreshableScrollView,
 } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView } from "react-native";
 
 interface MatchPlayerStat {
   id: string;
@@ -116,10 +116,7 @@ export default function PlayerDetailScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-      >
+      <RefreshableScrollView style={{ flex: 1 }} refreshing={isRefetching} onRefresh={refetch}>
         <YStack gap="$4" paddingBottom="$6">
           {/* Player Header */}
           <Card variant="elevated">
@@ -245,7 +242,7 @@ export default function PlayerDetailScreen() {
             </Card>
           )}
         </YStack>
-      </ScrollView>
+      </RefreshableScrollView>
     </Container>
   );
 }

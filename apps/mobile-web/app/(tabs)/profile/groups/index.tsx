@@ -1,14 +1,15 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { useCurrentGroup } from "@repo/api-client";
-import { Container } from "@repo/ui";
+import { groupQueryKeys, useCurrentGroup, useQueryClient } from "@repo/api-client";
+import { Container, RefreshableScrollView } from "@repo/ui";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { Pressable, ScrollView } from "react-native";
+import { Pressable } from "react-native";
 import { Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function MyGroupsScreen() {
   const { t } = useTranslation();
   const { myGroups: groups, groupId, switchGroup, isLoading } = useCurrentGroup();
+  const queryClient = useQueryClient();
 
   if (isLoading) {
     return (
@@ -28,7 +29,9 @@ export default function MyGroupsScreen() {
 
   return (
     <Container>
-      <ScrollView>
+      <RefreshableScrollView
+        onRefresh={() => queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() })}
+      >
         <YStack padding="$4" gap="$3">
           {groups.map((g) => {
             const badge = g.amIOwner
@@ -72,7 +75,7 @@ export default function MyGroupsScreen() {
             );
           })}
         </YStack>
-      </ScrollView>
+      </RefreshableScrollView>
     </Container>
   );
 }

@@ -13,11 +13,11 @@ import {
   RankingCard,
   PodiumDisplay,
   AwardCard,
+  RefreshableScrollView,
 } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView } from "react-native";
 
 export default function PlayersStatsScreen() {
   const { t } = useTranslation();
@@ -110,9 +110,10 @@ export default function PlayersStatsScreen() {
             />
           </YStack>
 
-          <ScrollView
+          <RefreshableScrollView
             style={{ flex: 1 }}
-            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+            refreshing={isRefetching}
+            onRefresh={refetch}
           >
             <YStack gap="$3" paddingBottom="$4">
               {isLoading && (
@@ -160,7 +161,7 @@ export default function PlayersStatsScreen() {
                   />
                 ))}
             </YStack>
-          </ScrollView>
+          </RefreshableScrollView>
         </>
       )}
 
@@ -177,11 +178,10 @@ export default function PlayersStatsScreen() {
             />
           </YStack>
 
-          <ScrollView
+          <RefreshableScrollView
             style={{ flex: 1 }}
-            refreshControl={
-              <RefreshControl refreshing={isRefetchingRankings} onRefresh={refetchRankings} />
-            }
+            refreshing={isRefetchingRankings}
+            onRefresh={refetchRankings}
           >
             <YStack gap="$3" paddingBottom="$4">
               {isLoadingRankings && (
@@ -250,17 +250,16 @@ export default function PlayersStatsScreen() {
                 </>
               )}
             </YStack>
-          </ScrollView>
+          </RefreshableScrollView>
         </>
       )}
 
       {/* Awards Tab */}
       {activeTab === "awards" && (
-        <ScrollView
+        <RefreshableScrollView
           style={{ flex: 1 }}
-          refreshControl={
-            <RefreshControl refreshing={isRefetchingLeaderboard} onRefresh={refetchLeaderboard} />
-          }
+          refreshing={isRefetchingLeaderboard}
+          onRefresh={refetchLeaderboard}
         >
           <YStack gap="$3" paddingBottom="$4">
             {isLoadingLeaderboard && (
@@ -318,7 +317,7 @@ export default function PlayersStatsScreen() {
                 />
               ))}
           </YStack>
-        </ScrollView>
+        </RefreshableScrollView>
       )}
     </Container>
   );

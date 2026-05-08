@@ -3,9 +3,9 @@ import { api, useInfiniteQuery } from "@repo/api-client";
 import { router, Stack } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Play } from "@tamagui/lucide-icons-2";
-import { Pressable, RefreshControl, ScrollView, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
-import { Container, Text, YStack, XStack, Card } from "@repo/ui";
+import { Container, Text, YStack, XStack, Card, RefreshableScrollView } from "@repo/ui";
 import { formatDisplayDate } from "@repo/shared/utils";
 import type { MatchMedia, MatchMediaFeedGroup } from "@repo/shared/domain";
 
@@ -86,8 +86,9 @@ export default function MultimediaFeedScreen() {
     <>
       <Stack.Screen options={{ title: t("multimedia.title") }} />
       <Container variant="padded">
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        <RefreshableScrollView
+          refreshing={isRefetching}
+          onRefresh={refetch}
           onScroll={({ nativeEvent }) => {
             const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
             const atBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 80;
@@ -150,7 +151,7 @@ export default function MultimediaFeedScreen() {
               )}
             </YStack>
           )}
-        </ScrollView>
+        </RefreshableScrollView>
       </Container>
     </>
   );

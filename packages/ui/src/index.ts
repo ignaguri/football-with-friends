@@ -18,6 +18,9 @@ export type { CustomCardProps } from "./components/Card";
 export { Container } from "./components/Container";
 export type { ContainerProps } from "./components/Container";
 
+export { RefreshableScrollView } from "./components/RefreshableScrollView";
+export type { RefreshableScrollViewProps } from "./components/RefreshableScrollView";
+
 // Feedback Components
 export { Dialog } from "./components/Dialog";
 export type { CustomDialogProps } from "./components/Dialog";

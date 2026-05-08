@@ -1,10 +1,11 @@
 // @ts-nocheck - Tamagui type recursion workaround
 
-import { Card, Container, Text } from "@repo/ui";
+import { notificationPreferencesQueryKeys, useQueryClient } from "@repo/api-client";
+import { Card, Container, RefreshableScrollView, Text } from "@repo/ui";
 import { Settings } from "@tamagui/lucide-icons-2";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, Platform, ScrollView } from "react-native";
+import { Linking, Platform } from "react-native";
 import { Spinner, Switch, XStack, YStack } from "tamagui";
 
 import { NotificationPermissionPrompt } from "../../../components/notifications/notification-permission-prompt";
@@ -38,6 +39,7 @@ const CATEGORIES: {
 export default function NotificationsScreen() {
   const { t } = useTranslation();
   const notif = useNotificationPreferencesContext();
+  const queryClient = useQueryClient();
   const [promptOpen, setPromptOpen] = useState(false);
 
   if (Platform.OS === "web") {
@@ -78,7 +80,14 @@ export default function NotificationsScreen() {
 
   return (
     <Container>
-      <ScrollView>
+      <RefreshableScrollView
+        onRefresh={async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: notificationPreferencesQueryKeys.all }),
+            notif.refreshOsStatus(),
+          ]);
+        }}
+      >
         <YStack padding="$4" gap="$4">
           <Card variant="outlined">
             <YStack gap="$3">
@@ -155,7 +164,7 @@ export default function NotificationsScreen() {
             </YStack>
           </Card>
         </YStack>
-      </ScrollView>
+      </RefreshableScrollView>
 
       <NotificationPermissionPrompt open={promptOpen} onClose={() => setPromptOpen(false)} />
     </Container>

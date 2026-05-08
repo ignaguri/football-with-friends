@@ -10,21 +10,23 @@ import {
   authFetchInit,
 } from "@repo/api-client";
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
-import { Container, MediaGrid, MediaLightbox, Text, YStack, XStack, Button } from "@repo/ui";
+import {
+  Container,
+  MediaGrid,
+  MediaLightbox,
+  RefreshableScrollView,
+  Text,
+  YStack,
+  XStack,
+  Button,
+} from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActionSheetIOS,
-  Alert,
-  Platform,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-} from "react-native";
+import { ActionSheetIOS, Alert, Platform, Pressable } from "react-native";
 import { Plus } from "@tamagui/lucide-icons-2";
 
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
@@ -276,9 +278,7 @@ export default function MatchGalleryScreen() {
   return (
     <>
       <Container variant="padded">
-        <ScrollView
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        >
+        <RefreshableScrollView refreshing={isRefetching} onRefresh={refetch}>
           <XStack justifyContent="flex-end" marginBottom="$3">
             {canUpload && (
               <Button
@@ -300,7 +300,7 @@ export default function MatchGalleryScreen() {
           ) : (
             <MediaGrid items={items} onItemPress={(_, i) => setLightboxIndex(i)} />
           )}
-        </ScrollView>
+        </RefreshableScrollView>
       </Container>
       <MediaLightbox
         items={items}

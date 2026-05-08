@@ -20,6 +20,7 @@ import {
   Card,
   Container,
   MembersTable,
+  RefreshableScrollView,
   type MemberRow,
   isValidPhoneNumber,
   useToastController,
@@ -372,7 +373,11 @@ export default function GroupDetailScreen() {
 
   return (
     <Container>
-      <ScrollView>
+      <RefreshableScrollView
+        onRefresh={async () => {
+          await Promise.all([refetch(), invitesQuery.refetch()]);
+        }}
+      >
         <YStack padding="$4" gap="$4">
           <YStack gap="$1">
             <Text fontSize="$7" fontWeight="700">
@@ -589,7 +594,7 @@ export default function GroupDetailScreen() {
             </Button>
           )}
         </YStack>
-      </ScrollView>
+      </RefreshableScrollView>
 
       {/* Delete-group confirm */}
       <AlertDialog
