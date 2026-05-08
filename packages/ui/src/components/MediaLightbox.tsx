@@ -1,5 +1,6 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
+import { format } from "date-fns";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { X, ChevronLeft, ChevronRight, MoreVertical, Trash2 } from "@tamagui/lucide-icons-2";
@@ -160,6 +161,7 @@ export function MediaLightbox({
         <YStack
           nativeID="media-lightbox-footer"
           padding="$3"
+          paddingBottom={insets.bottom + 12}
           gap="$2"
           backgroundColor="$backgroundHover"
         >
@@ -169,7 +171,7 @@ export function MediaLightbox({
                 {item.uploaderName}
               </Text>
               <Text color="$gray11" fontSize="$2">
-                {new Date(item.createdAt).toLocaleString()}
+                {format(new Date(item.createdAt), "dd/MM/yyyy HH:mm")}
               </Text>
             </YStack>
             {canDelete(item) && onDelete && (

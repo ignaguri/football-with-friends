@@ -219,7 +219,40 @@ export default function MatchGalleryScreen() {
       if (!res.ok) throw new Error("Reaction failed");
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["matchMedia", matchId] }),
+    onMutate: async ({ mediaId, emoji }) => {
+      const queryKey = ["matchMedia", matchId];
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<{ items: MatchMedia[] }>(queryKey);
+      qc.setQueryData<{ items: MatchMedia[] }>(queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.map((it) => {
+            if (it.id !== mediaId) return it;
+            const existing = it.reactions.find((r) => r.emoji === emoji);
+            const reactions = existing
+              ? it.reactions
+                  .map((r) =>
+                    r.emoji === emoji
+                      ? {
+                          ...r,
+                          didReact: !r.didReact,
+                          count: r.didReact ? Math.max(0, r.count - 1) : r.count + 1,
+                        }
+                      : r,
+                  )
+                  .filter((r) => r.count > 0)
+              : [...it.reactions, { emoji, count: 1, didReact: true }];
+            return { ...it, reactions };
+          }),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(["matchMedia", matchId], ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["matchMedia", matchId] }),
   });
 
   // --- Delete ---

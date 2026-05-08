@@ -5,7 +5,6 @@ import {
   type ReactionEmoji,
 } from "@repo/shared/domain";
 import { XStack, Text } from "tamagui";
-import { Pressable } from "react-native";
 
 // ASCII token per emoji so testIDs stay predictable for automation tools
 // (DOM attribute selectors and some agent frameworks struggle with raw emoji).
@@ -31,31 +30,32 @@ export function ReactionBar({ reactions, onToggle, disabled }: ReactionBarProps)
       {REACTION_EMOJIS.map((emoji) => {
         const r = byEmoji.get(emoji) ?? { emoji, count: 0, didReact: false };
         return (
-          <Pressable
+          <XStack
             key={emoji}
             onPress={() => !disabled && onToggle(emoji)}
-            accessibilityRole="button"
-            accessibilityLabel={`${emoji} reaction, ${r.count} ${r.count === 1 ? "person" : "people"}`}
+            role="button"
+            aria-label={`${emoji} reaction, ${r.count} ${r.count === 1 ? "person" : "people"}`}
             testID={`reaction-btn-${EMOJI_TEST_IDS[emoji]}`}
+            cursor="pointer"
+            alignItems="center"
+            gap="$1"
+            paddingHorizontal="$2"
+            paddingVertical="$1.5"
+            borderRadius="$10"
+            backgroundColor={r.didReact ? "$blue4" : "$gray3"}
+            borderWidth={1}
+            borderColor={r.didReact ? "$blue8" : "$gray5"}
+            animation="quick"
+            pressStyle={{ scale: 0.88, backgroundColor: r.didReact ? "$blue5" : "$gray4" }}
+            hoverStyle={{ backgroundColor: r.didReact ? "$blue5" : "$gray4" }}
           >
-            <XStack
-              alignItems="center"
-              gap="$1"
-              paddingHorizontal="$2"
-              paddingVertical="$1.5"
-              borderRadius="$10"
-              backgroundColor={r.didReact ? "$blue4" : "$gray3"}
-              borderWidth={1}
-              borderColor={r.didReact ? "$blue8" : "$gray5"}
-            >
-              <Text fontSize="$5">{emoji}</Text>
-              {r.count > 0 && (
-                <Text fontSize="$3" color={r.didReact ? "$blue11" : "$gray11"}>
-                  {r.count}
-                </Text>
-              )}
-            </XStack>
-          </Pressable>
+            <Text fontSize="$5">{emoji}</Text>
+            {r.count > 0 && (
+              <Text fontSize="$3" color={r.didReact ? "$blue11" : "$gray11"}>
+                {r.count}
+              </Text>
+            )}
+          </XStack>
         );
       })}
     </XStack>
