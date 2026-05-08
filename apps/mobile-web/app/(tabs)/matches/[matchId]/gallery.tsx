@@ -1,7 +1,20 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { MediaGrid, MediaLightbox } from "@repo/ui";
-import { api, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
+import {
+  api,
+  client,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useSession,
+  getConfiguredApiUrl,
+  getBearerToken,
+} from "@repo/api-client";
+import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
+import { Container, MediaGrid, MediaLightbox, Text, YStack, XStack, Button } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,13 +25,7 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as VideoThumbnails from "expo-video-thumbnails";
 import { Plus } from "@tamagui/lucide-icons-2";
-import { Container, Text, YStack, XStack, Button } from "@repo/ui";
-import { useSession, getConfiguredApiUrl, getBearerToken } from "@repo/api-client";
-import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
 
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
