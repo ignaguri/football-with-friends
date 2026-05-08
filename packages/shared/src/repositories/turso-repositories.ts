@@ -1277,7 +1277,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
   }
 
   async getAllPlayerSummaries(): Promise<PlayerSummary[]> {
-    // Get all users who have at least one non-cancelled signup
+    // Aggregate signups and match_player_stats independently in CTEs, then
+    // join. Joining the raw tables and grouping by user multiplies every
+    // signup row by every stats row (and vice versa), which inflates
+    // total_goals and total_third_times by the user's signup count.
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1290,6 +1293,20 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
       total_goals: number;
       total_third_times: number;
     }>`
+      WITH user_match_counts AS (
+        SELECT user_id, COUNT(DISTINCT match_id) AS total_matches
+        FROM signups
+        WHERE status = 'PAID'
+        GROUP BY user_id
+      ),
+      user_stats AS (
+        SELECT
+          user_id,
+          SUM(goals) AS total_goals,
+          SUM(third_time_attended) AS total_third_times
+        FROM match_player_stats
+        GROUP BY user_id
+      )
       SELECT
         u.id as user_id,
         u.name as user_name,
@@ -1298,14 +1315,13 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
-        COUNT(DISTINCT s.match_id) as total_matches,
-        COALESCE(SUM(mps.goals), 0) as total_goals,
-        COALESCE(SUM(mps.third_time_attended), 0) as total_third_times
+        umc.total_matches,
+        COALESCE(us.total_goals, 0) as total_goals,
+        COALESCE(us.total_third_times, 0) as total_third_times
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID'
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id
-      GROUP BY u.id
-      ORDER BY total_matches DESC, u.name ASC
+      INNER JOIN user_match_counts umc ON u.id = umc.user_id
+      LEFT JOIN user_stats us ON u.id = us.user_id
+      ORDER BY umc.total_matches DESC, u.name ASC
     `.execute(this.db);
 
     return rows.rows.map((row) => {
@@ -1396,6 +1412,10 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
   }
 
   async getRankingsByThirdTimes(groupId: string, limit: number): Promise<PlayerRanking[]> {
+    // Restrict to users who have at least one PAID signup in the group via
+    // EXISTS (semi-join). Joining `signups` directly would multiply each
+    // `match_player_stats` row by the user's paid-signup count and inflate
+    // the SUM.
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1415,11 +1435,14 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
-        COALESCE(SUM(mps.third_time_attended), 0) as value,
-        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_attended), 0) DESC, u.name ASC) as rank
+        SUM(mps.third_time_attended) as value,
+        ROW_NUMBER() OVER (ORDER BY SUM(mps.third_time_attended) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
+      INNER JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
+      WHERE EXISTS (
+        SELECT 1 FROM signups s
+        WHERE s.user_id = u.id AND s.status = 'PAID' AND s.group_id = ${groupId}
+      )
       GROUP BY u.id
       HAVING value > 0
       ORDER BY rank ASC
@@ -1445,6 +1468,8 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
   }
 
   async getRankingsByBeers(groupId: string, limit: number): Promise<PlayerRanking[]> {
+    // See note in getRankingsByThirdTimes: EXISTS instead of joining signups
+    // to avoid fanning out match_player_stats rows.
     const rows = await sql<{
       user_id: string;
       user_name: string;
@@ -1464,11 +1489,14 @@ export class TursoPlayerStatsRepository implements PlayerStatsRepository {
         u.displayUsername as display_username,
         u.nationality,
         u.profilePicture as profile_picture,
-        COALESCE(SUM(mps.third_time_beers), 0) as value,
-        ROW_NUMBER() OVER (ORDER BY COALESCE(SUM(mps.third_time_beers), 0) DESC, u.name ASC) as rank
+        SUM(mps.third_time_beers) as value,
+        ROW_NUMBER() OVER (ORDER BY SUM(mps.third_time_beers) DESC, u.name ASC) as rank
       FROM user u
-      INNER JOIN signups s ON u.id = s.user_id AND s.status = 'PAID' AND s.group_id = ${groupId}
-      LEFT JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
+      INNER JOIN match_player_stats mps ON u.id = mps.user_id AND mps.group_id = ${groupId}
+      WHERE EXISTS (
+        SELECT 1 FROM signups s
+        WHERE s.user_id = u.id AND s.status = 'PAID' AND s.group_id = ${groupId}
+      )
       GROUP BY u.id
       HAVING value > 0
       ORDER BY rank ASC
