@@ -33,7 +33,15 @@ type AppEnv = {
 
 const app = new Hono<AppEnv>();
 
-app.use("*", groupContextMiddleware);
+// Public file-serving route is unauthenticated (URLs are unguessable nanoid keys);
+// skip the group-context middleware so <img>/<Image> can load without a session.
+app.use("*", async (c, next) => {
+  const path = new URL(c.req.url).pathname;
+  if (c.req.method === "GET" && path.startsWith("/api/match-media/file/")) {
+    return next();
+  }
+  return groupContextMiddleware(c, next);
+});
 
 // Match-media rows don't carry their own `group_id` column; the scoping
 // anchor is the parent match. Any matchId-parameterized endpoint routes
@@ -124,7 +132,6 @@ app.get("/feed", async (c) => {
 // --- Serve file ----------------------------------------------------------
 
 app.get("/file/:key{.+}", async (c) => {
-  requireUser(c);
   const key = decodeURIComponent(c.req.param("key"));
   const bucket = c.env?.MATCH_MEDIA;
   if (!bucket) return c.json({ error: "Storage not configured" }, 500);

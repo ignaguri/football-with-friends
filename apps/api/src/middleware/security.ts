@@ -51,6 +51,7 @@ export const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/og\/[^/]+$/, method: "GET" }, // OG image renderer
   { path: /^\/api\/invites\/[^/]+$/, method: "GET" }, // Invite preview (POST accept requires auth)
   { path: /^\/api\/profile\/picture\//, method: "GET" }, // Served images
+  { path: /^\/api\/match-media\/file\//, method: "GET" }, // Served match media files
   { path: /^\/health$/ }, // Health check
   { path: /^\/api\/cron\/update-matches$/, method: "POST" }, // Cron (has own secret check)
   { path: /^\/api\/cron\/send-reminders$/, method: "POST" }, // Cron (has own secret check)
