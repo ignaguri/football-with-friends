@@ -21,13 +21,13 @@ import {
   Spinner,
   Dialog,
   AlertDialog,
+  RefreshableScrollView,
   useToastController,
   isValidPhoneNumber,
 } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, RefreshControl } from "react-native";
 import type { Match, Location, Court } from "@repo/shared/domain";
 
 type Tab = "matches" | "locations" | "courts" | "settings" | "voting";
@@ -305,10 +305,11 @@ function MatchesTab() {
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      refreshing={isRefetching}
+      onRefresh={refetch}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Match Button */}
@@ -479,7 +480,7 @@ function MatchesTab() {
           }
         }}
       />
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
@@ -629,10 +630,11 @@ function LocationsTab() {
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      refreshing={isRefetching}
+      onRefresh={refetch}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Location Button */}
@@ -819,7 +821,7 @@ function LocationsTab() {
           </YStack>
         </Dialog>
       </YStack>
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
@@ -986,10 +988,11 @@ function CourtsTab() {
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      refreshing={isRefetching}
+      onRefresh={refetch}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Court Button */}
@@ -1134,7 +1137,7 @@ function CourtsTab() {
           }}
         />
       </YStack>
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
@@ -1284,10 +1287,11 @@ function SettingsTab() {
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      refreshing={isRefetching}
+      onRefresh={refetch}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Cost Settings */}
@@ -1362,7 +1366,7 @@ function SettingsTab() {
         {/* Password Reset Codes */}
         <ResetCodesSection />
       </YStack>
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
@@ -1650,10 +1654,11 @@ function VotingCriteriaTab() {
   }
 
   return (
-    <ScrollView
+    <RefreshableScrollView
       backgroundColor="$background"
       style={{ flex: 1 }}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+      refreshing={isRefetching}
+      onRefresh={refetch}
     >
       <YStack gap="$3" paddingBottom="$6">
         {/* Add Criteria Button */}
@@ -1868,6 +1873,6 @@ function VotingCriteriaTab() {
           }}
         />
       </YStack>
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }

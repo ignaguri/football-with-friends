@@ -4,6 +4,7 @@ import { Spinner, Text, YStack } from "@repo/ui";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, RefreshControl } from "react-native";
+import { useTheme } from "tamagui";
 
 import { InboxEmpty } from "./inbox-empty";
 import { InboxRow } from "./inbox-row";
@@ -14,6 +15,7 @@ interface NotificationInboxProps {
 
 export function NotificationInbox({ onItemPress }: NotificationInboxProps) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { data, isLoading, isRefetching, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useNotifications();
 
@@ -34,7 +36,7 @@ export function NotificationInbox({ onItemPress }: NotificationInboxProps) {
 
   if (isLoading && items.length === 0) {
     return (
-      <YStack flex={1} alignItems="center" justifyContent="center">
+      <YStack flex={1} backgroundColor="$background" alignItems="center" justifyContent="center">
         <Spinner size="large" />
       </YStack>
     );
@@ -60,6 +62,7 @@ export function NotificationInbox({ onItemPress }: NotificationInboxProps) {
       renderItem={renderItem}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.3}
+      style={{ flex: 1, backgroundColor: theme.background?.val }}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
       ListFooterComponent={
         isFetchingNextPage ? (

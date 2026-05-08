@@ -16,13 +16,14 @@ import {
   Button,
   Spinner,
   AwardCard,
+  RefreshableScrollView,
   useToastController,
 } from "@repo/ui";
 import { Beer, CheckCircle2, Lock, Unlock } from "@tamagui/lucide-icons-2";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, RefreshControl, ScrollView } from "react-native";
+import { Alert } from "react-native";
 
 import type { MatchStats } from "@repo/shared/domain";
 
@@ -170,10 +171,7 @@ export default function MatchStatsScreen() {
       )}
 
       {stats && (
-        <ScrollView
-          style={{ flex: 1 }}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
-        >
+        <RefreshableScrollView style={{ flex: 1 }} refreshing={isRefetching} onRefresh={refetch}>
           <YStack gap="$3" paddingBottom="$6">
             {/* Status banner */}
             <Card variant="elevated">
@@ -318,7 +316,7 @@ export default function MatchStatsScreen() {
               </Card>
             )}
           </YStack>
-        </ScrollView>
+        </RefreshableScrollView>
       )}
     </Container>
   );

@@ -16,6 +16,7 @@ import {
   Container,
   Dialog,
   Input,
+  RefreshableScrollView,
   Spinner,
   Text,
   YStack,
@@ -195,7 +196,11 @@ export default function AdminRosterScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView>
+      <RefreshableScrollView
+        onRefresh={async () => {
+          await Promise.all([rosterQuery.refetch(), membersQuery.refetch()]);
+        }}
+      >
         <YStack gap="$4" paddingBottom="$6">
           <Card>
             <YStack padding="$4" gap="$3">
@@ -279,7 +284,7 @@ export default function AdminRosterScreen() {
             ))
           )}
         </YStack>
-      </ScrollView>
+      </RefreshableScrollView>
 
       {/* Edit dialog */}
       <Dialog

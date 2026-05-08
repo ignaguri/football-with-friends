@@ -25,6 +25,7 @@ import {
   StatusBadge,
   PlayersTable,
   List,
+  RefreshableScrollView,
   type PlayerRow,
   type PlayerAction,
   type PlayerStatusType,
@@ -46,7 +47,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, router } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation, Trans } from "react-i18next";
-import { Platform, Pressable, RefreshControl, ScrollView, Share, Linking } from "react-native";
+import { Platform, Pressable, ScrollView, Share, Linking } from "react-native";
 
 import {
   getGoogleCalendarUrl,
@@ -650,10 +651,11 @@ export default function MatchDetailScreen() {
 
   return (
     <Container variant="padded">
-      <ScrollView
+      <RefreshableScrollView
         style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+        refreshing={isRefetching}
+        onRefresh={refetch}
       >
         <YStack gap="$3" paddingBottom="$6">
           {/* Match Header Card */}
@@ -944,7 +946,7 @@ export default function MatchDetailScreen() {
             {t("matchDetail.viewRules")}
           </Button>
         </YStack>
-      </ScrollView>
+      </RefreshableScrollView>
 
       {/* Join Modal with Payment Info and Rules */}
       <Dialog

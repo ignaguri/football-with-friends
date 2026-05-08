@@ -1,10 +1,19 @@
 import { useInfiniteQuery, client, useSession, useCurrentGroup } from "@repo/api-client";
-import { Container, Card, Text, YStack, XStack, Spinner, Tabs, Button } from "@repo/ui";
+import {
+  Container,
+  Card,
+  Text,
+  YStack,
+  XStack,
+  Spinner,
+  Tabs,
+  Button,
+  RefreshableScrollView,
+} from "@repo/ui";
 import { Plus, BookOpen } from "@tamagui/lucide-icons-2";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RefreshControl, ScrollView } from "react-native";
 import { formatMatchDateTime } from "../../../lib/date-utils";
 
 type MatchType = "upcoming" | "past";
@@ -83,10 +92,11 @@ export default function MatchesListScreen() {
           />
         </YStack>
 
-        <ScrollView
+        <RefreshableScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} />}
+          refreshing={isRefetching}
+          onRefresh={refetch}
         >
           <YStack gap="$3" paddingBottom="$4">
             {isLoading && (
@@ -193,7 +203,7 @@ export default function MatchesListScreen() {
               </Button>
             )}
           </YStack>
-        </ScrollView>
+        </RefreshableScrollView>
 
         {/* Admin FAB — visible to platform admins and group organizers */}
         {canManage && (

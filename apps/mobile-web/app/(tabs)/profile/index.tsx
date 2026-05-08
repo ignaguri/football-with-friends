@@ -25,6 +25,7 @@ import {
   COUNTRIES,
   PhoneInput,
   AlertDialog,
+  RefreshableScrollView,
   getCountryFlag,
   getCountryName,
 } from "@repo/ui";
@@ -33,7 +34,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Link, router, Stack } from "expo-router";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, RefreshControl, Pressable, Platform, Alert, Linking } from "react-native";
+import { ScrollView, Pressable, Platform, Alert, Linking } from "react-native";
 import Constants from "expo-constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -57,7 +58,6 @@ export default function ProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -94,12 +94,6 @@ export default function ProfileScreen() {
   const handleLanguageChange = async (lang: "en" | "es") => {
     await changeLanguage(lang);
     setCurrentLanguage(lang);
-  };
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await refetchSession();
-    setIsRefreshing(false);
   };
 
   const handleSaveProfile = async () => {
@@ -384,10 +378,10 @@ export default function ProfileScreen() {
         }}
       />
       <Container variant="padded" paddingTop={insets.top + 16}>
-        <ScrollView
+        <RefreshableScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+          onRefresh={refetchSession}
         >
           <YStack gap="$4">
             {/* Profile Card with Inline Editing */}
@@ -715,7 +709,7 @@ export default function ProfileScreen() {
               </YStack>
             </Card>
           </YStack>
-        </ScrollView>
+        </RefreshableScrollView>
 
         {/* Password Change Confirmation Dialog */}
         <AlertDialog
