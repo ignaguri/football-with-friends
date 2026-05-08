@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useState } from "react";
 import type { ScrollView as RNScrollView, ScrollViewProps } from "react-native";
 import { RefreshControl, ScrollView } from "react-native";
 
-export type RefreshableScrollViewProps = ScrollViewProps & {
+export type RefreshableScrollViewProps = Omit<ScrollViewProps, "refreshControl"> & {
   onRefresh?: () => Promise<unknown> | unknown;
   refreshing?: boolean;
 };
@@ -29,12 +29,12 @@ export const RefreshableScrollView = forwardRef<RNScrollView, RefreshableScrollV
     return (
       <ScrollView
         ref={ref}
+        {...rest}
         refreshControl={
           onRefresh ? (
             <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
           ) : undefined
         }
-        {...rest}
       >
         {children}
       </ScrollView>
