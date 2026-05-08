@@ -1,4 +1,4 @@
-import { addDays } from "date-fns";
+import { sql } from "kysely";
 import { getDatabase } from "@repo/shared/database";
 import { NOTIFICATION_TYPES } from "@repo/shared/domain";
 import { getRepositoryFactory } from "@repo/shared/repositories";
@@ -8,26 +8,41 @@ import { formatDateInAppTimezone } from "@repo/shared/utils";
 
 import { recordForRecipients } from "../lib/notification-inbox";
 
+const REMINDER_LEAD_MS = 24 * 60 * 60 * 1000; // fire ~24h before kickoff
+
 /**
- * Send match reminders for matches happening tomorrow.
- * Only sends once per match (tracked via reminder_sent column).
+ * Send match reminders 24h before kickoff (e.g. an 18:00 match on day D
+ * triggers a reminder at 18:00 on day D-1, Europe/Berlin).
+ *
+ * Cron ticks every 30 min, so the actual fire time is the first tick at
+ * or after `kickoff - 24h`. Each match is reminded at most once
+ * (tracked via the `reminder_sent` column).
  */
 export async function sendMatchReminders() {
   const db = getDatabase();
 
-  // Get tomorrow's date in Europe/Berlin timezone
-  const tomorrowDate = formatDateInAppTimezone(addDays(new Date(), 1), "yyyy-MM-dd");
+  const now = new Date();
+  // Upper bound: matches kicking off at or before "now + 24h".
+  // Lower bound: matches that haven't started yet — guards against firing
+  // a stale reminder for a match still flagged "upcoming" past its kickoff.
+  const horizon = new Date(now.getTime() + REMINDER_LEAD_MS);
+  const horizonBerlin = formatDateInAppTimezone(horizon, "yyyy-MM-dd HH:mm");
+  const nowBerlin = formatDateInAppTimezone(now, "yyyy-MM-dd HH:mm");
 
-  console.log(`[CRON] Checking for matches on ${tomorrowDate} to send reminders`);
+  console.log(
+    `[CRON] Checking for matches kicking off in (${nowBerlin}, ${horizonBerlin}] (Berlin) for 24h reminders`,
+  );
 
   try {
-    // Find upcoming matches tomorrow that haven't had reminders sent
+    // Find upcoming matches whose kickoff falls in the 24h reminder window
+    // and that haven't been reminded yet.
     const matches = await db
       .selectFrom("matches")
       .selectAll()
       .where("status", "=", "upcoming")
-      .where("date", "=", tomorrowDate)
       .where("reminder_sent", "=", 0)
+      .where(sql<string>`(${sql.ref("date")} || ' ' || ${sql.ref("time")})`, ">", nowBerlin)
+      .where(sql<string>`(${sql.ref("date")} || ' ' || ${sql.ref("time")})`, "<=", horizonBerlin)
       .execute();
 
     if (matches.length === 0) {

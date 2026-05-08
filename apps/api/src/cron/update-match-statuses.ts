@@ -1,28 +1,33 @@
+import { sql } from "kysely";
 import { getDatabase } from "@repo/shared/database";
 import { NOTIFICATION_TYPES } from "@repo/shared/domain";
 import { getServiceFactory, NotificationTemplates } from "@repo/shared/services";
+import { formatDateInAppTimezone } from "@repo/shared/utils";
 
 import { recordForRecipients } from "../lib/notification-inbox";
+
+// Mark a match as completed once it has been underway for at least this long.
+// Stored `date` + `time` are Europe/Berlin local; cutoff is computed in the same
+// frame, so a lexicographic compare on `date || ' ' || time` is correct.
+const COMPLETION_BUFFER_MS = 60 * 60 * 1000; // 1 hour after kickoff
 
 /**
  * Update match statuses from "upcoming" to "completed"
  * and send voting reminders to participants.
  * Runs every 30 minutes via Cloudflare Cron Triggers.
  *
- * Uses native Date/Intl to stay within CF Workers CPU limits.
+ * A match is completed once `match_start + 1h <= now` in Europe/Berlin local
+ * time (i.e. ~1 hour after kickoff), independent of the calendar date.
  */
 export async function updateMatchStatuses() {
   const db = getDatabase();
 
-  // Get today's date in Europe/Berlin timezone using native Intl
-  const berlinDate = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Europe/Berlin",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date()); // returns "YYYY-MM-DD"
+  // "now - 1h" formatted in Berlin local — directly comparable to stored
+  // `date` + `time` strings, which are also Berlin local.
+  const cutoff = new Date(Date.now() - COMPLETION_BUFFER_MS);
+  const cutoffBerlin = formatDateInAppTimezone(cutoff, "yyyy-MM-dd HH:mm");
 
-  console.log(`[CRON] Updating upcoming matches before ${berlinDate}`);
+  console.log(`[CRON] Completing matches with kickoff <= ${cutoffBerlin} (Berlin)`);
 
   try {
     // Find matches that will transition (for voting reminders)
@@ -30,7 +35,7 @@ export async function updateMatchStatuses() {
       .selectFrom("matches")
       .select(["id", "date", "time", "location_id", "group_id"])
       .where("status", "=", "upcoming")
-      .where("date", "<", berlinDate)
+      .where(sql<string>`(${sql.ref("date")} || ' ' || ${sql.ref("time")})`, "<=", cutoffBerlin)
       .execute();
 
     // Update statuses
@@ -41,7 +46,7 @@ export async function updateMatchStatuses() {
         updated_at: new Date().toISOString(),
       })
       .where("status", "=", "upcoming")
-      .where("date", "<", berlinDate)
+      .where(sql<string>`(${sql.ref("date")} || ' ' || ${sql.ref("time")})`, "<=", cutoffBerlin)
       .execute();
 
     const updated = Number(result[0]?.numUpdatedRows ?? 0);
