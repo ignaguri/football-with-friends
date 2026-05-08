@@ -1,10 +1,12 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
+import { formatDisplayDate } from "@repo/shared/utils";
 import { Image } from "expo-image";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { X, ChevronLeft, ChevronRight, MoreVertical, Trash2 } from "@tamagui/lucide-icons-2";
 import { useEffect, useState } from "react";
 import { Modal, View, useWindowDimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { XStack, YStack, Text } from "tamagui";
 import { ReactionBar } from "./ReactionBar";
 
@@ -86,6 +88,7 @@ export function MediaLightbox({
   const [index, setIndex] = useState(startIndex);
   const [menuOpen, setMenuOpen] = useState(false);
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (visible) setIndex(startIndex);
@@ -114,7 +117,7 @@ export function MediaLightbox({
           onPress={onClose}
           accessibilityLabel="Close"
           testID="lightbox-close"
-          style={{ position: "absolute", top: 24, right: 16, zIndex: 10 }}
+          style={{ position: "absolute", top: insets.top + 8, right: insets.right + 16, zIndex: 10 }}
         >
           <X size={24} color="$color" />
         </IconChip>
@@ -158,6 +161,7 @@ export function MediaLightbox({
         <YStack
           nativeID="media-lightbox-footer"
           padding="$3"
+          paddingBottom={insets.bottom + 12}
           gap="$2"
           backgroundColor="$backgroundHover"
         >
@@ -167,7 +171,7 @@ export function MediaLightbox({
                 {item.uploaderName}
               </Text>
               <Text color="$gray11" fontSize="$2">
-                {new Date(item.createdAt).toLocaleString()}
+                {formatDisplayDate(item.createdAt, "dd/MM/yyyy HH:mm")}
               </Text>
             </YStack>
             {canDelete(item) && onDelete && (

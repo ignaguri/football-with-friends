@@ -31,6 +31,8 @@ export interface ExclusiveMultiSelectProps {
   disabled?: boolean;
   /** Label to show above the component */
   label?: string;
+  /** Accessibility label for the clear-selection button */
+  clearAccessibilityLabel?: string;
 }
 
 /**
@@ -46,6 +48,7 @@ export function ExclusiveMultiSelect({
   placeholder = "Select...",
   disabled = false,
   label,
+  clearAccessibilityLabel = "Clear selection",
 }: ExclusiveMultiSelectProps) {
   // Get available options for a specific item (excluding already selected values)
   const getAvailableOptions = useMemo(() => {
@@ -97,13 +100,18 @@ export function ExclusiveMultiSelect({
                 </YStack>
                 {currentValue && (
                   <Button
-                    size="$2"
+                    size="$3"
                     circular
                     icon={X}
-                    chromeless
                     onPress={() => handleClear(item.id)}
                     disabled={disabled}
                     opacity={disabled ? 0.5 : 1}
+                    backgroundColor="$gray3"
+                    borderColor="$gray7"
+                    borderWidth={1}
+                    hoverStyle={{ backgroundColor: "$red4", borderColor: "$red7" }}
+                    pressStyle={{ backgroundColor: "$red5", borderColor: "$red8" }}
+                    aria-label={clearAccessibilityLabel}
                   />
                 )}
               </XStack>

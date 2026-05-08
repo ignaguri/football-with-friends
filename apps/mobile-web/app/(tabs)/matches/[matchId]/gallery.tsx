@@ -1,7 +1,20 @@
 // @ts-nocheck - Tamagui type recursion workaround
-import { MediaGrid, MediaLightbox } from "@repo/ui";
-import { api, client, useQuery, useMutation, useQueryClient } from "@repo/api-client";
+import {
+  api,
+  client,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useSession,
+  getConfiguredApiUrl,
+  authFetchInit,
+} from "@repo/api-client";
+import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
+import { Container, MediaGrid, MediaLightbox, Text, YStack, XStack, Button } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,13 +25,7 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as VideoThumbnails from "expo-video-thumbnails";
 import { Plus } from "@tamagui/lucide-icons-2";
-import { Container, Text, YStack, XStack, Button } from "@repo/ui";
-import { useSession, getConfiguredApiUrl } from "@repo/api-client";
-import type { MatchMedia, ReactionEmoji } from "@repo/shared/domain";
 
 const PHOTO_MAX_BYTES = 10 * 1024 * 1024;
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
@@ -177,11 +184,10 @@ export default function MatchGalleryScreen() {
       fd.append("kind", kind);
 
       const apiUrl = getConfiguredApiUrl();
-      const res = await fetch(`${apiUrl}/api/match-media/${matchId}`, {
-        method: "POST",
-        body: fd,
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${apiUrl}/api/match-media/${matchId}`,
+        authFetchInit({ method: "POST", body: fd }),
+      );
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "Upload failed" }));
         Alert.alert(err.error ?? t("multimedia.errors.uploadFailed"));
@@ -202,26 +208,61 @@ export default function MatchGalleryScreen() {
   const toggleReactionMut = useMutation({
     mutationFn: async ({ mediaId, emoji }: { mediaId: string; emoji: ReactionEmoji }) => {
       const apiUrl = getConfiguredApiUrl();
-      const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ emoji }),
-      });
+      const res = await fetch(
+        `${apiUrl}/api/match-media/${matchId}/${mediaId}/reactions`,
+        authFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ emoji }),
+        }),
+      );
       if (!res.ok) throw new Error("Reaction failed");
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["matchMedia", matchId] }),
+    onMutate: async ({ mediaId, emoji }) => {
+      const queryKey = ["matchMedia", matchId];
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData<{ items: MatchMedia[] }>(queryKey);
+      qc.setQueryData<{ items: MatchMedia[] }>(queryKey, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.map((it) => {
+            if (it.id !== mediaId) return it;
+            const existing = it.reactions.find((r) => r.emoji === emoji);
+            const reactions = existing
+              ? it.reactions
+                  .map((r) =>
+                    r.emoji === emoji
+                      ? {
+                          ...r,
+                          didReact: !r.didReact,
+                          count: r.didReact ? Math.max(0, r.count - 1) : r.count + 1,
+                        }
+                      : r,
+                  )
+                  .filter((r) => r.count > 0)
+              : [...it.reactions, { emoji, count: 1, didReact: true }];
+            return { ...it, reactions };
+          }),
+        };
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(["matchMedia", matchId], ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["matchMedia", matchId] }),
   });
 
   // --- Delete ---
   const deleteMut = useMutation({
     mutationFn: async (mediaId: string) => {
       const apiUrl = getConfiguredApiUrl();
-      const res = await fetch(`${apiUrl}/api/match-media/${matchId}/${mediaId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const res = await fetch(
+        `${apiUrl}/api/match-media/${matchId}/${mediaId}`,
+        authFetchInit({ method: "DELETE" }),
+      );
       if (!res.ok) throw new Error("Delete failed");
     },
     onSuccess: () => {

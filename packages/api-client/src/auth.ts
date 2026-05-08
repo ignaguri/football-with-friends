@@ -69,6 +69,23 @@ export function getBearerToken(): string | undefined {
   return _cachedBearerToken;
 }
 
+/**
+ * Build the auth options for a `fetch` call: bearer header on native (where
+ * cookies don't persist), credentials:"include" on web (cross-origin cookies).
+ */
+export function authFetchInit(
+  base?: { headers?: HeadersInit; method?: string; body?: BodyInit | null },
+): RequestInit {
+  const token = getBearerToken();
+  const headers = new Headers(base?.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  return {
+    ...base,
+    headers,
+    credentials: token ? "omit" : "include",
+  };
+}
+
 // Extract a human-readable error message from API responses.
 // Handles both string errors and Zod validation error objects.
 function extractApiError(result: any, fallback: string): string {

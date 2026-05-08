@@ -751,6 +751,7 @@
     "beersCount": "Cervezas",
     "matchAwards": "Premios del Partido",
     "selectPlayer": "Seleccionar jugador",
+    "clearSelection": "Quitar selección",
     "submitVotes": "Enviar Votos",
     "submitting": "Enviando...",
     "votesSubmitted": "¡Votos enviados exitosamente!",

@@ -748,6 +748,7 @@
     "beersCount": "Beers",
     "matchAwards": "Match Awards",
     "selectPlayer": "Select player",
+    "clearSelection": "Clear selection",
     "submitVotes": "Submit Votes",
     "submitting": "Submitting...",
     "votesSubmitted": "Votes submitted successfully!",

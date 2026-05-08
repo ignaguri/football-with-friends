@@ -521,6 +521,7 @@ export default function StatsVotingScreen() {
                       onSelectionChange={handleSelectionChange}
                       placeholder={t("voting.selectPlayer")}
                       disabled={hasVoted || isVotingClosed}
+                      clearAccessibilityLabel={t("voting.clearSelection")}
                     />
                   )}
 

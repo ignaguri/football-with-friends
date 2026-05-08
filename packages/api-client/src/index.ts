@@ -30,6 +30,7 @@ export {
   storeBearerToken,
   clearBearerToken,
   getBearerToken,
+  authFetchInit,
   signUpWithPhone,
   signInWithPhone,
   needsPasswordReset,
