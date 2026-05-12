@@ -33,14 +33,13 @@ function pickPlatform(payload: ServerResponse) {
 export function useStoreUpdate() {
   const [state, setState] = useState<State>(INITIAL);
   const lastCheckedRef = useRef<number>(0);
+  const inFlightRef = useRef<boolean>(false);
 
   const check = useCallback(async () => {
     // Native + non-dev only. Web auto-updates; dev is too noisy.
     if (Platform.OS === "web" || __DEV__) return;
-
-    // Set BEFORE any awaits so concurrent AppState-triggered calls in the
-    // same tick are gated by the 6h window.
-    lastCheckedRef.current = Date.now();
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
 
     try {
       const localBuildRaw = Application.nativeBuildVersion;
@@ -53,6 +52,10 @@ export function useStoreUpdate() {
       const payload = (await res.json()) as ServerResponse;
       const picked = pickPlatform(payload);
       if (!picked) return;
+
+      // Only advance the 6h gate on a successful fetch+parse — transient
+      // failures retry on the next foreground.
+      lastCheckedRef.current = Date.now();
 
       if (picked.latestCounter <= localCounter) {
         setState((prev) =>
@@ -78,6 +81,8 @@ export function useStoreUpdate() {
       );
     } catch {
       // Silent fail — best-effort, same philosophy as the OTA check.
+    } finally {
+      inFlightRef.current = false;
     }
   }, []);
 

@@ -32,7 +32,7 @@ export function StoreUpdateBanner() {
         size="$2"
         theme="blue"
         onPress={() => {
-          void Linking.openURL(storeUrl);
+          Linking.openURL(storeUrl).catch(() => {});
         }}
         testID="store-update-banner-update"
         accessibilityRole="button"
