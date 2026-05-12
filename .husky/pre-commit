@@ -1,2 +1,4 @@
-# Run lint-staged to validate staged files
-# npx lint-staged // Uncomment when lint passes
+# Fail the commit if apps/api/src/config/app-versions.ts disagrees with
+# apps/mobile-web/app.config.ts. Set SKIP_VERSION_CHECK=1 to bypass
+# (e.g., when bumping app.config.ts before the new build is live on the store).
+pnpm check:app-versions
