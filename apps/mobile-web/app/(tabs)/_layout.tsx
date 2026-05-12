@@ -2,6 +2,7 @@
 import { useCurrentGroup, useSession } from "@repo/api-client";
 import { GroupSwitcher } from "../../components/group-switcher";
 import { NoGroupOnboarding } from "../../components/no-group-onboarding";
+import { StoreUpdateBanner } from "../../components/store-update-banner";
 import { NotificationPreferencesProvider } from "../../lib/notifications/notification-preferences-context";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import { Home, Calendar, Users, Settings, CircleUser } from "@tamagui/lucide-icons-2";
@@ -44,6 +45,7 @@ export default function TabsLayout() {
   return (
     <NotificationPreferencesProvider>
       <YStack flex={1}>
+        <StoreUpdateBanner />
         <GroupSwitcher />
         <Tabs
           sceneContainerStyle={{
