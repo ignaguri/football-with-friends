@@ -1,4 +1,3 @@
-// apps/mobile-web/components/store-update-banner.tsx
 // @ts-nocheck — Tamagui type recursion workaround (matches sibling components)
 import { ArrowUpCircle, X } from "@tamagui/lucide-icons-2";
 import { useTranslation } from "react-i18next";
@@ -9,8 +8,7 @@ import { useStoreUpdate } from "../lib/store-update/use-store-update";
 
 export function StoreUpdateBanner() {
   const { t } = useTranslation();
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-  const { available, storeUrl, dismiss } = useStoreUpdate(apiUrl);
+  const { available, storeUrl, dismiss } = useStoreUpdate();
 
   if (Platform.OS === "web") return null;
   if (!available || !storeUrl) return null;

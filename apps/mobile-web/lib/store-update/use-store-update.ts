@@ -1,8 +1,8 @@
-// apps/mobile-web/lib/store-update/use-store-update.ts
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
 import * as Application from "expo-application";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { client } from "@repo/api-client";
 
 const DISMISSED_KEY = "store-update:dismissed-version";
 const FOREGROUND_RECHECK_MS = 6 * 60 * 60 * 1000; // 6h
@@ -30,14 +30,13 @@ function pickPlatform(payload: ServerResponse) {
   return null;
 }
 
-export function useStoreUpdate(apiUrl: string | undefined) {
+export function useStoreUpdate() {
   const [state, setState] = useState<State>(INITIAL);
   const lastCheckedRef = useRef<number>(0);
 
   const check = useCallback(async () => {
     // Native + non-dev only. Web auto-updates; dev is too noisy.
     if (Platform.OS === "web" || __DEV__) return;
-    if (!apiUrl) return;
 
     // Set BEFORE any awaits so concurrent AppState-triggered calls in the
     // same tick are gated by the 6h window.
@@ -49,14 +48,18 @@ export function useStoreUpdate(apiUrl: string | undefined) {
       const localCounter = Number.parseInt(localBuildRaw, 10);
       if (!Number.isFinite(localCounter)) return;
 
-      const res = await fetch(`${apiUrl.replace(/\/$/, "")}/api/app-version`);
+      const res = await client.api["app-version"].$get();
       if (!res.ok) return;
       const payload = (await res.json()) as ServerResponse;
       const picked = pickPlatform(payload);
       if (!picked) return;
 
       if (picked.latestCounter <= localCounter) {
-        setState({ available: false, latestVersion: picked.version, storeUrl: picked.storeUrl });
+        setState((prev) =>
+          !prev.available && prev.latestVersion === picked.version
+            ? prev
+            : { available: false, latestVersion: picked.version, storeUrl: picked.storeUrl },
+        );
         return;
       }
 
@@ -68,13 +71,16 @@ export function useStoreUpdate(apiUrl: string | undefined) {
       }
 
       const available = dismissedVersion !== picked.version;
-      setState({ available, latestVersion: picked.version, storeUrl: picked.storeUrl });
+      setState((prev) =>
+        prev.available === available && prev.latestVersion === picked.version
+          ? prev
+          : { available, latestVersion: picked.version, storeUrl: picked.storeUrl },
+      );
     } catch {
       // Silent fail — best-effort, same philosophy as the OTA check.
     }
-  }, [apiUrl]);
+  }, []);
 
-  // Initial check on mount.
   useEffect(() => {
     void check();
   }, [check]);

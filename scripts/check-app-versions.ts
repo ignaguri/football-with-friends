@@ -1,5 +1,3 @@
-// scripts/check-app-versions.ts
-//
 // Drift detector: fails non-zero if app-versions.ts disagrees with
 // app.config.ts. Run via `pnpm check:app-versions` and from the
 // husky pre-commit hook.
