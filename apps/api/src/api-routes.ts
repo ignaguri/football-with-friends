@@ -18,6 +18,7 @@ import notificationPreferencesRoute from "./routes/notification-preferences";
 import matchMediaRoute from "./routes/match-media";
 import invitesRoute from "./routes/invites";
 import ogRoute from "./routes/og";
+import appVersionRoute from "./routes/app-version";
 
 export function registerApiRoutes(app: Hono<any>) {
   return app
@@ -38,7 +39,8 @@ export function registerApiRoutes(app: Hono<any>) {
     .route("/notification-preferences", notificationPreferencesRoute)
     .route("/match-media", matchMediaRoute)
     .route("/invites", invitesRoute)
-    .route("/og", ogRoute);
+    .route("/og", ogRoute)
+    .route("/app-version", appVersionRoute);
 }
 
 export type ApiRoutes = ReturnType<typeof registerApiRoutes>;

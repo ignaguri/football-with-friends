@@ -30,6 +30,7 @@
     "seed": "tsx scripts/seed.ts",
     "seed:local": "tsx scripts/seed.ts local",
     "seed:staging": "tsx scripts/seed.ts remote",
+    "check:app-versions": "tsx scripts/check-app-versions.ts",
     "validate-env": "tsx scripts/validate-env.ts",
     "env:check": "tsx scripts/validate-env.ts check",
     "env:template": "tsx scripts/validate-env.ts template",

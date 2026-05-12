@@ -72,3 +72,16 @@ wrangler secret put BETTER_AUTH_SECRET --env=preview
 wrangler secret put NEXT_PUBLIC_GOOGLE_CLIENT_ID --env=preview
 wrangler secret put GOOGLE_CLIENT_SECRET --env=preview
 ```
+
+## Native releases and the in-app update banner
+
+The mobile app shows a "new version available" banner whenever the values in `apps/api/src/config/app-versions.ts` advance past the user's local build counter. To avoid sending users to a store listing that hasn't been updated yet, follow this two-step flow:
+
+1. **Release PR**: bump `apps/mobile-web/app.config.ts` (`version`, `ios.buildNumber`, `android.versionCode`). Commit with `SKIP_VERSION_CHECK=1` to bypass the pre-commit drift check. Build and submit via EAS as usual.
+2. **Banner-enable PR**: once the new build is live on the App Store / Play Store closed track, open a tiny follow-up PR that bumps `apps/api/src/config/app-versions.ts` to match. Merging this deploys the API and existing users on older builds start seeing the banner.
+
+To bypass the drift check ad-hoc (e.g. during step 1):
+
+```sh
+SKIP_VERSION_CHECK=1 git commit -m "release: bump to 1.4.0"
+```
