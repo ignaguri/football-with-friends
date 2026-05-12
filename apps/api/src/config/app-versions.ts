@@ -5,13 +5,13 @@
 // `apps/mobile-web/app.config.ts`.
 export const APP_VERSIONS = {
   ios: {
-    version: "1.3.7",
-    buildNumber: 29,
+    version: "1.3.8",
+    buildNumber: 30,
     storeUrl: "https://apps.apple.com/us/app/fulbo-with-friends/id6759833737",
   },
   android: {
-    version: "1.3.7",
-    versionCode: 15,
+    version: "1.3.8",
+    versionCode: 16,
     storeUrl:
       "https://play.google.com/store/apps/details?id=com.pepegrillo.footballwithfriends",
   },
