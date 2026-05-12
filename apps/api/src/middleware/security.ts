@@ -53,6 +53,7 @@ export const PUBLIC_ROUTES: Array<{ method?: string; path: RegExp }> = [
   { path: /^\/api\/profile\/picture\//, method: "GET" }, // Served images
   { path: /^\/api\/match-media\/file\//, method: "GET" }, // Served match media files
   { path: /^\/health$/ }, // Health check
+  { path: /^\/api\/app-version$/, method: "GET" }, // Public store-version probe
   { path: /^\/api\/cron\/update-matches$/, method: "POST" }, // Cron (has own secret check)
   { path: /^\/api\/cron\/send-reminders$/, method: "POST" }, // Cron (has own secret check)
   { path: /^\/api\/cron\/send-engagement$/, method: "POST" }, // Cron (has own secret check)
