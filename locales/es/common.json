@@ -854,6 +854,11 @@
     "message": "Se descargó una nueva versión. Reiniciá la app para aplicarla.",
     "restart": "Reiniciar"
   },
+  "storeUpdate": {
+    "available": "Hay una nueva versión disponible",
+    "update": "Actualizar",
+    "dismiss": "Cerrar aviso de actualización"
+  },
   "groups": {
     "switcher": {
       "label": "Grupo",
