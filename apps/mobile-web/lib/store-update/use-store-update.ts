@@ -39,6 +39,10 @@ export function useStoreUpdate(apiUrl: string | undefined) {
     if (Platform.OS === "web" || __DEV__) return;
     if (!apiUrl) return;
 
+    // Set BEFORE any awaits so concurrent AppState-triggered calls in the
+    // same tick are gated by the 6h window.
+    lastCheckedRef.current = Date.now();
+
     try {
       const localBuildRaw = Application.nativeBuildVersion;
       if (!localBuildRaw) return;
@@ -50,8 +54,6 @@ export function useStoreUpdate(apiUrl: string | undefined) {
       const payload = (await res.json()) as ServerResponse;
       const picked = pickPlatform(payload);
       if (!picked) return;
-
-      lastCheckedRef.current = Date.now();
 
       if (picked.latestCounter <= localCounter) {
         setState({ available: false, latestVersion: picked.version, storeUrl: picked.storeUrl });
