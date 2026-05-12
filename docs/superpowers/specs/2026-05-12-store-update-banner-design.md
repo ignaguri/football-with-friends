@@ -77,11 +77,11 @@ The user-facing label uses the semver `version` field (e.g. "1.3.8") for readabi
 
 - **Mount point** — inside `apps/mobile-web/app/(tabs)/_layout.tsx` at the top of the screen stack, above tab content. Not in root `_layout.tsx` — that would surface it on auth/onboarding screens where it's the wrong context.
 
-### CI lint
+### Drift check
 
-- **`scripts/check-app-version-sync.ts`** (or co-located in `apps/api/scripts/`) — Node script that reads `apps/mobile-web/app.config.ts` and `apps/api/src/config/app-versions.ts`, asserts `ios.buildNumber` and `android.versionCode` match, and asserts the semver `version` matches. Fails non-zero on drift.
-- Invoked from the existing GH Actions workflow (or as a new turbo task wired in).
-- **Escape hatch:** if the PR title contains the token `[skip-version-check]`, the script exits 0. For rare cases where `app.config.ts` is touched without a release (e.g., editing a plugin entry).
+- **`scripts/check-app-versions.ts`** — Node script (run via `tsx`) that reads `apps/mobile-web/app.config.ts` and `apps/api/src/config/app-versions.ts`, asserts `ios.buildNumber` and `android.versionCode` match, and asserts the semver `version` matches. Fails non-zero on drift.
+- Exposed as `pnpm check:app-versions`. Invoked from `.husky/pre-commit` (the repo has no GitHub Actions today; if CI is added later, the same script plugs in).
+- **Escape hatch:** set the env var `SKIP_VERSION_CHECK=1` to bypass — e.g. `SKIP_VERSION_CHECK=1 git commit -m "..."`. Used during the release PR that bumps `app.config.ts` before the new build is live on the store.
 
 ## Data flow
 
@@ -128,9 +128,8 @@ launch / foreground-after-6h
 
 Two-step, intentionally manual:
 
-1. **Release PR** — bumps `apps/mobile-web/app.config.ts` (`version`, `buildNumber`, `versionCode`), runs EAS Build & Submit. CI lint passes because `app-versions.ts` is bumped in the same PR.
-   - *Trade-off:* this means the banner could fire before Apple finishes review. The user clicks Update, sees the old version on the store, gets confused. Avoid by either (a) splitting into two PRs (see step 2 below) or (b) accepting the small window.
-2. **Recommended split:** the release PR only bumps `app.config.ts` (with `[skip-version-check]` in the title to bypass lint). Once the build is live on the App Store / Play Store closed track, a tiny follow-up PR bumps `app-versions.ts` to match. This is the moment existing users start seeing the banner.
+1. **Release PR** — bumps `apps/mobile-web/app.config.ts` (`version`, `buildNumber`, `versionCode`), runs EAS Build & Submit. Commit with `SKIP_VERSION_CHECK=1` to bypass the pre-commit drift check (since `app-versions.ts` is intentionally not bumped yet).
+2. **Banner-enable PR:** once the build is live on the App Store / Play Store closed track, a tiny follow-up PR bumps `app-versions.ts` to match. This is the moment existing users start seeing the banner.
 
 Document both steps in `docs/deployment.md`.
 
