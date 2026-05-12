@@ -2,12 +2,14 @@
 import { ArrowUpCircle, X } from "@tamagui/lucide-icons-2";
 import { useTranslation } from "react-i18next";
 import { Linking, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Text, XStack } from "tamagui";
 
 import { useStoreUpdate } from "../lib/store-update/use-store-update";
 
 export function StoreUpdateBanner() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const { available, storeUrl, dismiss } = useStoreUpdate();
 
   if (Platform.OS === "web") return null;
@@ -19,7 +21,8 @@ export function StoreUpdateBanner() {
       borderBottomWidth={1}
       borderBottomColor="$borderColor"
       paddingHorizontal="$3"
-      paddingVertical="$2"
+      paddingTop={insets.top + 8}
+      paddingBottom="$2"
       alignItems="center"
       gap="$2"
       testID="store-update-banner"
