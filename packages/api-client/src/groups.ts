@@ -551,6 +551,10 @@ export interface GroupCreationRequestSummary {
 export function useMyGroupRequests() {
   return useQuery({
     queryKey: groupRequestQueryKeys.me(),
+    // The status screen must reflect an admin's decision made elsewhere, so keep
+    // it fresh on app foreground / remount rather than serving a stale cache.
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
     queryFn: async () => {
       const res = await client.api["group-requests"].me.$get();
       const data = (await res.json()) as { requests: GroupCreationRequestSummary[] };
@@ -563,6 +567,11 @@ export function usePendingGroupRequests(enabled: boolean) {
   return useQuery({
     queryKey: groupRequestQueryKeys.pending(),
     enabled,
+    // Requests are submitted by other users (other clients), so this queue can't
+    // be invalidated at submit time. Refetch on app foreground; consumer screens
+    // additionally refetch on navigation focus (the admin tab stays mounted).
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
     queryFn: async () => {
       const res = await client.api["group-requests"].$get();
       const data = (await res.json()) as { requests: GroupCreationRequestSummary[] };

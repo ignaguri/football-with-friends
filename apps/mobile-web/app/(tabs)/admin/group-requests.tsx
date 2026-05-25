@@ -6,7 +6,8 @@ import {
   useSession,
 } from "@repo/api-client";
 import { Container, Dialog, Input, RefreshableScrollView } from "@repo/ui";
-import { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "react-native";
 import { Button, Spinner, Text, XStack, YStack } from "tamagui";
@@ -20,6 +21,15 @@ export default function GroupRequestsScreen() {
   const reject = useRejectGroupRequest();
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
+  // This screen lives in an always-mounted tab, so the query won't re-run on its
+  // own. Refetch each time it regains focus so a request submitted by another
+  // user (or this user before being routed here) shows up without a manual pull.
+  useFocusEffect(
+    useCallback(() => {
+      if (isAdmin) refetch();
+    }, [isAdmin, refetch]),
+  );
 
   if (!isAdmin) {
     return (
