@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { Kysely } from "kysely";
 
 import { makeTestDb } from "../helpers/db";
-import { seedUser } from "../helpers/fixtures";
+import { seedGroup, seedUser } from "../helpers/fixtures";
 import { TursoGroupCreationRequestRepository } from "@repo/shared/repositories";
 
 let db: Kysely<any>;
@@ -55,9 +55,35 @@ describe("TursoGroupCreationRequestRepository", () => {
     expect(await repo.findPendingByUser(user.id)).toBeNull();
   });
 
-  test("listByStatus returns only matching rows", async () => {
+  test("markDecided approved path persists createdGroupId and decidedAt", async () => {
+    const owner = await seedUser(db);
+    const group = await seedGroup(db, { ownerUserId: owner.id, name: "Approved FC" });
+    const requester = await seedUser(db);
+    const req = await repo.create({
+      requestedByUserId: requester.id,
+      name: "Approved Request",
+      reason: "want a group",
+    });
+    const decided = await repo.markDecided(req.id, {
+      status: "approved",
+      decidedByUserId: owner.id,
+      createdGroupId: group.id,
+    });
+    expect(decided.status).toBe("approved");
+    expect(decided.createdGroupId).toBe(group.id);
+    expect(decided.decidedAt).toBeInstanceOf(Date);
+  });
+
+  test("listByStatus returns only matching rows (non-vacuous)", async () => {
+    const user = await seedUser(db);
+    const created = await repo.create({
+      requestedByUserId: user.id,
+      name: "Status Filter League",
+      reason: "Testing listByStatus",
+    });
     const pending = await repo.listByStatus("pending");
     expect(pending.every((r) => r.status === "pending")).toBe(true);
+    expect(pending.map((r) => r.id)).toContain(created.id);
   });
 
   test("deletePending removes only the caller's pending row", async () => {
