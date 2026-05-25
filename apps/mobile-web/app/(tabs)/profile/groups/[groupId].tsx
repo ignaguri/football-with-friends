@@ -8,11 +8,13 @@ import {
   useDeleteGroup,
   useGroupDetail,
   useGroupInvites,
+  useGroupJoinRequests,
   useKickMember,
   useLeaveGroup,
   useRevokeInvite,
   useSession,
   useTransferOwnership,
+  useUpdateGroup,
   useUpdateMemberRole,
 } from "@repo/api-client";
 import {
@@ -78,6 +80,9 @@ export default function GroupDetailScreen() {
   const kickMutation = useKickMember(groupId ?? "");
   const roleMutation = useUpdateMemberRole(groupId ?? "");
   const transferMutation = useTransferOwnership(groupId ?? "");
+
+  const updateGroup = useUpdateGroup(groupId ?? "");
+  const { data: joinRequests } = useGroupJoinRequests(groupId ?? null, isOrganizerView);
 
   const invitesQuery = useGroupInvites(isOrganizerView ? (groupId ?? null) : null);
   const createInviteMutation = useCreateInvite(groupId ?? "");
@@ -385,6 +390,39 @@ export default function GroupDetailScreen() {
             </Text>
             <Text color="$gray11">{group.slug}</Text>
           </YStack>
+
+          {amIOwner ? (
+            <YStack gap="$2">
+              <Button
+                onPress={() =>
+                  updateGroup.mutate({
+                    visibility: group.visibility === "public" ? "private" : "public",
+                  })
+                }
+                disabled={updateGroup.isPending}
+                accessibilityRole="button"
+                testID="group-visibility-toggle"
+              >
+                {group.visibility === "public"
+                  ? t("groups.joinRequests.makePrivate")
+                  : t("groups.joinRequests.makePublic")}
+              </Button>
+              <Text fontSize="$2" color="$gray11">
+                {t("groups.joinRequests.visibilityHint")}
+              </Text>
+            </YStack>
+          ) : null}
+
+          {isOrganizerView ? (
+            <Button
+              onPress={() => router.push(`/(tabs)/profile/groups/${groupId}/join-requests`)}
+              accessibilityRole="button"
+              testID="group-join-requests-link"
+            >
+              {t("groups.joinRequests.queueTitle")}
+              {joinRequests && joinRequests.length > 0 ? ` (${joinRequests.length})` : ""}
+            </Button>
+          ) : null}
 
           {isOrganizerView && (
             <YStack gap="$2">
