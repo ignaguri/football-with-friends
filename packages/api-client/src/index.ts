@@ -78,6 +78,15 @@ export {
   useCancelGroupRequest,
   useApproveGroupRequest,
   useRejectGroupRequest,
+  // Group search & join request hooks (group discovery).
+  joinRequestQueryKeys,
+  useSearchGroups,
+  useMyJoinRequests,
+  useSubmitJoinRequest,
+  useCancelJoinRequest,
+  useGroupJoinRequests,
+  useApproveJoinRequest,
+  useRejectJoinRequest,
 } from "./groups";
 export type {
   GroupInviteSummary,
@@ -89,6 +98,8 @@ export type {
   GroupDetailPayload,
   MyGroupSummary,
   GroupCreationRequestSummary,
+  GroupSearchResult,
+  JoinRequestSummary,
 } from "./groups";
 
 export {
