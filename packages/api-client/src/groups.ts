@@ -6,6 +6,7 @@
 
 import type {
   GroupInviteInvalidReason,
+  GroupRequestStatus,
   GroupVisibility,
   MemberRole,
   UpdateGroupRosterData,
@@ -520,6 +521,120 @@ export function useTransferOwnership(groupId: string) {
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.detail(groupId) });
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.members(groupId) });
       queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
+    },
+  });
+}
+
+// --- Group creation requests ---------------------------------------------
+
+export const groupRequestQueryKeys = {
+  all: ["group-requests"] as const,
+  me: () => [...groupRequestQueryKeys.all, "me"] as const,
+  pending: () => [...groupRequestQueryKeys.all, "pending"] as const,
+};
+
+// JSON-serialized client view of a group creation request (dates as strings); intentionally omits server-only fields: decidedByUserId, decidedAt, updatedAt.
+export interface GroupCreationRequestSummary {
+  id: string;
+  requestedByUserId: string;
+  // Present only in the admin pending list (GET /group-requests); the /me
+  // response omits it since the requester already knows who they are.
+  requestedByName?: string;
+  name: string;
+  reason: string;
+  status: GroupRequestStatus;
+  decisionReason?: string;
+  createdGroupId?: string;
+  createdAt: string;
+}
+
+export function useMyGroupRequests() {
+  return useQuery({
+    queryKey: groupRequestQueryKeys.me(),
+    // The status screen must reflect an admin's decision made elsewhere, so keep
+    // it fresh on app foreground / remount rather than serving a stale cache.
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    queryFn: async () => {
+      const res = await client.api["group-requests"].me.$get();
+      const data = (await res.json()) as { requests: GroupCreationRequestSummary[] };
+      return data.requests;
+    },
+  });
+}
+
+export function usePendingGroupRequests(enabled: boolean) {
+  return useQuery({
+    queryKey: groupRequestQueryKeys.pending(),
+    enabled,
+    // Requests are submitted by other users (other clients), so this queue can't
+    // be invalidated at submit time. Refetch on app foreground; consumer screens
+    // additionally refetch on navigation focus (the admin tab stays mounted).
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    queryFn: async () => {
+      const res = await client.api["group-requests"].$get();
+      const data = (await res.json()) as { requests: GroupCreationRequestSummary[] };
+      return data.requests;
+    },
+  });
+}
+
+export function useSubmitGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { name: string; reason: string }) => {
+      const res = await client.api["group-requests"].$post({ json: input });
+      const data = (await res.json()) as { request: GroupCreationRequestSummary };
+      return data.request;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.me() });
+    },
+  });
+}
+
+export function useCancelGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api["group-requests"][":id"].$delete({ param: { id } });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.me() });
+    },
+  });
+}
+
+export function useApproveGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api["group-requests"][":id"].approve.$post({ param: { id } });
+      return res.json();
+    },
+    onSuccess: () => {
+      // Only the admin's own pending queue can be refreshed from here. The new
+      // group belongs to the requester (a different client), so invalidating the
+      // admin's group list would refetch nothing useful — intentionally omitted.
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.pending() });
+    },
+  });
+}
+
+export function useRejectGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; reason: string }) => {
+      const res = await client.api["group-requests"][":id"].reject.$post({
+        param: { id: input.id },
+        json: { reason: input.reason },
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.pending() });
     },
   });
 }

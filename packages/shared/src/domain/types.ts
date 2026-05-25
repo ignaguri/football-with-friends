@@ -577,6 +577,8 @@ export const NOTIFICATION_TYPES = {
   VOTING_OPEN: "voting_open",
   ENGAGEMENT_REMINDER: "engagement_reminder",
   GROUP_INVITE: "group_invite",
+  GROUP_REQUEST_SUBMITTED: "group_request_submitted",
+  GROUP_REQUEST_DECISION: "group_request_decision",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -820,6 +822,23 @@ export interface UpdateGroupData {
   name?: string;
   slug?: string;
   visibility?: GroupVisibility;
+}
+
+export const GROUP_REQUEST_STATUSES = ["pending", "approved", "rejected"] as const;
+export type GroupRequestStatus = (typeof GROUP_REQUEST_STATUSES)[number];
+
+export interface GroupCreationRequest {
+  id: string;
+  requestedByUserId: string;
+  name: string;
+  reason: string;
+  status: GroupRequestStatus;
+  decisionReason?: string;
+  decidedByUserId?: string;
+  decidedAt?: Date;
+  createdGroupId?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreateGroupInviteData {

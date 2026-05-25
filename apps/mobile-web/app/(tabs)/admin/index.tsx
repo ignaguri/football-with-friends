@@ -7,6 +7,7 @@ import {
   getAdminResetCodes,
   useCopyVenues,
   useCurrentGroup,
+  usePendingGroupRequests,
 } from "@repo/api-client";
 import {
   Container,
@@ -25,8 +26,8 @@ import {
   useToastController,
   isValidPhoneNumber,
 } from "@repo/ui";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Match, Location, Court } from "@repo/shared/domain";
 
@@ -193,6 +194,16 @@ function MatchesTab() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const toast = useToastController();
+  const { data: pendingGroupRequests, refetch: refetchPendingGroupRequests } =
+    usePendingGroupRequests(session?.user?.role === "admin");
+  const pendingGroupRequestsCount = pendingGroupRequests?.length ?? 0;
+  // Keep the badge count current when the admin tab regains focus (it stays
+  // mounted, so the query doesn't re-run on navigation by itself).
+  useFocusEffect(
+    useCallback(() => {
+      if (session?.user?.role === "admin") refetchPendingGroupRequests();
+    }, [session?.user?.role, refetchPendingGroupRequests]),
+  );
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [targetMatch, setTargetMatch] = useState<Match | null>(null);
@@ -329,6 +340,23 @@ function MatchesTab() {
             testID="admin-groups-create-btn"
           >
             {t("groups.create.title")}
+          </Button>
+        ) : null}
+
+        {/* Group requests review queue — platform admin only */}
+        {session?.user?.role === "admin" ? (
+          <Button
+            variant="outline"
+            onPress={() => router.push("/(tabs)/admin/group-requests")}
+            testID="admin-link-group-requests"
+            accessibilityLabel={t("groups.requests.queueTitle")}
+          >
+            <XStack flex={1} justifyContent="space-between" alignItems="center">
+              <Text>{t("groups.requests.queueTitle")}</Text>
+              {pendingGroupRequestsCount > 0 ? (
+                <Badge variant="danger">{pendingGroupRequestsCount}</Badge>
+              ) : null}
+            </XStack>
           </Button>
         ) : null}
 

@@ -10,8 +10,8 @@ export interface CustomDialogProps extends DialogProps {
   trigger?: React.ReactNode;
   onConfirm?: () => void;
   onCancel?: () => void;
-  confirmText?: string;
-  cancelText?: string;
+  confirmText?: React.ReactNode;
+  cancelText?: React.ReactNode;
   showActions?: boolean;
   showClose?: boolean;
 }

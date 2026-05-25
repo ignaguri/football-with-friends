@@ -5,3 +5,4 @@ export * from "./voting-repository";
 export * from "./push-token-repository";
 export * from "./notification-inbox-repository";
 export * from "./group-repositories";
+export * from "./group-creation-request-repository";

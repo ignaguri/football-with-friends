@@ -869,6 +869,27 @@
       "organizer": "Organizer",
       "member": "Member"
     },
+    "requests": {
+      "ctaCreate": "Create a group",
+      "title": "Request a group",
+      "nameLabel": "Group name",
+      "namePlaceholder": "e.g. Sunday Footy",
+      "reasonLabel": "Why do you want this group?",
+      "reasonPlaceholder": "Tell the admin a bit about it",
+      "submit": "Send request",
+      "pending": "Your request is pending review.",
+      "rejected": "Request declined: {{reason}}",
+      "cancel": "Cancel request",
+      "resubmit": "Request another group",
+      "error": "Something went wrong. Please try again.",
+      "queueTitle": "Group requests",
+      "queueEmpty": "No pending requests.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectPrompt": "Reason for rejecting",
+      "requestedBy": "Requested by {{name}}",
+      "adminOnly": "Only admins can review group requests."
+    },
     "create": {
       "title": "Create Group",
       "nameLabel": "Group name",

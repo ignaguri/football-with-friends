@@ -220,3 +220,51 @@ export async function notifyGroupInviteTarget(params: {
     );
   });
 }
+
+// Self-serve group-creation request lifecycle. Two of the three are push-only:
+// a creation request has no group, and the persistent inbox is group-scoped
+// (groupId NOT NULL). Only the approval (group now exists) records an inbox row.
+
+export async function notifyAdminOfGroupRequest(params: {
+  requesterName: string;
+  groupName: string;
+}): Promise<void> {
+  await safeNotify("group request submitted", async () => {
+    const adminIds = await getAdminUserIds();
+    if (adminIds.length === 0) return;
+    const payload = NotificationTemplates.groupRequestSubmitted({
+      requesterName: params.requesterName,
+      groupName: params.groupName,
+    });
+    await getNotificationService().sendToUsers(adminIds, payload);
+  });
+}
+
+export async function notifyRequesterApproved(params: {
+  userId: string;
+  group: { id: string; name: string };
+}): Promise<void> {
+  await safeNotify("group request approved", async () => {
+    const payload = NotificationTemplates.groupRequestApproved({
+      groupName: params.group.name,
+      groupId: params.group.id,
+    });
+    await recordForRecipients({
+      userIds: [params.userId],
+      groupId: params.group.id,
+      type: NOTIFICATION_TYPES.GROUP_REQUEST_DECISION,
+      payload,
+    });
+    await getNotificationService().sendToUser(params.userId, payload);
+  });
+}
+
+export async function notifyRequesterRejected(params: {
+  userId: string;
+  reason: string;
+}): Promise<void> {
+  await safeNotify("group request rejected", async () => {
+    const payload = NotificationTemplates.groupRequestRejected({ reason: params.reason });
+    await getNotificationService().sendToUser(params.userId, payload);
+  });
+}

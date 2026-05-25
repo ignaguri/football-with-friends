@@ -4,6 +4,7 @@ import type { Hono } from "hono";
 import matchesRoute from "./routes/matches";
 import courtsRoute from "./routes/courts";
 import groupsRoute from "./routes/groups";
+import groupRequestsRoute from "./routes/group-requests";
 import locationsRoute from "./routes/locations";
 import profileRoute from "./routes/profile";
 import settingsRoute from "./routes/settings";
@@ -26,6 +27,7 @@ export function registerApiRoutes(app: Hono<any>) {
     .route("/matches", matchesRoute)
     .route("/courts", courtsRoute)
     .route("/groups", groupsRoute)
+    .route("/group-requests", groupRequestsRoute)
     .route("/locations", locationsRoute)
     .route("/profile", profileRoute)
     .route("/settings", settingsRoute)

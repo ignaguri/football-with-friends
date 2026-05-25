@@ -145,6 +145,40 @@ export const NotificationTemplates = {
     };
   },
 
+  groupRequestSubmitted(params: { requesterName: string; groupName: string }): NotificationPayload {
+    return {
+      title: "New group request",
+      body: `${params.requesterName} requested to create "${params.groupName}".`,
+      data: {
+        type: NOTIFICATION_TYPES.GROUP_REQUEST_SUBMITTED,
+        screen: "/(tabs)/admin/group-requests",
+      },
+    };
+  },
+
+  groupRequestApproved(params: { groupName: string; groupId: string }): NotificationPayload {
+    return {
+      title: "Group approved!",
+      body: `Your group "${params.groupName}" is ready.`,
+      data: {
+        type: NOTIFICATION_TYPES.GROUP_REQUEST_DECISION,
+        groupId: params.groupId,
+        screen: `/(tabs)/profile/groups/${params.groupId}`,
+      },
+    };
+  },
+
+  groupRequestRejected(params: { reason: string }): NotificationPayload {
+    return {
+      title: "Group request declined",
+      body: params.reason || "Your group request was not approved.",
+      data: {
+        type: NOTIFICATION_TYPES.GROUP_REQUEST_DECISION,
+        screen: "/(tabs)/profile/groups/request",
+      },
+    };
+  },
+
   engagementReminder(variant: number): NotificationPayload {
     const messages = [
       { title: "Don't Miss Out!", body: "Check out upcoming matches and join your friends!" },

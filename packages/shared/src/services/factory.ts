@@ -1,6 +1,7 @@
 // Service factory for dependency injection
 
 import { CourtService } from "./court-service";
+import { GroupCreationRequestService } from "./group-creation-request-service";
 import { GroupService } from "./group-service";
 import { MatchService } from "./match-service";
 import { NotificationService } from "./notification-service";
@@ -16,6 +17,7 @@ export class ServiceFactory {
   public readonly rankingService: RankingService;
   public readonly notificationService: NotificationService;
   public readonly groupService: GroupService;
+  public readonly groupRequestService: GroupCreationRequestService;
 
   constructor(repositoryFactory?: AppRepositoryFactory, expoAccessToken?: string) {
     const repos = repositoryFactory || getRepositoryFactory();
@@ -44,6 +46,10 @@ export class ServiceFactory {
       repos.groupRoster,
       repos.locations,
       repos.courts,
+    );
+    this.groupRequestService = new GroupCreationRequestService(
+      repos.groupCreationRequests,
+      this.groupService,
     );
   }
 }
