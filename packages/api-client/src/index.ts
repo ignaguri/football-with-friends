@@ -70,6 +70,14 @@ export {
   useUpdateRosterEntry,
   useDeleteRosterEntry,
   useCopyVenues,
+  // Group creation request hooks (self-serve group creation).
+  groupRequestQueryKeys,
+  useMyGroupRequests,
+  usePendingGroupRequests,
+  useSubmitGroupRequest,
+  useCancelGroupRequest,
+  useApproveGroupRequest,
+  useRejectGroupRequest,
 } from "./groups";
 export type {
   GroupInviteSummary,
@@ -80,6 +88,7 @@ export type {
   GroupMemberSummary,
   GroupDetailPayload,
   MyGroupSummary,
+  GroupCreationRequestSummary,
 } from "./groups";
 
 export {

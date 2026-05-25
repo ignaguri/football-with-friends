@@ -523,3 +523,102 @@ export function useTransferOwnership(groupId: string) {
     },
   });
 }
+
+// --- Group creation requests ---------------------------------------------
+
+export const groupRequestQueryKeys = {
+  all: ["group-requests"] as const,
+  me: () => [...groupRequestQueryKeys.all, "me"] as const,
+  pending: () => [...groupRequestQueryKeys.all, "pending"] as const,
+};
+
+export interface GroupCreationRequestSummary {
+  id: string;
+  requestedByUserId: string;
+  name: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  decisionReason?: string;
+  createdGroupId?: string;
+  createdAt: string;
+}
+
+export function useMyGroupRequests() {
+  return useQuery({
+    queryKey: groupRequestQueryKeys.me(),
+    queryFn: async () => {
+      const res = await client.api["group-requests"].me.$get();
+      const data = (await res.json()) as { requests: GroupCreationRequestSummary[] };
+      return data.requests;
+    },
+  });
+}
+
+export function usePendingGroupRequests(enabled: boolean) {
+  return useQuery({
+    queryKey: groupRequestQueryKeys.pending(),
+    enabled,
+    queryFn: async () => {
+      const res = await client.api["group-requests"].$get();
+      const data = (await res.json()) as { requests: GroupCreationRequestSummary[] };
+      return data.requests;
+    },
+  });
+}
+
+export function useSubmitGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { name: string; reason: string }) => {
+      const res = await client.api["group-requests"].$post({ json: input });
+      const data = (await res.json()) as { request: GroupCreationRequestSummary };
+      return data.request;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.me() });
+    },
+  });
+}
+
+export function useCancelGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api["group-requests"][":id"].$delete({ param: { id } });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.me() });
+    },
+  });
+}
+
+export function useApproveGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api["group-requests"][":id"].approve.$post({ param: { id } });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.pending() });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
+    },
+  });
+}
+
+export function useRejectGroupRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; reason: string }) => {
+      const res = await client.api["group-requests"][":id"].reject.$post({
+        param: { id: input.id },
+        json: { reason: input.reason },
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.pending() });
+    },
+  });
+}
