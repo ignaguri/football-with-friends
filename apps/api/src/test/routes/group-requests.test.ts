@@ -113,6 +113,20 @@ describe("admin-gated endpoints", () => {
   });
 });
 
+describe("GET /group-requests/me", () => {
+  test("returns own submitted requests", async () => {
+    const user = await seedUser(db);
+    const app = appAs(persona(user.id, "user"));
+
+    await app.fetch(post("/group-requests", { name: "My FC", reason: "mine" }));
+
+    const res = await app.fetch(new Request("http://test.local/group-requests/me"));
+    expect(res.status).toBe(200);
+    const { requests } = (await res.json()) as { requests: { id: string }[] };
+    expect(requests.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
 describe("DELETE /group-requests/:id (cancel own pending)", () => {
   test("owner can cancel and then resubmit", async () => {
     const user = await seedUser(db);
@@ -127,5 +141,27 @@ describe("DELETE /group-requests/:id (cancel own pending)", () => {
 
     const resubmit = await app.fetch(post("/group-requests", { name: "New FC", reason: "c2" }));
     expect(resubmit.status).toBe(201);
+  });
+
+  test("non-owner cannot cancel another user's request (404)", async () => {
+    const userA = await seedUser(db);
+    const userB = await seedUser(db);
+
+    const submit = await appAs(persona(userA.id, "user")).fetch(
+      post("/group-requests", { name: "Steal FC", reason: "x" }),
+    );
+    const { request } = (await submit.json()) as { request: { id: string } };
+
+    // B tries to delete A's request — should get 404 (non-owner; deletePending returns false)
+    const del = await appAs(persona(userB.id, "user")).fetch(
+      new Request(`http://test.local/group-requests/${request.id}`, { method: "DELETE" }),
+    );
+    expect(del.status).toBe(404);
+
+    // A's request is still pending — A submitting again yields 409
+    const resubmit = await appAs(persona(userA.id, "user")).fetch(
+      post("/group-requests", { name: "Another FC", reason: "again" }),
+    );
+    expect(resubmit.status).toBe(409);
   });
 });

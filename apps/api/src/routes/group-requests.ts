@@ -63,6 +63,7 @@ app.post("/:id/approve", async (c) => {
   if (denied) return denied;
   const user = requireUser(c);
   const id = c.req.param("id");
+  // Expected domain errors (client errors → 400): "Request is not pending"
   try {
     const { group } = await getSvc().approve(id, user.id);
     fireAndForget(c, notifyRequesterApproved({ userId: group.ownerUserId, group }));
@@ -82,6 +83,7 @@ app.post(
     const user = requireUser(c);
     const id = c.req.param("id");
     const { reason } = c.req.valid("json");
+    // Expected domain errors (client errors → 400): "Request is not pending", "A rejection reason is required"
     try {
       const request = await getSvc().reject(id, user.id, reason);
       fireAndForget(c, notifyRequesterRejected({ userId: request.requestedByUserId, reason }));
