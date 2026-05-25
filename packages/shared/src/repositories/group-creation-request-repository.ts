@@ -111,6 +111,7 @@ export class TursoGroupCreationRequestRepository {
         updated_at: new Date().toISOString(),
       })
       .where("id", "=", id)
+      .where("status", "=", "pending")
       .returningAll()
       .executeTakeFirstOrThrow();
     return rowToRequest(row);

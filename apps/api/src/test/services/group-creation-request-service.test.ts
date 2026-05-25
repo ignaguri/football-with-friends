@@ -104,4 +104,22 @@ describe("GroupCreationRequestService.cancel", () => {
     const again = await service.submit({ userId: user.id, name: "After Cancel", reason: "c2" });
     expect(again.ok).toBe(true);
   });
+
+  test("non-owner cannot cancel another user's request", async () => {
+    const userA = await seedUser(db);
+    const userB = await seedUser(db);
+    const submitted = await service.submit({ userId: userA.id, name: "Mine FC", reason: "a" });
+    if (!submitted.ok) throw new Error("expected submit ok");
+
+    // userB's cancel attempt must fail
+    expect(await service.cancel(submitted.request.id, userB.id)).toBe(false);
+
+    // userA's request is still pending: a second submit from userA is blocked
+    const blocked = await service.submit({ userId: userA.id, name: "Mine FC 2", reason: "a2" });
+    expect(blocked.ok).toBe(false);
+    if (!blocked.ok) expect(blocked.reason).toBe("already_pending");
+
+    // the owner can still cancel it
+    expect(await service.cancel(submitted.request.id, userA.id)).toBe(true);
+  });
 });

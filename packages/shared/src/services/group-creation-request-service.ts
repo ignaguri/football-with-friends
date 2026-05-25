@@ -50,6 +50,9 @@ export class GroupCreationRequestService {
     }
     // Reuses the existing create primitive: requester becomes owner + organizer,
     // visibility defaults to 'private'.
+    // createGroup is non-transactional; the markDecided pending-guard ensures
+    // a concurrent double-approve leaves at most an orphaned group while the
+    // request stays consistent (points to the first group).
     const group = await this.groupService.createGroup({
       ownerUserId: request.requestedByUserId,
       name: request.name,
@@ -78,7 +81,7 @@ export class GroupCreationRequestService {
       decidedByUserId: adminUserId,
       decisionReason: reason.trim(),
     });
-    logEvent("group_request.rejected", { requestId, adminUserId });
+    logEvent("group_request.rejected", { requestId, adminUserId, reason: reason.trim() });
     return decided;
   }
 
