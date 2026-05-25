@@ -62,6 +62,18 @@ export default function AdminLayout() {
         }}
       />
       <Stack.Screen
+        name="group-requests"
+        options={{
+          title: t("groups.requests.queueTitle"),
+          headerBackVisible: false,
+          headerLeft: () => (
+            <Pressable onPress={() => router.navigate("/(tabs)/admin")} style={{ marginLeft: 8 }}>
+              <ChevronLeft size={28} color={theme.color?.val} />
+            </Pressable>
+          ),
+        }}
+      />
+      <Stack.Screen
         name="roster"
         options={{
           title: t("groups.roster.title"),

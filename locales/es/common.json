@@ -886,7 +886,13 @@
       "cancel": "Cancelar solicitud",
       "resubmit": "Solicitar otro grupo",
       "openGroup": "Abrir grupo",
-      "error": "Algo salió mal. Intentá de nuevo."
+      "error": "Algo salió mal. Intentá de nuevo.",
+      "queueTitle": "Solicitudes de grupo",
+      "queueEmpty": "No hay solicitudes pendientes.",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "rejectPrompt": "Motivo del rechazo",
+      "requestedBy": "Solicitado por {{name}}"
     },
     "create": {
       "title": "Crear grupo",

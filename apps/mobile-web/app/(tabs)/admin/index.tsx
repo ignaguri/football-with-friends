@@ -7,6 +7,7 @@ import {
   getAdminResetCodes,
   useCopyVenues,
   useCurrentGroup,
+  usePendingGroupRequests,
 } from "@repo/api-client";
 import {
   Container,
@@ -193,6 +194,10 @@ function MatchesTab() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const toast = useToastController();
+  const { data: pendingGroupRequests } = usePendingGroupRequests(
+    session?.user?.role === "admin",
+  );
+  const pendingGroupRequestsCount = pendingGroupRequests?.length ?? 0;
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showCancelAlert, setShowCancelAlert] = useState(false);
   const [targetMatch, setTargetMatch] = useState<Match | null>(null);
@@ -329,6 +334,22 @@ function MatchesTab() {
             testID="admin-groups-create-btn"
           >
             {t("groups.create.title")}
+          </Button>
+        ) : null}
+
+        {/* Group requests review queue — platform admin only */}
+        {session?.user?.role === "admin" ? (
+          <Button
+            variant="outline"
+            onPress={() => router.push("/(tabs)/admin/group-requests")}
+            testID="admin-link-group-requests"
+          >
+            <XStack flex={1} justifyContent="space-between" alignItems="center">
+              <Text>{t("groups.requests.queueTitle")}</Text>
+              {pendingGroupRequestsCount > 0 ? (
+                <Badge variant="danger">{pendingGroupRequestsCount}</Badge>
+              ) : null}
+            </XStack>
           </Button>
         ) : null}
 

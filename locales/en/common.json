@@ -883,7 +883,13 @@
       "cancel": "Cancel request",
       "resubmit": "Request another group",
       "openGroup": "Open group",
-      "error": "Something went wrong. Please try again."
+      "error": "Something went wrong. Please try again.",
+      "queueTitle": "Group requests",
+      "queueEmpty": "No pending requests.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectPrompt": "Reason for rejecting",
+      "requestedBy": "Requested by {{name}}"
     },
     "create": {
       "title": "Create Group",
