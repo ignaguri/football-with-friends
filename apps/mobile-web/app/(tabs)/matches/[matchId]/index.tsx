@@ -1150,7 +1150,16 @@ export default function MatchDetailScreen() {
         variant="default"
         showCancel={false}
       >
-        <Trans i18nKey="matchDetail.confirmationMessage" />
+        <Trans
+          i18nKey="matchDetail.confirmationMessage"
+          components={{
+            // Map to RN-safe Tamagui Text. Custom tag names (not basic HTML
+            // like <br>/<p>) so react-i18next renders them only via these
+            // components — never as native-invalid DOM nodes.
+            para: <Text fontSize="$4" color="$gray11" />,
+            bold: <Text fontSize="$4" color="$gray11" fontWeight="bold" />,
+          }}
+        />
       </AlertDialog>
 
       {/* Cancel Confirmation Alert */}

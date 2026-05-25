@@ -75,7 +75,7 @@
     "cancelSpotMessage": "Are you sure you want to cancel your spot? You can rejoin later if you change your mind.",
     "confirmCancel": "Yes, cancel spot",
     "confirmation": "Confirmation",
-    "confirmationMessage": "Thank you for signing up! Remember that confirmation is done with payment.<br/><br/>Important: Payment on match day has a 2 Euro surcharge. Please don't forget.<br/><br/>For each day without paying after the match there will be a 1 Euro penalty!",
+    "confirmationMessage": "<para>Thank you for signing up! Remember that confirmation is done with payment.</para><para><bold>Important:</bold> Payment on match day has a 2 Euro surcharge. Please don't forget.</para><para>For each day without paying after the match there will be a 1 Euro penalty!</para>",
     "acceptConditions": "Accept conditions",
     "editName": "Edit Name",
     "playerName": "Player Name",
@@ -645,7 +645,7 @@
   "multimedia": {
     "title": "Multimedia",
     "upload": "Upload",
-    "uploading": "Uploading… {{percent}}%",
+    "uploading": "Uploading…",
     "captionPlaceholder": "Add a caption (optional)",
     "post": "Post",
     "cancel": "Cancel",
