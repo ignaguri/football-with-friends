@@ -1,7 +1,7 @@
 // Search public groups + request-to-join lifecycle. Approval adds membership
 // (reusing the membership repo). Authorization is enforced at the route layer.
 
-import type { Group, GroupJoinRequest } from "../domain/types";
+import type { Group, GroupJoinRequest, GroupJoinRequestWithRequester } from "../domain/types";
 import { scoreGroupMatch } from "../utils/group-search";
 import type {
   TursoGroupRepository,
@@ -109,8 +109,8 @@ export class GroupJoinRequestService {
     return this.requestRepo.listByUser(userId);
   }
 
-  async listPendingForGroup(groupId: string): Promise<GroupJoinRequest[]> {
-    return this.requestRepo.listPendingByGroup(groupId);
+  async listPendingForGroup(groupId: string): Promise<GroupJoinRequestWithRequester[]> {
+    return this.requestRepo.listPendingByGroupWithRequester(groupId);
   }
 
   async approve(

@@ -56,7 +56,7 @@ export default function GroupJoinRequestsScreen() {
                 gap="$2"
                 testID={`join-request-card-${r.id}`}
               >
-                <Text fontSize="$4">{r.requestedByUserId}</Text>
+                <Text fontSize="$4">{r.requesterName || r.requesterPhone || r.requestedByUserId}</Text>
                 {r.message ? (
                   <Text fontSize="$3" color="$gray11">
                     {r.message}

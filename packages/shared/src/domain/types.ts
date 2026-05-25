@@ -859,6 +859,14 @@ export interface GroupJoinRequest {
   updatedAt: Date;
 }
 
+// Enriched shape for the organizer review queue only — carries requester
+// identity fields joined from the user table. Mirrors the fields exposed by
+// GroupMemberWithUser so the member list and join-request queue are consistent.
+export interface GroupJoinRequestWithRequester extends GroupJoinRequest {
+  requesterName?: string;
+  requesterPhone?: string;
+}
+
 export interface CreateGroupInviteData {
   groupId: string;
   createdByUserId: string;

@@ -3,7 +3,7 @@
 import { nanoid } from "nanoid";
 
 import { getDatabase } from "../database/connection";
-import type { GroupJoinRequest, GroupJoinRequestStatus } from "../domain/types";
+import type { GroupJoinRequest, GroupJoinRequestStatus, GroupJoinRequestWithRequester } from "../domain/types";
 
 function rowToRequest(row: any): GroupJoinRequest {
   return {
@@ -95,6 +95,35 @@ export class TursoGroupJoinRequestRepository {
       .orderBy("created_at", "asc")
       .execute();
     return rows.map(rowToRequest);
+  }
+
+  async listPendingByGroupWithRequester(groupId: string): Promise<GroupJoinRequestWithRequester[]> {
+    const rows = await this.db
+      .selectFrom("group_join_requests")
+      .leftJoin("user", "user.id", "group_join_requests.requested_by_user_id")
+      .where("group_join_requests.group_id", "=", groupId)
+      .where("group_join_requests.status", "=", "pending")
+      .select([
+        "group_join_requests.id",
+        "group_join_requests.group_id",
+        "group_join_requests.requested_by_user_id",
+        "group_join_requests.message",
+        "group_join_requests.status",
+        "group_join_requests.decision_reason",
+        "group_join_requests.decided_by_user_id",
+        "group_join_requests.decided_at",
+        "group_join_requests.created_at",
+        "group_join_requests.updated_at",
+        "user.name as requester_name",
+        "user.phoneNumber as requester_phone",
+      ])
+      .orderBy("group_join_requests.created_at", "asc")
+      .execute();
+    return rows.map((row: any) => ({
+      ...rowToRequest(row),
+      requesterName: row.requester_name ?? undefined,
+      requesterPhone: row.requester_phone ?? undefined,
+    }));
   }
 
   async markDecided(id: string, data: MarkJoinDecidedData): Promise<GroupJoinRequest> {

@@ -664,6 +664,8 @@ export interface JoinRequestSummary {
   status: "pending" | "approved" | "rejected";
   decisionReason?: string;
   createdAt: string;
+  requesterName?: string;
+  requesterPhone?: string;
 }
 
 export function useSearchGroups(query: string) {

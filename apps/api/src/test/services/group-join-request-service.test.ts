@@ -96,6 +96,20 @@ describe("submitJoinRequest", () => {
   });
 });
 
+describe("listPendingForGroup", () => {
+  test("enriches entries with the requester's name", async () => {
+    const { owner, group } = await publicGroup();
+    const user = await seedUser(db, { name: "Alice Tester" });
+    const submitted = await service.submitJoinRequest({ groupId: group.id, userId: user.id });
+    if (!submitted.ok) throw new Error("expected ok");
+
+    const pending = await service.listPendingForGroup(group.id);
+    const entry = pending.find((r) => r.requestedByUserId === user.id);
+    expect(entry).toBeDefined();
+    expect(entry?.requesterName).toBe("Alice Tester");
+  });
+});
+
 describe("approve / reject / cancel", () => {
   test("approve adds membership and marks approved", async () => {
     const { owner, group } = await publicGroup();
