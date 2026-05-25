@@ -42,6 +42,12 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen
+        name="groups/request"
+        options={{
+          title: t("groups.requests.title"),
+        }}
+      />
+      <Stack.Screen
         name="notifications"
         options={{
           title: t("notifications.settings.entry"),
