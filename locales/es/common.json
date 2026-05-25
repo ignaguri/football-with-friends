@@ -892,7 +892,8 @@
       "approve": "Aprobar",
       "reject": "Rechazar",
       "rejectPrompt": "Motivo del rechazo",
-      "requestedBy": "Solicitado por {{name}}"
+      "requestedBy": "Solicitado por {{name}}",
+      "adminOnly": "Solo los administradores pueden revisar solicitudes de grupo."
     },
     "create": {
       "title": "Crear grupo",

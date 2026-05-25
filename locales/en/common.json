@@ -889,7 +889,8 @@
       "approve": "Approve",
       "reject": "Reject",
       "rejectPrompt": "Reason for rejecting",
-      "requestedBy": "Requested by {{name}}"
+      "requestedBy": "Requested by {{name}}",
+      "adminOnly": "Only admins can review group requests."
     },
     "create": {
       "title": "Create Group",

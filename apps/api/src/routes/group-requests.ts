@@ -7,6 +7,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
+import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, requireUser } from "../middleware/security";
 import { requirePlatformAdmin } from "../middleware/authz";
 import { fireAndForget } from "../lib/execution";
@@ -50,12 +51,22 @@ app.get("/me", async (c) => {
   return c.json({ requests });
 });
 
-// Review queue — platform admin only.
+// Review queue — platform admin only. Enriches each request with the
+// requester's display name so the UI shows a name instead of a raw user id.
+// The pending queue is small, so a per-row lookup is acceptable; falls back to
+// the user id if the user can't be resolved (so the UI never shows blank).
 app.get("/", async (c) => {
   const denied = requirePlatformAdmin(c);
   if (denied) return denied;
   const requests = await getSvc().listPending();
-  return c.json({ requests });
+  const userRepo = getRepositoryFactory().playerStats;
+  const enriched = await Promise.all(
+    requests.map(async (r) => {
+      const user = await userRepo.getUserById(r.requestedByUserId);
+      return { ...r, requestedByName: user?.name ?? r.requestedByUserId };
+    }),
+  );
+  return c.json({ requests: enriched });
 });
 
 app.post("/:id/approve", async (c) => {

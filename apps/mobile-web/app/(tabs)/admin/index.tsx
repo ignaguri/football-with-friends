@@ -343,6 +343,7 @@ function MatchesTab() {
             variant="outline"
             onPress={() => router.push("/(tabs)/admin/group-requests")}
             testID="admin-link-group-requests"
+            accessibilityLabel={t("groups.requests.queueTitle")}
           >
             <XStack flex={1} justifyContent="space-between" alignItems="center">
               <Text>{t("groups.requests.queueTitle")}</Text>

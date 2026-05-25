@@ -75,6 +75,26 @@ describe("admin-gated endpoints", () => {
     ).toBe(403);
   });
 
+  test("admin list enriches each request with the requester's name", async () => {
+    const requester = await seedUser(db, { name: "Diego Maradona" });
+    const admin = await seedUser(db, { role: "admin" });
+
+    await appAs(persona(requester.id, "user")).fetch(
+      post("/group-requests", { name: "Name FC", reason: "names please" }),
+    );
+
+    const list = await appAs(persona(admin.id, "admin")).fetch(
+      new Request("http://test.local/group-requests"),
+    );
+    expect(list.status).toBe(200);
+    const { requests } = (await list.json()) as {
+      requests: { requestedByUserId: string; requestedByName: string }[];
+    };
+    const mine = requests.find((r) => r.requestedByUserId === requester.id);
+    expect(mine).toBeDefined();
+    expect(mine?.requestedByName).toBe("Diego Maradona");
+  });
+
   test("admin approve creates a group; requester owns it", async () => {
     const requester = await seedUser(db);
     const admin = await seedUser(db, { role: "admin" });

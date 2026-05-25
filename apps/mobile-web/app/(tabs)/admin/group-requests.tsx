@@ -21,7 +21,7 @@ export default function GroupRequestsScreen() {
   if (!isAdmin) {
     return (
       <Container variant="centered">
-        <Text color="$gray11">{t("groups.create.adminOnly")}</Text>
+        <Text color="$gray11">{t("groups.requests.adminOnly")}</Text>
       </Container>
     );
   }
@@ -85,7 +85,9 @@ export default function GroupRequestsScreen() {
                   {r.name}
                 </Text>
                 <Text fontSize="$2" color="$gray11">
-                  {t("groups.requests.requestedBy", { name: r.requestedByUserId })}
+                  {t("groups.requests.requestedBy", {
+                    name: r.requestedByName ?? r.requestedByUserId,
+                  })}
                 </Text>
                 <Text fontSize="$3">{r.reason}</Text>
                 <XStack gap="$2">

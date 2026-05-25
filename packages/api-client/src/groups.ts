@@ -537,6 +537,9 @@ export const groupRequestQueryKeys = {
 export interface GroupCreationRequestSummary {
   id: string;
   requestedByUserId: string;
+  // Present only in the admin pending list (GET /group-requests); the /me
+  // response omits it since the requester already knows who they are.
+  requestedByName?: string;
   name: string;
   reason: string;
   status: GroupRequestStatus;
