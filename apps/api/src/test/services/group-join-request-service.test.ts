@@ -81,6 +81,19 @@ describe("submitJoinRequest", () => {
     expect(out.ok).toBe(false);
     if (!out.ok) expect(out.reason).toBe("already_pending");
   });
+
+  test("concurrent duplicate submits: one wins, the other is already_pending (no throw)", async () => {
+    const { group } = await publicGroup();
+    const user = await seedUser(db);
+    const [a, b] = await Promise.all([
+      service.submitJoinRequest({ groupId: group.id, userId: user.id }),
+      service.submitJoinRequest({ groupId: group.id, userId: user.id }),
+    ]);
+    const oks = [a, b].filter((r) => r.ok).length;
+    const pendings = [a, b].filter((r) => !r.ok && r.reason === "already_pending").length;
+    expect(oks).toBe(1);
+    expect(pendings).toBe(1);
+  });
 });
 
 describe("approve / reject / cancel", () => {

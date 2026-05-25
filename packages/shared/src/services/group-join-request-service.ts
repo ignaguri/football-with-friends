@@ -30,6 +30,10 @@ function logEvent(event: string, payload: Record<string, unknown>): void {
   console.log(JSON.stringify({ event, ...payload, ts: new Date().toISOString() }));
 }
 
+function isUniqueViolation(error: unknown): boolean {
+  return error instanceof Error && /UNIQUE constraint failed/i.test(error.message);
+}
+
 export class GroupJoinRequestService {
   constructor(
     private groupRepo: TursoGroupRepository,
@@ -84,13 +88,21 @@ export class GroupJoinRequestService {
     const pending = await this.requestRepo.findPendingByUserAndGroup(params.userId, params.groupId);
     if (pending) return { ok: false, reason: "already_pending" };
 
-    const request = await this.requestRepo.create({
-      groupId: params.groupId,
-      requestedByUserId: params.userId,
-      message: params.message,
-    });
-    logEvent("join_request.submitted", { requestId: request.id, groupId: params.groupId });
-    return { ok: true, request };
+    try {
+      const request = await this.requestRepo.create({
+        groupId: params.groupId,
+        requestedByUserId: params.userId,
+        message: params.message,
+      });
+      logEvent("join_request.submitted", { requestId: request.id, groupId: params.groupId });
+      return { ok: true, request };
+    } catch (error) {
+      // Lost a race against idx_gjr_one_pending_per_user_group (concurrent submit):
+      // the pre-check above passed for both callers but the index rejected the
+      // second insert. Surface it as the same clean "already pending" outcome.
+      if (isUniqueViolation(error)) return { ok: false, reason: "already_pending" };
+      throw error;
+    }
   }
 
   async listForUser(userId: string): Promise<GroupJoinRequest[]> {
@@ -113,15 +125,18 @@ export class GroupJoinRequestService {
     const group = await this.groupRepo.findById(groupId);
     if (!group) throw new Error("Group not found");
 
-    // Idempotent: tryAdd returns false if already a member.
+    // Claim the request first: markDecided's WHERE status='pending' guard means a
+    // concurrent reject/double-approve loses here (throws) BEFORE we add membership,
+    // so a racing decision can't leave an orphaned member on a non-approved request.
+    const decided = await this.requestRepo.markDecided(requestId, {
+      status: "approved",
+      decidedByUserId: deciderUserId,
+    });
+    // Idempotent: tryAdd no-ops if already a member.
     await this.memberRepo.tryAdd({
       groupId,
       userId: request.requestedByUserId,
       role: "member",
-    });
-    const decided = await this.requestRepo.markDecided(requestId, {
-      status: "approved",
-      decidedByUserId: deciderUserId,
     });
     logEvent("join_request.approved", { requestId, groupId, deciderUserId });
     return { request: decided, group };
