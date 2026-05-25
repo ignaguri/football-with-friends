@@ -19,12 +19,13 @@ import {
   YStack,
   XStack,
   Button,
+  Spinner,
 } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionSheetIOS, Alert, Platform, Pressable } from "react-native";
 import { Plus } from "@tamagui/lucide-icons-2";
@@ -39,6 +40,14 @@ export default function MatchGalleryScreen() {
   const qc = useQueryClient();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // Avoid touching state after the user navigates away mid-upload.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const { data, refetch, isRefetching } = useQuery({
     queryKey: ["matchMedia", matchId],
@@ -202,7 +211,7 @@ export default function MatchGalleryScreen() {
       console.error("upload error", e);
       Alert.alert(t("multimedia.errors.uploadFailed"));
     } finally {
-      setUploading(false);
+      if (mountedRef.current) setUploading(false);
     }
   };
 
@@ -283,13 +292,13 @@ export default function MatchGalleryScreen() {
             {canUpload && (
               <Button
                 size="$3"
-                icon={<Plus size={16} />}
+                icon={uploading ? <Spinner size="small" /> : <Plus size={16} />}
                 onPress={openUpload}
                 disabled={uploading}
                 accessibilityLabel={t("a11y.uploadMedia")}
                 testID="gallery-upload-btn"
               >
-                {uploading ? t("multimedia.uploading", { percent: 0 }) : t("multimedia.upload")}
+                {uploading ? t("multimedia.uploading") : t("multimedia.upload")}
               </Button>
             )}
           </XStack>

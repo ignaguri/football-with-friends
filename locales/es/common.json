@@ -76,7 +76,7 @@
     "cancelSpotMessage": "¿Estás seguro que querés cancelar tu lugar? Podés volver a anotarte más tarde si cambiás de opinión.",
     "confirmCancel": "Sí, cancelar lugar",
     "confirmation": "Confirmación",
-    "confirmationMessage": "¡Gracias por anotarte! Acordate que la confirmación se hace con el pago.<br/><br/>Importante: El pago el día del partido tiene un sobrecargo de 2 Euros. Por favor no te olvides.<br/><br/>Por cada día sin pagar posterior al partido habrá una penalización de 1 Euro!",
+    "confirmationMessage": "<para>¡Gracias por anotarte! Acordate que la confirmación se hace con el pago.</para><para><bold>Importante:</bold> El pago el día del partido tiene un sobrecargo de 2 Euros. Por favor no te olvides.</para><para>Por cada día sin pagar posterior al partido habrá una penalización de 1 Euro!</para>",
     "acceptConditions": "Aceptar condiciones",
     "editName": "Editar Nombre",
     "playerName": "Nombre del Jugador",
@@ -648,7 +648,7 @@
   "multimedia": {
     "title": "Multimedia",
     "upload": "Subir",
-    "uploading": "Subiendo… {{percent}}%",
+    "uploading": "Subiendo…",
     "captionPlaceholder": "Agregá un comentario (opcional)",
     "post": "Publicar",
     "cancel": "Cancelar",

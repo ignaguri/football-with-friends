@@ -85,9 +85,11 @@ export function AlertDialog({
             )}
 
             {children && (
-              <TamaguiAlertDialog.Description fontSize="$4" color="$gray11" asChild>
-                <div>{children}</div>
-              </TamaguiAlertDialog.Description>
+              // Render arbitrary body content in a cross-platform container.
+              // A literal <div> crashes on React Native (unknown host component),
+              // and only the children path hit it — every other caller uses the
+              // `description` string prop above.
+              <YStack gap="$2">{children}</YStack>
             )}
           </YStack>
 
