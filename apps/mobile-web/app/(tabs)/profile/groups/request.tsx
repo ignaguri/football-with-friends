@@ -1,11 +1,10 @@
 // @ts-nocheck - Tamagui type recursion workaround
 import {
-  groupRequestQueryKeys,
   useCancelGroupRequest,
   useMyGroupRequests,
-  useQueryClient,
   useSubmitGroupRequest,
 } from "@repo/api-client";
+import { Container } from "@repo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +13,6 @@ import { Button, Input, Spinner, Text, TextArea, YStack } from "tamagui";
 
 export default function RequestGroupScreen() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const { data: requests, isLoading } = useMyGroupRequests();
   const submit = useSubmitGroupRequest();
   const cancel = useCancelGroupRequest();
@@ -23,14 +21,14 @@ export default function RequestGroupScreen() {
 
   if (isLoading) {
     return (
-      <YStack flex={1} justifyContent="center" alignItems="center">
+      <Container variant="centered">
         <Spinner size="large" />
-      </YStack>
+      </Container>
     );
   }
 
   const pending = requests?.find((r) => r.status === "pending");
-  const lastDecided = requests?.find((r) => r.status !== "pending");
+  const lastDecided = requests?.find((r) => r.status === "approved" || r.status === "rejected");
 
   async function onSubmit() {
     if (!name.trim() || !reason.trim()) return;
@@ -46,7 +44,6 @@ export default function RequestGroupScreen() {
   async function onCancel(id: string) {
     try {
       await cancel.mutateAsync(id);
-      queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.me() });
     } catch (err) {
       Alert.alert("Error", err instanceof Error ? err.message : t("groups.requests.error"));
     }
@@ -93,6 +90,7 @@ export default function RequestGroupScreen() {
         </Text>
       ) : null}
 
+      {lastDecided ? <Text fontSize="$5" fontWeight="600">{t("groups.requests.resubmit")}</Text> : null}
       <Text fontSize="$4">{t("groups.requests.nameLabel")}</Text>
       <Input
         value={name}

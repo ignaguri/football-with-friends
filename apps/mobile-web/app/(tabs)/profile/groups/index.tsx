@@ -82,6 +82,7 @@ export default function MyGroupsScreen() {
               </Pressable>
             );
           })}
+          {/* same testID as empty-state CTA — mutually exclusive branches */}
           <Button
             theme="blue"
             marginTop="$2"
