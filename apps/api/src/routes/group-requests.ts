@@ -74,14 +74,20 @@ app.post("/:id/approve", async (c) => {
   if (denied) return denied;
   const user = requireUser(c);
   const id = c.req.param("id");
-  // Expected domain errors (client errors → 400): "Request is not pending"
   try {
     const { group } = await getSvc().approve(id, user.id);
     fireAndForget(c, notifyRequesterApproved({ userId: group.ownerUserId, group }));
     return c.json({ group });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to approve request";
-    return c.json({ error: message }, 400);
+    // Only the known domain error is a client error (400). Anything else (DB
+    // outage, slug collision, etc.) is a server fault — return 500 and log it,
+    // so monitoring doesn't see real failures masquerading as bad requests.
+    if (message === "Request is not pending") {
+      return c.json({ error: message }, 400);
+    }
+    console.error(JSON.stringify({ event: "group_request.approve_failed", id, error: message }));
+    return c.json({ error: "Failed to approve request" }, 500);
   }
 });
 
@@ -94,14 +100,18 @@ app.post(
     const user = requireUser(c);
     const id = c.req.param("id");
     const { reason } = c.req.valid("json");
-    // Expected domain errors (client errors → 400): "Request is not pending", "A rejection reason is required"
     try {
       const request = await getSvc().reject(id, user.id, reason);
       fireAndForget(c, notifyRequesterRejected({ userId: request.requestedByUserId, reason }));
       return c.json({ request });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to reject request";
-      return c.json({ error: message }, 400);
+      // Known domain errors are client errors (400); everything else is a server fault (500).
+      if (message === "Request is not pending" || message === "A rejection reason is required") {
+        return c.json({ error: message }, 400);
+      }
+      console.error(JSON.stringify({ event: "group_request.reject_failed", id, error: message }));
+      return c.json({ error: "Failed to reject request" }, 500);
     }
   },
 );

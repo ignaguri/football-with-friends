@@ -117,6 +117,17 @@ export class TursoGroupCreationRequestRepository {
     return rowToRequest(row);
   }
 
+  /** Records the created group on an already-decided request (second step of approve). */
+  async setCreatedGroup(id: string, groupId: string): Promise<GroupCreationRequest> {
+    const row = await this.db
+      .updateTable("group_creation_requests")
+      .set({ created_group_id: groupId, updated_at: new Date().toISOString() })
+      .where("id", "=", id)
+      .returningAll()
+      .executeTakeFirstOrThrow();
+    return rowToRequest(row);
+  }
+
   /** Deletes the caller's own pending request. Returns true if a row was removed. */
   async deletePending(id: string, userId: string): Promise<boolean> {
     const result = await this.db

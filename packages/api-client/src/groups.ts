@@ -606,8 +606,10 @@ export function useApproveGroupRequest() {
       return res.json();
     },
     onSuccess: () => {
+      // Only the admin's own pending queue can be refreshed from here. The new
+      // group belongs to the requester (a different client), so invalidating the
+      // admin's group list would refetch nothing useful — intentionally omitted.
       queryClient.invalidateQueries({ queryKey: groupRequestQueryKeys.pending() });
-      queryClient.invalidateQueries({ queryKey: groupQueryKeys.me() });
     },
   });
 }

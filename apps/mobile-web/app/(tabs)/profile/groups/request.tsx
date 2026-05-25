@@ -5,7 +5,6 @@ import {
   useSubmitGroupRequest,
 } from "@repo/api-client";
 import { Container } from "@repo/ui";
-import { router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "react-native";
@@ -71,19 +70,6 @@ export default function RequestGroupScreen() {
 
   return (
     <YStack flex={1} padding="$4" gap="$3">
-      {lastDecided?.status === "approved" && lastDecided.createdGroupId ? (
-        <YStack gap="$2">
-          <Text color="$green11">{t("groups.requests.approved")}</Text>
-          <Button
-            theme="green"
-            onPress={() => router.replace(`/(tabs)/profile/groups/${lastDecided.createdGroupId}`)}
-            accessibilityRole="button"
-            testID="group-request-open-group"
-          >
-            {t("groups.requests.openGroup")}
-          </Button>
-        </YStack>
-      ) : null}
       {lastDecided?.status === "rejected" ? (
         <Text color="$red11">
           {t("groups.requests.rejected", { reason: lastDecided.decisionReason ?? "" })}

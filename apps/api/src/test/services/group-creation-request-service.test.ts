@@ -67,6 +67,26 @@ describe("GroupCreationRequestService.approve", () => {
     expect(row.created_group_id).toBe(group.id);
   });
 
+  test("approving a name whose slug already exists dedupes instead of bricking the request", async () => {
+    const userA = await seedUser(db);
+    const userB = await seedUser(db);
+    const admin = await seedUser(db, { role: "admin" });
+
+    const first = await service.submit({ userId: userA.id, name: "Tigres", reason: "one" });
+    if (!first.ok) throw new Error("expected submit ok");
+    const groupA = (await service.approve(first.request.id, admin.id)).group;
+
+    // Same name → same base slug. The approve must still succeed (deduped slug),
+    // not throw a UNIQUE-constraint error and leave the request stuck pending.
+    const second = await service.submit({ userId: userB.id, name: "Tigres", reason: "two" });
+    if (!second.ok) throw new Error("expected submit ok");
+    const result = await service.approve(second.request.id, admin.id);
+
+    expect(result.group.slug).not.toBe(groupA.slug);
+    expect(result.request.status).toBe("approved");
+    expect(result.request.createdGroupId).toBe(result.group.id);
+  });
+
   test("throws when the request is not pending", async () => {
     const user = await seedUser(db);
     const admin = await seedUser(db, { role: "admin" });

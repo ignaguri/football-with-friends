@@ -27,7 +27,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
         decision_reason TEXT,
         decided_by_user_id TEXT REFERENCES user(id) ON DELETE SET NULL,
         decided_at TEXT,
-        created_group_id TEXT REFERENCES groups(id),
+        created_group_id TEXT REFERENCES groups(id) ON DELETE SET NULL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )

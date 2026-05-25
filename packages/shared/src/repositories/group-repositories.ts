@@ -97,7 +97,11 @@ export class TursoGroupRepository {
 
   async create(data: CreateGroupData): Promise<Group> {
     const id = generateId("grp");
-    const slug = data.slug ?? slugify(data.name);
+    // groups.slug is UNIQUE. When derived from the name (no explicit slug), dedupe
+    // by suffixing so two groups with similar names can't fail the insert — e.g. a
+    // self-serve request approved for a name whose slug already exists. An explicit
+    // slug is taken as-is (the caller owns that collision).
+    const slug = data.slug ?? (await this.findAvailableSlug(slugify(data.name)));
     const row = await this.db
       .insertInto("groups")
       .values({
@@ -110,6 +114,26 @@ export class TursoGroupRepository {
       .returningAll()
       .executeTakeFirstOrThrow();
     return rowToGroup(row);
+  }
+
+  // Finds a slug not taken by ANY group (including soft-deleted ones — the UNIQUE
+  // constraint ignores deleted_at). Appends -2, -3, … within slugify()'s 48-char budget.
+  private async findAvailableSlug(base: string): Promise<string> {
+    let candidate = base;
+    for (let n = 2; await this.slugTaken(candidate); n++) {
+      const suffix = `-${n}`;
+      candidate = `${base.slice(0, 48 - suffix.length)}${suffix}`;
+    }
+    return candidate;
+  }
+
+  private async slugTaken(slug: string): Promise<boolean> {
+    const row = await this.db
+      .selectFrom("groups")
+      .select("id")
+      .where("slug", "=", slug)
+      .executeTakeFirst();
+    return !!row;
   }
 
   async findById(id: string): Promise<Group | null> {

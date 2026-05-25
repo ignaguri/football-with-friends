@@ -5,7 +5,8 @@ import {
   useRejectGroupRequest,
   useSession,
 } from "@repo/api-client";
-import { Container, RefreshableScrollView } from "@repo/ui";
+import { Container, Dialog, Input, RefreshableScrollView } from "@repo/ui";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "react-native";
 import { Button, Spinner, Text, XStack, YStack } from "tamagui";
@@ -17,6 +18,8 @@ export default function GroupRequestsScreen() {
   const { data: requests, isLoading, refetch } = usePendingGroupRequests(isAdmin);
   const approve = useApproveGroupRequest();
   const reject = useRejectGroupRequest();
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   if (!isAdmin) {
     return (
@@ -42,24 +45,21 @@ export default function GroupRequestsScreen() {
     }
   }
 
+  // A single in-app modal collects the reason on every platform (Alert.prompt is
+  // iOS-only, so it can't serve web/Android), and the reason stays required.
   function onReject(id: string) {
-    // Alert.prompt is iOS-only; on Android fall back to a fixed reason. The
-    // dedicated reject screen can replace this if multi-platform input is needed.
-    if (Alert.prompt) {
-      Alert.prompt(t("groups.requests.rejectPrompt"), undefined, async (reason) => {
-        if (!reason?.trim()) return;
-        try {
-          await reject.mutateAsync({ id, reason: reason.trim() });
-        } catch (err) {
-          Alert.alert("Error", err instanceof Error ? err.message : t("groups.requests.error"));
-        }
-      });
-    } else {
-      reject
-        .mutateAsync({ id, reason: "Declined by admin" })
-        .catch((err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : t("groups.requests.error")),
-        );
+    setRejectReason("");
+    setRejectingId(id);
+  }
+
+  async function confirmReject() {
+    const id = rejectingId;
+    if (!id || !rejectReason.trim()) return;
+    try {
+      await reject.mutateAsync({ id, reason: rejectReason.trim() });
+      setRejectingId(null);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : t("groups.requests.error"));
     }
   }
 
@@ -117,6 +117,27 @@ export default function GroupRequestsScreen() {
           )}
         </YStack>
       </RefreshableScrollView>
+
+      <Dialog
+        open={!!rejectingId}
+        onOpenChange={(open) => !open && setRejectingId(null)}
+        title={t("groups.requests.rejectPrompt")}
+        confirmText={reject.isPending ? <Spinner /> : t("groups.requests.reject")}
+        cancelText={t("shared.cancel")}
+        onConfirm={confirmReject}
+        onCancel={() => setRejectingId(null)}
+      >
+        <YStack gap="$3" padding="$4">
+          <Input
+            label={t("groups.requests.reasonLabel")}
+            value={rejectReason}
+            onChangeText={setRejectReason}
+            placeholder={t("groups.requests.rejectPrompt")}
+            testID="group-request-reject-reason"
+            autoFocus
+          />
+        </YStack>
+      </Dialog>
     </Container>
   );
 }
