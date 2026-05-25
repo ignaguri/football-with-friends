@@ -8,8 +8,8 @@ Groups carry a `visibility` field on the `groups` table:
 ## Current state
 
 - **DB**: `groups.visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private','public'))`.
-- **API**: `PATCH /api/groups/:id` accepts `visibility`. The field is **platform admin-gated** — only a `platform admin` can flip a group from `private` to `public` or back.
-- **UI**: No member-facing toggle. The flag is settable today only by a platform admin directly against the API.
+- **API**: `PATCH /api/groups/:id` accepts `visibility`. The field is **owner-or-platform-admin-gated** — only the group owner or a platform admin can flip a group from `private` to `public` or back.
+- **UI**: An owner-facing toggle is available in the group detail screen.
 
 ## When public discovery ships
 
@@ -21,7 +21,7 @@ Consumers that render or filter on `visibility` should:
 
 ## Changing the flag
 
-Platform admin only:
+Group owner or platform admin:
 
 ```
 PATCH /api/groups/:id
@@ -29,4 +29,4 @@ X-Group-Id: <id>
 { "visibility": "public" }
 ```
 
-Non-admin organizers receive `403 Only platform admin can change visibility`.
+Non-owner organizers receive `403 Only the group owner can change visibility`.

@@ -11,7 +11,7 @@ import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getServiceFactory } from "@repo/shared/services";
 import { MEMBER_ROLES } from "@repo/shared/domain";
-import { notifyGroupInviteTarget } from "../lib/notify";
+import { notifyGroupInviteTarget, notifyJoinApproved, notifyJoinRejected } from "../lib/notify";
 import { fireAndForget } from "../lib/execution";
 import { type AppVariables, requireUser } from "../middleware/security";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
@@ -26,6 +26,7 @@ import {
 const app = new Hono<{ Variables: AppVariables }>();
 
 const getGroupService = () => getServiceFactory().groupService;
+const getJoinRequestService = () => getServiceFactory().groupJoinRequestService;
 
 // List my groups — public-to-authed-user, no X-Group-Id required.
 app.get("/me", async (c) => {
@@ -127,11 +128,12 @@ app.patch(
     const denied = requireOrganizer(c);
     if (denied) return denied;
 
-    // Visibility toggling is gated behind platform admin until we ship the
-    // public-directory flow (Phase 5); see the design doc.
     const updates = c.req.valid("json");
-    if (updates.visibility !== undefined && !isPlatformAdmin(c)) {
-      return c.json({ error: "Only platform admin can change visibility" }, 403);
+    if (
+      updates.visibility !== undefined &&
+      !(requireCurrentGroup(c).isOwner || isPlatformAdmin(c))
+    ) {
+      return c.json({ error: "Only the group owner can change visibility" }, 403);
     }
 
     try {
@@ -496,6 +498,67 @@ app.post(
       return c.json({ success: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to transfer ownership";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+// Join requests (request-to-join review) -------------------------------------
+// Organizer-only. Submission/search live in routes/discovery.ts (pre-membership).
+
+app.get("/:id/join-requests", async (c) => {
+  const id = c.req.param("id");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const requests = await getJoinRequestService().listPendingForGroup(id);
+  return c.json({ requests });
+});
+
+app.post("/:id/join-requests/:reqId/approve", async (c) => {
+  const id = c.req.param("id");
+  const reqId = c.req.param("reqId");
+  const mismatched = assertInCurrentGroup(c, id, "Group not found");
+  if (mismatched) return mismatched;
+
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+
+  const user = requireUser(c);
+  try {
+    const { request, group } = await getJoinRequestService().approve(reqId, id, user.id);
+    fireAndForget(c, notifyJoinApproved(request.requestedByUserId, group));
+    return c.json({ request });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to approve request";
+    return c.json({ error: message }, 400);
+  }
+});
+
+app.post(
+  "/:id/join-requests/:reqId/reject",
+  zValidator("json", z.object({ reason: z.string().trim().min(1).max(500) })),
+  async (c) => {
+    const id = c.req.param("id");
+    const reqId = c.req.param("reqId");
+    const mismatched = assertInCurrentGroup(c, id, "Group not found");
+    if (mismatched) return mismatched;
+
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+
+    const user = requireUser(c);
+    const { reason } = c.req.valid("json");
+    try {
+      const request = await getJoinRequestService().reject(reqId, id, user.id, reason);
+      const group = await getGroupService().getGroupBasics(id);
+      if (group) fireAndForget(c, notifyJoinRejected(request.requestedByUserId, group, reason));
+      return c.json({ request });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to reject request";
       return c.json({ error: message }, 400);
     }
   },
