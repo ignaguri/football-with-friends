@@ -2,6 +2,7 @@
 
 import { CourtService } from "./court-service";
 import { GroupCreationRequestService } from "./group-creation-request-service";
+import { GroupJoinRequestService } from "./group-join-request-service";
 import { GroupService } from "./group-service";
 import { MatchService } from "./match-service";
 import { NotificationService } from "./notification-service";
@@ -18,6 +19,7 @@ export class ServiceFactory {
   public readonly notificationService: NotificationService;
   public readonly groupService: GroupService;
   public readonly groupRequestService: GroupCreationRequestService;
+  public readonly groupJoinRequestService: GroupJoinRequestService;
 
   constructor(repositoryFactory?: AppRepositoryFactory, expoAccessToken?: string) {
     const repos = repositoryFactory || getRepositoryFactory();
@@ -50,6 +52,11 @@ export class ServiceFactory {
     this.groupRequestService = new GroupCreationRequestService(
       repos.groupCreationRequests,
       this.groupService,
+    );
+    this.groupJoinRequestService = new GroupJoinRequestService(
+      repos.groups,
+      repos.groupMembers,
+      repos.groupJoinRequests,
     );
   }
 }

@@ -1,6 +1,7 @@
 export * from "./court-service";
 export * from "./factory";
 export * from "./group-creation-request-service";
+export * from "./group-join-request-service";
 export * from "./match-service";
 export * from "./notification-service";
 export * from "./notification-templates";
