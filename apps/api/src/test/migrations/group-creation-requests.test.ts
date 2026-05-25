@@ -1,5 +1,5 @@
-// Verifies the group_creation_requests table is created by makeTestDb (which
-// runs all migrations) and that its one-pending partial unique index holds.
+// Verifies the up migration creates the group_creation_requests table and that
+// the partial unique index (one pending request per user) is enforced.
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { Kysely } from "kysely";
 import { sql } from "kysely";
@@ -30,7 +30,7 @@ describe("group_creation_requests migration", () => {
 
   test("partial unique index blocks a second pending row for the same user", async () => {
     const user = await seedUser(db);
-    const insert = (id: string, status: string) =>
+    const insert = (id: string, status: "pending" | "approved" | "rejected") =>
       db
         .insertInto("group_creation_requests")
         .values({

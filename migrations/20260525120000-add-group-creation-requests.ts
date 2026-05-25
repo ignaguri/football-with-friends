@@ -25,7 +25,7 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
         status TEXT NOT NULL DEFAULT 'pending'
           CHECK (status IN ('pending','approved','rejected')),
         decision_reason TEXT,
-        decided_by_user_id TEXT REFERENCES user(id),
+        decided_by_user_id TEXT REFERENCES user(id) ON DELETE SET NULL,
         decided_at TEXT,
         created_group_id TEXT REFERENCES groups(id),
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -38,6 +38,8 @@ export const up: Migration["up"] = async (db: Kysely<any>) => {
       ON group_creation_requests(requested_by_user_id) WHERE status = 'pending'`.execute(db);
     await sql`CREATE INDEX idx_gcr_status ON group_creation_requests(status)`.execute(db);
     console.log("✅ Created group_creation_requests table");
+  } else {
+    console.log("⏭️  group_creation_requests table already exists, skipping");
   }
   console.log("✅ Migration: add-group-creation-requests completed");
 };

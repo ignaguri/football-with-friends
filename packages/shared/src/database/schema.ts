@@ -280,7 +280,7 @@ export interface GroupCreationRequestsTable {
   requested_by_user_id: string;
   name: string;
   reason: string;
-  status: Generated<string>;
+  status: Generated<"pending" | "approved" | "rejected">;
   decision_reason: string | null;
   decided_by_user_id: string | null;
   decided_at: ColumnType<Date, string | undefined, string> | null;
