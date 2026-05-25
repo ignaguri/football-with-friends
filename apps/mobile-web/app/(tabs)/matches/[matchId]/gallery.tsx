@@ -44,6 +44,9 @@ export default function MatchGalleryScreen() {
   // Avoid touching state after the user navigates away mid-upload.
   const mountedRef = useRef(true);
   useEffect(() => {
+    // Reset on (re)mount so a StrictMode double-invoke doesn't leave the ref
+    // stuck false — otherwise the upload's finally would skip setUploading(false).
+    mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
