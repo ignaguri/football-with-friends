@@ -4,7 +4,7 @@ import { Container, RefreshableScrollView } from "@repo/ui";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";
-import { Spinner, Text, XStack, YStack } from "tamagui";
+import { Button, Spinner, Text, XStack, YStack } from "tamagui";
 
 export default function MyGroupsScreen() {
   const { t } = useTranslation();
@@ -23,6 +23,14 @@ export default function MyGroupsScreen() {
     return (
       <Container variant="padded" gap="$2">
         <Text color="$gray11">{t("groups.myGroups.empty")}</Text>
+        <Button
+          theme="blue"
+          onPress={() => router.push("/(tabs)/profile/groups/request")}
+          accessibilityRole="button"
+          testID="groups-cta-create"
+        >
+          {t("groups.requests.ctaCreate")}
+        </Button>
       </Container>
     );
   }
@@ -74,6 +82,15 @@ export default function MyGroupsScreen() {
               </Pressable>
             );
           })}
+          <Button
+            theme="blue"
+            marginTop="$2"
+            onPress={() => router.push("/(tabs)/profile/groups/request")}
+            accessibilityRole="button"
+            testID="groups-cta-create"
+          >
+            {t("groups.requests.ctaCreate")}
+          </Button>
         </YStack>
       </RefreshableScrollView>
     </Container>

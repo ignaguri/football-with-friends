@@ -872,6 +872,22 @@
       "organizer": "Organizador",
       "member": "Miembro"
     },
+    "requests": {
+      "ctaCreate": "Crear un grupo",
+      "title": "Solicitar un grupo",
+      "nameLabel": "Nombre del grupo",
+      "namePlaceholder": "ej. Fútbol de los domingos",
+      "reasonLabel": "¿Por qué querés este grupo?",
+      "reasonPlaceholder": "Contale al admin un poco sobre el grupo",
+      "submit": "Enviar solicitud",
+      "pending": "Tu solicitud está pendiente de revisión.",
+      "approved": "¡Aprobada! Tu grupo está listo.",
+      "rejected": "Solicitud rechazada: {{reason}}",
+      "cancel": "Cancelar solicitud",
+      "resubmit": "Solicitar otro grupo",
+      "openGroup": "Abrir grupo",
+      "error": "Algo salió mal. Intentá de nuevo."
+    },
     "create": {
       "title": "Crear grupo",
       "nameLabel": "Nombre del grupo",
