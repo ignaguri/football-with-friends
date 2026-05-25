@@ -172,6 +172,17 @@ export class TursoGroupRepository {
     return row ? rowToGroup(row) : null;
   }
 
+  async listPublic(limit = 200): Promise<Group[]> {
+    const rows = await this.db
+      .selectFrom("groups")
+      .selectAll()
+      .where("visibility", "=", "public")
+      .where("deleted_at", "is", null)
+      .limit(limit)
+      .execute();
+    return rows.map(rowToGroup);
+  }
+
   async listByUserId(
     userId: string,
   ): Promise<Array<Group & { myRole: MemberRole; amIOwner: boolean }>> {
@@ -342,6 +353,20 @@ export class TursoGroupMembershipRepository {
       .orderBy("joined_at", "asc")
       .execute();
     return rows.map(rowToMember);
+  }
+
+  /** Member counts keyed by group id. Groups with zero members are omitted — callers should default to 0. */
+  async countByGroupIds(groupIds: string[]): Promise<Record<string, number>> {
+    if (groupIds.length === 0) return {};
+    const rows = await this.db
+      .selectFrom("group_members")
+      .select((eb) => ["group_id", eb.fn.countAll<number>().as("count")])
+      .where("group_id", "in", groupIds)
+      .groupBy("group_id")
+      .execute();
+    const out: Record<string, number> = {};
+    for (const r of rows) out[r.group_id] = Number(r.count);
+    return out;
   }
 
   // Like `listByGroup`, but joins the user table so the UI can render
