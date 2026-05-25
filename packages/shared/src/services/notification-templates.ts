@@ -171,7 +171,7 @@ export const NotificationTemplates = {
   groupRequestRejected(params: { reason: string }): NotificationPayload {
     return {
       title: "Group request declined",
-      body: params.reason,
+      body: params.reason || "Your group request was not approved.",
       data: {
         type: NOTIFICATION_TYPES.GROUP_REQUEST_DECISION,
         screen: "/(tabs)/profile/groups/request",
