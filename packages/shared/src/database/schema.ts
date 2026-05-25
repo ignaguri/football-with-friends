@@ -275,6 +275,20 @@ export interface GroupSettingsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface GroupCreationRequestsTable {
+  id: string;
+  requested_by_user_id: string;
+  name: string;
+  reason: string;
+  status: Generated<string>;
+  decision_reason: string | null;
+  decided_by_user_id: string | null;
+  decided_at: ColumnType<Date, string | undefined, string> | null;
+  created_group_id: string | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 // Database interface
 export interface Database {
   locations: LocationsTable;
@@ -299,6 +313,7 @@ export interface Database {
   group_invites: GroupInvitesTable;
   group_roster: GroupRosterTable;
   group_settings: GroupSettingsTable;
+  group_creation_requests: GroupCreationRequestsTable;
 }
 
 // SQLite system tables used by migrations and database introspection
