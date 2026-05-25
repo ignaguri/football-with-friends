@@ -6,6 +6,7 @@
 
 import type {
   GroupInviteInvalidReason,
+  GroupRequestStatus,
   GroupVisibility,
   MemberRole,
   UpdateGroupRosterData,
@@ -532,12 +533,13 @@ export const groupRequestQueryKeys = {
   pending: () => [...groupRequestQueryKeys.all, "pending"] as const,
 };
 
+// JSON-serialized client view of a group creation request (dates as strings); intentionally omits server-only fields: decidedByUserId, decidedAt, updatedAt.
 export interface GroupCreationRequestSummary {
   id: string;
   requestedByUserId: string;
   name: string;
   reason: string;
-  status: "pending" | "approved" | "rejected";
+  status: GroupRequestStatus;
   decisionReason?: string;
   createdGroupId?: string;
   createdAt: string;
