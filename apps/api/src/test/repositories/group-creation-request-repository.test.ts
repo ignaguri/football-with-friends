@@ -74,6 +74,39 @@ describe("TursoGroupCreationRequestRepository", () => {
     expect(decided.decidedAt).toBeInstanceOf(Date);
   });
 
+  test("markDecided throws the domain error when the row is no longer pending", async () => {
+    const user = await seedUser(db);
+    const req = await repo.create({ requestedByUserId: user.id, name: "Race FC", reason: "x" });
+    await repo.markDecided(req.id, {
+      status: "rejected",
+      decidedByUserId: user.id,
+      decisionReason: "first",
+    });
+    // A concurrent second decision must surface "Request is not pending", not a raw
+    // no-result error (so the route returns 400, not 500).
+    await expect(
+      repo.markDecided(req.id, { status: "approved", decidedByUserId: user.id }),
+    ).rejects.toThrow(/not pending/i);
+  });
+
+  test("setCreatedGroup only stamps an approved request that has no group yet", async () => {
+    const owner = await seedUser(db);
+    const group = await seedGroup(db, { ownerUserId: owner.id, name: "Guarded FC" });
+    const requester = await seedUser(db);
+    const req = await repo.create({
+      requestedByUserId: requester.id,
+      name: "Guarded Request",
+      reason: "x",
+    });
+    // Still pending → guard rejects.
+    await expect(repo.setCreatedGroup(req.id, group.id)).rejects.toThrow(/awaiting a created group/i);
+    // Once approved, the first stamp succeeds; a second is rejected (no overwrite).
+    await repo.markDecided(req.id, { status: "approved", decidedByUserId: owner.id });
+    const stamped = await repo.setCreatedGroup(req.id, group.id);
+    expect(stamped.createdGroupId).toBe(group.id);
+    await expect(repo.setCreatedGroup(req.id, group.id)).rejects.toThrow(/awaiting a created group/i);
+  });
+
   test("listByStatus returns only matching rows (non-vacuous)", async () => {
     const user = await seedUser(db);
     const created = await repo.create({

@@ -113,18 +113,29 @@ export class TursoGroupCreationRequestRepository {
       .where("id", "=", id)
       .where("status", "=", "pending")
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+    // No row means a concurrent decision already flipped it out of 'pending'.
+    // Surface the same domain error a pre-read would, not a raw no-result, so the
+    // route returns a clean 400 instead of a 500.
+    if (!row) throw new Error("Request is not pending");
     return rowToRequest(row);
   }
 
-  /** Records the created group on an already-decided request (second step of approve). */
+  /**
+   * Records the created group on an already-decided request (second step of approve).
+   * Guarded to an approved request that has no group yet, so the invariant holds at
+   * the repository layer even if this is ever called out of order.
+   */
   async setCreatedGroup(id: string, groupId: string): Promise<GroupCreationRequest> {
     const row = await this.db
       .updateTable("group_creation_requests")
       .set({ created_group_id: groupId, updated_at: new Date().toISOString() })
       .where("id", "=", id)
+      .where("status", "=", "approved")
+      .where("created_group_id", "is", null)
       .returningAll()
-      .executeTakeFirstOrThrow();
+      .executeTakeFirst();
+    if (!row) throw new Error("Request is not awaiting a created group");
     return rowToRequest(row);
   }
 

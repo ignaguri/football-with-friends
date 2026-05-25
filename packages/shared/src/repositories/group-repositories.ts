@@ -25,6 +25,12 @@ function generateId(prefix: string): string {
   return `${prefix}_${nanoid()}`;
 }
 
+function isSlugUniqueViolation(error: unknown): boolean {
+  // SQLite/libSQL: "UNIQUE constraint failed: groups.slug"
+  if (!(error instanceof Error)) return false;
+  return /unique constraint failed/i.test(error.message) && /\bgroups\.slug\b/i.test(error.message);
+}
+
 function slugify(name: string): string {
   return (
     name
@@ -97,23 +103,33 @@ export class TursoGroupRepository {
 
   async create(data: CreateGroupData): Promise<Group> {
     const id = generateId("grp");
-    // groups.slug is UNIQUE. When derived from the name (no explicit slug), dedupe
-    // by suffixing so two groups with similar names can't fail the insert — e.g. a
-    // self-serve request approved for a name whose slug already exists. An explicit
-    // slug is taken as-is (the caller owns that collision).
-    const slug = data.slug ?? (await this.findAvailableSlug(slugify(data.name)));
-    const row = await this.db
-      .insertInto("groups")
-      .values({
-        id,
-        name: data.name,
-        slug,
-        owner_user_id: data.ownerUserId,
-        visibility: data.visibility ?? "private",
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
-    return rowToGroup(row);
+    const explicitSlug = data.slug !== undefined;
+    // groups.slug is UNIQUE. An explicit slug is inserted as-is (the caller owns the
+    // collision). A name-derived slug is deduped against existing rows; since that's
+    // a read-then-insert, a concurrent create can still grab the same slug first, so
+    // retry on the slug-UNIQUE violation by re-picking the next free suffix.
+    for (let attempt = 0; ; attempt++) {
+      const slug = explicitSlug
+        ? (data.slug as string)
+        : await this.findAvailableSlug(slugify(data.name));
+      try {
+        const row = await this.db
+          .insertInto("groups")
+          .values({
+            id,
+            name: data.name,
+            slug,
+            owner_user_id: data.ownerUserId,
+            visibility: data.visibility ?? "private",
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow();
+        return rowToGroup(row);
+      } catch (error) {
+        if (!explicitSlug && attempt < 5 && isSlugUniqueViolation(error)) continue;
+        throw error;
+      }
+    }
   }
 
   // Finds a slug not taken by ANY group (including soft-deleted ones — the UNIQUE
