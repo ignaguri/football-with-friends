@@ -110,3 +110,34 @@ describe("per-match organizer powers", () => {
     expect(allowed.status).toBe(200);
   });
 });
+
+describe("cross-group authorization guards", () => {
+  test("signup PATCH 404s when the match belongs to another group (no organizer-power leak)", async () => {
+    // Alice organizes match A in group A...
+    const { owner, group: groupA, match: matchA, member: alice } = await scenario();
+    await app(persona(owner.id), { id: groupA.id }).fetch(
+      new Request(`http://t/matches/${matchA.id}/organizer`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userId: alice.id }),
+      }),
+    );
+
+    // ...but is only a plain member of group B, her active group here.
+    const ownerB = await seedUser(db);
+    const groupB = await seedGroup(db, { ownerUserId: ownerB.id });
+    await seedMembership(db, { groupId: groupB.id, userId: alice.id, role: "member" });
+
+    // Acting in group B, she targets group A's match. Her per-match organizer
+    // role on matchA must NOT grant her organizer power over signups in group B:
+    // the handler 404s on the cross-group match before any update runs.
+    const res = await app(persona(alice.id), { id: groupB.id }).fetch(
+      new Request(`http://t/matches/${matchA.id}/signup/any-signup-id`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status: "PAID" }),
+      }),
+    );
+    expect(res.status).toBe(404);
+  });
+});

@@ -8,6 +8,7 @@ import {
   useGroupMembers,
   useAssignMatchOrganizer,
   useClearMatchOrganizer,
+  canManageMatch,
 } from "@repo/api-client";
 import { MATCH_STATUSES, type MatchStatus } from "@repo/shared/domain";
 import {
@@ -79,8 +80,12 @@ export default function EditMatchScreen() {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  const { myRole, groupId } = useCurrentGroup();
-  const canManage = session?.user?.role === "admin" || myRole === "organizer";
+  const { myRole, groupId, amIOwner } = useCurrentGroup();
+  const isPlatformAdmin = session?.user?.role === "admin";
+  // Group organizers / owners delegate matches; the assign-organizer picker
+  // below is gated on this. Editing the match itself is allowed for the
+  // per-match organizer too (see `canManage`, derived after the match loads).
+  const isGroupOrganizer = myRole === "organizer" || amIOwner === true;
 
   const { data: members } = useGroupMembers(groupId);
   const assignOrganizer = useAssignMatchOrganizer();
@@ -97,6 +102,16 @@ export default function EditMatchScreen() {
       return res.json() as Promise<MatchDetails>;
     },
     enabled: !!matchId && !!session?.user,
+  });
+
+  // Editing the match (including via the per-match organizer) gates on the same
+  // rule the server enforces for PATCH /matches/:id. Resolves false while the
+  // match is loading; the loading spinner below guards that window.
+  const canManage = canManageMatch({
+    match: match ?? { organizerUserId: null },
+    currentUserId: session?.user?.id,
+    isGroupOrganizer,
+    isPlatformAdmin,
   });
 
   // Fetch locations
@@ -353,7 +368,9 @@ export default function EditMatchScreen() {
             disabled={updateMutation.isPending}
           />
 
-          {/* Match Organizer */}
+          {/* Match Organizer — delegation stays with group organizers/owners,
+              so a per-match organizer editing here doesn't see this picker. */}
+          {isGroupOrganizer || isPlatformAdmin ? (
           <YStack gap="$2">
             <Text fontSize="$4">{t("matches.organizer.assignLabel")}</Text>
             {members?.map((m) => (
@@ -380,6 +397,7 @@ export default function EditMatchScreen() {
               </Button>
             ) : null}
           </YStack>
+          ) : null}
 
           {/* Error Message */}
           {error && (

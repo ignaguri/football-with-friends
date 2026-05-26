@@ -430,7 +430,9 @@ app.patch(
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
     const match = await getRepositoryFactory().matches.findById(matchId);
-    const isOrganizer = isMatchManager(c, match ?? { organizerUserId: null });
+    const notFound = assertInCurrentGroup(c, match, "Match not found");
+    if (notFound) return notFound;
+    const isOrganizer = isMatchManager(c, match!);
 
     try {
       const result = await getMatchService().updateSignup(
@@ -526,7 +528,9 @@ app.post(
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
     const match = await getRepositoryFactory().matches.findById(matchId);
-    const isOrganizer = isMatchManager(c, match ?? { organizerUserId: null });
+    const notFound = assertInCurrentGroup(c, match, "Match not found");
+    if (notFound) return notFound;
+    const isOrganizer = isMatchManager(c, match!);
 
     try {
       const stats = await getPlayerStatsService().recordStats(
@@ -564,7 +568,10 @@ app.patch(
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
-    const isOrganizer = isCurrentOrganizer(c);
+    const match = await getRepositoryFactory().matches.findById(matchId);
+    const notFound = assertInCurrentGroup(c, match, "Match not found");
+    if (notFound) return notFound;
+    const isOrganizer = isMatchManager(c, match!);
 
     try {
       const stats = await getPlayerStatsService().updateStats(
