@@ -36,7 +36,16 @@
     "none": "No se encontraron partidos.",
     "error": "No se pudieron cargar los partidos.",
     "youJoined": "Anotado",
-    "youPlayed": "Jugaste"
+    "youPlayed": "Jugaste",
+    "organizer": {
+      "organizedBy": "Organizado por {{name}}",
+      "assignLabel": "Organizador del partido",
+      "assignCta": "Asignar organizador",
+      "clear": "Quitar organizador",
+      "pickMember": "Elegí un miembro",
+      "assigned": "Organizador asignado",
+      "error": "No se pudo actualizar el organizador. Intentá de nuevo."
+    }
   },
   "matchDetail": {
     "pay": "Pagar",

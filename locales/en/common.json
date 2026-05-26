@@ -35,7 +35,16 @@
     "none": "No matches found.",
     "error": "Failed to load matches.",
     "youJoined": "You joined",
-    "youPlayed": "You played"
+    "youPlayed": "You played",
+    "organizer": {
+      "organizedBy": "Organized by {{name}}",
+      "assignLabel": "Match organizer",
+      "assignCta": "Assign organizer",
+      "clear": "Clear organizer",
+      "pickMember": "Choose a member",
+      "assigned": "Organizer assigned",
+      "error": "Couldn't update the organizer. Please try again."
+    }
   },
   "matchDetail": {
     "pay": "Pay",

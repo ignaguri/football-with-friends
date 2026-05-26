@@ -5,6 +5,9 @@ import {
   useQueryClient,
   client,
   useCurrentGroup,
+  useGroupMembers,
+  useAssignMatchOrganizer,
+  useClearMatchOrganizer,
 } from "@repo/api-client";
 import { MATCH_STATUSES, type MatchStatus } from "@repo/shared/domain";
 import {
@@ -46,6 +49,7 @@ interface MatchDetails {
   sameDayCost?: string;
   location?: { id: string; name: string; address?: string };
   court?: { id: string; name: string };
+  organizerUserId?: string | null;
 }
 
 // Extract the actual error message from API errors.
@@ -75,8 +79,12 @@ export default function EditMatchScreen() {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  const { myRole } = useCurrentGroup();
+  const { myRole, groupId } = useCurrentGroup();
   const canManage = session?.user?.role === "admin" || myRole === "organizer";
+
+  const { data: members } = useGroupMembers(groupId);
+  const assignOrganizer = useAssignMatchOrganizer();
+  const clearOrganizer = useClearMatchOrganizer();
 
   // Fetch existing match data
   const { data: match, isLoading: isLoadingMatch } = useQuery({
@@ -344,6 +352,34 @@ export default function EditMatchScreen() {
             options={statusOptions}
             disabled={updateMutation.isPending}
           />
+
+          {/* Match Organizer */}
+          <YStack gap="$2">
+            <Text fontSize="$4">{t("matches.organizer.assignLabel")}</Text>
+            {members?.map((m) => (
+              <Button
+                key={m.userId}
+                theme={match?.organizerUserId === m.userId ? "green" : undefined}
+                onPress={() => assignOrganizer.mutate({ matchId, userId: m.userId })}
+                disabled={assignOrganizer.isPending}
+                accessibilityRole="button"
+                testID={`match-assign-organizer-${m.userId}`}
+              >
+                {m.name ?? m.userId}
+              </Button>
+            ))}
+            {match?.organizerUserId ? (
+              <Button
+                theme="red"
+                onPress={() => clearOrganizer.mutate(matchId)}
+                disabled={clearOrganizer.isPending}
+                accessibilityRole="button"
+                testID="match-clear-organizer"
+              >
+                {t("matches.organizer.clear")}
+              </Button>
+            ) : null}
+          </YStack>
 
           {/* Error Message */}
           {error && (
