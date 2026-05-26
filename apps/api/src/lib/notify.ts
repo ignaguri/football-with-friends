@@ -282,6 +282,7 @@ export async function notifyOrganizersOfJoinRequest(
     const organizerIds = members.filter((m) => m.role === "organizer").map((m) => m.userId);
     if (organizerIds.length === 0) return;
     const payload = NotificationTemplates.joinRequestSubmitted({
+      groupId: group.id,
       groupName: group.name,
       requesterName,
     });

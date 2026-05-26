@@ -4,8 +4,9 @@ import {
   useGroupJoinRequests,
   useRejectJoinRequest,
 } from "@repo/api-client";
-import { Container, RefreshableScrollView } from "@repo/ui";
+import { Container, Dialog, Input, RefreshableScrollView } from "@repo/ui";
 import { useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Alert } from "react-native";
 import { Button, Spinner, Text, XStack, YStack } from "tamagui";
@@ -16,6 +17,8 @@ export default function GroupJoinRequestsScreen() {
   const { data: requests, isLoading, refetch } = useGroupJoinRequests(groupId, true);
   const approve = useApproveJoinRequest(groupId);
   const reject = useRejectJoinRequest(groupId);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
 
   if (isLoading) {
     return (
@@ -25,17 +28,22 @@ export default function GroupJoinRequestsScreen() {
     );
   }
 
+  // A single in-app modal collects the reason on every platform (Alert.prompt is
+  // iOS-only, so it can't serve web/Android), and the reason stays required.
   function onReject(reqId: string) {
-    const run = (reason: string) => {
-      if (!reason?.trim()) return;
-      reject
-        .mutateAsync({ reqId, reason: reason.trim() })
-        .catch((err) =>
-          Alert.alert("Error", err instanceof Error ? err.message : t("groups.discover.error")),
-        );
-    };
-    if (Alert.prompt) Alert.prompt(t("groups.joinRequests.rejectPrompt"), undefined, run);
-    else run("Declined by organizer");
+    setRejectReason("");
+    setRejectingId(reqId);
+  }
+
+  async function confirmReject() {
+    const reqId = rejectingId;
+    if (!reqId || !rejectReason.trim()) return;
+    try {
+      await reject.mutateAsync({ reqId, reason: rejectReason.trim() });
+      setRejectingId(null);
+    } catch (err) {
+      Alert.alert("Error", err instanceof Error ? err.message : t("groups.discover.error"));
+    }
   }
 
   return (
@@ -98,6 +106,26 @@ export default function GroupJoinRequestsScreen() {
           )}
         </YStack>
       </RefreshableScrollView>
+
+      <Dialog
+        open={!!rejectingId}
+        onOpenChange={(open) => !open && setRejectingId(null)}
+        title={t("groups.joinRequests.rejectPrompt")}
+        confirmText={reject.isPending ? <Spinner /> : t("groups.joinRequests.reject")}
+        cancelText={t("shared.cancel")}
+        onConfirm={confirmReject}
+        onCancel={() => setRejectingId(null)}
+      >
+        <YStack gap="$3" padding="$4">
+          <Input
+            value={rejectReason}
+            onChangeText={setRejectReason}
+            placeholder={t("groups.joinRequests.rejectPrompt")}
+            testID="join-request-reject-reason"
+            autoFocus
+          />
+        </YStack>
+      </Dialog>
     </Container>
   );
 }

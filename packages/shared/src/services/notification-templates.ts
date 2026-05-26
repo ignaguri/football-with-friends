@@ -179,13 +179,18 @@ export const NotificationTemplates = {
     };
   },
 
-  joinRequestSubmitted(params: { groupName: string; requesterName: string }): NotificationPayload {
+  joinRequestSubmitted(params: {
+    groupId: string;
+    groupName: string;
+    requesterName: string;
+  }): NotificationPayload {
     return {
       title: "New join request",
       body: `${params.requesterName} asked to join ${params.groupName}.`,
       data: {
         type: NOTIFICATION_TYPES.JOIN_REQUEST_SUBMITTED,
-        screen: "/(tabs)/profile/groups",
+        groupId: params.groupId,
+        screen: `/(tabs)/profile/groups/${params.groupId}/join-requests`,
       },
     };
   },
