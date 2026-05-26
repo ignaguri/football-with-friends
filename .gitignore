@@ -132,6 +132,7 @@ docs/superpowers/
 apps/mobile-web/build-*.ipa
 apps/mobile-web/build-*.aab
 apps/mobile-web/build-*.apk
+apps/mobile-web/builds/
 
 # Wrangler-generated Cloudflare Worker types (regenerate with `wrangler types`)
 apps/api/worker-configuration.d.ts
