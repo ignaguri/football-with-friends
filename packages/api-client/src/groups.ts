@@ -638,3 +638,128 @@ export function useRejectGroupRequest() {
     },
   });
 }
+
+// --- Group search & join requests ----------------------------------------
+
+export const joinRequestQueryKeys = {
+  all: ["join-requests"] as const,
+  search: (q: string) => [...joinRequestQueryKeys.all, "search", q] as const,
+  mine: () => [...joinRequestQueryKeys.all, "mine"] as const,
+  forGroup: (groupId: string) => [...joinRequestQueryKeys.all, "group", groupId] as const,
+};
+
+export interface GroupSearchResult {
+  id: string;
+  name: string;
+  slug: string;
+  memberCount: number;
+  relationship: "member" | "pending" | "none";
+}
+
+export interface JoinRequestSummary {
+  id: string;
+  groupId: string;
+  requestedByUserId: string;
+  message?: string;
+  status: "pending" | "approved" | "rejected";
+  decisionReason?: string;
+  createdAt: string;
+  requesterName?: string;
+  requesterPhone?: string;
+}
+
+export function useSearchGroups(query: string) {
+  return useQuery({
+    queryKey: joinRequestQueryKeys.search(query),
+    enabled: query.trim().length > 0,
+    queryFn: async () => {
+      const res = await client.api.discovery.search.$get({ query: { q: query } });
+      const data = (await res.json()) as { results: GroupSearchResult[] };
+      return data.results;
+    },
+  });
+}
+
+export function useMyJoinRequests() {
+  return useQuery({
+    queryKey: joinRequestQueryKeys.mine(),
+    queryFn: async () => {
+      const res = await client.api.discovery["my-join-requests"].$get();
+      const data = (await res.json()) as { requests: JoinRequestSummary[] };
+      return data.requests;
+    },
+  });
+}
+
+export function useSubmitJoinRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { groupId: string; message?: string }) => {
+      const res = await client.api.discovery.groups[":id"]["join-requests"].$post({
+        param: { id: input.groupId },
+        json: { message: input.message },
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: joinRequestQueryKeys.all });
+    },
+  });
+}
+
+export function useCancelJoinRequest() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api.discovery["join-requests"][":id"].$delete({ param: { id } });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: joinRequestQueryKeys.all });
+    },
+  });
+}
+
+export function useGroupJoinRequests(groupId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: joinRequestQueryKeys.forGroup(groupId ?? ""),
+    enabled: !!groupId && enabled,
+    queryFn: async () => {
+      const res = await client.api.groups[":id"]["join-requests"].$get({ param: { id: groupId! } });
+      const data = (await res.json()) as { requests: JoinRequestSummary[] };
+      return data.requests;
+    },
+  });
+}
+
+export function useApproveJoinRequest(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (reqId: string) => {
+      const res = await client.api.groups[":id"]["join-requests"][":reqId"].approve.$post({
+        param: { id: groupId, reqId },
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: joinRequestQueryKeys.forGroup(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupQueryKeys.detail(groupId) });
+    },
+  });
+}
+
+export function useRejectJoinRequest(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { reqId: string; reason: string }) => {
+      const res = await client.api.groups[":id"]["join-requests"][":reqId"].reject.$post({
+        param: { id: groupId, reqId: input.reqId },
+        json: { reason: input.reason },
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: joinRequestQueryKeys.forGroup(groupId) });
+    },
+  });
+}

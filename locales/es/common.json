@@ -984,6 +984,30 @@
         "collapsedHint": "Restringí una invitación a un solo número"
       }
     },
+    "discover": {
+      "entry": "Buscar un grupo",
+      "title": "Buscar un grupo",
+      "searchPlaceholder": "Buscar grupos públicos",
+      "noResults": "No se encontraron grupos.",
+      "members_one": "{{count}} miembro",
+      "members_other": "{{count}} miembros",
+      "request": "Solicitar unirme",
+      "pending": "Pendiente",
+      "open": "Abrir",
+      "requested": "Solicitud enviada",
+      "myRequests": "Mis solicitudes",
+      "error": "Algo salió mal. Intentá de nuevo."
+    },
+    "joinRequests": {
+      "queueTitle": "Solicitudes para unirse",
+      "queueEmpty": "No hay solicitudes pendientes.",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "rejectPrompt": "Motivo del rechazo",
+      "makePublic": "Hacer el grupo visible",
+      "makePrivate": "Hacer el grupo privado",
+      "visibilityHint": "Los grupos públicos aparecen en la búsqueda y aceptan solicitudes."
+    },
     "roster": {
       "title": "Plantel",
       "add": "Agregar invitado",

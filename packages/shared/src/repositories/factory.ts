@@ -31,6 +31,7 @@ import {
   TursoGroupSettingsRepository,
 } from "./group-repositories";
 import { TursoGroupCreationRequestRepository } from "./group-creation-request-repository";
+import { TursoGroupJoinRequestRepository } from "./group-join-request-repository";
 
 // Configuration type
 export type StorageProvider = "turso" | "local-db";
@@ -52,6 +53,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
   public readonly groupRoster: TursoGroupRosterRepository;
   public readonly groupSettings: TursoGroupSettingsRepository;
   public readonly groupCreationRequests: TursoGroupCreationRequestRepository;
+  public readonly groupJoinRequests: TursoGroupJoinRequestRepository;
 
   constructor(provider: StorageProvider = "turso") {
     switch (provider) {
@@ -72,6 +74,7 @@ export class AppRepositoryFactory implements RepositoryFactory {
         this.groupRoster = new TursoGroupRosterRepository();
         this.groupSettings = new TursoGroupSettingsRepository();
         this.groupCreationRequests = new TursoGroupCreationRequestRepository();
+        this.groupJoinRequests = new TursoGroupJoinRequestRepository();
         break;
 
       default:

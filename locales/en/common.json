@@ -981,6 +981,30 @@
         "collapsedHint": "Lock an invite to a single phone number"
       }
     },
+    "discover": {
+      "entry": "Find a group",
+      "title": "Find a group",
+      "searchPlaceholder": "Search public groups",
+      "noResults": "No groups found.",
+      "members_one": "{{count}} member",
+      "members_other": "{{count}} members",
+      "request": "Request to join",
+      "pending": "Pending",
+      "open": "Open",
+      "requested": "Request sent",
+      "myRequests": "My requests",
+      "error": "Something went wrong. Please try again."
+    },
+    "joinRequests": {
+      "queueTitle": "Join requests",
+      "queueEmpty": "No pending requests.",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rejectPrompt": "Reason for declining",
+      "makePublic": "Make group discoverable",
+      "makePrivate": "Make group private",
+      "visibilityHint": "Public groups appear in search and accept join requests."
+    },
     "roster": {
       "title": "Roster",
       "add": "Add ghost",

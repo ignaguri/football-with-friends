@@ -179,6 +179,45 @@ export const NotificationTemplates = {
     };
   },
 
+  joinRequestSubmitted(params: {
+    groupId: string;
+    groupName: string;
+    requesterName: string;
+  }): NotificationPayload {
+    return {
+      title: "New join request",
+      body: `${params.requesterName} asked to join ${params.groupName}.`,
+      data: {
+        type: NOTIFICATION_TYPES.JOIN_REQUEST_SUBMITTED,
+        groupId: params.groupId,
+        screen: `/(tabs)/profile/groups/${params.groupId}/join-requests`,
+      },
+    };
+  },
+
+  joinRequestApproved(params: { groupName: string; groupId: string }): NotificationPayload {
+    return {
+      title: "Request approved!",
+      body: `You're now a member of ${params.groupName}.`,
+      data: {
+        type: NOTIFICATION_TYPES.JOIN_REQUEST_DECISION,
+        groupId: params.groupId,
+        screen: `/(tabs)/profile/groups/${params.groupId}`,
+      },
+    };
+  },
+
+  joinRequestRejected(params: { groupName: string; reason: string }): NotificationPayload {
+    return {
+      title: "Join request declined",
+      body: `${params.groupName}: ${params.reason}`,
+      data: {
+        type: NOTIFICATION_TYPES.JOIN_REQUEST_DECISION,
+        screen: "/(tabs)/profile/groups/discover",
+      },
+    };
+  },
+
   engagementReminder(variant: number): NotificationPayload {
     const messages = [
       { title: "Don't Miss Out!", body: "Check out upcoming matches and join your friends!" },

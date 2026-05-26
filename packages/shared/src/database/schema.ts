@@ -275,6 +275,19 @@ export interface GroupSettingsTable {
   updated_at: ColumnType<Date, string | undefined, string>;
 }
 
+export interface GroupJoinRequestsTable {
+  id: string;
+  group_id: string;
+  requested_by_user_id: string;
+  message: string | null;
+  status: Generated<"pending" | "approved" | "rejected">;
+  decision_reason: string | null;
+  decided_by_user_id: string | null;
+  decided_at: ColumnType<Date, string | undefined, string> | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+  updated_at: ColumnType<Date, string | undefined, string>;
+}
+
 export interface GroupCreationRequestsTable {
   id: string;
   requested_by_user_id: string;
@@ -313,6 +326,7 @@ export interface Database {
   group_invites: GroupInvitesTable;
   group_roster: GroupRosterTable;
   group_settings: GroupSettingsTable;
+  group_join_requests: GroupJoinRequestsTable;
   group_creation_requests: GroupCreationRequestsTable;
 }
 

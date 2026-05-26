@@ -31,6 +31,13 @@ export default function MyGroupsScreen() {
         >
           {t("groups.requests.ctaCreate")}
         </Button>
+        <Button
+          onPress={() => router.push("/(tabs)/profile/groups/discover")}
+          accessibilityRole="button"
+          testID="groups-find-a-group"
+        >
+          {t("groups.discover.entry")}
+        </Button>
       </Container>
     );
   }
@@ -91,6 +98,14 @@ export default function MyGroupsScreen() {
             testID="groups-cta-create"
           >
             {t("groups.requests.ctaCreate")}
+          </Button>
+          <Button
+            marginTop="$2"
+            onPress={() => router.push("/(tabs)/profile/groups/discover")}
+            accessibilityRole="button"
+            testID="groups-find-a-group"
+          >
+            {t("groups.discover.entry")}
           </Button>
         </YStack>
       </RefreshableScrollView>

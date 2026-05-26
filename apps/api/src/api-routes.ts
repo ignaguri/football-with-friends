@@ -20,10 +20,12 @@ import matchMediaRoute from "./routes/match-media";
 import invitesRoute from "./routes/invites";
 import ogRoute from "./routes/og";
 import appVersionRoute from "./routes/app-version";
+import discoveryRoute from "./routes/discovery";
 
 export function registerApiRoutes(app: Hono<any>) {
   return app
     .basePath("/api")
+    .route("/discovery", discoveryRoute)
     .route("/matches", matchesRoute)
     .route("/courts", courtsRoute)
     .route("/groups", groupsRoute)

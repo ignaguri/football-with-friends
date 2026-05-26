@@ -42,6 +42,18 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen
+        name="groups/[groupId]/join-requests"
+        options={{
+          title: t("groups.joinRequests.queueTitle"),
+        }}
+      />
+      <Stack.Screen
+        name="groups/discover"
+        options={{
+          title: t("groups.discover.title"),
+        }}
+      />
+      <Stack.Screen
         name="groups/request"
         options={{
           title: t("groups.requests.title"),

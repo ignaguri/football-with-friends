@@ -268,3 +268,60 @@ export async function notifyRequesterRejected(params: {
     await getNotificationService().sendToUser(params.userId, payload);
   });
 }
+
+// Group join-request lifecycle. The group exists, so organizer + approval
+// notifications record group-scoped inbox rows. Rejection is push-only — the
+// requester is not (yet) a member, so an inbox row would imply membership.
+
+export async function notifyOrganizersOfJoinRequest(
+  group: { id: string; name: string },
+  requesterName: string,
+): Promise<void> {
+  await safeNotify("join request submitted", async () => {
+    const members = await getRepositoryFactory().groupMembers.listByGroup(group.id);
+    const organizerIds = members.filter((m) => m.role === "organizer").map((m) => m.userId);
+    if (organizerIds.length === 0) return;
+    const payload = NotificationTemplates.joinRequestSubmitted({
+      groupId: group.id,
+      groupName: group.name,
+      requesterName,
+    });
+    await recordForRecipients({
+      userIds: organizerIds,
+      groupId: group.id,
+      type: NOTIFICATION_TYPES.JOIN_REQUEST_SUBMITTED,
+      payload,
+    });
+    await getNotificationService().sendToUsers(organizerIds, payload);
+  });
+}
+
+export async function notifyJoinApproved(
+  userId: string,
+  group: { id: string; name: string },
+): Promise<void> {
+  await safeNotify("join request approved", async () => {
+    const payload = NotificationTemplates.joinRequestApproved({
+      groupName: group.name,
+      groupId: group.id,
+    });
+    await recordForRecipients({
+      userIds: [userId],
+      groupId: group.id,
+      type: NOTIFICATION_TYPES.JOIN_REQUEST_DECISION,
+      payload,
+    });
+    await getNotificationService().sendToUser(userId, payload);
+  });
+}
+
+export async function notifyJoinRejected(
+  userId: string,
+  group: { name: string },
+  reason: string,
+): Promise<void> {
+  await safeNotify("join request rejected", async () => {
+    const payload = NotificationTemplates.joinRequestRejected({ groupName: group.name, reason });
+    await getNotificationService().sendToUser(userId, payload);
+  });
+}

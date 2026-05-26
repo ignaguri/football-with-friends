@@ -579,6 +579,8 @@ export const NOTIFICATION_TYPES = {
   GROUP_INVITE: "group_invite",
   GROUP_REQUEST_SUBMITTED: "group_request_submitted",
   GROUP_REQUEST_DECISION: "group_request_decision",
+  JOIN_REQUEST_SUBMITTED: "join_request_submitted",
+  JOIN_REQUEST_DECISION: "join_request_decision",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
@@ -839,6 +841,30 @@ export interface GroupCreationRequest {
   createdGroupId?: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export const GROUP_JOIN_REQUEST_STATUSES = ["pending", "approved", "rejected"] as const;
+export type GroupJoinRequestStatus = (typeof GROUP_JOIN_REQUEST_STATUSES)[number];
+
+export interface GroupJoinRequest {
+  id: string;
+  groupId: string;
+  requestedByUserId: string;
+  message?: string;
+  status: GroupJoinRequestStatus;
+  decisionReason?: string;
+  decidedByUserId?: string;
+  decidedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Enriched shape for the organizer review queue only — carries requester
+// identity fields joined from the user table. Mirrors the fields exposed by
+// GroupMemberWithUser so the member list and join-request queue are consistent.
+export interface GroupJoinRequestWithRequester extends GroupJoinRequest {
+  requesterName?: string;
+  requesterPhone?: string;
 }
 
 export interface CreateGroupInviteData {

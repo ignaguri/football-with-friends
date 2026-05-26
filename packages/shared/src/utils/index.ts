@@ -1,3 +1,4 @@
 export * from "./display-name";
 export * from "./timezone";
 export * from "./notification-routes";
+export * from "./group-search";
