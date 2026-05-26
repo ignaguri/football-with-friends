@@ -22,7 +22,11 @@ import type {
   TursoGroupRosterRepository,
   TursoGroupSettingsRepository,
 } from "../repositories/group-repositories";
-import type { LocationRepository, CourtRepository } from "../repositories/interfaces";
+import type {
+  LocationRepository,
+  CourtRepository,
+  MatchRepository,
+} from "../repositories/interfaces";
 
 // Structured log line. Cloudflare Workers ingests `console.log` output and
 // indexes on top-level JSON fields, so every event emits a single JSON line.
@@ -101,6 +105,7 @@ export class GroupService {
     private rosterRepo: TursoGroupRosterRepository,
     private locationRepo: LocationRepository,
     private courtRepo: CourtRepository,
+    private matchRepo: MatchRepository,
   ) {}
 
   async listMyGroups(userId: string) {
@@ -179,6 +184,9 @@ export class GroupService {
       throw new Error("Cannot remove the owner; transfer ownership first");
     }
     await this.memberRepo.remove(groupId, userId);
+    // Drop any per-match organizer assignments so the stale pointer can't
+    // re-grant management rights if the user later rejoins the group.
+    await this.matchRepo.clearOrganizerForUser(groupId, userId);
   }
 
   /**
@@ -192,6 +200,7 @@ export class GroupService {
       throw new Error("Owner cannot leave; transfer ownership first");
     }
     await this.memberRepo.remove(groupId, userId);
+    await this.matchRepo.clearOrganizerForUser(groupId, userId);
   }
 
   /**

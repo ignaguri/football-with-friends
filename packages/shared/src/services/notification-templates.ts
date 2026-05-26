@@ -32,6 +32,18 @@ export const NotificationTemplates = {
     };
   },
 
+  matchOrganizerUnassigned(match: NotificationMatchInfo): NotificationPayload {
+    return {
+      title: "No longer organizing a match",
+      body: `You're no longer the organizer for the match on ${match.date}.`,
+      data: {
+        type: NOTIFICATION_TYPES.MATCH_ORGANIZER_UNASSIGNED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
+    };
+  },
+
   matchUpdated(match: NotificationMatchInfo, changes: string): NotificationPayload {
     return {
       title: "Match Updated",

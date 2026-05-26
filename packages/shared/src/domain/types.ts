@@ -584,6 +584,7 @@ export const NOTIFICATION_TYPES = {
   JOIN_REQUEST_SUBMITTED: "join_request_submitted",
   JOIN_REQUEST_DECISION: "join_request_decision",
   MATCH_ORGANIZER_ASSIGNED: "match_organizer_assigned",
+  MATCH_ORGANIZER_UNASSIGNED: "match_organizer_unassigned",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];

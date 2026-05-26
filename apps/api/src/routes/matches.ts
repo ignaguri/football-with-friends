@@ -22,6 +22,7 @@ import {
   notifyPlayerCancelled,
   notifyRemovedFromMatch,
   notifyMatchOrganizerAssigned,
+  notifyMatchOrganizerUnassigned,
 } from "../lib/notify";
 import { fireAndForget } from "../lib/execution";
 
@@ -276,9 +277,22 @@ app.post(
     const current = requireCurrentGroup(c);
     const matchId = c.req.param("id");
     const { userId } = c.req.valid("json");
+
+    const existing = await getRepositoryFactory().matches.findById(matchId);
+    const notFound = assertInCurrentGroup(c, existing, "Match not found");
+    if (notFound) return notFound;
+    const previousOrganizerId = existing!.organizerUserId;
+
     try {
       const match = await getMatchService().assignOrganizer(current.id, matchId, userId);
-      fireAndForget(c, notifyMatchOrganizerAssigned(match, userId));
+      // Only notify on a real change: skip the no-op re-assign so we don't spam
+      // duplicate pushes, and tell the previous organizer they were replaced.
+      if (previousOrganizerId !== userId) {
+        fireAndForget(c, notifyMatchOrganizerAssigned(match, userId));
+        if (previousOrganizerId) {
+          fireAndForget(c, notifyMatchOrganizerUnassigned(match, previousOrganizerId));
+        }
+      }
       return c.json({ match });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to assign organizer";
@@ -293,8 +307,17 @@ app.delete("/:id/organizer", async (c) => {
   if (denied) return denied;
   const current = requireCurrentGroup(c);
   const matchId = c.req.param("id");
+
+  const existing = await getRepositoryFactory().matches.findById(matchId);
+  const notFound = assertInCurrentGroup(c, existing, "Match not found");
+  if (notFound) return notFound;
+  const previousOrganizerId = existing!.organizerUserId;
+
   try {
     const match = await getMatchService().clearOrganizer(current.id, matchId);
+    if (previousOrganizerId) {
+      fireAndForget(c, notifyMatchOrganizerUnassigned(match, previousOrganizerId));
+    }
     return c.json({ match });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to clear organizer";

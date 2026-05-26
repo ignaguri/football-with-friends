@@ -48,6 +48,7 @@ export class ServiceFactory {
       repos.groupRoster,
       repos.locations,
       repos.courts,
+      repos.matches,
     );
     this.groupRequestService = new GroupCreationRequestService(
       repos.groupCreationRequests,

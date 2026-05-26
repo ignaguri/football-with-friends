@@ -625,15 +625,19 @@ export class TursoMatchRepository implements MatchRepository {
     const userSignup = userId ? signups.find((s) => s.userId === userId) : undefined;
 
     // Resolve the per-match organizer's display name for the "Organized by X"
-    // line. Null when unassigned.
+    // line. Null when unassigned. Falls back to username when name is unset
+    // (e.g. phone-auth users) so the label never renders a dangling empty name.
     let organizer: { id: string; name: string } | null = null;
     if (match.organizerUserId) {
       const organizerRow = await this.db
         .selectFrom("user")
-        .select(["id", "name"])
+        .select(["id", "name", "username"])
         .where("id", "=", match.organizerUserId)
         .executeTakeFirst();
-      if (organizerRow) organizer = { id: organizerRow.id, name: organizerRow.name ?? "" };
+      if (organizerRow) {
+        const displayName = organizerRow.name?.trim() || organizerRow.username?.trim() || "";
+        organizer = { id: organizerRow.id, name: displayName };
+      }
     }
 
     return {
@@ -727,6 +731,15 @@ export class TursoMatchRepository implements MatchRepository {
     const updated = await this.findById(id);
     if (!updated) throw new Error("Match not found after setOrganizer");
     return updated;
+  }
+
+  async clearOrganizerForUser(groupId: string, userId: string): Promise<void> {
+    await this.db
+      .updateTable("matches")
+      .set({ organizer_user_id: null, updated_at: new Date().toISOString() })
+      .where("group_id", "=", groupId)
+      .where("organizer_user_id", "=", userId)
+      .execute();
   }
 
   async delete(id: string): Promise<void> {

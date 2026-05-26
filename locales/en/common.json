@@ -538,6 +538,8 @@
         "removed_from_match": "Removed from match",
         "match_reminder": "Match reminder",
         "voting_open": "Vote on the match",
+        "match_organizer_assigned": "You're organizing",
+        "match_organizer_unassigned": "No longer organizing",
         "engagement_reminder": "Come back!",
         "payment_reminder": "Payment reminder"
       }

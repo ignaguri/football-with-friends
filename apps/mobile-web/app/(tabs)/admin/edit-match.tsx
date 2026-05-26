@@ -87,7 +87,12 @@ export default function EditMatchScreen() {
   // per-match organizer too (see `canManage`, derived after the match loads).
   const isGroupOrganizer = myRole === "organizer" || amIOwner === true;
 
-  const { data: members } = useGroupMembers(groupId);
+  // Only organizers/owners see (and can use) the assign picker, and the members
+  // endpoint is organizer-only — so don't fetch members for a per-match
+  // organizer (a plain member), which would just 403.
+  const { data: members } = useGroupMembers(
+    isGroupOrganizer || isPlatformAdmin ? groupId : null,
+  );
   const assignOrganizer = useAssignMatchOrganizer();
   const clearOrganizer = useClearMatchOrganizer();
 

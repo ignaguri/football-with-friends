@@ -14,13 +14,16 @@ import { ServiceFactory, resetServiceFactory } from "@repo/shared/services";
 let db: Kysely<any>;
 let cleanup: () => Promise<void>;
 let service: ServiceFactory["matchService"];
+let groupService: ServiceFactory["groupService"];
 
 beforeAll(async () => {
   const harness = await makeTestDb();
   db = harness.db;
   cleanup = harness.cleanup;
   resetServiceFactory();
-  service = new ServiceFactory().matchService;
+  const factory = new ServiceFactory();
+  service = factory.matchService;
+  groupService = factory.groupService;
 });
 
 afterAll(async () => {
@@ -74,5 +77,21 @@ describe("MatchService.clearOrganizer", () => {
     await service.assignOrganizer(group.id, match.id, member.id);
     const cleared = await service.clearOrganizer(group.id, match.id);
     expect(cleared.organizerUserId).toBeUndefined();
+  });
+});
+
+describe("organizer cleanup on member removal", () => {
+  test("removing a member clears their per-match organizer assignment", async () => {
+    const { group, match } = await setupMatch();
+    const member = await seedUser(db);
+    await seedMembership(db, { groupId: group.id, userId: member.id, role: "member" });
+    await service.assignOrganizer(group.id, match.id, member.id);
+
+    // Member leaves the group -> the stale organizer pointer must be dropped so
+    // it can't silently re-grant management rights if they rejoin.
+    await groupService.removeMember(group.id, member.id);
+
+    const after = await service.getMatchDetails(match.id);
+    expect(after?.organizerUserId).toBeUndefined();
   });
 });

@@ -681,7 +681,7 @@ export default function MatchDetailScreen() {
                   <Text fontSize="$7" fontWeight="bold">
                     {formatFullDate(match.date)}
                   </Text>
-                  {match?.organizer ? (
+                  {match?.organizer?.name ? (
                     <Text fontSize="$2" color="$gray11" testID="match-organized-by">
                       {t("matches.organizer.organizedBy", { name: match.organizer.name })}
                     </Text>
