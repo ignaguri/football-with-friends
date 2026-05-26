@@ -142,6 +142,11 @@ export interface MatchRepository {
   update(id: string, updates: UpdateMatchData): Promise<Match>;
 
   /**
+   * Set or clear the per-match organizer (delegation). Pass null to clear.
+   */
+  setOrganizer(id: string, organizerUserId: string | null): Promise<Match>;
+
+  /**
    * Delete a match
    */
   delete(id: string): Promise<void>;

@@ -624,6 +624,18 @@ export class TursoMatchRepository implements MatchRepository {
     const isUserSignedUp = userId ? signups.some((s) => s.userId === userId) : undefined;
     const userSignup = userId ? signups.find((s) => s.userId === userId) : undefined;
 
+    // Resolve the per-match organizer's display name for the "Organized by X"
+    // line. Null when unassigned.
+    let organizer: { id: string; name: string } | null = null;
+    if (match.organizerUserId) {
+      const organizerRow = await this.db
+        .selectFrom("user")
+        .select(["id", "name"])
+        .where("id", "=", match.organizerUserId)
+        .executeTakeFirst();
+      if (organizerRow) organizer = { id: organizerRow.id, name: organizerRow.name ?? "" };
+    }
+
     return {
       ...match,
       location: dbLocationToLocation(location),
@@ -637,6 +649,7 @@ export class TursoMatchRepository implements MatchRepository {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      organizer,
       availableSpots,
       isUserSignedUp,
       userSignup,
@@ -702,6 +715,17 @@ export class TursoMatchRepository implements MatchRepository {
       throw new Error("Match not found after update");
     }
 
+    return updated;
+  }
+
+  async setOrganizer(id: string, organizerUserId: string | null): Promise<Match> {
+    await this.db
+      .updateTable("matches")
+      .set({ organizer_user_id: organizerUserId, updated_at: new Date().toISOString() })
+      .where("id", "=", id)
+      .execute();
+    const updated = await this.findById(id);
+    if (!updated) throw new Error("Match not found after setOrganizer");
     return updated;
   }
 
