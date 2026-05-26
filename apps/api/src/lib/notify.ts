@@ -325,3 +325,19 @@ export async function notifyJoinRejected(
     await getNotificationService().sendToUser(userId, payload);
   });
 }
+
+// Per-match organizer assignment. The match has a group, so this records a
+// group-scoped inbox row + sends push (transactional; no opt-in category).
+export async function notifyMatchOrganizerAssigned(match: Match, userId: string): Promise<void> {
+  await safeNotify("match organizer assigned", async () => {
+    const info = await toMatchInfo(match);
+    const payload = NotificationTemplates.matchOrganizerAssigned(info);
+    await recordForRecipients({
+      userIds: [userId],
+      groupId: match.groupId,
+      type: NOTIFICATION_TYPES.MATCH_ORGANIZER_ASSIGNED,
+      payload,
+    });
+    await getNotificationService().sendToUser(userId, payload);
+  });
+}

@@ -19,6 +19,19 @@ export const NotificationTemplates = {
     };
   },
 
+  matchOrganizerAssigned(match: NotificationMatchInfo): NotificationPayload {
+    const location = match.locationName ? ` at ${match.locationName}` : "";
+    return {
+      title: "You're organizing a match",
+      body: `You're now the organizer for the match on ${match.date} at ${match.time}${location}.`,
+      data: {
+        type: NOTIFICATION_TYPES.MATCH_ORGANIZER_ASSIGNED,
+        matchId: match.id,
+        screen: matchScreen(match.id),
+      },
+    };
+  },
+
   matchUpdated(match: NotificationMatchInfo, changes: string): NotificationPayload {
     return {
       title: "Match Updated",
