@@ -71,6 +71,7 @@ export interface Match {
   costPerPlayer?: string;
   sameDayCost?: string;
   createdByUserId: string;
+  organizerUserId?: string;
   votingClosedAt: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -456,6 +457,7 @@ export interface MatchDetails extends Match {
   court?: Court;
   signups: Signup[];
   createdByUser: User;
+  organizer?: { id: string; name: string } | null;
   availableSpots: number;
   isUserSignedUp?: boolean;
   userSignup?: Signup;
@@ -581,6 +583,7 @@ export const NOTIFICATION_TYPES = {
   GROUP_REQUEST_DECISION: "group_request_decision",
   JOIN_REQUEST_SUBMITTED: "join_request_submitted",
   JOIN_REQUEST_DECISION: "join_request_decision",
+  MATCH_ORGANIZER_ASSIGNED: "match_organizer_assigned",
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];

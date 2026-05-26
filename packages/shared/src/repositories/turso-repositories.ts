@@ -103,6 +103,7 @@ function dbMatchToMatch(row: any): Match {
     costPerPlayer: row.cost_per_player,
     sameDayCost: row.same_day_cost,
     createdByUserId: row.created_by_user_id,
+    organizerUserId: row.organizer_user_id ?? undefined,
     votingClosedAt: row.voting_closed_at ?? null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
