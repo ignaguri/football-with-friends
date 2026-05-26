@@ -7,7 +7,11 @@ import { z } from "zod";
 import type { Match } from "@repo/shared/domain";
 import type { Context } from "hono";
 
-import { assertInCurrentGroup, requireOrganizer, requirePlatformAdmin } from "../middleware/authz";
+import {
+  assertInCurrentGroup,
+  requireMatchManager,
+  requirePlatformAdmin,
+} from "../middleware/authz";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
 import { type AppVariables, requireUser } from "../middleware/security";
 
@@ -248,9 +252,9 @@ app.post("/matches/:matchId/close-voting", async (c) => {
   try {
     requireUser(c);
     const matchId = c.req.param("matchId");
-    const notFound = await assertMatchInCurrentGroup(c, matchId);
-    if (notFound) return notFound;
-    const denied = requireOrganizer(c);
+    const loaded = await loadMatchInCurrentGroup(c, matchId);
+    if ("response" in loaded) return loaded.response;
+    const denied = requireMatchManager(c, loaded.match);
     if (denied) return denied;
     await votingService.setMatchVotingState(matchId, true);
     return c.json({ success: true });
@@ -267,9 +271,9 @@ app.post("/matches/:matchId/reopen-voting", async (c) => {
   try {
     requireUser(c);
     const matchId = c.req.param("matchId");
-    const notFound = await assertMatchInCurrentGroup(c, matchId);
-    if (notFound) return notFound;
-    const denied = requireOrganizer(c);
+    const loaded = await loadMatchInCurrentGroup(c, matchId);
+    if ("response" in loaded) return loaded.response;
+    const denied = requireMatchManager(c, loaded.match);
     if (denied) return denied;
     await votingService.setMatchVotingState(matchId, false);
     return c.json({ success: true });

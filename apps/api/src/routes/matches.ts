@@ -6,7 +6,13 @@ import { getRepositoryFactory } from "@repo/shared/repositories";
 import { type AppVariables, sessionUserToUser, requireUser } from "../middleware/security";
 import { INVITE_TARGET_PHONE_REGEX } from "./groups";
 import { groupContextMiddleware, requireCurrentGroup } from "../middleware/group-context";
-import { isCurrentOrganizer, requireOrganizer } from "../middleware/authz";
+import {
+  assertInCurrentGroup,
+  isCurrentOrganizer,
+  isMatchManager,
+  requireMatchManager,
+  requireOrganizer,
+} from "../middleware/authz";
 import {
   notifyMatchCreated,
   notifyMatchUpdated,
@@ -15,6 +21,7 @@ import {
   notifySubstitutePromoted,
   notifyPlayerCancelled,
   notifyRemovedFromMatch,
+  notifyMatchOrganizerAssigned,
 } from "../lib/notify";
 import { fireAndForget } from "../lib/execution";
 
@@ -205,11 +212,14 @@ app.patch(
     }),
   ),
   async (c) => {
-    const denied = requireOrganizer(c);
-    if (denied) return denied;
-
     const current = requireCurrentGroup(c);
     const matchId = c.req.param("id");
+    const existing = await getRepositoryFactory().matches.findById(matchId);
+    const notFound = assertInCurrentGroup(c, existing, "Match not found");
+    if (notFound) return notFound;
+    const denied = requireMatchManager(c, existing!);
+    if (denied) return denied;
+
     const updates = c.req.valid("json");
 
     try {
@@ -237,19 +247,57 @@ app.patch(
   },
 );
 
-// Delete a match (organizer only)
+// Delete a match (match manager: group organizer / platform admin / assigned organizer)
 app.delete("/:id", async (c) => {
-  const denied = requireOrganizer(c);
-  if (denied) return denied;
-
   const current = requireCurrentGroup(c);
   const matchId = c.req.param("id");
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  const notFound = assertInCurrentGroup(c, match, "Match not found");
+  if (notFound) return notFound;
+  const denied = requireMatchManager(c, match!);
+  if (denied) return denied;
 
   try {
     await getMatchService().deleteMatch(current.id, matchId);
     return c.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to delete match";
+    return c.json({ error: message }, 400);
+  }
+});
+
+// Assign a per-match organizer (group organizer / platform admin only).
+app.post(
+  "/:id/organizer",
+  zValidator("json", z.object({ userId: z.string().min(1) })),
+  async (c) => {
+    const denied = requireOrganizer(c);
+    if (denied) return denied;
+    const current = requireCurrentGroup(c);
+    const matchId = c.req.param("id");
+    const { userId } = c.req.valid("json");
+    try {
+      const match = await getMatchService().assignOrganizer(current.id, matchId, userId);
+      fireAndForget(c, notifyMatchOrganizerAssigned(match, userId));
+      return c.json({ match });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to assign organizer";
+      return c.json({ error: message }, 400);
+    }
+  },
+);
+
+// Clear a per-match organizer (group organizer / platform admin only).
+app.delete("/:id/organizer", async (c) => {
+  const denied = requireOrganizer(c);
+  if (denied) return denied;
+  const current = requireCurrentGroup(c);
+  const matchId = c.req.param("id");
+  try {
+    const match = await getMatchService().clearOrganizer(current.id, matchId);
+    return c.json({ match });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to clear organizer";
     return c.json({ error: message }, 400);
   }
 });
@@ -337,14 +385,17 @@ app.post(
     }),
   ),
   async (c) => {
-    const denied = requireOrganizer(c);
+    const current = requireCurrentGroup(c);
+    const matchId = c.req.param("id");
+    const match = await getRepositoryFactory().matches.findById(matchId);
+    const notFound = assertInCurrentGroup(c, match, "Match not found");
+    if (notFound) return notFound;
+    const denied = requireMatchManager(c, match!);
     if (denied) return denied;
 
-    const matchId = c.req.param("id");
     const playerData = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
-    const current = requireCurrentGroup(c);
 
     try {
       const signup = await getMatchService().addPlayerAsOrganizer(
@@ -373,14 +424,15 @@ app.patch(
   ),
   async (c) => {
     const signupId = c.req.param("signupId");
+    const matchId = c.req.param("id");
     const updates = c.req.valid("json");
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
-    const isOrganizer = isCurrentOrganizer(c);
+    const match = await getRepositoryFactory().matches.findById(matchId);
+    const isOrganizer = isMatchManager(c, match ?? { organizerUserId: null });
 
     try {
-      const matchId = c.req.param("id");
       const result = await getMatchService().updateSignup(
         current.id,
         signupId,
@@ -389,7 +441,6 @@ app.patch(
         isOrganizer,
       );
 
-      const match = await getRepositoryFactory().matches.findById(matchId);
       if (match && match.groupId === current.id) {
         if (updates.status === "PAID" && result.oldStatus !== "PAID" && result.signup.userId) {
           fireAndForget(c, notifyPlayerConfirmed(match, result.signup.userId));
@@ -409,22 +460,22 @@ app.patch(
   },
 );
 
-// Organizer: Remove a player from a match (hard delete)
+// Match manager: Remove a player from a match (hard delete)
 app.delete("/:id/signup/:signupId", async (c) => {
-  const denied = requireOrganizer(c);
-  if (denied) return denied;
-
+  const current = requireCurrentGroup(c);
   const matchId = c.req.param("id");
   const signupId = c.req.param("signupId");
+  const match = await getRepositoryFactory().matches.findById(matchId);
+  const notFound = assertInCurrentGroup(c, match, "Match not found");
+  if (notFound) return notFound;
+  const denied = requireMatchManager(c, match!);
+  if (denied) return denied;
+
   const sessionUser = requireUser(c);
   const user = sessionUserToUser(sessionUser);
-  const current = requireCurrentGroup(c);
 
   try {
-    const [signup, match] = await Promise.all([
-      getRepositoryFactory().signups.findById(signupId),
-      getRepositoryFactory().matches.findById(matchId),
-    ]);
+    const signup = await getRepositoryFactory().signups.findById(signupId);
 
     await getMatchService().removePlayerAsOrganizer(current.id, signupId, user);
 
@@ -474,7 +525,8 @@ app.post(
     const sessionUser = requireUser(c);
     const user = sessionUserToUser(sessionUser);
     const current = requireCurrentGroup(c);
-    const isOrganizer = isCurrentOrganizer(c);
+    const match = await getRepositoryFactory().matches.findById(matchId);
+    const isOrganizer = isMatchManager(c, match ?? { organizerUserId: null });
 
     try {
       const stats = await getPlayerStatsService().recordStats(
