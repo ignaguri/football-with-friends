@@ -7,6 +7,7 @@ import {
   useSession,
   useCurrentGroup,
   useGroupRoster,
+  canManageMatch,
   type GroupRosterEntry,
 } from "@repo/api-client";
 import type { MatchStats } from "@repo/shared/domain";
@@ -126,7 +127,7 @@ export default function MatchDetailScreen() {
   const [guestPhone, setGuestPhone] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestSearch, setGuestSearch] = useState("");
-  const { groupId: currentGroupId, myRole } = useCurrentGroup();
+  const { groupId: currentGroupId, myRole, amIOwner } = useCurrentGroup();
   const isOrganizer = myRole === "organizer" || session?.user?.role === "admin";
   // Roster list is organizer-only; don't trigger a 403 for regular members.
   const rosterForGuest = useGroupRoster(showGuestDialog && isOrganizer ? currentGroupId : null);
@@ -153,11 +154,6 @@ export default function MatchDetailScreen() {
   const [signupToRemove, setSignupToRemove] = useState<string | null>(null);
 
   const userId = session?.user?.id;
-  // Historically `isAdmin` gated organizer actions (edit name, remove player,
-  // guest quick-add). Keep the name but widen it to the group-relative role
-  // so organizers of the active group get the same affordances as the
-  // platform admin.
-  const isAdmin = isOrganizer;
 
   const {
     data: match,
@@ -175,6 +171,17 @@ export default function MatchDetailScreen() {
       return res.json() as Promise<MatchDetails>;
     },
     enabled: !!matchId,
+  });
+
+  // Management gate. Historically named `isAdmin`; keep the name so downstream
+  // usages (edit, guest add, edit name, mark paid, remove player) are unchanged.
+  // Now derived from canManageMatch so the assigned per-match organizer also
+  // gets these affordances, alongside group organizers and platform admins.
+  const isAdmin = canManageMatch({
+    match: match ?? { organizerUserId: null },
+    currentUserId: session?.user?.id,
+    isGroupOrganizer: myRole === "organizer" || amIOwner === true,
+    isPlatformAdmin: session?.user?.role === "admin",
   });
 
   const { data: settings } = useQuery({
@@ -674,6 +681,11 @@ export default function MatchDetailScreen() {
                   <Text fontSize="$7" fontWeight="bold">
                     {formatFullDate(match.date)}
                   </Text>
+                  {match?.organizer?.name ? (
+                    <Text fontSize="$2" color="$gray11" testID="match-organized-by">
+                      {t("matches.organizer.organizedBy", { name: match.organizer.name })}
+                    </Text>
+                  ) : null}
                 </YStack>
 
                 {/* Action buttons */}

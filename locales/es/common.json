@@ -36,7 +36,16 @@
     "none": "No se encontraron partidos.",
     "error": "No se pudieron cargar los partidos.",
     "youJoined": "Anotado",
-    "youPlayed": "Jugaste"
+    "youPlayed": "Jugaste",
+    "organizer": {
+      "organizedBy": "Organizado por {{name}}",
+      "assignLabel": "Organizador del partido",
+      "assignCta": "Asignar organizador",
+      "clear": "Quitar organizador",
+      "pickMember": "Elegí un miembro",
+      "assigned": "Organizador asignado",
+      "error": "No se pudo actualizar el organizador. Intentá de nuevo."
+    }
   },
   "matchDetail": {
     "pay": "Pagar",
@@ -532,6 +541,8 @@
         "removed_from_match": "Te sacaron del partido",
         "match_reminder": "Recordatorio de partido",
         "voting_open": "Votá el partido",
+        "match_organizer_assigned": "Estás organizando",
+        "match_organizer_unassigned": "Ya no organizás",
         "engagement_reminder": "Volvé a la cancha",
         "payment_reminder": "Recordatorio de pago"
       }

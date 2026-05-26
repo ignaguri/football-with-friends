@@ -119,5 +119,13 @@ export {
 } from "./notifications-inbox";
 export type { InboxNotification, InboxPage } from "./notifications-inbox";
 
+// Match organizer hooks + canManageMatch helper.
+export {
+  matchQueryKeys,
+  useAssignMatchOrganizer,
+  useClearMatchOrganizer,
+  canManageMatch,
+} from "./matches";
+
 // Re-export the API routes type for convenience
 export type { ApiRoutes } from "../../../apps/api/src/index";

@@ -516,6 +516,32 @@ export class MatchService {
   }
 
   /**
+   * Delegate a match to a group member. Validates the match belongs to the
+   * group and the target is a current member (ghosts have no user id and are
+   * excluded). Returns the updated match. Authorization (group organizer /
+   * admin) is enforced at the route boundary.
+   */
+  async assignOrganizer(groupId: string, matchId: string, userId: string): Promise<Match> {
+    const match = await this.matchRepository.findById(matchId);
+    if (!match || match.groupId !== groupId) {
+      throw new Error("Match not found");
+    }
+    const membership = await this.memberRepository.find(groupId, userId);
+    if (!membership) {
+      throw new Error("User is not a member of this group");
+    }
+    return this.matchRepository.setOrganizer(matchId, userId);
+  }
+
+  async clearOrganizer(groupId: string, matchId: string): Promise<Match> {
+    const match = await this.matchRepository.findById(matchId);
+    if (!match || match.groupId !== groupId) {
+      throw new Error("Match not found");
+    }
+    return this.matchRepository.setOrganizer(matchId, null);
+  }
+
+  /**
    * Validate match data
    */
   private validateMatchData(matchData: Omit<CreateMatchData, "groupId" | "createdByUserId">): void {

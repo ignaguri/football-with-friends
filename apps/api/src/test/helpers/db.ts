@@ -27,6 +27,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || "test";
 import { closeDatabase, getDatabase, resetDatabase } from "@repo/shared/database";
 import { resetEnvCache } from "@repo/shared/env";
 import { resetRepositoryFactory } from "@repo/shared/repositories";
+import { resetServiceFactory } from "@repo/shared/services";
 
 // Resolve absolute path to the repository-root /migrations directory. apps/api
 // sits two levels below the repo root.
@@ -63,6 +64,7 @@ export async function makeTestDb(): Promise<{
   resetEnvCache();
   resetDatabase();
   resetRepositoryFactory();
+  resetServiceFactory();
 
   const db = getDatabase() as unknown as Kysely<any>;
 
@@ -129,6 +131,7 @@ export async function makeTestDb(): Promise<{
     await closeDatabase();
     resetDatabase();
     resetRepositoryFactory();
+    resetServiceFactory();
   };
 
   return { db, cleanup };

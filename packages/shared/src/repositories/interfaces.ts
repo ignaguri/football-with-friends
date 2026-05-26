@@ -142,6 +142,18 @@ export interface MatchRepository {
   update(id: string, updates: UpdateMatchData): Promise<Match>;
 
   /**
+   * Set or clear the per-match organizer (delegation). Pass null to clear.
+   */
+  setOrganizer(id: string, organizerUserId: string | null): Promise<Match>;
+
+  /**
+   * Clear the per-match organizer on every match in a group that is assigned to
+   * a given user. Used when a member leaves/is removed so a stale assignment
+   * can't silently re-grant management rights if they later rejoin.
+   */
+  clearOrganizerForUser(groupId: string, userId: string): Promise<void>;
+
+  /**
    * Delete a match
    */
   delete(id: string): Promise<void>;

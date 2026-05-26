@@ -5,6 +5,10 @@ import {
   useQueryClient,
   client,
   useCurrentGroup,
+  useGroupMembers,
+  useAssignMatchOrganizer,
+  useClearMatchOrganizer,
+  canManageMatch,
 } from "@repo/api-client";
 import { MATCH_STATUSES, type MatchStatus } from "@repo/shared/domain";
 import {
@@ -46,6 +50,7 @@ interface MatchDetails {
   sameDayCost?: string;
   location?: { id: string; name: string; address?: string };
   court?: { id: string; name: string };
+  organizerUserId?: string | null;
 }
 
 // Extract the actual error message from API errors.
@@ -75,8 +80,21 @@ export default function EditMatchScreen() {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
-  const { myRole } = useCurrentGroup();
-  const canManage = session?.user?.role === "admin" || myRole === "organizer";
+  const { myRole, groupId, amIOwner } = useCurrentGroup();
+  const isPlatformAdmin = session?.user?.role === "admin";
+  // Group organizers / owners delegate matches; the assign-organizer picker
+  // below is gated on this. Editing the match itself is allowed for the
+  // per-match organizer too (see `canManage`, derived after the match loads).
+  const isGroupOrganizer = myRole === "organizer" || amIOwner === true;
+
+  // Only organizers/owners see (and can use) the assign picker, and the members
+  // endpoint is organizer-only — so don't fetch members for a per-match
+  // organizer (a plain member), which would just 403.
+  const { data: members } = useGroupMembers(
+    isGroupOrganizer || isPlatformAdmin ? groupId : null,
+  );
+  const assignOrganizer = useAssignMatchOrganizer();
+  const clearOrganizer = useClearMatchOrganizer();
 
   // Fetch existing match data
   const { data: match, isLoading: isLoadingMatch } = useQuery({
@@ -89,6 +107,16 @@ export default function EditMatchScreen() {
       return res.json() as Promise<MatchDetails>;
     },
     enabled: !!matchId && !!session?.user,
+  });
+
+  // Editing the match (including via the per-match organizer) gates on the same
+  // rule the server enforces for PATCH /matches/:id. Resolves false while the
+  // match is loading; the loading spinner below guards that window.
+  const canManage = canManageMatch({
+    match: match ?? { organizerUserId: null },
+    currentUserId: session?.user?.id,
+    isGroupOrganizer,
+    isPlatformAdmin,
   });
 
   // Fetch locations
@@ -344,6 +372,37 @@ export default function EditMatchScreen() {
             options={statusOptions}
             disabled={updateMutation.isPending}
           />
+
+          {/* Match Organizer — delegation stays with group organizers/owners,
+              so a per-match organizer editing here doesn't see this picker. */}
+          {isGroupOrganizer || isPlatformAdmin ? (
+          <YStack gap="$2">
+            <Text fontSize="$4">{t("matches.organizer.assignLabel")}</Text>
+            {members?.map((m) => (
+              <Button
+                key={m.userId}
+                theme={match?.organizerUserId === m.userId ? "green" : undefined}
+                onPress={() => assignOrganizer.mutate({ matchId, userId: m.userId })}
+                disabled={assignOrganizer.isPending}
+                accessibilityRole="button"
+                testID={`match-assign-organizer-${m.userId}`}
+              >
+                {m.name ?? m.userId}
+              </Button>
+            ))}
+            {match?.organizerUserId ? (
+              <Button
+                theme="red"
+                onPress={() => clearOrganizer.mutate(matchId)}
+                disabled={clearOrganizer.isPending}
+                accessibilityRole="button"
+                testID="match-clear-organizer"
+              >
+                {t("matches.organizer.clear")}
+              </Button>
+            ) : null}
+          </YStack>
+          ) : null}
 
           {/* Error Message */}
           {error && (

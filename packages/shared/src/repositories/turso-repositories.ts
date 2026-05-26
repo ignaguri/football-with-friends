@@ -103,6 +103,7 @@ function dbMatchToMatch(row: any): Match {
     costPerPlayer: row.cost_per_player,
     sameDayCost: row.same_day_cost,
     createdByUserId: row.created_by_user_id,
+    organizerUserId: row.organizer_user_id ?? undefined,
     votingClosedAt: row.voting_closed_at ?? null,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -623,6 +624,22 @@ export class TursoMatchRepository implements MatchRepository {
     const isUserSignedUp = userId ? signups.some((s) => s.userId === userId) : undefined;
     const userSignup = userId ? signups.find((s) => s.userId === userId) : undefined;
 
+    // Resolve the per-match organizer's display name for the "Organized by X"
+    // line. Null when unassigned. Falls back to username when name is unset
+    // (e.g. phone-auth users) so the label never renders a dangling empty name.
+    let organizer: { id: string; name: string } | null = null;
+    if (match.organizerUserId) {
+      const organizerRow = await this.db
+        .selectFrom("user")
+        .select(["id", "name", "username"])
+        .where("id", "=", match.organizerUserId)
+        .executeTakeFirst();
+      if (organizerRow) {
+        const displayName = organizerRow.name?.trim() || organizerRow.username?.trim() || "";
+        organizer = { id: organizerRow.id, name: displayName };
+      }
+    }
+
     return {
       ...match,
       location: dbLocationToLocation(location),
@@ -636,6 +653,7 @@ export class TursoMatchRepository implements MatchRepository {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
+      organizer,
       availableSpots,
       isUserSignedUp,
       userSignup,
@@ -702,6 +720,26 @@ export class TursoMatchRepository implements MatchRepository {
     }
 
     return updated;
+  }
+
+  async setOrganizer(id: string, organizerUserId: string | null): Promise<Match> {
+    await this.db
+      .updateTable("matches")
+      .set({ organizer_user_id: organizerUserId, updated_at: new Date().toISOString() })
+      .where("id", "=", id)
+      .execute();
+    const updated = await this.findById(id);
+    if (!updated) throw new Error("Match not found after setOrganizer");
+    return updated;
+  }
+
+  async clearOrganizerForUser(groupId: string, userId: string): Promise<void> {
+    await this.db
+      .updateTable("matches")
+      .set({ organizer_user_id: null, updated_at: new Date().toISOString() })
+      .where("group_id", "=", groupId)
+      .where("organizer_user_id", "=", userId)
+      .execute();
   }
 
   async delete(id: string): Promise<void> {

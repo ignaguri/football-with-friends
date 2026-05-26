@@ -27,6 +27,7 @@ export interface MatchesTable {
   cost_per_player: string | null;
   same_day_cost: string | null;
   created_by_user_id: string;
+  organizer_user_id: string | null;
   reminder_sent: Generated<number>;
   // Group scoping — nullable through Phase 0, backfilled and tightened to NOT NULL in Phase 1.
   group_id: string | null;
