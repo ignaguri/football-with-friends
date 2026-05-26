@@ -49,6 +49,29 @@ export function requireMember(_c: Context): Response | null {
 }
 
 /**
+ * Per-match management gate. A match is manageable by a group organizer /
+ * platform admin (via isCurrentOrganizer) OR by the match's assigned
+ * organizer. The caller must already have confirmed the match is in the
+ * current group (assertInCurrentGroup) before relying on this.
+ */
+export function isMatchManager(
+  c: Context,
+  match: { organizerUserId?: string | null },
+): boolean {
+  if (isCurrentOrganizer(c)) return true;
+  return !!match.organizerUserId && match.organizerUserId === requireUser(c).id;
+}
+
+export function requireMatchManager(
+  c: Context,
+  match: { organizerUserId?: string | null },
+): Response | null {
+  return isMatchManager(c, match)
+    ? null
+    : forbidden(c, "Organizer role required for this action");
+}
+
+/**
  * Asserts that a group-scoped entity (or a bare group id) matches the
  * caller's current group. Returns a 404 `Response` on mismatch
  * (intentionally 404 not 403 to avoid id-existence leakage across groups).
