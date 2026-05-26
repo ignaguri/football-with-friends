@@ -11,10 +11,13 @@ const client = _client as any;
 // The fetch wrapper in `client.ts` already throws on non-OK responses, so
 // mutations here don't re-check `res.ok` — it'd be dead code.
 
-// Query-key namespace for matches.
+// Query-key namespace for matches. These MUST mirror the keys the mobile-web
+// screens actually use, or invalidation won't refresh them: the detail screen
+// (matches/[matchId]/index.tsx) reads ["match", id], and the lists screen reads
+// ["matches", activeTab] (invalidated by the ["matches"] prefix).
 export const matchQueryKeys = {
   all: ["matches"] as const,
-  detail: (id: string) => ["matches", "detail", id] as const,
+  detail: (id: string) => ["match", id] as const,
 };
 
 export function useAssignMatchOrganizer() {
