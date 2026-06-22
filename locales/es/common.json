@@ -316,6 +316,7 @@
     "signUpFailed": "Error al crear la cuenta",
     "googleSignInFailed": "Error al iniciar sesión con Google",
     "appleSignInFailed": "Error al iniciar sesión con Apple",
+    "appleSignInRetry": "No se pudo conectar con Apple. Por favor, inténtalo de nuevo.",
     "unexpectedError": "Ocurrió un error inesperado",
     "serviceUnavailable": "Servicio temporalmente no disponible. Por favor, inténtalo más tarde.",
     "phoneAlreadyRegistered": "Este número de teléfono ya está registrado.",

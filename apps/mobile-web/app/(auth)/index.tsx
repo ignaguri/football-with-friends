@@ -174,14 +174,28 @@ export default function AuthLandingScreen() {
       }
     } catch (err: any) {
       console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message);
-      if (err?.code !== "ERR_REQUEST_CANCELED") {
-        Sentry.captureException(err, {
-          tags: { source: "apple-sign-in" },
-          extra: { code: err?.code, message: err?.message },
-        });
-        const message = err?.message || t("auth.appleSignInFailed");
-        setServerError(message);
+      // ERR_REQUEST_CANCELED: user backed out of the sheet, nothing to do.
+      if (err?.code === "ERR_REQUEST_CANCELED") {
+        return;
       }
+      // ERR_REQUEST_UNKNOWN: Apple's catch-all for transient auth-service
+      // flakiness. It's recoverable on retry, so treat it as a soft failure:
+      // a breadcrumb instead of an exception, and a friendly retry message.
+      if (err?.code === "ERR_REQUEST_UNKNOWN") {
+        Sentry.addBreadcrumb({
+          category: "apple-auth",
+          message: "Apple sign-in failed with ERR_REQUEST_UNKNOWN (transient)",
+          level: "warning",
+        });
+        setServerError(t("auth.appleSignInRetry"));
+        return;
+      }
+      Sentry.captureException(err, {
+        tags: { source: "apple-sign-in" },
+        extra: { code: err?.code, message: err?.message },
+      });
+      const message = err?.message || t("auth.appleSignInFailed");
+      setServerError(message);
     }
   };
 
