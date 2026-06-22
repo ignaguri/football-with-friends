@@ -16,7 +16,7 @@
     "@repo/shared": "workspace:*",
     "@tamagui/lucide-icons-2": "2.0.0-rc.41",
     "@tamagui/toast": "2.0.0-rc.41",
-    "date-fns": "^4.1.0",
+    "date-fns": "^4.4.0",
     "expo-image": "~55.0.9",
     "expo-video": "^55.0.15",
     "react-dom": "19.2.5",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
-    "@types/react": "~19.2.14",
+    "@types/react": "~19.2.17",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {

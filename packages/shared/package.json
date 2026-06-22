@@ -18,14 +18,14 @@
   "dependencies": {
     "@libsql/client": "^0.17.3",
     "@libsql/kysely-libsql": "^0.4.1",
-    "date-fns": "^4.1.0",
+    "date-fns": "^4.4.0",
     "date-fns-tz": "^3.2.0",
     "kysely": "^0.28.16",
     "libsql": "^0.5.29",
-    "nanoid": "^5.1.11",
+    "nanoid": "^5.1.15",
     "react": "19.2.5",
     "react-dom": "19.2.5",
-    "zod": "^4.4.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
