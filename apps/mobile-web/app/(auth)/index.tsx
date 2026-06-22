@@ -173,7 +173,6 @@ export default function AuthLandingScreen() {
         router.replace("/(tabs)");
       }
     } catch (err: any) {
-      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message);
       // ERR_REQUEST_CANCELED: user backed out of the sheet, nothing to do.
       if (err?.code === "ERR_REQUEST_CANCELED") {
         return;
@@ -186,10 +185,12 @@ export default function AuthLandingScreen() {
           category: "apple-auth",
           message: "Apple sign-in failed with ERR_REQUEST_UNKNOWN (transient)",
           level: "warning",
+          data: { code: err?.code, message: err?.message },
         });
         setServerError(t("auth.appleSignInRetry"));
         return;
       }
+      console.error("[AUTH] Apple Sign-In error:", err?.code, err?.message);
       Sentry.captureException(err, {
         tags: { source: "apple-sign-in" },
         extra: { code: err?.code, message: err?.message },
