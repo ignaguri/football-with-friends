@@ -16,23 +16,23 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
-    "@better-auth/expo": "^1.6.9",
+    "@better-auth/expo": "^1.6.20",
     "@hono/zod-validator": "^0.7.6",
     "@repo/shared": "workspace:*",
-    "@sentry/cloudflare": "^10.51.0",
-    "@vercel/blob": "^2.3.3",
-    "better-auth": "^1.6.9",
-    "hono": "^4.12.16",
+    "@sentry/cloudflare": "^10.59.0",
+    "@vercel/blob": "^2.4.1",
+    "better-auth": "^1.6.20",
+    "hono": "^4.12.26",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "workers-og": "^0.0.27",
-    "zod": "^4.4.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260502.1",
+    "@cloudflare/workers-types": "^4.20260621.1",
     "@repo/typescript-config": "workspace:*",
-    "@types/bun": "^1.3.13",
+    "@types/bun": "^1.3.14",
     "typescript": "^5.9.3",
-    "wrangler": "^4.87.0"
+    "wrangler": "^4.103.0"
   }
 }
