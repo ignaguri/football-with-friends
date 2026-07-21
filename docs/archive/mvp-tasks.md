@@ -1,3 +1,6 @@
+> **⚠️ ARCHIVED / HISTORICAL — MVP checklist from the Google Sheets era.**
+> References a "match sheet" / "metadata sheet" that no longer exist (storage is Turso now). Most items shipped. Kept for context only.
+
 # MVP Tasks – Fútbol con los pibes
 
 A concise checklist of remaining MVP tasks. Check off each item as you complete it.

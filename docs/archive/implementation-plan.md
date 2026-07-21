@@ -1,3 +1,6 @@
+> **⚠️ ARCHIVED / HISTORICAL — does not reflect the current codebase.**
+> This is the original web-only implementation plan from the **Google Sheets** era. Google Sheets storage is gone (the app runs on Turso/LibSQL) and the app is now a universal Expo app with a Hono API. Kept for context only. For how things work today, see the root `CLAUDE.md` and the live docs in `docs/`.
+
 # Fútbol con los pibes – Implementation Plan
 
 ## 1. Project Overview

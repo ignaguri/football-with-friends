@@ -1,3 +1,6 @@
+> **⚠️ ARCHIVED / HISTORICAL — this migration is complete.**
+> The Next.js-web-only → universal Expo migration described here shipped. Note it prescribes **oRPC** as the API layer; that was never wired and has since been removed. The API uses **Hono RPC** (routes under `apps/api/src/routes/*`). Kept for context only. See the root `CLAUDE.md` for the current architecture.
+
 # Universal App Migration Plan
 
 **Goal**: Migrate "Fútbol con los pibes" from Next.js web-only to a universal Expo app (web + iOS + Android) with a standalone Hono API backend.

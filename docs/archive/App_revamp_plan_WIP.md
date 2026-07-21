@@ -1,3 +1,6 @@
+> **⚠️ ARCHIVED / HISTORICAL — old WIP scratch note.**
+> A rough revamp plan; several items already shipped (match-status cron, match pagination, substitutions). Not a reliable source of pending work. Kept for context only.
+
 ## App revamp plan
 
 ### Home page

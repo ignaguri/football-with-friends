@@ -1,17 +1,19 @@
 # @repo/api-client
 
-Type-safe API client for Football with Friends using oRPC and React Query.
+Type-safe API client for Football with Friends, built on the **Hono RPC client** (`hc`) and TanStack React Query.
+
+> **Note:** The API uses Hono RPC, not oRPC. Endpoints are plain Hono routes under `apps/api/src/routes/*`, registered in `apps/api/src/api-routes.ts`. The `ApiRoutes` type is re-exported from `apps/api/src/index.ts` and gives the client end-to-end type safety. There is no `orpc` export.
 
 ## Features
 
-- 🔒 **End-to-end type safety** - Full TypeScript support from API to client
-- ⚡ **React Query integration** - Automatic caching, refetching, and state management
-- 🎯 **oRPC procedures** - Type-safe RPC calls with automatic validation
-- 📱 **Universal** - Works on both web (Next.js) and mobile (Expo)
+- 🔒 **End-to-end type safety** - `ApiRoutes` flows from the Hono app into the client
+- ⚡ **React Query integration** - hooks re-exported from `@tanstack/react-query`
+- 🔑 **Auth built in** - BetterAuth client plus phone/password helpers and bearer-token storage
+- 📱 **Universal** - works on web and mobile (Expo); the API base URL resolves at request time
 
 ## Installation
 
-This package is part of the monorepo and is automatically available via workspace references.
+Part of the monorepo, available via workspace reference:
 
 ```json
 {
@@ -25,7 +27,7 @@ This package is part of the monorepo and is automatically available via workspac
 
 ### Setup Provider
 
-Wrap your app with the `APIProvider` to enable React Query:
+Wrap your app with `APIProvider` to enable React Query:
 
 ```tsx
 import { APIProvider } from "@repo/api-client";
@@ -39,134 +41,107 @@ function App() {
 }
 ```
 
-### Using Hooks
+### Configure the API URL and language
 
-#### Query Data
+Call these early in app init (e.g. `_layout.tsx`). Without a configured URL the client falls back to `http://localhost:3001`.
+
+```ts
+import { configureGeneralApiClient, configureLanguage } from "@repo/api-client";
+
+configureGeneralApiClient(process.env.EXPO_PUBLIC_API_URL);
+configureLanguage("es"); // sets the Accept-Language header on every request
+```
+
+### Calling endpoints
+
+`client` (also exported as `api`) is the Hono RPC client. Call a route method (`$get`, `$post`, `$delete`, …), then `.json()` the `Response`. Wrap it in React Query yourself. Query params are passed as strings under `query`.
 
 ```tsx
-import { orpc } from "@repo/api-client";
+import { client, useInfiniteQuery } from "@repo/api-client";
 
 function MatchList() {
-  const { data, isLoading, error } = orpc.matches.getAll.useQuery({
-    input: { type: "upcoming" },
+  const { data } = useInfiniteQuery({
+    queryKey: ["matches", "upcoming"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const res = await client.api.matches.$get({
+        query: { type: "upcoming", limit: "5", offset: String(pageParam) },
+      });
+      return res.json();
+    },
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? (lastPage.page + 1) * 5 : undefined),
+    initialPageParam: 0,
   });
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
-
-  return (
-    <ul>
-      {data.map((match) => (
-        <li key={match.id}>{match.location.name}</li>
-      ))}
-    </ul>
-  );
+  const matches = data?.pages.flatMap((page) => page.matches) ?? [];
+  return <>{/* … */}</>;
 }
 ```
 
-#### Mutations
+Mutations follow the same shape with `useMutation`:
 
 ```tsx
-import { orpc } from "@repo/api-client";
+import { client, useMutation, useQueryClient } from "@repo/api-client";
 
-function SignupButton({ matchId }: { matchId: string }) {
-  const mutation = orpc.matches.signup.create.useMutation();
-
-  const handleSignup = () => {
-    mutation.mutate({
-      input: {
-        matchId,
-        isGuest: false,
-      },
-    });
-  };
-
-  return (
-    <button onClick={handleSignup} disabled={mutation.isPending}>
-      {mutation.isPending ? "Signing up..." : "Sign Up"}
-    </button>
-  );
+function useSignup(matchId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await client.api.matches[":id"].signup.$post({
+        param: { id: matchId },
+      });
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["matches"] }),
+  });
 }
 ```
 
-### Direct API Calls
+The custom fetch throws on non-OK responses (so React Query treats them as errors), injects the bearer token and the active-group header (`X-Group-Id`), and sets `credentials`/`Accept-Language`. See `src/client.ts`.
 
-For non-React contexts, use the client directly:
+### Error handling
 
-```ts
-import { api } from "@repo/api-client";
-
-// Get matches
-const matches = await api.matches.getAll({ type: "upcoming" });
-
-// Create a match (admin only)
-const newMatch = await api.matches.create({
-  locationId: "loc_123",
-  date: "2025-01-20",
-  time: "19:00",
-  maxPlayers: 10,
-});
-```
-
-## Available Procedures
-
-### Matches
+Thrown errors carry the response details:
 
 ```ts
-orpc.matches.getAll.useQuery({ input: { type } })
-orpc.matches.getById.useQuery({ input: { id, userId? } })
-orpc.matches.create.useMutation()
-orpc.matches.update.useMutation()
-orpc.matches.delete.useMutation()
-
-// Signup operations
-orpc.matches.signup.create.useMutation()
-orpc.matches.signup.updateStatus.useMutation()
-orpc.matches.signup.remove.useMutation()
-orpc.matches.signup.addPlayer.useMutation()
+try {
+  const res = await client.api.matches.$get({ query: { type: "upcoming" } });
+  return res.json();
+} catch (err) {
+  const e = err as Error & { status: number; data: unknown };
+  console.error(e.status, e.data);
+}
 ```
 
-### Courts
+## Exports
 
-```ts
-orpc.courts.getAll.useQuery({ input: { locationId? } })
-orpc.courts.getById.useQuery({ input: { id } })
-orpc.courts.create.useMutation()
-orpc.courts.update.useMutation()
-orpc.courts.delete.useMutation()
-```
+Beyond the raw `client`/`api`, the package ships ready-made hooks so most feature code never touches `client` directly:
 
-### Locations
+- **React Query re-exports** - `useQuery`, `useMutation`, `useInfiniteQuery`, `useQueries`, `useSuspenseQuery`, `useSuspenseInfiniteQuery`, `useQueryClient`
+- **Provider** - `APIProvider`, `createQueryClient` (also at `@repo/api-client/provider`)
+- **Auth** - `authClient`, `useSession`, `signIn`/`signOut`/`signUp`, `signInWithPhone`/`signUpWithPhone`, `requestPasswordReset`, `resetPasswordWithCode`, `getAdminResetCodes`, bearer-token helpers, `deleteAccount`
+- **Active group** - `getActiveGroupId`, `setActiveGroupId`, `GROUP_HEADER`
+- **Groups** - `useMyGroups`, `useGroupDetail`, `useGroupMembers`, invite/roster/member-role hooks, group-creation-request hooks, and group-search/join-request hooks
+- **Notifications** - `useNotifications`, `useUnreadNotificationCount`, mark-read hooks, and notification-preference hooks
+- **Matches** - `useAssignMatchOrganizer`, `useClearMatchOrganizer`, `canManageMatch`
 
-```ts
-orpc.locations.getAll.useQuery();
-orpc.locations.getById.useQuery({ input: { id } });
-orpc.locations.create.useMutation();
-orpc.locations.update.useMutation();
-orpc.locations.delete.useMutation();
-```
+See `src/index.ts` for the full export list and accompanying types.
 
 ## Environment Variables
 
-The client automatically detects the API URL from:
+The API base URL resolves at request time from, in order:
 
-- `EXPO_PUBLIC_API_URL` (for Expo/React Native)
-- `NEXT_PUBLIC_API_URL` (for Next.js)
-- Falls back to `http://localhost:3001`
+1. The value passed to `configureGeneralApiClient(...)`
+2. `EXPO_PUBLIC_API_URL`
+3. Fallback: `http://localhost:3001`
 
-## Configuration
-
-### Custom Query Client
+## Custom Query Client
 
 ```tsx
-import { createQueryClient, QueryClientProvider } from "@repo/api-client";
+import { createQueryClient } from "@repo/api-client";
+import { QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = createQueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
+  defaultOptions: { queries: { staleTime: 5 * 60 * 1000 } },
 });
 
 function App() {
@@ -175,75 +150,5 @@ function App() {
       <YourApp />
     </QueryClientProvider>
   );
-}
-```
-
-### Custom Fetch Options
-
-The client automatically includes credentials and sets proper headers. To customize:
-
-```ts
-import { createORPCClient } from "@orpc/client";
-import type { AppRouter } from "@repo/api-client";
-
-const customClient = createORPCClient<AppRouter>({
-  baseURL: "https://your-api.com/rpc",
-  fetch: (input, init) => {
-    return fetch(input, {
-      ...init,
-      credentials: "include",
-      headers: {
-        ...init?.headers,
-        "X-Custom-Header": "value",
-      },
-    });
-  },
-});
-```
-
-## Type Safety
-
-All procedures are fully typed, including inputs and outputs:
-
-```tsx
-// TypeScript knows the exact shape of the input and response
-const { data } = orpc.matches.getAll.useQuery({
-  input: {
-    type: "upcoming", // ✅ Type-checked
-    // type: 'invalid' // ❌ TypeScript error
-  },
-});
-
-// data is typed as Match[]
-data.forEach((match) => {
-  console.log(match.location.name); // ✅ Fully typed
-});
-```
-
-## Error Handling
-
-```tsx
-const { data, error, isError } = orpc.matches.getAll.useQuery({
-  input: { type: "upcoming" },
-});
-
-if (isError) {
-  // error is typed as ORPCError
-  console.error("Code:", error.code);
-  console.error("Message:", error.message);
-}
-```
-
-## Testing
-
-```tsx
-import { createQueryClient } from "@repo/api-client";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { render } from "@testing-library/react";
-
-function renderWithClient(component: React.ReactElement) {
-  const queryClient = createQueryClient();
-
-  return render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
 }
 ```

@@ -30,7 +30,7 @@ This is a **Turborepo** monorepo using **pnpm workspaces** with the following st
 #### Apps (`apps/`)
 
 - **`api/`** - Hono API server
-  - Backend API with oRPC for type-safe endpoints
+  - Type-safe endpoints via Hono RPC (routes under `apps/api/src/routes/*`, registered in `apps/api/src/api-routes.ts`)
   - BetterAuth integration for authentication
   - Zod validation with Hono middleware
   - Local development: `pnpm dev:api` (runs with Bun)

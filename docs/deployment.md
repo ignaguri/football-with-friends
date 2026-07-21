@@ -35,6 +35,8 @@ pnpm cf:tail --env=preview  # View staging logs
 
 ## EAS Local Builds (iOS / Android) and OTA Updates
 
+> **⚠️ Cloud EAS builds cost real credits.** The project has a limited number of free EAS builds. Do not run `eas build` (cloud) or `eas submit` without the maintainer's explicit approval, and never as an automated/agent action. For iterating locally, use the free options: `expo run:ios` / `expo run:android` for a simulator/device build, or `eas build --local` (below) which builds on your machine and does not consume cloud credits.
+
 Use `eas build --local` to produce a local `.ipa` or `.apk` without uploading source to EAS servers. Use `eas update` to push OTA JavaScript bundle updates.
 
 **⚠️ Rename `.env.local` before building or sending an OTA update.** The Expo Metro bundler loads `apps/mobile-web/.env.local` during the bundle phase even when EAS injects profile env vars — local values (e.g. `EXPO_PUBLIC_API_URL=http://localhost:3001`) silently win and get baked into the binary or OTA bundle.

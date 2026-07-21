@@ -1,3 +1,6 @@
+> **⚠️ ARCHIVED / HISTORICAL — this migration is complete.**
+> The Google Sheets → Turso/SQLite migration described here shipped long ago; Google Sheets is no longer a storage provider (`STORAGE_PROVIDER` accepts only `turso | local-db`). Kept for context only. See the root `CLAUDE.md` and `docs/migration-guide.md` for the current database setup.
+
 # Storage Migration Plan: Google Sheets to SQLite/Turso
 
 ## Overview
