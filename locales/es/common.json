@@ -457,6 +457,8 @@
   },
   "a11y": {
     "addMatch": "Agregar partido",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "openMatch": "Abrir partido del {{date}}, {{location}}",
     "openMatchNoLocation": "Abrir partido del {{date}}",
     "viewRules": "Ver reglas",
