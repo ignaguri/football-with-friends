@@ -43,6 +43,7 @@ import i18n from "../lib/i18n"; // Initialize i18n
 import { unregisterServiceWorker } from "../lib/register-service-worker";
 import { RulesModalProvider } from "../lib/rules-modal-context";
 import { ThemeProvider, useThemeContext } from "../lib/theme-context";
+import { ViewModeProvider } from "../lib/view-mode-context";
 import { useSentryUser } from "../lib/use-sentry-user";
 import config from "../tamagui.config";
 import "../global.css"; // Global CSS to fix React Native Web background
@@ -75,6 +76,14 @@ function AppNavigation() {
         name="(tabs)"
         options={{
           headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="mode"
+        options={{
+          headerShown: false,
+          // No back gesture: the user must pick a mode to continue.
+          gestureEnabled: false,
         }}
       />
       <Stack.Screen
@@ -171,9 +180,11 @@ function AppContent({ updateReady }: { updateReady: boolean }) {
                       })
                     }
                   >
-                    <RulesModalProvider>
-                      <AppNavigation />
-                    </RulesModalProvider>
+                    <ViewModeProvider>
+                      <RulesModalProvider>
+                        <AppNavigation />
+                      </RulesModalProvider>
+                    </ViewModeProvider>
                   </APIProvider>
                 </ErrorBoundary>
               </YStack>

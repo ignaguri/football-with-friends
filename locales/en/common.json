@@ -452,8 +452,35 @@
     "error": "Error: {message}",
     "saving": "Saving..."
   },
+  "mode": {
+    "title": "How do you want to enter?",
+    "subtitle": "You can change this next time you sign in.",
+    "player": {
+      "title": "Player",
+      "body": "See matches, sign up and follow your group."
+    },
+    "organizer": {
+      "title": "Administrator",
+      "body": "Create matches and manage the groups you organize."
+    },
+    "footnote": "Administrator tools only appear in groups you administer.",
+    "continueAsPlayer": "Continue as player",
+    "needGroup": {
+      "title": "You need your own group",
+      "body": "Organizing means running your own group. Request one and an admin will review it.",
+      "nameLabel": "Group name",
+      "namePlaceholder": "e.g. Thursday football",
+      "reasonLabel": "What is it for?",
+      "reasonPlaceholder": "Tell us who will play",
+      "submit": "Request group",
+      "submitting": "Sending...",
+      "pending": "Your request is pending review. We'll let you know when it's decided."
+    }
+  },
   "a11y": {
     "addMatch": "Add match",
+    "chooseModePlayer": "Enter as player",
+    "chooseModeOrganizer": "Enter as administrator",
     "openMatch": "Open match on {{date}}, {{location}}",
     "openMatchNoLocation": "Open match on {{date}}",
     "viewRules": "View rules",

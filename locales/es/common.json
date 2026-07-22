@@ -455,8 +455,35 @@
     "error": "Error: {message}",
     "saving": "Guardando..."
   },
+  "mode": {
+    "title": "¿Cómo querés entrar?",
+    "subtitle": "Podés cambiarlo la próxima vez que inicies sesión.",
+    "player": {
+      "title": "Jugador",
+      "body": "Mirá los partidos, anotate y seguí a tu grupo."
+    },
+    "organizer": {
+      "title": "Administrador",
+      "body": "Creá partidos y gestioná los grupos que organizás."
+    },
+    "footnote": "Las herramientas de administrador aparecen solo en los grupos que administrás.",
+    "continueAsPlayer": "Continuar como jugador",
+    "needGroup": {
+      "title": "Necesitás tu propio grupo",
+      "body": "Organizar significa tener tu propio grupo. Pedí uno y un administrador lo va a revisar.",
+      "nameLabel": "Nombre del grupo",
+      "namePlaceholder": "ej. Fútbol de los jueves",
+      "reasonLabel": "¿Para qué es?",
+      "reasonPlaceholder": "Contanos quiénes van a jugar",
+      "submit": "Pedir grupo",
+      "submitting": "Enviando...",
+      "pending": "Tu pedido está en revisión. Te avisamos cuando haya novedades."
+    }
+  },
   "a11y": {
     "addMatch": "Agregar partido",
+    "chooseModePlayer": "Entrar como jugador",
+    "chooseModeOrganizer": "Entrar como administrador",
     "openMatch": "Abrir partido del {{date}}, {{location}}",
     "openMatchNoLocation": "Abrir partido del {{date}}",
     "viewRules": "Ver reglas",

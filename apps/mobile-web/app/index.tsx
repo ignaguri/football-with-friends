@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { YStack, Spinner } from "tamagui";
 
+import { useViewMode } from "../lib/view-mode-context";
+
 /**
  * Root index route - handles "/" navigation on web
  * Redirects to appropriate route based on authentication status
@@ -13,6 +15,7 @@ import { YStack, Spinner } from "tamagui";
 export default function Index() {
   const { data: session, isPending, refetch } = useSession();
   const [isHandlingCallback, setIsHandlingCallback] = useState(false);
+  const { mode } = useViewMode();
 
   // Handle OAuth callback with session token from URL
   // The web-callback endpoint passes session_token in the query params
@@ -57,6 +60,8 @@ export default function Index() {
     );
   }
 
-  // Redirect based on auth status
-  return <Redirect href={session?.user ? "/(tabs)" : "/(auth)"} />;
+  // Redirect based on auth status. Authenticated users pick a view mode once
+  // per session before the tabs mount — see `lib/view-mode-context.tsx`.
+  if (!session?.user) return <Redirect href="/(auth)" />;
+  return <Redirect href={mode ? "/(tabs)" : "/mode"} />;
 }
