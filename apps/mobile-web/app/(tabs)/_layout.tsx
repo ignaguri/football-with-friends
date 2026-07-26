@@ -5,6 +5,7 @@ import { NoGroupOnboarding } from "../../components/no-group-onboarding";
 import { StoreUpdateBanner } from "../../components/store-update-banner";
 import { NotificationPreferencesProvider } from "../../lib/notifications/notification-preferences-context";
 import { usePushNotifications } from "../../lib/use-push-notifications";
+import { useViewMode } from "../../lib/view-mode-context";
 import { Home, Calendar, Users, Settings, CircleUser } from "@tamagui/lucide-icons-2";
 import { Tabs, Redirect, router } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -15,6 +16,7 @@ export default function TabsLayout() {
   const theme = useTheme();
   const { data: session, isPending } = useSession();
   const { myRole, noGroup } = useCurrentGroup();
+  const { mode } = useViewMode();
 
   // Must be called before any early returns (Rules of Hooks)
   usePushNotifications();
@@ -33,14 +35,26 @@ export default function TabsLayout() {
     return <Redirect href="/(auth)" />;
   }
 
+  // The session's view mode is picked on `/mode`. Guard here too so a deep link
+  // straight into a tab can't skip it.
+  if (!mode) {
+    return <Redirect href="/mode" />;
+  }
+
   // Short-circuit to onboarding so matches/admin don't mount scoped queries
   // that would 409 on every render. `noGroup` is false while loading.
   if (noGroup) return <NoGroupOnboarding />;
 
   // Admin tab is gated by group-relative role. Platform admin retains the
   // global override so Ignacio can see admin panels on any group.
+  //
+  // The view mode can only narrow this, never widen it: a player-mode session
+  // hides the tab even from a real organizer, but organizer mode grants nothing
+  // to someone the server doesn't already recognise as one. See
+  // `lib/view-mode-context.tsx`.
   const isPlatformAdmin = session?.user?.role === "admin";
-  const isAdmin = isPlatformAdmin || myRole === "organizer";
+  const hasOrganizerRole = isPlatformAdmin || myRole === "organizer";
+  const isAdmin = hasOrganizerRole && mode === "organizer";
 
   return (
     <NotificationPreferencesProvider>
