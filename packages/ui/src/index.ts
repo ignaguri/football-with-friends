@@ -167,5 +167,10 @@ export {
 } from "./utils/country-flags";
 export type { Country, CountryWithDialCode } from "./utils/country-flags";
 
+// Accessibility utilities — bridge React Native a11y props to web ARIA.
+// Tamagui v2 primitives do not forward accessibilityLabel/Role to the DOM.
+export { webA11yProps, webPressableProps } from "./utils/a11y";
+export type { RNAccessibilityProps, AccessibilityState } from "./utils/a11y";
+
 // Display name utilities
 export { getPlayerDisplayParts, getPlayerDisplayLabel } from "./utils/display-name";

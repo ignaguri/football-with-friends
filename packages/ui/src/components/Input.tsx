@@ -3,6 +3,7 @@ import type { InputProps } from "tamagui";
 import { Input as TamaguiInput, YStack, XStack, Text } from "tamagui";
 import { Eye, EyeOff } from "@tamagui/lucide-icons-2";
 import { Platform, Pressable } from "react-native";
+import { webA11yProps } from "../utils/a11y";
 
 export interface CustomInputProps extends InputProps {
   label?: string;
@@ -12,6 +13,14 @@ export interface CustomInputProps extends InputProps {
   /** Hide the password visibility toggle even for secure text fields */
   hidePasswordToggle?: boolean;
   size?: string | number;
+  /**
+   * Accessible label for the password toggle in its "hidden" state.
+   * Passed in by the caller because this package has no i18n context
+   * (same pattern as `clearAccessibilityLabel` in ExclusiveMultiSelect).
+   */
+  showPasswordLabel?: string;
+  /** Accessible label for the password toggle in its "visible" state. */
+  hidePasswordLabel?: string;
 }
 
 export function Input({
@@ -21,6 +30,8 @@ export function Input({
   showPasswordToggle,
   hidePasswordToggle,
   secureTextEntry,
+  showPasswordLabel = "Show password",
+  hidePasswordLabel = "Hide password",
   ...props
 }: CustomInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -32,6 +43,17 @@ export function Input({
   const isPassword = secureTextEntry || showPasswordToggle;
   const showToggle = isPassword && !hidePasswordToggle;
   const shouldHideText = isPassword && !isPasswordVisible;
+
+  // The visible <Text> label is not programmatically associated with the input:
+  // Tamagui gives us no id/htmlFor pairing, so the accessible name would fall
+  // back to the placeholder. Reuse the visible label as the accessible name
+  // unless the caller supplied one explicitly.
+  const explicitLabel =
+    props.accessibilityLabel ?? (props as Record<string, string | undefined>)["aria-label"];
+  const a11yLabel = explicitLabel ?? label;
+
+  const toggleLabel = isPasswordVisible ? hidePasswordLabel : showPasswordLabel;
+  const toggleTestID = props.testID ? `${props.testID}-toggle` : undefined;
 
   return (
     <YStack gap="$2">
@@ -59,10 +81,19 @@ export function Input({
           {...(Platform.OS === "web" && shouldHideText ? { type: "password" } : {})}
           flex={1}
           {...props}
+          {...(a11yLabel
+            ? Platform.OS === "web"
+              ? webA11yProps({ accessibilityLabel: a11yLabel })
+              : { accessibilityLabel: a11yLabel }
+            : {})}
         />
         {showToggle && (
           <Pressable
             onPress={togglePasswordVisibility}
+            accessibilityRole="button"
+            accessibilityLabel={toggleLabel}
+            testID={toggleTestID}
+            hitSlop={8}
             style={{
               position: "absolute",
               right: 12,
