@@ -484,6 +484,8 @@
     "addMatch": "Agregar partido",
     "chooseModePlayer": "Entrar como jugador",
     "chooseModeOrganizer": "Entrar como administrador",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "openMatch": "Abrir partido del {{date}}, {{location}}",
     "openMatchNoLocation": "Abrir partido del {{date}}",
     "viewRules": "Ver reglas",

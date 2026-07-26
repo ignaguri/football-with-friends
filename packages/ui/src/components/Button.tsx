@@ -1,5 +1,6 @@
 import type { ButtonProps } from "tamagui";
 import { Button as TamaguiButton } from "tamagui";
+import { webA11yProps } from "../utils/a11y";
 
 export interface CustomButtonProps extends Omit<ButtonProps, "variant"> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "danger" | "danger-outline" | "navy";
@@ -58,5 +59,8 @@ export function Button({ variant = "primary", ...props }: CustomButtonProps) {
     },
   };
 
-  return <TamaguiButton {...variantStyles[variant]} {...props} />;
+  // Tamagui v2's Button drops accessibilityLabel/Role on web, so icon-only
+  // buttons end up with no accessible name. webA11yProps bridges them and
+  // never overrides an aria-* the caller set explicitly.
+  return <TamaguiButton {...variantStyles[variant]} {...props} {...webA11yProps(props)} />;
 }

@@ -481,6 +481,8 @@
     "addMatch": "Add match",
     "chooseModePlayer": "Enter as player",
     "chooseModeOrganizer": "Enter as administrator",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "openMatch": "Open match on {{date}}, {{location}}",
     "openMatchNoLocation": "Open match on {{date}}",
     "viewRules": "View rules",
