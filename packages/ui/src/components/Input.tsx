@@ -82,10 +82,9 @@ export function Input({
           flex={1}
           {...props}
           {...(a11yLabel
-            ? {
-                accessibilityLabel: a11yLabel,
-                ...webA11yProps({ accessibilityLabel: a11yLabel }),
-              }
+            ? Platform.OS === "web"
+              ? webA11yProps({ accessibilityLabel: a11yLabel })
+              : { accessibilityLabel: a11yLabel }
             : {})}
         />
         {showToggle && (
