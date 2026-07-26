@@ -12,20 +12,20 @@
 // unreachable that way. The request form is inlined here instead, on a route
 // that sits outside the tabs.
 
-import {
-  useCurrentGroup,
-  useMyGroupRequests,
-  useSubmitGroupRequest,
-  useSession,
-} from "@repo/api-client";
-import { Button, Container, Input, Spinner, Text, XStack, YStack } from "@repo/ui";
+import { useCurrentGroup, useMyGroupRequests, useSession } from "@repo/api-client";
+import { Button, Container, Spinner, Text, XStack, YStack } from "@repo/ui";
 import { CalendarCog, ChevronRight, User } from "@tamagui/lucide-icons-2";
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Pressable } from "react-native";
+import { Pressable } from "react-native";
 import { useTheme } from "tamagui";
 
+import {
+  GroupRequestFields,
+  GroupRequestPendingCard,
+  useGroupRequestForm,
+} from "../components/group-request-form";
 import { useViewMode } from "../lib/view-mode-context";
 
 function ModeCard({ icon, title, body, onPress, testID, accessibilityLabel }) {
@@ -79,11 +79,8 @@ export default function ModeScreen() {
   const { myGroups, isLoading: groupsLoading } = useCurrentGroup();
 
   const [needsGroup, setNeedsGroup] = useState(false);
-  const [name, setName] = useState("");
-  const [reason, setReason] = useState("");
-
   const { data: requests } = useMyGroupRequests();
-  const submitRequest = useSubmitGroupRequest();
+  const requestForm = useGroupRequestForm();
 
   if (isPending || groupsLoading) {
     return (
@@ -118,17 +115,6 @@ export default function ModeScreen() {
     setNeedsGroup(true);
   }
 
-  async function onSubmitRequest() {
-    if (!name.trim() || !reason.trim()) return;
-    try {
-      await submitRequest.mutateAsync({ name: name.trim(), reason: reason.trim() });
-      setName("");
-      setReason("");
-    } catch (err) {
-      Alert.alert("Error", err instanceof Error ? err.message : t("groups.requests.error"));
-    }
-  }
-
   if (needsGroup) {
     return (
       <Container variant="padded">
@@ -151,38 +137,25 @@ export default function ModeScreen() {
               borderColor="$borderColor"
               backgroundColor="$gray2"
             >
-              <Text fontSize="$5" fontWeight="600">
-                {pendingRequest.name}
-              </Text>
-              <Text color="$gray11">{t("mode.needGroup.pending")}</Text>
+              <GroupRequestPendingCard
+                name={pendingRequest.name}
+                pendingLabel={t("mode.needGroup.pending")}
+              />
             </YStack>
           ) : (
-            <YStack gap="$3">
-              <Input
-                label={t("mode.needGroup.nameLabel")}
-                placeholder={t("mode.needGroup.namePlaceholder")}
-                value={name}
-                onChangeText={setName}
-                testID="mode-request-name"
-              />
-              <Input
-                label={t("mode.needGroup.reasonLabel")}
-                placeholder={t("mode.needGroup.reasonPlaceholder")}
-                value={reason}
-                onChangeText={setReason}
-                testID="mode-request-reason"
-              />
-              <Button
-                onPress={onSubmitRequest}
-                disabled={!name.trim() || !reason.trim() || submitRequest.isPending}
-                opacity={!name.trim() || !reason.trim() || submitRequest.isPending ? 0.5 : 1}
-                testID="mode-request-submit"
-              >
-                {submitRequest.isPending
+            <GroupRequestFields
+              form={requestForm}
+              testIDPrefix="mode-request"
+              nameLabel={t("mode.needGroup.nameLabel")}
+              namePlaceholder={t("mode.needGroup.namePlaceholder")}
+              reasonLabel={t("mode.needGroup.reasonLabel")}
+              reasonPlaceholder={t("mode.needGroup.reasonPlaceholder")}
+              submitContent={
+                requestForm.isSubmitting
                   ? t("mode.needGroup.submitting")
-                  : t("mode.needGroup.submit")}
-              </Button>
-            </YStack>
+                  : t("mode.needGroup.submit")
+              }
+            />
           )}
 
           <Button variant="ghost" onPress={choosePlayer} testID="mode-continue-as-player">

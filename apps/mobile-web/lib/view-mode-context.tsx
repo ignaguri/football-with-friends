@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { Platform } from "react-native";
 
 /**
  * Session-scoped view mode, chosen on the `/mode` screen after sign-in.
@@ -13,12 +14,26 @@ import type { ReactNode } from "react";
  * from real organizers. It cannot grant anything — a client-side grant would
  * just render admin UI whose every request the API rejects.
  *
- * Deliberately in-memory: the choice is asked once per session and resets when
- * the app restarts (on web, a page reload counts as a restart and returns the
- * user to `/mode`). Nothing is persisted, so there is no stale mode to
- * invalidate when a user's real role changes server-side.
+ * On native, this resets when the app restarts, which is expected. On web, a
+ * page reload used to count as a restart too and bounced the user back to
+ * `/mode` on every refresh, so the choice is mirrored to `sessionStorage`
+ * there: it survives reloads within the tab but still clears on tab close,
+ * so there is no long-lived stale mode to invalidate when a user's real role
+ * changes server-side.
  */
 export type ViewMode = "player" | "organizer";
+
+const STORAGE_KEY = "fwf-view-mode";
+
+function isViewMode(value: unknown): value is ViewMode {
+  return value === "player" || value === "organizer";
+}
+
+function readStoredMode(): ViewMode | null {
+  if (Platform.OS !== "web" || typeof window === "undefined") return null;
+  const stored = window.sessionStorage.getItem(STORAGE_KEY);
+  return isViewMode(stored) ? stored : null;
+}
 
 interface ViewModeContextValue {
   mode: ViewMode | null;
@@ -29,10 +44,21 @@ interface ViewModeContextValue {
 const ViewModeContext = createContext<ViewModeContextValue | undefined>(undefined);
 
 export function ViewModeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ViewMode | null>(null);
+  const [mode, setModeState] = useState<ViewMode | null>(readStoredMode);
 
-  const setMode = useCallback((next: ViewMode) => setModeState(next), []);
-  const clearMode = useCallback(() => setModeState(null), []);
+  const setMode = useCallback((next: ViewMode) => {
+    setModeState(next);
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.sessionStorage.setItem(STORAGE_KEY, next);
+    }
+  }, []);
+
+  const clearMode = useCallback(() => {
+    setModeState(null);
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.sessionStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
 
   const value = useMemo(() => ({ mode, setMode, clearMode }), [mode, setMode, clearMode]);
 
