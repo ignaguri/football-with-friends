@@ -32,7 +32,8 @@ export function GroupSwitcher() {
         testID="group-switcher-trigger"
         pressStyle={{ opacity: 0.7 }}
         paddingHorizontal="$4"
-        paddingVertical="$2"
+        paddingTop={insets.top + 8}
+        paddingBottom="$2"
         alignItems="center"
         gap="$2"
         borderBottomWidth={1}
