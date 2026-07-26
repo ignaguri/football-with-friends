@@ -3,6 +3,7 @@ import type { InputProps } from "tamagui";
 import { Input as TamaguiInput, YStack, XStack, Text } from "tamagui";
 import { Eye, EyeOff } from "@tamagui/lucide-icons-2";
 import { Platform, Pressable } from "react-native";
+import { webA11yProps } from "../utils/a11y";
 
 export interface CustomInputProps extends InputProps {
   label?: string;
@@ -83,8 +84,7 @@ export function Input({
           {...(a11yLabel
             ? {
                 accessibilityLabel: a11yLabel,
-                // Tamagui v2 doesn't map accessibilityLabel to aria-label on web
-                ...(Platform.OS === "web" ? { "aria-label": a11yLabel } : {}),
+                ...webA11yProps({ accessibilityLabel: a11yLabel }),
               }
             : {})}
         />
@@ -93,7 +93,6 @@ export function Input({
             onPress={togglePasswordVisibility}
             accessibilityRole="button"
             accessibilityLabel={toggleLabel}
-            accessibilityState={{ selected: isPasswordVisible }}
             testID={toggleTestID}
             hitSlop={8}
             style={{
