@@ -3,6 +3,7 @@
 // chrome unchanged.
 
 import { useCurrentGroup } from "@repo/api-client";
+import { webPressableProps } from "@repo/ui";
 import { Check, ChevronDown } from "@tamagui/lucide-icons-2";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,13 +18,18 @@ export function GroupSwitcher() {
 
   if (myGroups.length < 2 || !group) return null;
 
+  const triggerA11yProps = {
+    accessibilityRole: "button" as const,
+    accessibilityLabel: t("groups.switcher.open", { name: group.name }),
+    onPress: () => setOpen(true),
+  };
+
   return (
     <>
       <XStack
-        accessibilityRole="button"
-        accessibilityLabel={t("groups.switcher.open", { name: group.name })}
+        {...triggerA11yProps}
+        {...webPressableProps(triggerA11yProps)}
         testID="group-switcher-trigger"
-        onPress={() => setOpen(true)}
         pressStyle={{ opacity: 0.7 }}
         paddingHorizontal="$4"
         paddingVertical="$2"
@@ -59,15 +65,19 @@ export function GroupSwitcher() {
             </Text>
             {myGroups.map((g) => {
               const active = g.id === group.id;
+              const itemA11yProps = {
+                accessibilityRole: "button" as const,
+                onPress: () => {
+                  if (!active) switchGroup(g.id);
+                  setOpen(false);
+                },
+              };
               return (
                 <XStack
                   key={g.id}
-                  accessibilityRole="button"
+                  {...itemA11yProps}
+                  {...webPressableProps(itemA11yProps)}
                   testID={`group-switcher-item-${g.id}`}
-                  onPress={() => {
-                    if (!active) switchGroup(g.id);
-                    setOpen(false);
-                  }}
                   pressStyle={{ opacity: 0.7 }}
                   paddingVertical="$3"
                   paddingHorizontal="$3"
