@@ -13,7 +13,6 @@ import { auth } from "./auth";
 // Import cron jobs
 import { updateMatchStatuses } from "./cron/update-match-statuses";
 import { sendMatchReminders } from "./cron/send-match-reminders";
-import { sendEngagementReminders } from "./cron/send-engagement-reminders";
 import { pruneInboxNotifications } from "./cron/prune-inbox-notifications";
 
 // Cron expressions must match `[triggers].crons` in wrangler.toml.
@@ -288,7 +287,7 @@ export default Sentry.withSentry(
       let tasks: Array<Promise<unknown>>;
       switch (event.cron) {
         case CRON_EVERY_30_MIN:
-          tasks = [updateMatchStatuses(), sendMatchReminders(), sendEngagementReminders()];
+          tasks = [updateMatchStatuses(), sendMatchReminders()];
           break;
         case CRON_DAILY_01_UTC:
           tasks = [pruneInboxNotifications()];
